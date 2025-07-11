@@ -9,12 +9,17 @@ import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.Player;
 import com.velocitypowered.api.proxy.ProxyServer;
-import org.pintux.life.common.FloodgateUtil;
-import org.pintux.life.common.api.BedrockGuiAPI;
-import org.pintux.life.common.form.FormMenuUtil;
-import org.pintux.life.common.utils.FormPlayer;
-import org.pintux.life.common.utils.MessageConfig;
-import org.pintux.life.common.utils.MessageData;
+import org.geysermc.floodgate.api.FloodgateApi;
+import it.pintux.life.common.BedrockGuiAPI;
+import it.pintux.life.common.form.FormMenuUtil;
+import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageConfig;
+import it.pintux.life.common.utils.MessageData;
+import org.pintux.life.velocity.platform.VelocityCommandExecutor;
+import org.pintux.life.velocity.platform.VelocityEconomyManager;
+import org.pintux.life.velocity.platform.VelocityFormSender;
+import org.pintux.life.velocity.platform.VelocityPlayerChecker;
+import org.pintux.life.velocity.platform.VelocitySoundManager;
 import org.pintux.life.velocity.utils.VelocityConfig;
 import org.pintux.life.velocity.utils.VelocityPlayer;
 import org.slf4j.Logger;
@@ -90,7 +95,15 @@ public class BedrockGUI {
         }
         MessageConfig configHandler = null;
         messageData = new MessageData(configHandler);
-        formMenuUtil = new FormMenuUtil(new VelocityConfig(mainConfig), messageData);
+        
+        // Initialize platform implementations
+        VelocityCommandExecutor commandExecutor = new VelocityCommandExecutor(server);
+        VelocitySoundManager soundManager = new VelocitySoundManager();
+        VelocityEconomyManager economyManager = new VelocityEconomyManager();
+        VelocityFormSender formSender = new VelocityFormSender();
+
+        // Initialize FormMenuUtil with platform implementations
+        formMenuUtil = new FormMenuUtil(new VelocityConfig(mainConfig), messageData, commandExecutor, soundManager, economyManager, formSender);
     }
 
     @Subscribe
@@ -100,9 +113,13 @@ public class BedrockGUI {
         }
 
         Player player = event.getPlayer();
-        FormPlayer formPlayer = new VelocityPlayer(player);
+        FormPlayer formPlayer = new VelocityPlayer(player, server);
 
-        if (!FloodgateUtil.isFloodgate(player.getUniqueId())) {
+        try {
+            if (!FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                return;
+            }
+        } catch (Exception e) {
             return;
         }
 
@@ -165,7 +182,7 @@ public class BedrockGUI {
 
     public BedrockGuiAPI getApi() {
         if (api == null) {
-            api = new BedrockGuiAPI(formMenuUtil);
+            api = BedrockGuiAPI.getInstance();
         }
         return api;
     }

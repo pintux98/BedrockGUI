@@ -4,3 +4,6 @@
 /build/classes/java/main/
 .idea
 /common/build/
+/paper/build/
+/geyser/build/
+/bungeecord/build/

@@ -1,0 +1,558 @@
+# BedrockGUI Configuration - Comprehensive Action Types Demo
+# This config demonstrates all available action types with proper formatting
+
+# Global settings
+settings:
+  debug: true
+  placeholder_refresh_interval: 30
+  default_sound: "ui.button.click"
+
+# Resource Pack Configuration
+resource_packs:
+  enabled: true
+  default_pack: "ui_pack"
+  
+  # Available resource packs
+  packs:
+    ui_pack:
+      name: "Enhanced UI Pack"
+      url: "https://example.com/packs/ui_pack.mcpack"
+      hash: "abc123def456"
+      force: false
+      description: "Enhanced UI elements for better user experience"
+    texture_pack:
+      name: "Custom Texture Pack"
+      url: "https://example.com/packs/texture_pack.mcpack"
+      hash: "def456ghi789"
+      force: false
+      description: "Custom textures for blocks and items"
+    custom_pack:
+      name: "Custom Theme Pack"
+      url: "https://example.com/packs/custom_pack.mcpack"
+      hash: "ghi789jkl012"
+      force: true
+      description: "Custom theme with unique styling"
+    base_pack:
+      name: "Base Resource Pack"
+      url: "https://example.com/packs/base_pack.mcpack"
+      hash: "jkl012mno345"
+      force: false
+      description: "Base pack with essential resources"
+    theme_pack:
+      name: "Theme Resource Pack"
+      url: "https://example.com/packs/theme_pack.mcpack"
+      hash: "mno345pqr678"
+      force: false
+      description: "Themed pack for special events"
+  
+  # Menu-specific resource packs
+  menu_packs:
+    main: "ui_pack"
+    resourcepack_test: "custom_pack"
+    pack_sequence: "base_pack"
+    vip: "theme_pack"
+
+# Commands configuration
+commands:
+  main:
+    description: "Open main BedrockGUI demo hub"
+    permission: "bedrockgui.use"
+    aliases: ["gui", "menu", "hub"]
+    form: "main"
+  tp:
+    description: "Open teleport demo menu"
+    permission: "bedrockgui.teleport"
+    aliases: ["teleport", "tpdemo"]
+    form: "teleport_demo"
+  cmd:
+    description: "Open command demo menu"
+    permission: "bedrockgui.command"
+    aliases: ["command", "cmddemo"]
+    form: "command_demo"
+  msg:
+    description: "Open message demo menu"
+    permission: "bedrockgui.message"
+    aliases: ["message", "msgdemo"]
+    form: "message_demo"
+  sound:
+    description: "Open sound demo menu"
+    permission: "bedrockgui.sound"
+    aliases: ["sounds", "sounddemo"]
+    form: "sound_demo"
+  admin:
+    description: "Open admin tools menu"
+    permission: "bedrockgui.admin"
+    aliases: ["admintools", "admindemo"]
+    form: "admin_demo"
+  custom:
+    description: "Open custom forms demo"
+    permission: "bedrockgui.custom"
+    aliases: ["customform", "forms"]
+    form: "custom_demo"
+  vip:
+    description: "Open VIP menu"
+    permission: "bedrockgui.vip"
+    aliases: ["vipmenu", "premium"]
+    form: "vip_menu"
+  resourcepack:
+    description: "Open resource pack test menu"
+    permission: "bedrockgui.resourcepack"
+    aliases: ["rp", "packs", "resourcepacks"]
+    form: "resourcepack_test"
+  packseq:
+    description: "Open pack sequence test menu"
+    permission: "bedrockgui.packseq"
+    aliases: ["packsequence", "rpseq"]
+    form: "pack_sequence"
+  
+# Message configuration
+messages:
+  prefix: "§8[§bBedrockGUI§8]§r "
+  no_permission: "§cYou don't have permission to use this!"
+  menu_not_found: "§cMenu not found!"
+  action_success: "§aAction executed successfully!"
+  action_failed: "§cAction failed to execute!"
+
+# Form menus
+menu:
+  # Main hub menu - Entry point
+  main:
+    command: main
+    type: "SIMPLE"
+    title: "§b§lBedrockGUI Demo Hub"
+    description: "§7Welcome! This demo showcases all action types.\n§eClick buttons to test different actions."
+    buttons:
+      teleport_menu:
+        text: "§a§lTeleport Menu"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:teleport_demo"
+      command_menu:
+        text: "§e§lCommand Actions"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:command_demo"
+      message_menu:
+        text: "§d§lMessage Actions"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:message_demo"
+      sound_menu:
+        text: "§6§lSound Actions"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:sound_demo"
+      admin_menu:
+        text: "§c§lAdmin Tools"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:admin_demo"
+        show_condition: "permission:bedrockgui.admin"
+      custom_forms:
+        text: "§b§lCustom Forms"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:custom_demo"
+      resource_packs:
+        text: "§d§lResource Packs"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:resourcepack_test"
+      close_demo:
+        text: "§8§lClose Menu"
+        onClick: "close:"
+
+  # Teleport actions demo
+  teleport_demo:
+    command: tp
+    type: "SIMPLE"
+    title: "§a§lTeleport Actions Demo"
+    description: "§7Test different teleport action formats"
+    buttons:
+      spawn_teleport:
+        text: "§a§lTeleport to Spawn"
+        onClick: "teleport:spawn"
+      coordinates_teleport:
+        text: "§e§lTeleport to Coordinates"
+        onClick: "teleport:0,100,0,world"
+      player_teleport:
+        text: "§b§lTeleport to Player"
+        onClick: "teleport:player:admin"
+      command_teleport:
+        text: "§6§lCommand Teleport"
+        onClick: "tp %player_name% 0 100 0"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Command actions demo
+  command_demo:
+    command: cmd
+    type: "SIMPLE"
+    title: "§e§lCommand Actions Demo"
+    description: "§7Test various command executions"
+    buttons:
+      give_item:
+        text: "§a§lGive Diamond"
+        onClick: "give %player_name% diamond 1"
+      gamemode_creative:
+        text: "§6§lCreative Mode"
+        onClick: "command:gamemode creative %player_name%"
+        show_condition: "permission:gamemode.creative"
+      time_day:
+        text: "§e§lSet Time Day"
+        onClick: "time set day"
+        show_condition: "permission:time.set"
+      weather_clear:
+        text: "§b§lClear Weather"
+        onClick: "command:weather clear"
+        show_condition: "permission:weather.set"
+      heal_player:
+        text: "§c§lHeal Player"
+        onClick: "heal %player_name%"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Message actions demo
+  message_demo:
+    command: msg
+    type: "SIMPLE"
+    title: "§d§lMessage Actions Demo"
+    description: "§7Test different message types"
+    buttons:
+      simple_message:
+        text: "§a§lSimple Message"
+        onClick: "message:§aHello %player_name%! Welcome to the server!"
+      info_message:
+        text: "§b§lPlayer Info"
+        onClick: "message:§bPlayer: %player_name% | World: %player_world% | Health: %player_health%"
+      warning_message:
+        text: "§e§lWarning Message"
+        onClick: "message:§e⚠ This is a warning message for testing!"
+      error_message:
+        text: "§c§lError Message"
+        onClick: "message:§c✗ This is an error message simulation!"
+      success_message:
+        text: "§2§lSuccess Message"
+        onClick: "message:§2✓ Action completed successfully!"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Sound actions demo
+  sound_demo:
+    command: sound
+    type: "SIMPLE"
+    title: "§6§lSound Actions Demo"
+    description: "§7Test different sound effects"
+    buttons:
+      ui_sound:
+        text: "§a§lUI Click Sound"
+        onClick: "sound:ui.button.click"
+      success_sound:
+        text: "§2§lSuccess Sound"
+        onClick: "sound:random.levelup"
+      error_sound:
+        text: "§c§lError Sound"
+        onClick: "sound:mob.villager.no"
+      notification_sound:
+        text: "§e§lNotification Sound"
+        onClick: "sound:random.orb"
+      explosion_sound:
+        text: "§4§lExplosion Sound"
+        onClick: "sound:random.explode"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Admin tools demo
+  admin_demo:
+    command: admin
+    permission: "bedrockgui.admin"
+    type: "SIMPLE"
+    title: "§c§lAdmin Tools Demo"
+    description: "§7Administrative actions and server management"
+    buttons:
+      reload_config:
+        text: "§6§lReload Config"
+        onClick: "command:bedrockgui reload"
+      broadcast_message:
+        text: "§a§lBroadcast Message"
+        onClick: "broadcast:§a[ADMIN] Server maintenance in 5 minutes!"
+      server_command:
+        text: "§e§lServer Command"
+        onClick: "server:save-all"
+      kick_all:
+        text: "§c§lKick All Players"
+        onClick: "open:confirm_kick_all"
+      delay_test:
+        text: "§b§lDelay Test"
+        onClick: "open:delay_demo"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Confirmation dialog
+  confirm_kick_all:
+    command: confirm
+    permission: "bedrockgui.admin"
+    type: "MODAL"
+    title: "§c§lConfirm Action"
+    description: "§7Are you sure you want to kick all players?\n§c§lThis action cannot be undone!"
+    buttons:
+      confirm:
+        text: "§a§lConfirm"
+        onClick: "command:kick @a Server maintenance"
+      cancel:
+        text: "§c§lCancel"
+        onClick: "open:admin_demo"
+
+  # Delay actions demo
+  delay_demo:
+    command: delay
+    permission: "bedrockgui.admin"
+    type: "SIMPLE"
+    title: "§b§lDelay Actions Demo"
+    description: "§7Test delayed action execution"
+    buttons:
+      short_delay:
+        text: "§a§l1 Second Delay"
+        onClick: "delay:1000"
+      medium_delay:
+        text: "§e§l3 Second Delay"
+        onClick: "delay:3000"
+      long_delay:
+        text: "§c§l5 Second Delay"
+        onClick: "delay:5000"
+      delayed_message:
+        text: "§d§lDelayed Message"
+        onClick: "open:delayed_message_form"
+      back:
+        text: "§c§lBack to Admin"
+        onClick: "open:admin_demo"
+
+  # Custom forms demo
+  custom_demo:
+    command: custom
+    type: "CUSTOM"
+    title: "§b§lCustom Form Demo"
+    description: "§7Test custom form components with actions"
+    components:
+      player_name:
+        type: "input"
+        text: "Target Player Name"
+        placeholder: "Enter player name"
+        default: "%player_name%"
+        action: "message:Target player set to: $1"
+      teleport_location:
+        type: "dropdown"
+        text: "Teleport Location"
+        options:
+          - "Spawn"
+          - "PvP Arena"
+          - "Creative World"
+          - "Nether"
+          - "End"
+        default: 0
+        action: "teleport:$1"
+      give_amount:
+        type: "slider"
+        text: "Item Amount"
+        min: 1
+        max: 64
+        step: 1
+        default: 1
+        action: "give %player_name% diamond $1"
+      enable_notifications:
+        type: "toggle"
+        text: "Enable Notifications"
+        default: true
+        action: "message:Notifications: $1"
+      admin_message:
+        type: "input"
+        text: "Admin Message"
+        placeholder: "Enter message to broadcast"
+        default: "Server announcement"
+        action: "broadcast:§c[ADMIN] $1"
+    global_actions:
+      - "message:§aForm submitted successfully!"
+      - "sound:random.levelup"
+      - "delay:2000"
+      - "open:main"
+
+  # Delayed message form
+  delayed_message_form:
+    command: delay_msg
+    permission: "bedrockgui.admin"
+    type: "CUSTOM"
+    title: "§d§lDelayed Message"
+    description: "§7Send a message after a delay"
+    components:
+      message_text:
+        type: "input"
+        text: "Message to Send"
+        placeholder: "Enter your message"
+        default: "This is a delayed message!"
+        action: "delay:2000"
+      delay_seconds:
+        type: "slider"
+        text: "Delay (seconds)"
+        min: 1
+        max: 10
+        step: 1
+        default: 3
+        action: "delay:$1000"
+    global_actions:
+      - "message:§eMessage will be sent in $delay_seconds seconds..."
+      - "delay:$delay_seconds000"
+      - "message:§a$message_text"
+      - "sound:random.orb"
+
+  # Multi-action sequence demo
+  sequence_demo:
+    command: seq
+    type: "SIMPLE"
+    title: "§5§lAction Sequence Demo"
+    description: "§7Test multiple actions in sequence"
+    buttons:
+      welcome_sequence:
+        text: "§a§lWelcome Sequence"
+        onClick: "open:welcome_sequence"
+      goodbye_sequence:
+        text: "§c§lGoodbye Sequence"
+        onClick: "open:goodbye_sequence"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Welcome sequence
+  welcome_sequence:
+    command: welcome
+    type: "CUSTOM"
+    title: "§a§lWelcome!"
+    description: "§7This will execute multiple actions"
+    components:
+      confirm:
+        type: "toggle"
+        text: "Execute Welcome Sequence"
+        default: false
+        action: "message:Starting welcome sequence..."
+    global_actions:
+      - "sound:random.levelup"
+      - "message:§a§lWelcome to the server, %player_name%!"
+      - "delay:1000"
+      - "give %player_name% bread 5"
+      - "delay:1000"
+      - "message:§eYou have been given some bread to start!"
+      - "delay:2000"
+      - "teleport:spawn"
+      - "message:§bYou have been teleported to spawn!"
+      - "sound:random.orb"
+
+  # Goodbye sequence
+  goodbye_sequence:
+    command: goodbye
+    type: "MODAL"
+    title: "§c§lGoodbye!"
+    description: "§7Are you sure you want to leave?"
+    buttons:
+      confirm:
+        text: "§a§lYes, Goodbye"
+        onClick: "open:execute_goodbye"
+      cancel:
+        text: "§c§lStay"
+        onClick: "open:main"
+
+  # Execute goodbye
+  execute_goodbye:
+    command: exec
+    type: "CUSTOM"
+    title: "§c§lFarewell"
+    description: "§7Thanks for playing!"
+    components:
+      dummy:
+        type: "toggle"
+        text: "Executing goodbye sequence..."
+        default: true
+        action: "message:Goodbye sequence started..."
+    global_actions:
+      - "message:§c§lThanks for playing, %player_name%!"
+      - "sound:random.successful_hit"
+      - "delay:2000"
+      - "message:§eYour progress has been saved."
+      - "delay:1000"
+      - "broadcast:§7%player_name% is leaving the server!"
+      - "delay:2000"
+      - "command:kick %player_name% Thanks for playing! Come back soon!"
+
+  # Resource Pack Test Menu - Demonstrates resource pack functionality
+  resourcepack_test:
+    command: resourcepack
+    type: "SIMPLE"
+    title: "§d§lResource Pack Test"
+    description: "§7Test resource pack features and functionality"
+    buttons:
+      send_ui_pack:
+        text: "§a§lSend UI Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:ui_pack"
+      send_texture_pack:
+        text: "§b§lSend Texture Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:texture_pack"
+      send_custom_pack:
+        text: "§6§lSend Custom Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:custom_pack"
+      pack_info:
+        text: "§e§lResource Pack Info"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "message:§eResource packs enhance your Bedrock experience with custom textures and UI elements!"
+      test_sequence:
+        text: "§d§lTest Pack Sequence"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "open:pack_sequence"
+      back:
+        text: "§c§lBack to Main"
+        onClick: "open:main"
+
+  # Pack Sequence Menu - Demonstrates sequential resource pack loading
+  pack_sequence:
+    command: packseq
+    type: "SIMPLE"
+    title: "§d§lPack Sequence Test"
+    description: "§7Test sequential resource pack loading"
+    buttons:
+      step1:
+        text: "§a§lStep 1: Load Base Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:base_pack"
+      step2:
+        text: "§b§lStep 2: Load UI Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:ui_pack"
+      step3:
+        text: "§6§lStep 3: Load Theme Pack"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "resourcepack:theme_pack"
+      test_all:
+        text: "§d§lLoad All Packs"
+        image: "https://raw.githubusercontent.com/GeyserMC/Geyser/master/bootstrap/geyser/src/main/resources/icon.png"
+        onClick: "delay:1000"
+      back:
+        text: "§c§lBack to Resource Pack Test"
+        onClick: "open:resourcepack_test"
+
+# Conditional examples
+conditional_examples:
+  vip_menu:
+    type: "SIMPLE"
+    title: "§6§lVIP Menu"
+    description: "§7Exclusive VIP features"
+    permission: "server.vip"
+    buttons:
+      vip_teleport:
+        text: "§6§lVIP Lounge"
+        onClick: "teleport:vip_lounge"
+        show_condition: "permission:teleport.vip"
+      vip_kit:
+        text: "§e§lVIP Kit"
+        onClick: "give %player_name% diamond_sword 1"
+        show_condition: "permission:kit.vip"
+      back:
+        text: "§c§lBack"
+        onClick: "open:main"

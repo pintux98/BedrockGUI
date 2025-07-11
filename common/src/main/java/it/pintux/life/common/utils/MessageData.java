@@ -47,17 +47,17 @@ public class MessageData {
     public String replaceVariables(String value, Map<String, Object> replacements, FormPlayer player) {
         if (replacements != null) {
             for (Map.Entry<String, Object> entry : replacements.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
+                String placeholder = "$" + entry.getKey();
                 value = value.replace(placeholder, String.valueOf(entry.getValue()));
             }
         }
 
         value = config.setPlaceholders(player, value);
 
-        Matcher matcher = Pattern.compile("\\{(\\w+)}").matcher(value);
+        Matcher matcher = Pattern.compile("\\$(\\w+)").matcher(value);
         while (matcher.find()) {
             String placeholder = matcher.group(1);
-            System.out.println("Missing replacement value for placeholder: " + placeholder);
+            System.out.println("Missing replacement value for placeholder: $" + placeholder);
         }
 
         return value;

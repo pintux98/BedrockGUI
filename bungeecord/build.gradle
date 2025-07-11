@@ -9,11 +9,13 @@ version = '1.6.0'
 repositories {
     mavenCentral()
     maven { url 'https://oss.sonatype.org/content/repositories/snapshots' }
+    maven { url = "https://repo.opencollab.dev/main/" }
 }
 
 dependencies {
     implementation project(':common')
     compileOnly 'net.md-5:bungeecord-api:1.20-R0.1'
+    compileOnly('org.geysermc.floodgate:api:2.2.3-SNAPSHOT')
 }
 
 sourceSets {

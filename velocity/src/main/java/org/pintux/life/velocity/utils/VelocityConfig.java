@@ -1,6 +1,6 @@
 package org.pintux.life.velocity.utils;
 
-import org.pintux.life.common.utils.FormConfig;
+import it.pintux.life.common.utils.FormConfig;
 import org.spongepowered.configurate.ConfigurationNode;
 
 import java.util.*;

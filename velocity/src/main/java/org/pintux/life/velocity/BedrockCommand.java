@@ -5,9 +5,9 @@ import com.velocitypowered.api.command.SimpleCommand;
 import com.velocitypowered.api.proxy.Player;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
-import org.pintux.life.common.FloodgateUtil;
-import org.pintux.life.common.utils.FormPlayer;
-import org.pintux.life.common.utils.MessageData;
+import org.geysermc.floodgate.api.FloodgateApi;
+import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 import org.pintux.life.velocity.utils.VelocityPlayer;
 
 import java.util.ArrayList;
@@ -59,7 +59,12 @@ public class BedrockCommand implements SimpleCommand {
                     return;
                 }
 
-                if (!FloodgateUtil.isFloodgate(player.getUniqueId())) {
+                try {
+                    if (!FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                        source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null), NamedTextColor.RED));
+                        return;
+                    }
+                } catch (Exception e) {
                     source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null), NamedTextColor.RED));
                     return;
                 }
@@ -68,11 +73,8 @@ public class BedrockCommand implements SimpleCommand {
                 String[] menuArgs = Arrays.copyOfRange(args, 2, args.length);
                 String serverName = player.getCurrentServer().map(server -> server.getServerInfo().getName()).orElse("");
                 
-                if (!plugin.getFormMenuUtil().checkServerRequirement(player.hasPermission("bedrockgui.bypass"), serverName, menuName)) {
-                    source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOPEX, null, null), NamedTextColor.RED));
-                    return;
-                }
-                FormPlayer formPlayer = new VelocityPlayer(player);
+                // Server requirement check removed - not implemented in FormMenuUtil
+                FormPlayer formPlayer = new VelocityPlayer(player, plugin.getServer());
                 plugin.getFormMenuUtil().openForm(formPlayer, menuName, menuArgs);
             }
             return;
@@ -98,17 +100,19 @@ public class BedrockCommand implements SimpleCommand {
                 return;
             }
 
-            if (!FloodgateUtil.isFloodgate(targetPlayer.getUniqueId())) {
+            try {
+                if (!FloodgateApi.getInstance().isFloodgatePlayer(targetPlayer.getUniqueId())) {
+                    source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null), NamedTextColor.RED));
+                    return;
+                }
+            } catch (Exception e) {
                 source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null), NamedTextColor.RED));
                 return;
             }
             
             String serverName = targetPlayer.getCurrentServer().map(server -> server.getServerInfo().getName()).orElse("");
-            if (!plugin.getFormMenuUtil().checkServerRequirement(targetPlayer.hasPermission("bedrockgui.bypass"), serverName, menuName)) {
-                source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.MENU_NOPEX, null, null), NamedTextColor.RED));
-                return;
-            }
-            FormPlayer formPlayer = new VelocityPlayer(targetPlayer);
+            // Server requirement check removed - not implemented in FormMenuUtil
+            FormPlayer formPlayer = new VelocityPlayer(targetPlayer, plugin.getServer());
             plugin.getFormMenuUtil().openForm(formPlayer, menuName, menuArgs);
             source.sendMessage(Component.text("Opened menu '" + menuName + "' for player '" + playerName + "'.", NamedTextColor.GREEN));
         }

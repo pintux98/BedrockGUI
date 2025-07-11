@@ -1,64 +1,137 @@
-menu: #Only 2 types available at the moment! See https://geysermc.org/wiki/geyser/forms/ for examples
-  test_modal:
-    type: MODAL #Simple with title, description and just 2 buttons!
-    title: "Modal test $1"
-    description: "Something here to write"
+# BedrockGUI Enhanced Configuration with Resource Pack Support
+# This is an example configuration showing how to use the new resource pack features
+
+# Resource Pack Configuration
+resource_packs:
+  enabled: true
+  default_pack: "bedrockgui_default.mcpack"
+  
+  # Per-menu resource packs
+  per_menu_packs:
+    main_menu: "main_theme.mcpack"
+    shop_menu: "shop_theme.mcpack"
+    admin_menu: "admin_theme.mcpack"
+    player_menu: "player_theme.mcpack"
+  
+  # Fallback image URLs for when resource packs aren't available
+  fallback_images:
+    "textures/ui/button_default.png": "https://example.com/images/button_default.png"
+    "textures/ui/shop_icon.png": "https://example.com/images/shop_icon.png"
+    "textures/ui/admin_icon.png": "https://example.com/images/admin_icon.png"
+    "textures/ui/player_icon.png": "https://example.com/images/player_icon.png"
+
+# Example menu configurations with resource pack support
+menu:
+  main_menu:
+    command: "gui"
+    permission: "bedrockgui.use"
+    type: "SIMPLE"
+    title: "&6Main Menu"
+    description: "Welcome to the server!"
     buttons:
-      bottone_1:
-        text: "Your_name »  %player_name%"
-        onClick: "command say hi $1"
-      bottone_2:
-        text: "Other » thing"
-        onClick: "command say hello $1"
-  test_simple:
-    command: "test $1" #this will open only if you do /test <argument>
-    permission: "bedrockgui.permission"
-    type: SIMPLE #Title, description and a lot of cool buttons
-    title: "A simple title $1"
-    description: "Long text to fit in the menu"
+      shop:
+        text: "&aShop"
+        image: "textures/ui/shop_icon.png"  # Resource pack texture
+        onClick: "open shop_menu"
+      player:
+        text: "&bPlayer Menu"
+        image: "textures/ui/player_icon.png"  # Resource pack texture
+        onClick: "open player_menu"
+      admin:
+        text: "&cAdmin Panel"
+        image: "textures/ui/admin_icon.png"  # Resource pack texture
+        onClick: "open admin_menu"
+
+  shop_menu:
+    command: "shop"
+    permission: "bedrockgui.shop"
+    type: "SIMPLE"
+    title: "&6Server Shop"
+    description: "Buy items with your coins!"
     buttons:
-      button:
-        text: "Some fancy text with  » %player_name% as placeholder"
-        image: "https://geysermc.org/assets/images/geyser-88cf8a88a1c88cc983b4c44d6b75f7fe.png"
-        onClick: "command version"
-      without_click:
-        text: "Some fancy text with  »  %player_name% as placeholder"
-        image: "https://geysermc.org/assets/images/geyser-88cf8a88a1c88cc983b4c44d6b75f7fe.png"
-      without_image:
-        text: "Some fancy text with  »  %player_name% as placeholder"
-        onClick: "open test $1" #Will open the menu "test" and pass argument
-  test_custom:
-    type: CUSTOM
-    title: "Custom Form Example"
-    description: "Please provide the following information"
+      weapons:
+        text: "&cWeapons"
+        image: "textures/items/diamond_sword.png"
+        onClick: "command shop weapons"
+      armor:
+        text: "&9Armor"
+        image: "textures/items/diamond_chestplate.png"
+        onClick: "command shop armor"
+      tools:
+        text: "&eTools"
+        image: "textures/items/diamond_pickaxe.png"
+        onClick: "command shop tools"
+      back:
+        text: "&7Back"
+        image: "textures/ui/arrow_left.png"
+        onClick: "open main_menu"
+
+  player_menu:
+    command: "player"
+    type: "CUSTOM"
+    title: "&bPlayer Settings"
     components:
-      name_input:
-        type: input
-        text: "Enter your name"
-        placeholder: "Your name here"
-        default: "DefaultName"
-        action: "command say Hello $1" # Action for just this input
-      age_slider:
-        type: slider
-        text: "Select your age"
+      username:
+        type: "input"
+        text: "Enter your display name:"
+        placeholder: "Your name here..."
+        default: ""
+        action: "command nick $1"
+      fly_speed:
+        type: "slider"
+        text: "Flight Speed:"
         min: 1
-        max: 100
+        max: 10
         step: 1
-        default: 18
-        action: "command say You are $1 years old" # Action for just this slider
-      preferences_dropdown:
-        type: dropdown
-        text: "Select a preference"
-        options:
-          - "Option 1"
-          - "Option 2"
-          - "Option 3"
-        default: 0
-        action: "command say You selected $1" # Action for just this dropdown
-      enable_feature_toggle:
-        type: toggle
-        text: "Enable feature"
-        default: false
-        action: "command say Feature enabled: $1" # Action for just this toggle
+        default: 5
+        action: "command flyspeed $1"
+      notifications:
+        type: "toggle"
+        text: "Enable Notifications"
+        default: true
+        action: "command notifications $1"
     global_actions:
-      - "command say Player $name_input, age $age_slider, selected $preferences_dropdown, feature enabled: $enable_feature_toggle"
+      - "command save_settings $username $fly_speed $notifications"
+
+  admin_menu:
+    command: "admin"
+    permission: "bedrockgui.admin"
+    type: "SIMPLE"
+    title: "&cAdmin Panel"
+    description: "Administrative tools"
+    buttons:
+      teleport:
+        text: "&bTeleport Menu"
+        image: "textures/ui/teleport_icon.png"
+        onClick: "open teleport_menu"
+      moderation:
+        text: "&cModeration"
+        image: "textures/ui/moderation_icon.png"
+        onClick: "open moderation_menu"
+      server:
+        text: "&eServer Management"
+        image: "textures/ui/server_icon.png"
+        onClick: "open server_menu"
+
+# Message Configuration
+messages:
+  menu_not_found: "&cMenu not found!"
+  menu_nopex: "&cYou don't have permission to use this menu!"
+  menu_args: "&cThis menu requires &e{args} &carguments!"
+  resource_pack_loading: "&aLoading custom theme..."
+  resource_pack_loaded: "&aCustom theme loaded successfully!"
+  resource_pack_failed: "&cFailed to load custom theme. Using default."
+
+# Advanced Settings
+settings:
+  # Delay before showing forms after sending resource packs (milliseconds)
+  resource_pack_delay: 500
+  
+  # Whether to automatically send resource packs on player join
+  auto_send_packs: true
+  
+  # Whether to use fallback images when resource packs fail
+  use_fallback_images: true
+  
+  # Debug mode for resource pack loading
+  debug_resource_packs: false

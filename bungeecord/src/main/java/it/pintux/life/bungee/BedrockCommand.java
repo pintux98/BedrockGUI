@@ -1,13 +1,14 @@
 package it.pintux.life.bungee;
 
 import it.pintux.life.bungee.utils.BungeePlayer;
-import it.pintux.life.common.FloodgateUtil;
+import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.MessageData;
 import net.md_5.bungee.api.ChatColor;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,7 +52,12 @@ public class BedrockCommand extends Command implements TabExecutor {
                 return;
             }
 
-            if (!FloodgateUtil.isFloodgate(player.getUniqueId())) {
+            try {
+                if (!FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                    player.sendMessage(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null));
+                    return;
+                }
+            } catch (Exception e) {
                 player.sendMessage(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null));
                 return;
             }

@@ -3,7 +3,12 @@ package it.pintux.life.bungee;
 import it.pintux.life.bungee.utils.BungeeConfig;
 import it.pintux.life.bungee.utils.BungeeMessageConfig;
 import it.pintux.life.bungee.utils.BungeePlayer;
-import it.pintux.life.common.FloodgateUtil;
+import it.pintux.life.bungee.platform.BungeeCommandExecutor;
+import it.pintux.life.bungee.platform.BungeeEconomyManager;
+import it.pintux.life.bungee.platform.BungeeFormSender;
+import it.pintux.life.bungee.platform.BungeePlayerChecker;
+import it.pintux.life.bungee.platform.BungeeSoundManager;
+import org.geysermc.floodgate.api.FloodgateApi;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.MessageData;
@@ -59,12 +64,20 @@ public class BedrockGUI extends Plugin implements Listener {
         }
         MessageConfig configHandler = new BungeeMessageConfig(messageConfig);
         messageData = new MessageData(configHandler);
-        formMenuUtil = new FormMenuUtil(new BungeeConfig(mainConfig), messageData);
+
+        // Initialize platform implementations
+        BungeeCommandExecutor commandExecutor = new BungeeCommandExecutor();
+        BungeeSoundManager soundManager = new BungeeSoundManager();
+        BungeeEconomyManager economyManager = new BungeeEconomyManager();
+        BungeeFormSender formSender = new BungeeFormSender();
+
+        // Initialize FormMenuUtil with platform implementations
+        formMenuUtil = new FormMenuUtil(new BungeeConfig(mainConfig), messageData, commandExecutor, soundManager, economyManager, formSender);
     }
 
     @EventHandler(priority = EventPriority.LOW)
     public void onPlayerPreprocessCommand(ChatEvent event) {
-        if ((event.getSender() instanceof ProxiedPlayer)) {
+        if (!(event.getSender() instanceof ProxiedPlayer)) {
             return;
         }
         if (!(event.isCommand()) || !(event.isProxyCommand())) {
@@ -72,7 +85,11 @@ public class BedrockGUI extends Plugin implements Listener {
         }
         BungeePlayer player = new BungeePlayer((ProxiedPlayer) event.getSender());
 
-        if (!FloodgateUtil.isFloodgate(player.getUniqueId())) {
+        try {
+            if (!FloodgateApi.getInstance().isFloodgatePlayer(player.getUniqueId())) {
+                return;
+            }
+        } catch (Exception e) {
             return;
         }
         String message = event.getMessage();

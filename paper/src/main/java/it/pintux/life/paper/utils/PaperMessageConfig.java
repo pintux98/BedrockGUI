@@ -34,7 +34,7 @@ public class PaperMessageConfig implements MessageConfig {
     @Override
     public String setPlaceholders(FormPlayer player, String message) {
         if (getServer().getPluginManager().isPluginEnabled("PlaceholderAPI")) {
-            Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
+            Player bukkitPlayer = player == null ? null : Bukkit.getPlayer(player.getUniqueId());
             return PlaceholderAPI.setPlaceholders(bukkitPlayer, message);
         }
         return message;
