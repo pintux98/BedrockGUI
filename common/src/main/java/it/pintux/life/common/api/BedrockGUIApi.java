@@ -303,6 +303,13 @@ public class BedrockGUIApi {
     }
     
     /**
+     * Gets the FormMenuUtil instance
+     */
+    public FormMenuUtil getFormMenuUtil() {
+        return formMenuUtil;
+    }
+    
+    /**
      * Shuts down the API and cleans up resources
      */
     public void shutdown() {

@@ -15,6 +15,28 @@ public class PlaceholderUtil {
     private static final Pattern MISSING_PLACEHOLDER_PATTERN = Pattern.compile("\\$(\\w+)");
     
     /**
+     * Process all placeholders in a text string (overloaded for action handlers)
+     * @param text The text to process
+     * @param player The player for PlaceholderAPI processing
+     * @param messageData MessageData instance for PlaceholderAPI integration
+     * @return Processed text with all placeholders replaced
+     */
+    public static String processPlaceholders(String text, FormPlayer player, Object messageData) {
+        if (text == null) {
+            return null;
+        }
+        
+        String result = text;
+        
+        // Process PlaceholderAPI placeholders (% prefixed) if messageData is available
+        if (messageData instanceof MessageData && result.contains("%")) {
+            result = ((MessageData) messageData).replaceVariables(result, null, player);
+        }
+        
+        return result;
+    }
+    
+    /**
      * Process all placeholders in a text string
      * @param text The text to process
      * @param dynamicPlaceholders Map of dynamic placeholders ($ prefixed)

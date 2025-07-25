@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.PlaceholderUtil;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -47,7 +48,7 @@ public class RandomActionHandler implements ActionHandler {
         
         try {
             // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context);
+            String processedData = processPlaceholders(actionData.trim(), context, player);
             
             // Split by pipe character to get individual actions
             String[] actionOptions = processedData.split("\\|");
@@ -134,7 +135,7 @@ public class RandomActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context) {
+    private String processPlaceholders(String data, ActionContext context, FormPlayer player) {
         if (context == null) {
             return data;
         }
@@ -150,14 +151,16 @@ public class RandomActionHandler implements ActionHandler {
             }
         }
         
-        // Process form results as placeholders
-        Map<String, Object> formResults = context.getFormResults();
-        if (formResults != null && !formResults.isEmpty()) {
-            for (Map.Entry<String, Object> entry : formResults.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue().toString() : "";
-                result = result.replace(placeholder, value);
-            }
+        // Process dynamic placeholders (prefixed with $)
+        result = PlaceholderUtil.processDynamicPlaceholders(result, context.getPlaceholders());
+        
+        // Process form results
+        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        
+        // Process PlaceholderAPI placeholders if MessageData is available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageData = context.getMetadata().get("messageData");
+            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
         }
         
         return result;

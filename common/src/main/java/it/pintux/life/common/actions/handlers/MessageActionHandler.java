@@ -35,7 +35,7 @@ public class MessageActionHandler implements ActionHandler {
         }
         
         try {
-            String processedMessage = processPlaceholders(actionValue, context);
+            String processedMessage = processPlaceholders(actionValue, context, player);
             
             if (ValidationUtils.isNullOrEmpty(processedMessage.trim())) {
                 return ActionResult.failure("Processed message is empty");
@@ -83,15 +83,26 @@ public class MessageActionHandler implements ActionHandler {
      * Processes placeholders in the message
      * @param message the message with placeholders
      * @param context the action context containing placeholder values
+     * @param player the player for PlaceholderAPI processing
      * @return the processed message
      */
-    private String processPlaceholders(String message, ActionContext context) {
+    private String processPlaceholders(String message, ActionContext context, FormPlayer player) {
         if (context == null) {
             return message;
         }
         
+        // Process dynamic placeholders first
         String result = PlaceholderUtil.processDynamicPlaceholders(message, context.getPlaceholders());
         result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        
+        // Then process PlaceholderAPI placeholders if available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageDataObj = context.getMetadata().get("messageData");
+            if (messageDataObj instanceof it.pintux.life.common.utils.MessageData) {
+                it.pintux.life.common.utils.MessageData messageData = (it.pintux.life.common.utils.MessageData) messageDataObj;
+                result = PlaceholderUtil.processPlaceholders(result, null, player, messageData);
+            }
+        }
         
         return result;
     }

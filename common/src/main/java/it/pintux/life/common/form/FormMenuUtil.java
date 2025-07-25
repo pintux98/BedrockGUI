@@ -12,6 +12,7 @@ import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ConditionEvaluator;
+import it.pintux.life.common.utils.PlaceholderPopulator;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
@@ -93,24 +94,24 @@ public class FormMenuUtil {
     }
 
     private void loadFormMenus() {
-        for (String key : config.getKeys("menu")) {
-            String command = config.getString("menu." + key + ".command");
-            String permission = config.getString("menu." + key + ".permission");
-            String type = config.getString("menu." + key + ".type", "SIMPLE");
-            String title = config.getString("menu." + key + ".title", "Unknown");
-            String description = config.getString("menu." + key + ".description");
+        for (String key : config.getKeys("forms")) {
+            String command = config.getString("forms." + key + ".command");
+            String permission = config.getString("forms." + key + ".permission");
+            String type = config.getString("forms." + key + ".type", "SIMPLE");
+            String title = config.getString("forms." + key + ".title", "Unknown");
+            String description = config.getString("forms." + key + ".description");
             List<FormButton> buttons = new ArrayList<>();
             if (type.equalsIgnoreCase("SIMPLE") || type.equalsIgnoreCase("MODAL")) {
-                for (String button : config.getKeys("menu." + key + ".buttons")) {
-                    String text = config.getString("menu." + key + ".buttons." + button + ".text");
-                    String image = config.getString("menu." + key + ".buttons." + button + ".image");
-                    String onClick = config.getString("menu." + key + ".buttons." + button + ".onClick");
+                for (String button : config.getKeys("forms." + key + ".buttons")) {
+                    String text = config.getString("forms." + key + ".buttons." + button + ".text");
+                    String image = config.getString("forms." + key + ".buttons." + button + ".image");
+                    String onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     
                     // Check for conditional properties
-                    String showCondition = config.getString("menu." + key + ".buttons." + button + ".show_condition");
-                    String alternativeText = config.getString("menu." + key + ".buttons." + button + ".alternative_text");
-                    String alternativeImage = config.getString("menu." + key + ".buttons." + button + ".alternative_image");
-                    String alternativeOnClick = config.getString("menu." + key + ".buttons." + button + ".alternative_onClick");
+                    String showCondition = config.getString("forms." + key + ".buttons." + button + ".show_condition");
+                    String alternativeText = config.getString("forms." + key + ".buttons." + button + ".alternative_text");
+                    String alternativeImage = config.getString("forms." + key + ".buttons." + button + ".alternative_image");
+                    String alternativeOnClick = config.getString("forms." + key + ".buttons." + button + ".alternative_onClick");
                     
                     if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
                         // Create conditional button
@@ -120,10 +121,10 @@ public class FormMenuUtil {
                         conditionalButton.setAlternativeOnClick(alternativeOnClick);
                         
                         // Load conditional property modifications
-                        for (String condKey : config.getKeys("menu." + key + ".buttons." + button + ".conditions")) {
-                            String condition = config.getString("menu." + key + ".buttons." + button + ".conditions." + condKey + ".condition");
-                            String property = config.getString("menu." + key + ".buttons." + button + ".conditions." + condKey + ".property");
-                            String value = config.getString("menu." + key + ".buttons." + button + ".conditions." + condKey + ".value");
+                        for (String condKey : config.getKeys("forms." + key + ".buttons." + button + ".conditions")) {
+                            String condition = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".condition");
+                            String property = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".property");
+                            String value = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".value");
                             
                             if (condition != null && property != null && value != null) {
                                 conditionalButton.addConditionalProperty(condition, property, value);
@@ -146,17 +147,17 @@ public class FormMenuUtil {
 
             Map<String, Map<String, Object>> components = new HashMap<>();
             if (type.equalsIgnoreCase("CUSTOM")) {
-                for (String componentKey : config.getKeys("menu." + key + ".components")) {
-                    Map<String, Object> component = config.getValues("menu." + key + ".components." + componentKey);
+                for (String componentKey : config.getKeys("forms." + key + ".components")) {
+                    Map<String, Object> component = config.getValues("forms." + key + ".components." + componentKey);
                     components.put(componentKey, component);
                 }
             }
 
-            List<String> globalActions = config.getStringList("menu." + key + ".global_actions");
+            List<String> globalActions = config.getStringList("forms." + key + ".global_actions");
 
             FormMenu menu = new FormMenu(command, permission, title, description, type, buttons, components, globalActions);
             formMenus.put(key.toLowerCase(), menu);
-            logger.info("Loaded form menu: " + key + " type: " + type);
+            logger.info("Loaded form: " + key + " type: " + type);
         }
     }
 
@@ -211,12 +212,8 @@ public class FormMenuUtil {
             formBuilder.content(replacePlaceholders(content, placeholders, player, messageData));
         }
         
-        // Create action context for condition evaluation
-        ActionContext context = ActionContext.builder()
-            .placeholders(placeholders)
-            .placeholder("player", player.getName())
-            .placeholder("uuid", player.getUniqueId().toString())
-            .build();
+        // Create action context for condition evaluation with built-in placeholders
+        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
         // Get effective button properties
         String button1Text, button2Text;
@@ -289,12 +286,8 @@ public class FormMenuUtil {
 
         List<String> onClickActions = new ArrayList<>();
         
-        // Create action context for condition evaluation
-        ActionContext context = ActionContext.builder()
-            .placeholders(placeholders)
-            .placeholder("player", player.getName())
-            .placeholder("uuid", player.getUniqueId().toString())
-            .build();
+        // Create action context for condition evaluation with built-in placeholders
+        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
         for (FormButton button : buttons) {
             // Handle conditional buttons
@@ -356,12 +349,8 @@ public class FormMenuUtil {
         String title = replacePlaceholders(formMenu.getFormTitle(), placeholders, player, messageData);
         CustomForm.Builder formBuilder = CustomForm.builder().title(title);
 
-        // Create action context for condition evaluation
-        ActionContext context = ActionContext.builder()
-            .placeholders(placeholders)
-            .placeholder("player", player.getName())
-            .placeholder("uuid", player.getUniqueId().toString())
-            .build();
+        // Create action context for condition evaluation with built-in placeholders
+        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         Map<Integer, String> componentActions = new HashMap<>();
         Map<String, Object> componentResults = new HashMap<>();
@@ -480,12 +469,8 @@ public class FormMenuUtil {
         
         onClickAction = replacePlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders, player, messageData);
 
-        // Create action context
-        ActionContext context = ActionContext.builder()
-            .placeholders(placeholders)
-            .placeholder("player", player.getName())
-            .placeholder("uuid", player.getUniqueId().toString())
-            .build();
+        // Create action context with built-in placeholders
+        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         // Parse and execute action
         ActionExecutor.Action action = actionExecutor.parseAction(onClickAction);
@@ -531,17 +516,14 @@ public class FormMenuUtil {
             action = action.replace("$1", value);
         }
         
-        // Create action context with component value
-        ActionContext.Builder contextBuilder = ActionContext.builder()
-            .placeholder("player", player.getName())
-            .placeholder("uuid", player.getUniqueId().toString());
-            
+        // Create action context with component value and built-in placeholders
+        Map<String, String> customPlaceholders = new HashMap<>();
         if (value != null) {
-            contextBuilder.placeholder("value", value)
-                         .placeholder("1", value); // Support both {value} and {1}
+            customPlaceholders.put("value", value);
+            customPlaceholders.put("1", value); // Support both {value} and {1}
         }
         
-        ActionContext context = contextBuilder.build();
+        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
         
         // Parse and execute action
         ActionExecutor.Action parsedAction = actionExecutor.parseAction(action);

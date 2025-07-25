@@ -31,11 +31,19 @@ public class PaperConfig implements FormConfig {
 
     @Override
     public Set<String> getKeys(String path) {
-        return config.getConfigurationSection(path).getKeys(false);
+        var section = config.getConfigurationSection(path);
+        if (section == null) {
+            return new java.util.HashSet<>();
+        }
+        return section.getKeys(false);
     }
 
     @Override
     public Map<String, Object> getValues(String path) {
-        return config.getConfigurationSection(path).getValues(false);
+        var section = config.getConfigurationSection(path);
+        if (section == null) {
+            return new java.util.HashMap<>();
+        }
+        return section.getValues(false);
     }
 }

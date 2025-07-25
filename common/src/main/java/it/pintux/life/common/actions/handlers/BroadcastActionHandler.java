@@ -39,7 +39,7 @@ public class BroadcastActionHandler implements ActionHandler {
         
         try {
             // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context);
+            String processedData = processPlaceholders(actionData.trim(), context, player);
             String[] parts = processedData.split(":", 3);
             
             String message;
@@ -160,7 +160,7 @@ public class BroadcastActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context) {
+    private String processPlaceholders(String data, ActionContext context, FormPlayer player) {
         if (context == null) {
             return data;
         }
@@ -183,6 +183,15 @@ public class BroadcastActionHandler implements ActionHandler {
                 String placeholder = "{" + entry.getKey() + "}";
                 String value = entry.getValue() != null ? entry.getValue().toString() : "";
                 result = result.replace(placeholder, value);
+            }
+        }
+        
+        // Process PlaceholderAPI placeholders if available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageDataObj = context.getMetadata().get("messageData");
+            if (messageDataObj instanceof it.pintux.life.common.utils.MessageData) {
+                it.pintux.life.common.utils.MessageData messageData = (it.pintux.life.common.utils.MessageData) messageDataObj;
+                result = it.pintux.life.common.utils.PlaceholderUtil.processPlaceholders(result, null, player, messageData);
             }
         }
         

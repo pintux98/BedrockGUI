@@ -150,6 +150,16 @@ public class ActionExecutor {
             }
         }
         
+        // Check if the first word matches a registered action type
+        String[] words = trimmed.split("\\s+", 2);
+        if (words.length >= 1) {
+            String firstWord = words[0].toLowerCase();
+            if (registry.hasHandler(firstWord)) {
+                String value = words.length > 1 ? words[1] : "";
+                return new Action(firstWord, value);
+            }
+        }
+        
         // Default to command action if no type specified
         return new Action("command", trimmed);
     }

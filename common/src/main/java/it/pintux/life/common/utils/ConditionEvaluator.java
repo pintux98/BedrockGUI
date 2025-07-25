@@ -67,7 +67,7 @@ public class ConditionEvaluator {
                     }
                     String operator = parts[offset + 2];
                     String expectedValue = parts[offset + 3];
-                    conditionMet = evaluatePlaceholderCondition(conditionValue, operator, expectedValue, context);
+                    conditionMet = evaluatePlaceholderCondition(conditionValue, operator, expectedValue, context, player, messageData);
                     break;
                 default:
                     logger.warn("Unknown condition type: " + conditionType);
@@ -97,39 +97,45 @@ public class ConditionEvaluator {
     /**
      * Evaluates a placeholder-based condition
      */
-    private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionContext context) {
+    private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionContext context, FormPlayer player, MessageData messageData) {
         try {
+            // Process any remaining placeholders in the placeholder value (including PlaceholderAPI)
+            String processedPlaceholderValue = PlaceholderUtil.processPlaceholders(placeholderValue, context.getPlaceholders(), player, messageData);
+            
+            // Also process any remaining placeholders in the expected value (including PlaceholderAPI)
+            String processedExpectedValue = PlaceholderUtil.processPlaceholders(expectedValue, context.getPlaceholders(), player, messageData);
+            
             switch (operator.toLowerCase()) {
                 case "equals":
                 case "==":
-                    return placeholderValue.equals(expectedValue);
+                    return processedPlaceholderValue.equals(processedExpectedValue);
                 case "not_equals":
                 case "!=":
-                    return !placeholderValue.equals(expectedValue);
+                    return !processedPlaceholderValue.equals(processedExpectedValue);
                 case "contains":
-                    return placeholderValue.contains(expectedValue);
+                    return processedPlaceholderValue.contains(processedExpectedValue);
                 case "starts_with":
-                    return placeholderValue.startsWith(expectedValue);
+                    return processedPlaceholderValue.startsWith(processedExpectedValue);
                 case "ends_with":
-                    return placeholderValue.endsWith(expectedValue);
+                    return processedPlaceholderValue.endsWith(processedExpectedValue);
                 case ">":
                 case "greater_than":
-                    return compareNumeric(placeholderValue, expectedValue) > 0;
+                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) > 0;
                 case ">=":
                 case "greater_equal":
-                    return compareNumeric(placeholderValue, expectedValue) >= 0;
+                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) >= 0;
                 case "<":
                 case "less_than":
-                    return compareNumeric(placeholderValue, expectedValue) < 0;
+                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) < 0;
                 case "<=":
                 case "less_equal":
-                    return compareNumeric(placeholderValue, expectedValue) <= 0;
+                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) <= 0;
                 case "regex":
-                    return placeholderValue.matches(expectedValue);
+                    return processedPlaceholderValue.matches(processedExpectedValue);
                 case "empty":
-                    return placeholderValue == null || placeholderValue.trim().isEmpty();
+                    return processedPlaceholderValue == null || processedPlaceholderValue.trim().isEmpty();
                 case "not_empty":
-                    return placeholderValue != null && !placeholderValue.trim().isEmpty();
+                    return processedPlaceholderValue != null && !processedPlaceholderValue.trim().isEmpty();
                 default:
                     logger.warn("Unknown operator in placeholder condition: " + operator);
                     return false;

@@ -34,7 +34,7 @@ public class CommandActionHandler implements ActionHandler {
         }
 
         try {
-            String processedCommand = processPlaceholders(actionValue, context);
+            String processedCommand = processPlaceholders(actionValue, context, player);
 
             if (processedCommand.startsWith("/")) {
                 processedCommand = processedCommand.substring(1);
@@ -101,13 +101,19 @@ public class CommandActionHandler implements ActionHandler {
      * @param context the action context containing placeholder values
      * @return the processed command
      */
-    private String processPlaceholders(String command, ActionContext context) {
+    private String processPlaceholders(String command, ActionContext context, FormPlayer player) {
         if (context == null) {
             return command;
         }
 
         String result = PlaceholderUtil.processDynamicPlaceholders(command, context.getPlaceholders());
         result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        
+        // Process PlaceholderAPI placeholders if MessageData is available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageData = context.getMetadata().get("messageData");
+            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
+        }
 
         return result;
     }

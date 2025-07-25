@@ -43,7 +43,7 @@ public class OpenFormActionHandler implements ActionHandler {
         }
         
         try {
-            String processedMenuName = processPlaceholders(actionValue, context);
+            String processedMenuName = processPlaceholders(actionValue, context, player);
             
             if (!ValidationUtils.isValidMenuName(processedMenuName)) {
                 return ActionResult.failure("Invalid menu name: " + processedMenuName);
@@ -99,15 +99,22 @@ public class OpenFormActionHandler implements ActionHandler {
      * Processes placeholders in the menu name
      * @param menuName the menu name with placeholders
      * @param context the action context containing placeholder values
+     * @param player the player for PlaceholderAPI processing
      * @return the processed menu name
      */
-    private String processPlaceholders(String menuName, ActionContext context) {
+    private String processPlaceholders(String menuName, ActionContext context, FormPlayer player) {
         if (context == null) {
             return menuName;
         }
         
         String result = PlaceholderUtil.processDynamicPlaceholders(menuName, context.getPlaceholders());
         result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        
+        // Process PlaceholderAPI placeholders if MessageData is available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageData = context.getMetadata().get("messageData");
+            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
+        }
         
         return result;
     }

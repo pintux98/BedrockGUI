@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.PlaceholderUtil;
 
 import java.util.Map;
 
@@ -40,7 +41,7 @@ public class ServerActionHandler implements ActionHandler {
         
         try {
             // Process placeholders in the command
-            String processedCommand = processPlaceholders(actionData.trim(), context);
+            String processedCommand = processPlaceholders(actionData.trim(), context, player);
             
             logger.info("Executing server command for player " + player.getName() + ": " + processedCommand);
             
@@ -81,30 +82,31 @@ public class ServerActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String command, ActionContext context) {
+    private String processPlaceholders(String command, ActionContext context, FormPlayer player) {
         if (context == null) {
             return command;
         }
         
         String result = command;
-        Map<String, String> placeholders = context.getPlaceholders();
         
-        if (placeholders != null && !placeholders.isEmpty()) {
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
+        // Replace placeholders from context
+        if (context.getPlaceholders() != null) {
+            for (Map.Entry<String, String> entry : context.getPlaceholders().entrySet()) {
                 String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue() : "";
-                result = result.replace(placeholder, value);
+                result = result.replace(placeholder, entry.getValue());
             }
         }
         
-        // Process form results as placeholders
-        Map<String, Object> formResults = context.getFormResults();
-        if (formResults != null && !formResults.isEmpty()) {
-            for (Map.Entry<String, Object> entry : formResults.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue().toString() : "";
-                result = result.replace(placeholder, value);
-            }
+        // Process dynamic placeholders (prefixed with $)
+        result = PlaceholderUtil.processDynamicPlaceholders(result, context.getPlaceholders());
+        
+        // Process form results
+        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        
+        // Process PlaceholderAPI placeholders if MessageData is available
+        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
+            Object messageData = context.getMetadata().get("messageData");
+            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
         }
         
         return result;

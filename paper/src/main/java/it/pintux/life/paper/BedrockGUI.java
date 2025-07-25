@@ -77,9 +77,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         //     formSender
         // );
         
-        // Use basic form utility for now
-        formMenuUtil = new FormMenuUtil(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender);
-        getLogger().info("Using basic FormMenuUtil");
+        // Use the FormMenuUtil from the API to avoid duplicate registration
+        formMenuUtil = api.getFormMenuUtil();
+        getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
         getLogger().info("BedrockGUI loaded and enabled");
         //getLogger().info("BedrockGUI loaded with Resource Pack API support");

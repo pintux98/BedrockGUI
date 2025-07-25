@@ -58,6 +58,16 @@ public class PaperSoundManager implements PlatformSoundManager {
      * @return The Sound enum, or null if not found
      */
     private Sound parseSound(String soundName) {
+        if (soundName == null || soundName.isEmpty()) {
+            return null;
+        }
+        
+        // Handle legacy sound names first
+        Sound legacySound = parseLegacySound(soundName);
+        if (legacySound != null) {
+            return legacySound;
+        }
+        
         try {
             // Try to parse as enum name first
             return Sound.valueOf(soundName.toUpperCase());
@@ -92,6 +102,55 @@ public class PaperSoundManager implements PlatformSoundManager {
                 }
                 return null;
             }
+        }
+    }
+    
+    /**
+     * Parse legacy sound names to modern Bukkit Sound enums.
+     * 
+     * @param soundName The legacy sound name
+     * @return The Sound enum, or null if not a known legacy sound
+     */
+    private Sound parseLegacySound(String soundName) {
+        String lowerName = soundName.toLowerCase();
+        
+        // Common legacy sound mappings
+        switch (lowerName) {
+            case "random.levelup":
+            case "entity.player.levelup":
+                return Sound.ENTITY_PLAYER_LEVELUP;
+            case "random.click":
+            case "ui.button.click":
+                return Sound.UI_BUTTON_CLICK;
+            case "random.pop":
+            case "entity.item.pickup":
+                return Sound.ENTITY_ITEM_PICKUP;
+            case "random.orb":
+            case "entity.experience_orb.pickup":
+                return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
+            case "mob.villager.yes":
+            case "entity.villager.yes":
+                return Sound.ENTITY_VILLAGER_YES;
+            case "mob.villager.no":
+            case "entity.villager.no":
+                return Sound.ENTITY_VILLAGER_NO;
+            case "note.pling":
+            case "block.note_block.pling":
+                return Sound.BLOCK_NOTE_BLOCK_PLING;
+            case "note.harp":
+            case "block.note_block.harp":
+                return Sound.BLOCK_NOTE_BLOCK_HARP;
+            case "random.break":
+            case "entity.item.break":
+                return Sound.ENTITY_ITEM_BREAK;
+            case "dig.stone":
+            case "block.stone.break":
+                return Sound.BLOCK_STONE_BREAK;
+            case "step.stone":
+            case "block.stone.step":
+                return Sound.BLOCK_STONE_STEP;
+            default:
+                return null;
         }
     }
 }
