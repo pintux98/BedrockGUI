@@ -1,6 +1,0 @@
-id: bgui
-name: BedrockGUI-Geyser
-version: '${version}'
-main: it.pintux.life.geyser.BedrockGUIExtension
-authors: [pintux]
-api: "2.2.0"

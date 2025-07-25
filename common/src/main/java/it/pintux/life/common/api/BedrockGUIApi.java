@@ -1,10 +1,11 @@
 package it.pintux.life.common.api;
 
 import it.pintux.life.common.actions.*;
+import it.pintux.life.common.actions.handlers.ResourcePackActionHandler;
 import it.pintux.life.common.form.FormMenuUtil;
-import it.pintux.life.common.form.obj.*;
 import it.pintux.life.common.platform.*;
 import it.pintux.life.common.utils.*;
+import it.pintux.life.common.utils.Logger;
 import org.geysermc.cumulus.form.*;
 import org.geysermc.cumulus.util.FormImage;
 
@@ -12,7 +13,6 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 
 /**
@@ -39,6 +39,7 @@ public class BedrockGUIApi {
     private final ActionRegistry actionRegistry;
     private final PlatformFormSender formSender;
     private final MessageData messageData;
+    private final PlatformResourcePackManager resourcePackManager;
     
     // Form cache for dynamic forms
     private final Map<String, DynamicForm> dynamicForms = new HashMap<>();
@@ -53,15 +54,26 @@ public class BedrockGUIApi {
                         PlatformCommandExecutor commandExecutor,
                         PlatformSoundManager soundManager,
                         PlatformEconomyManager economyManager,
-                        PlatformFormSender formSender) {
+                        PlatformFormSender formSender,
+                        PlatformResourcePackManager resourcePackManager) {
         this.messageData = messageData;
         this.formSender = formSender;
+        this.resourcePackManager = resourcePackManager;
         this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
         
+        // Register resource pack action handler if resource pack manager is available
+        // The handler will check if resource packs are enabled at runtime
+        if (resourcePackManager != null) {
+            registerActionHandler(new ResourcePackActionHandler(this, Logger.getLogger(BedrockGUIApi.class)));
+            logger.info("ResourcePack action handler registered (enabled: " + resourcePackManager.isEnabled() + ")");
+        } else {
+            logger.warn("ResourcePack manager not available - ResourcePack actions will not be registered");
+        }
+        
         instance = this;
-        logger.info("BedrockGUIApi initialized with enhanced features");
+        logger.info("BedrockGUIApi initialized with enhanced features and resource pack support");
     }
     
     /**
@@ -307,6 +319,39 @@ public class BedrockGUIApi {
      */
     public FormMenuUtil getFormMenuUtil() {
         return formMenuUtil;
+    }
+    
+    /**
+     * Gets the resource pack manager instance
+     */
+    public PlatformResourcePackManager getResourcePackManager() {
+        return resourcePackManager;
+    }
+    
+    /**
+     * Handles player join events for resource pack management
+     */
+    public void onPlayerJoin(UUID playerId) {
+        if (resourcePackManager != null && resourcePackManager.isEnabled()) {
+            // Send default resource pack to new players
+            try {
+                // Use a small delay to ensure player is fully loaded
+                CompletableFuture.runAsync(() -> {
+                    try {
+                        Thread.sleep(1000); // 1 second delay
+                        String defaultPack = "ui_enhanced"; // Default pack from config
+                        boolean success = resourcePackManager.sendResourcePack(playerId, defaultPack);
+                        if (success) {
+                            logger.info("Sent default resource pack to player: " + playerId);
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                    }
+                });
+            } catch (Exception e) {
+                logger.warn("Failed to send default resource pack to player " + playerId + ": " + e.getMessage());
+            }
+        }
     }
     
     /**

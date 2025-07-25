@@ -1,0 +1,61 @@
+# BedrockGUI Resource Pack Configuration Example
+# Copy this configuration to your plugin's config.yml to enable resource pack support
+
+# Resource Pack Configuration
+resource_packs:
+  # Enable or disable resource pack functionality
+  enabled: true
+  
+  # Available resource packs (name -> URL mapping)
+  packs:
+    ui_enhanced: "https://example.com/packs/ui_enhanced.zip"
+    custom_icons: "https://example.com/packs/custom_icons.zip"
+    admin_tools: "https://example.com/packs/admin_tools.zip"
+    dark_theme: "https://example.com/packs/dark_theme.zip"
+    
+  # Default resource pack for menus (optional)
+  default_menu_pack: "ui_enhanced"
+  
+  # Auto-send resource pack when player joins (optional)
+  auto_send_on_join: false
+  
+  # Resource pack settings
+  settings:
+    # Force resource pack (kick player if they decline)
+    force: false
+    # Custom prompt message
+    prompt: "This server uses custom resource packs to enhance your experience!"
+    
+# Example form configuration using resource pack actions
+forms:
+  resource_pack_menu:
+    command: "rpmenu"
+    permission: "bedrockgui.resourcepack"
+    type: "SIMPLE"
+    title: "Resource Pack Manager"
+    description: "Manage your resource packs"
+    buttons:
+      send_ui:
+        text: "Enable UI Pack"
+        image: "textures/ui/icon_setting"
+        onClick: "resourcepack:send:ui_enhanced"
+      send_dark:
+        text: "Enable Dark Theme"
+        image: "textures/ui/dark_mode"
+        onClick: "resourcepack:send:dark_theme"
+      check_status:
+        text: "Check Pack Status"
+        image: "textures/ui/info"
+        onClick: "resourcepack:list"
+      remove_all:
+        text: "Remove All Packs"
+        image: "textures/ui/trash"
+        onClick: "resourcepack:remove:all"
+        
+# Resource pack action examples:
+# resourcepack:send:ui_enhanced     - Send the ui_enhanced pack
+# resourcepack:remove:ui_enhanced   - Remove the ui_enhanced pack
+# resourcepack:remove:all           - Remove all packs
+# resourcepack:check:ui_enhanced    - Check if player has ui_enhanced pack
+# resourcepack:list                 - List all available packs
+# ui_enhanced                       - Direct pack name (backward compatibility)

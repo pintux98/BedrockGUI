@@ -66,8 +66,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = new PaperEconomyManager(this);
         PaperFormSender formSender = new PaperFormSender();
+        PaperResourcePackManager resourcePackManager = new PaperResourcePackManager(this);
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager);
 
         // EnhancedFormMenuUtil enhancedFormMenuUtil = new EnhancedFormMenuUtil(
         //     new PaperConfig(getConfig()), 
@@ -174,26 +175,26 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     /**
      * Handles player join events for resource pack management
      */
-    //@EventHandler
-    //public void onPlayerJoin(PlayerJoinEvent event) {
-    //    PaperPlayerChecker playerChecker = new PaperPlayerChecker();
-    //    if (api != null && playerChecker.isBedrockPlayer(event.getPlayer().getUniqueId())) {
-    //        // Send default resource packs to Bedrock players
-    //        getServer().getScheduler().runTaskLater(this, () -> {
-    //            api.onPlayerJoin(event.getPlayer().getUniqueId());
-    //        }, 20L); // 1 second delay to ensure player is fully loaded
-    //    }
-    //}
-//
-    ///**
-    // * Handles player quit events for cleanup
-    // */
-    //@EventHandler
-    //public void onPlayerQuit(PlayerQuitEvent event) {
-    //    if (api != null) {
-    //        api.onPlayerDisconnect(event.getPlayer().getUniqueId());
-    //    }
-    //}
+    @EventHandler
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
+        if (api != null && playerChecker.isBedrockPlayer(event.getPlayer().getUniqueId())) {
+            // Send default resource packs to Bedrock players
+            getServer().getScheduler().runTaskLater(this, () -> {
+                api.onPlayerJoin(event.getPlayer().getUniqueId());
+            }, 20L); // 1 second delay to ensure player is fully loaded
+        }
+    }
+
+    /**
+     * Handles player quit events for cleanup
+     */
+    @EventHandler
+    public void onPlayerQuit(PlayerQuitEvent event) {
+        if (api != null && api.getResourcePackManager() != null) {
+            ((PaperResourcePackManager) api.getResourcePackManager()).onPlayerDisconnect(event.getPlayer().getUniqueId());
+        }
+    }
 
     /**
      * Gets the enhanced form menu utility
