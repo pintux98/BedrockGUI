@@ -2,6 +2,7 @@ package it.pintux.life.common.form.obj;
 
 import java.util.Map;
 import java.util.HashMap;
+import java.util.StringJoiner;
 
 /**
  * Represents a button that can be conditionally shown or modified based on conditions.
@@ -73,29 +74,83 @@ public class ConditionalButton extends FormButton {
     
     /**
      * Checks if the button should be shown based on its show condition
+     * 
+     * Note: This method only checks if a condition exists, it doesn't evaluate it.
+     * The actual condition evaluation is done in FormMenuUtil using ConditionEvaluator.
      */
-    public boolean shouldShow() {
-        return showCondition == null || showCondition.trim().isEmpty();
+    public boolean hasShowCondition() {
+        return showCondition != null && !showCondition.trim().isEmpty();
     }
     
     /**
      * Gets the effective text based on conditions
+     * 
+     * @param condition The condition that was evaluated to true, or null if using alternative
+     * @return The effective text to display
      */
-    public String getEffectiveText() {
+    public String getEffectiveText(String condition) {
+        // If a specific condition was met
+        if (condition != null) {
+            ConditionalProperty property = conditionalProperties.get(condition);
+            if (property != null && "text".equals(property.getProperty())) {
+                return property.getValue();
+            }
+        }
+        
+        // If using alternative text
+        if (alternativeText != null) {
+            return alternativeText;
+        }
+        
+        // Default to base text
         return getText();
     }
     
     /**
      * Gets the effective image based on conditions
+     * 
+     * @param condition The condition that was evaluated to true, or null if using alternative
+     * @return The effective image to display
      */
-    public String getEffectiveImage() {
+    public String getEffectiveImage(String condition) {
+        // If a specific condition was met
+        if (condition != null) {
+            ConditionalProperty property = conditionalProperties.get(condition);
+            if (property != null && "image".equals(property.getProperty())) {
+                return property.getValue();
+            }
+        }
+        
+        // If using alternative image
+        if (alternativeImage != null) {
+            return alternativeImage;
+        }
+        
+        // Default to base image
         return getImage();
     }
     
     /**
      * Gets the effective onClick action based on conditions
+     * 
+     * @param condition The condition that was evaluated to true, or null if using alternative
+     * @return The effective onClick action to execute
      */
-    public String getEffectiveOnClick() {
+    public String getEffectiveOnClick(String condition) {
+        // If a specific condition was met
+        if (condition != null) {
+            ConditionalProperty property = conditionalProperties.get(condition);
+            if (property != null && "onClick".equals(property.getProperty())) {
+                return property.getValue();
+            }
+        }
+        
+        // If using alternative onClick
+        if (alternativeOnClick != null) {
+            return alternativeOnClick;
+        }
+        
+        // Default to base onClick
         return getOnClick();
     }
     
@@ -118,5 +173,24 @@ public class ConditionalButton extends FormButton {
         public String getValue() {
             return value;
         }
+        
+        @Override
+        public String toString() {
+            return property + "=" + value;
+        }
+    }
+    
+    @Override
+    public String toString() {
+        return new StringJoiner(", ", ConditionalButton.class.getSimpleName() + "[", "]")
+                .add("text='" + getText() + "'")
+                .add("image='" + getImage() + "'")
+                .add("onClick='" + getOnClick() + "'")
+                .add("showCondition='" + showCondition + "'")
+                .add("alternativeText='" + alternativeText + "'")
+                .add("alternativeImage='" + alternativeImage + "'")
+                .add("alternativeOnClick='" + alternativeOnClick + "'")
+                .add("conditionalProperties=" + conditionalProperties)
+                .toString();
     }
 }

@@ -28,8 +28,9 @@ public class PaperPlayer implements FormPlayer {
     }
 
     @Override
-    public void executeAction(String action) {
+    public boolean executeAction(String action) {
         player.chat(action);
+        return true;
     }
 
     @Override

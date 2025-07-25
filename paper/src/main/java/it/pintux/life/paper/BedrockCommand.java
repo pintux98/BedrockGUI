@@ -35,8 +35,8 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
             sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name>");
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui pack <reload|list|send> [args]");
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui themes [player]");
+            //sender.sendMessage(ChatColor.RED + "Usage: /bgui pack <reload|list|send> [args]");
+            //sender.sendMessage(ChatColor.RED + "Usage: /bgui themes [player]");
             return true;
         }
         String arg = args[0];
@@ -46,8 +46,8 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             plugin.reloadData();
-            plugin.reloadResourcePacks();
-            sender.sendMessage(ChatColor.GREEN + "Reloaded BedrockGUI and Resource Packs!");
+            //plugin.reloadResourcePacks();
+            sender.sendMessage(ChatColor.GREEN + "Reloaded BedrockGUI and features!");
             return true;
         }
 
@@ -66,104 +66,99 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             String[] menuArgs = Arrays.copyOfRange(args, 2, args.length);
             PaperPlayer player1 = new PaperPlayer(player);
 
-            // Use enhanced form utility if resource packs are enabled
-            if (plugin.getApi().isResourcePacksEnabled()) {
-//                plugin.getEnhancedFormMenuUtil().openForm(player1, menuName, menuArgs);
-                plugin.getFormMenuUtil().openForm(player1, menuName, menuArgs);
-            } else {
-                plugin.getFormMenuUtil().openForm(player1, menuName, menuArgs);
-            }
+            // Open form using the form menu utility
+            plugin.getFormMenuUtil().openForm(player1, menuName, menuArgs);
         }
 
-        if (arg.equalsIgnoreCase("pack")) {
-            if (!player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
-                return true;
-            }
+        //if (arg.equalsIgnoreCase("pack")) {
+        //    if (!player.hasPermission("bedrockgui.admin")) {
+        //        sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
+        //        return true;
+        //    }
+//
+        //    if (args.length < 2) {
+        //        sender.sendMessage(ChatColor.RED + "Usage: /bgui pack <reload|list|send> [args]");
+        //        return true;
+        //    }
+//
+        //    String packAction = args[1];
+//
+        //    if (packAction.equalsIgnoreCase("reload")) {
+        //        plugin.reloadResourcePacks();
+        //        sender.sendMessage(ChatColor.GREEN + "Resource packs reloaded!");
+        //        return true;
+        //    }
+//
+        //    if (packAction.equalsIgnoreCase("list")) {
+        //        if (!plugin.getApi().isResourcePacksEnabled()) {
+        //            sender.sendMessage(ChatColor.RED + "Resource packs are disabled!");
+        //            return true;
+        //        }
+//
+        //        Set<String> packs = plugin.getApi().getResourcePackManager().getLoadedPacks();
+        //        sender.sendMessage(ChatColor.GREEN + "Loaded Resource Packs:");
+        //        for (String pack : packs) {
+        //            sender.sendMessage(ChatColor.YELLOW + "- " + pack);
+        //        }
+        //        return true;
+        //    }
+//
+        //    if (packAction.equalsIgnoreCase("send")) {
+        //        if (args.length < 4) {
+        //            sender.sendMessage(ChatColor.RED + "Usage: /bgui pack send <player> <menu_name>");
+        //            return true;
+        //        }
+//
+        //        Player targetPlayer = plugin.getServer().getPlayer(args[2]);
+        //        if (targetPlayer == null) {
+        //            sender.sendMessage(ChatColor.RED + "Player not found!");
+        //            return true;
+        //        }
+//
+        //        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
+        //        PaperPlayerChecker targetPlayerChecker = new PaperPlayerChecker();
+        //        if (!targetPlayerChecker.isBedrockPlayer(targetPlayer.getUniqueId())) {
+        //            sender.sendMessage(ChatColor.RED + "Target player is not a Bedrock player!");
+        //            return true;
+        //        }
+//
+        //        String menuName = args[3];
+        //        plugin.getApi().sendResourcePack(targetPlayer.getUniqueId(), menuName);
+        //        sender.sendMessage(ChatColor.GREEN + "Sent resource pack for menu '" + menuName + "' to " + targetPlayer.getName());
+        //        return true;
+        //    }
+        //}
 
-            if (args.length < 2) {
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui pack <reload|list|send> [args]");
-                return true;
-            }
-
-            String packAction = args[1];
-
-            if (packAction.equalsIgnoreCase("reload")) {
-                plugin.reloadResourcePacks();
-                sender.sendMessage(ChatColor.GREEN + "Resource packs reloaded!");
-                return true;
-            }
-
-            if (packAction.equalsIgnoreCase("list")) {
-                if (!plugin.getApi().isResourcePacksEnabled()) {
-                    sender.sendMessage(ChatColor.RED + "Resource packs are disabled!");
-                    return true;
-                }
-
-                Set<String> packs = plugin.getApi().getResourcePackManager().getLoadedPacks();
-                sender.sendMessage(ChatColor.GREEN + "Loaded Resource Packs:");
-                for (String pack : packs) {
-                    sender.sendMessage(ChatColor.YELLOW + "- " + pack);
-                }
-                return true;
-            }
-
-            if (packAction.equalsIgnoreCase("send")) {
-                if (args.length < 4) {
-                    sender.sendMessage(ChatColor.RED + "Usage: /bgui pack send <player> <menu_name>");
-                    return true;
-                }
-
-                Player targetPlayer = plugin.getServer().getPlayer(args[2]);
-                if (targetPlayer == null) {
-                    sender.sendMessage(ChatColor.RED + "Player not found!");
-                    return true;
-                }
-
-                PaperPlayerChecker playerChecker = new PaperPlayerChecker();
-                PaperPlayerChecker targetPlayerChecker = new PaperPlayerChecker();
-                if (!targetPlayerChecker.isBedrockPlayer(targetPlayer.getUniqueId())) {
-                    sender.sendMessage(ChatColor.RED + "Target player is not a Bedrock player!");
-                    return true;
-                }
-
-                String menuName = args[3];
-                plugin.getApi().sendResourcePack(targetPlayer.getUniqueId(), menuName);
-                sender.sendMessage(ChatColor.GREEN + "Sent resource pack for menu '" + menuName + "' to " + targetPlayer.getName());
-                return true;
-            }
-        }
-
-        if (arg.equalsIgnoreCase("themes")) {
-            Player targetPlayer = player;
-
-            if (args.length > 1 && player.hasPermission("bedrockgui.admin")) {
-                targetPlayer = plugin.getServer().getPlayer(args[1]);
-                if (targetPlayer == null) {
-                    sender.sendMessage(ChatColor.RED + "Player not found!");
-                    return true;
-                }
-            }
-
-            PaperPlayerChecker themePlayerChecker = new PaperPlayerChecker();
-            if (!themePlayerChecker.isBedrockPlayer(targetPlayer.getUniqueId())) {
-                sender.sendMessage(ChatColor.RED + "Target player is not a Bedrock player!");
-                return true;
-            }
-
-            PaperPlayer paperPlayer = new PaperPlayer(targetPlayer);
-            Set<String> themes = plugin.getApi().getAvailableThemes(paperPlayer);
-
-            if (themes.isEmpty()) {
-                sender.sendMessage(ChatColor.YELLOW + "No themes available for " + targetPlayer.getName());
-            } else {
-                sender.sendMessage(ChatColor.GREEN + "Available themes for " + targetPlayer.getName() + ":");
-                for (String theme : themes) {
-                    sender.sendMessage(ChatColor.YELLOW + "- " + theme);
-                }
-            }
-            return true;
-        }
+        //if (arg.equalsIgnoreCase("themes")) {
+        //    Player targetPlayer = player;
+//
+        //    if (args.length > 1 && player.hasPermission("bedrockgui.admin")) {
+        //        targetPlayer = plugin.getServer().getPlayer(args[1]);
+        //        if (targetPlayer == null) {
+        //            sender.sendMessage(ChatColor.RED + "Player not found!");
+        //            return true;
+        //        }
+        //    }
+//
+        //    PaperPlayerChecker themePlayerChecker = new PaperPlayerChecker();
+        //    if (!themePlayerChecker.isBedrockPlayer(targetPlayer.getUniqueId())) {
+        //        sender.sendMessage(ChatColor.RED + "Target player is not a Bedrock player!");
+        //        return true;
+        //    }
+//
+        //    PaperPlayer paperPlayer = new PaperPlayer(targetPlayer);
+        //    Set<String> themes = plugin.getApi().getAvailableThemes(paperPlayer);
+//
+        //    if (themes.isEmpty()) {
+        //        sender.sendMessage(ChatColor.YELLOW + "No themes available for " + targetPlayer.getName());
+        //    } else {
+        //        sender.sendMessage(ChatColor.GREEN + "Available themes for " + targetPlayer.getName() + ":");
+        //        for (String theme : themes) {
+        //            sender.sendMessage(ChatColor.YELLOW + "- " + theme);
+        //        }
+        //    }
+        //    return true;
+        //}
 
         return true;
     }
@@ -182,8 +177,8 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             List<String> commands = new ArrayList<>();
             commands.add("reload");
             commands.add("open");
-            commands.add("pack");
-            commands.add("themes");
+            //commands.add("pack");
+            //commands.add("themes");
             return commands;
         }
         if (args.length == 2 && args[0].equalsIgnoreCase("open")) {
@@ -194,37 +189,37 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                     .collect(Collectors.toList());
         }
 
-        if (args.length == 2 && args[0].equalsIgnoreCase("pack")) {
-            List<String> packCommands = new ArrayList<>();
-            packCommands.add("reload");
-            packCommands.add("list");
-            packCommands.add("send");
-            return packCommands.stream()
-                    .filter(c -> c.startsWith(args[1].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        if (args.length == 3 && args[0].equalsIgnoreCase("pack") && args[1].equalsIgnoreCase("send")) {
-            return plugin.getServer().getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        if (args.length == 4 && args[0].equalsIgnoreCase("pack") && args[1].equalsIgnoreCase("send")) {
-            return Stream.of(plugin.getFormMenuUtil().getFormMenus().keySet())
-                    .flatMap(Set::stream)
-                    .map(String::toLowerCase)
-                    .filter(c -> c.startsWith(args[3].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
-
-        if (args.length == 2 && args[0].equalsIgnoreCase("themes")) {
-            return plugin.getServer().getOnlinePlayers().stream()
-                    .map(Player::getName)
-                    .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
-                    .collect(Collectors.toList());
-        }
+        //if (args.length == 2 && args[0].equalsIgnoreCase("pack")) {
+        //    List<String> packCommands = new ArrayList<>();
+        //    packCommands.add("reload");
+        //    packCommands.add("list");
+        //    packCommands.add("send");
+        //    return packCommands.stream()
+        //            .filter(c -> c.startsWith(args[1].toLowerCase()))
+        //            .collect(Collectors.toList());
+        //}
+//
+        //if (args.length == 3 && args[0].equalsIgnoreCase("pack") && args[1].equalsIgnoreCase("send")) {
+        //    return plugin.getServer().getOnlinePlayers().stream()
+        //            .map(Player::getName)
+        //            .filter(name -> name.toLowerCase().startsWith(args[2].toLowerCase()))
+        //            .collect(Collectors.toList());
+        //}
+//
+        //if (args.length == 4 && args[0].equalsIgnoreCase("pack") && args[1].equalsIgnoreCase("send")) {
+        //    return Stream.of(plugin.getFormMenuUtil().getFormMenus().keySet())
+        //            .flatMap(Set::stream)
+        //            .map(String::toLowerCase)
+        //            .filter(c -> c.startsWith(args[3].toLowerCase()))
+        //            .collect(Collectors.toList());
+        //}
+//
+        //if (args.length == 2 && args[0].equalsIgnoreCase("themes")) {
+        //    return plugin.getServer().getOnlinePlayers().stream()
+        //            .map(Player::getName)
+        //            .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+        //            .collect(Collectors.toList());
+        //}
 
         return new ArrayList<>();
     }

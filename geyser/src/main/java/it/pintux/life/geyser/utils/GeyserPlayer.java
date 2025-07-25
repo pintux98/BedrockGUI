@@ -1,12 +1,7 @@
 package it.pintux.life.geyser.utils;
 
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionExecutor;
-import it.pintux.life.common.actions.ActionResult;
-import it.pintux.life.geyser.BedrockGUIExtension;
 import org.geysermc.geyser.api.connection.GeyserConnection;
-import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.cumulus.form.Form;
 
 import java.util.UUID;
@@ -51,8 +46,9 @@ public class GeyserPlayer implements FormPlayer {
     }
     
     @Override
-    public void executeAction(String action) {
+    public boolean executeAction(String action) {
         sendMessage("[Action] " + action);
+        return true;
     }
     
     public void executeCommand(String command) {

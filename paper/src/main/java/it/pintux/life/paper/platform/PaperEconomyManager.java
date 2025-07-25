@@ -2,22 +2,26 @@ package it.pintux.life.paper.platform;
 
 import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
-import net.milkbowl.vault.economy.Economy;
+import it.pintux.life.paper.BedrockGUI;
+import net.milkbowl.vault2.economy.Economy;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.RegisteredServiceProvider;
+
+import java.math.BigDecimal;
 
 /**
  * Paper implementation of PlatformEconomyManager using Vault API.
  */
 public class PaperEconomyManager implements PlatformEconomyManager {
-    
+
     private Economy economy;
-    
-    public PaperEconomyManager() {
+    private BedrockGUI plugin;
+
+    public PaperEconomyManager(BedrockGUI plugin) {
+        this.plugin = plugin;
         setupEconomy();
     }
-    
+
     private void setupEconomy() {
         try {
             if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
@@ -32,97 +36,92 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             economy = null;
         }
     }
-    
+
     @Override
     public boolean isEconomyAvailable() {
         return economy != null;
     }
-    
+
     @Override
-    public double getBalance(FormPlayer player) {
+    public BigDecimal getBalance(FormPlayer player) {
         if (!isEconomyAvailable()) {
-            return 0.0;
+            return BigDecimal.valueOf(0.0);
         }
         try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
-            return economy.getBalance(offlinePlayer);
+            return economy.balance(plugin.getName(), player.getUniqueId());
         } catch (Exception e) {
-            return 0.0;
+            return BigDecimal.valueOf(0.0);
         }
     }
-    
+
     @Override
-    public boolean addMoney(FormPlayer player, double amount) {
-        if (!isEconomyAvailable() || amount <= 0) {
+    public boolean addMoney(FormPlayer player, BigDecimal amount) {
+        if (!isEconomyAvailable() || amount.doubleValue() <= 0) {
             return false;
         }
         try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
-            return economy.depositPlayer(offlinePlayer, amount).transactionSuccess();
+            return economy.deposit(plugin.getName(), player.getUniqueId(), amount).transactionSuccess();
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
-    public boolean removeMoney(FormPlayer player, double amount) {
-        if (!isEconomyAvailable() || amount <= 0) {
+    public boolean removeMoney(FormPlayer player, BigDecimal amount) {
+        if (!isEconomyAvailable() || amount.doubleValue() <= 0) {
             return false;
         }
         try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
-            return economy.withdrawPlayer(offlinePlayer, amount).transactionSuccess();
+            return economy.withdraw(plugin.getName(), player.getUniqueId(), amount).transactionSuccess();
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
-    public boolean hasEnoughMoney(FormPlayer player, double amount) {
+    public boolean hasEnoughMoney(FormPlayer player, BigDecimal amount) {
         if (!isEconomyAvailable()) {
             return false;
         }
         try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
-            return economy.has(offlinePlayer, amount);
+            return economy.has(plugin.getName(), player.getUniqueId(), amount);
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
-    public boolean setBalance(FormPlayer player, double amount) {
-        if (!isEconomyAvailable() || amount < 0) {
+    public boolean setBalance(FormPlayer player, BigDecimal amount) {
+        if (!isEconomyAvailable() || amount.doubleValue() < 0) {
             return false;
         }
         try {
-            OfflinePlayer offlinePlayer = Bukkit.getOfflinePlayer(player.getUniqueId());
-            double currentBalance = economy.getBalance(offlinePlayer);
-            if (currentBalance > amount) {
-                return economy.withdrawPlayer(offlinePlayer, currentBalance - amount).transactionSuccess();
-            } else if (currentBalance < amount) {
-                return economy.depositPlayer(offlinePlayer, amount - currentBalance).transactionSuccess();
+            BigDecimal currentBalance = economy.balance(plugin.getName(), player.getUniqueId());
+            if (currentBalance.doubleValue() > amount.doubleValue()) {
+                return economy.withdraw(plugin.getName(), player.getUniqueId(), BigDecimal.valueOf(currentBalance.doubleValue() - amount.doubleValue())).transactionSuccess();
+            } else if (currentBalance.doubleValue() < amount.doubleValue()) {
+                return economy.deposit(plugin.getName(), player.getUniqueId(), BigDecimal.valueOf(amount.doubleValue() - currentBalance.doubleValue())).transactionSuccess();
             }
             return true;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public String getCurrencySymbol() {
         if (!isEconomyAvailable()) {
             return "$";
         }
         try {
-            return economy.currencyNameSingular();
+            return economy.defaultCurrencyNameSingular(plugin.getName());
         } catch (Exception e) {
             return "$";
         }
     }
-    
+
     @Override
-    public String formatMoney(double amount) {
+    public String formatMoney(BigDecimal amount) {
         if (!isEconomyAvailable()) {
             return String.format("%.2f", amount);
         }

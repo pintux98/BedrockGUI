@@ -1,6 +1,0 @@
-name: BedrockGUI-Bungee
-main: it.pintux.life.bungee.BedrockGUI
-version: '${version}'
-author: pintux
-depends:
-  - floodgate

@@ -1,6 +1,6 @@
 rootProject.name = 'BedrockGUI'
 include 'common'
-include 'bungeecord'
+//include 'bungeecord'
 include 'paper'
-include 'velocity'
+//include 'velocity'
 //include 'geyser'

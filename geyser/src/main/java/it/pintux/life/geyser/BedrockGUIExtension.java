@@ -109,20 +109,14 @@ public class BedrockGUIExtension implements Extension {
             api.initialize(geyserConfig, messageData);
 
             GeyserFormSender formSender = new GeyserFormSender();
-            GeyserPlayerChecker playerChecker = new GeyserPlayerChecker();
-
-            GeyserCommandExecutor commandExecutor = new GeyserCommandExecutor(logger);
-            GeyserSoundManager soundManager = new GeyserSoundManager(logger);
-            GeyserEconomyManager economyManager = new GeyserEconomyManager(logger);
-            GeyserResourcePackManager resourcePackManager = new GeyserResourcePackManager(logger, geyserConfig);
 
             formMenuUtil = new FormMenuUtil(
                     geyserConfig,
                     messageData,
-                    formSender,
-                    commandExecutor,
-                    soundManager,
-                    economyManager
+                    null,
+                    null,
+                    null,
+                    formSender
             );
 
             logger.info("BedrockGUI loaded with Resource Pack API support");

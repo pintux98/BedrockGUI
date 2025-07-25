@@ -41,7 +41,6 @@ public class ConditionalActionHandler implements ActionHandler {
         }
         
         try {
-            // Process placeholders in the action data
             String processedData = processPlaceholders(actionData.trim(), context);
             String[] parts = processedData.split(":", 6);
             
@@ -52,7 +51,6 @@ public class ConditionalActionHandler implements ActionHandler {
             boolean negate = false;
             int offset = 0;
             
-            // Check for negation
             if ("not".equals(parts[0])) {
                 negate = true;
                 offset = 1;
@@ -61,7 +59,6 @@ public class ConditionalActionHandler implements ActionHandler {
                 }
             }
             
-            // Build condition string for ConditionEvaluator
             StringBuilder conditionBuilder = new StringBuilder();
             String conditionType = parts[offset];
             String conditionValue = parts[offset + 1];
@@ -78,7 +75,7 @@ public class ConditionalActionHandler implements ActionHandler {
                     String expectedValue = parts[offset + 3];
                     conditionBuilder.append("placeholder:").append(conditionValue)
                                    .append(":").append(operator).append(":").append(expectedValue);
-                    offset += 2; // Adjust offset for operator and expected value
+                    offset += 2;
                     break;
                 default:
                     return ActionResult.failure("Unknown condition type: " + conditionType);
@@ -87,7 +84,6 @@ public class ConditionalActionHandler implements ActionHandler {
             String condition = conditionBuilder.toString();
             boolean conditionMet = ConditionEvaluator.evaluateCondition(player, condition, context, null);
             
-            // Apply negation if specified
             if (negate) {
                 conditionMet = !conditionMet;
             }
@@ -97,7 +93,6 @@ public class ConditionalActionHandler implements ActionHandler {
                 return ActionResult.success("Condition not met, action skipped");
             }
             
-            // Extract action type and data
             if (parts.length < offset + 4) {
                 return ActionResult.failure("Missing action type or action data");
             }
@@ -105,7 +100,6 @@ public class ConditionalActionHandler implements ActionHandler {
             String actionType = parts[offset + 2];
             String actionDataToExecute = parts[offset + 3];
             
-            // If there are more parts, join them as they might contain colons
             if (parts.length > offset + 4) {
                 StringBuilder sb = new StringBuilder(actionDataToExecute);
                 for (int i = offset + 4; i < parts.length; i++) {
@@ -116,7 +110,6 @@ public class ConditionalActionHandler implements ActionHandler {
             
             logger.info("Condition met for player " + player.getName() + ", executing action: " + actionType + ":" + actionDataToExecute);
             
-            // Execute the action
             ActionResult result = actionExecutor.executeAction(player, actionType, actionDataToExecute, context);
             
             if (result.isSuccess()) {
@@ -141,12 +134,10 @@ public class ConditionalActionHandler implements ActionHandler {
         
         String[] parts = actionValue.trim().split(":");
         
-        // Check for minimum parts
         if (parts.length < 4) {
             return false;
         }
         
-        // Check for negation
         int offset = 0;
         if ("not".equals(parts[0])) {
             offset = 1;
@@ -198,7 +189,6 @@ public class ConditionalActionHandler implements ActionHandler {
             }
         }
         
-        // Process form results as placeholders
         Map<String, Object> formResults = context.getFormResults();
         if (formResults != null && !formResults.isEmpty()) {
             for (Map.Entry<String, Object> entry : formResults.entrySet()) {

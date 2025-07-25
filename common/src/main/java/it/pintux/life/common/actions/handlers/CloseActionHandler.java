@@ -5,6 +5,7 @@ import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 /**
  * Handles closing the current form
@@ -25,8 +26,6 @@ public class CloseActionHandler implements ActionHandler {
         }
         
         try {
-            // Close the current form by not sending any new form
-            // This effectively closes the form UI for the player
             logger.debug("Closing form for player " + player.getName());
             return ActionResult.success("Form closed successfully");
             

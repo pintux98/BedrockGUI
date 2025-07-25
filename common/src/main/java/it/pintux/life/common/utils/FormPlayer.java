@@ -9,7 +9,7 @@ public interface FormPlayer {
 
     void sendMessage(String message);
 
-    void executeAction(String action);
+    boolean executeAction(String action);
 
     boolean hasPermission(String permission);
 }

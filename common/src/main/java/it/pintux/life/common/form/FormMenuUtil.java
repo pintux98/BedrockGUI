@@ -74,7 +74,7 @@ public class FormMenuUtil {
         // Platform-dependent action handlers (only register if platform managers are available)
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
+            //actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
         }
         
         if (soundManager != null) {
@@ -222,8 +222,15 @@ public class FormMenuUtil {
         String button1Text, button2Text;
         String button1OnClick, button2OnClick;
         
+        // Check if buttons should be shown based on conditions
         if (b1 instanceof ConditionalButton) {
             ConditionalButton cb1 = (ConditionalButton) b1;
+            // Check if button has a show condition and evaluate it
+            if (cb1.hasShowCondition() && 
+                !ConditionEvaluator.evaluateCondition(player, cb1.getShowCondition(), context, messageData)) {
+                logger.warn("Modal form button 1 has a show condition that evaluated to false. This is not fully supported in modal forms.");
+                // For modal forms, we can't hide buttons, so we'll still show it but with modified properties
+            }
             button1Text = getEffectiveButtonText(cb1, player, context, placeholders, messageData);
             button1OnClick = getEffectiveButtonOnClick(cb1, player, context);
         } else {
@@ -233,6 +240,12 @@ public class FormMenuUtil {
         
         if (b2 instanceof ConditionalButton) {
             ConditionalButton cb2 = (ConditionalButton) b2;
+            // Check if button has a show condition and evaluate it
+            if (cb2.hasShowCondition() && 
+                !ConditionEvaluator.evaluateCondition(player, cb2.getShowCondition(), context, messageData)) {
+                logger.warn("Modal form button 2 has a show condition that evaluated to false. This is not fully supported in modal forms.");
+                // For modal forms, we can't hide buttons, so we'll still show it but with modified properties
+            }
             button2Text = getEffectiveButtonText(cb2, player, context, placeholders, messageData);
             button2OnClick = getEffectiveButtonOnClick(cb2, player, context);
         } else {
@@ -288,8 +301,8 @@ public class FormMenuUtil {
             if (button instanceof ConditionalButton) {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
                 
-                // Check if button should be shown
-                if (conditionalButton.getShowCondition() != null && 
+                // Check if button has a show condition and evaluate it
+                if (conditionalButton.hasShowCondition() && 
                     !ConditionEvaluator.evaluateCondition(player, conditionalButton.getShowCondition(), context, messageData)) {
                     // Button should be hidden, skip it
                     continue;
@@ -639,22 +652,23 @@ public class FormMenuUtil {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
             // Check conditional properties for text modifications
+            String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
                 
                 if ("text".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
-                    return replacePlaceholders(property.getValue(), placeholders, player, messageData);
+                    matchedCondition = condition;
+                    break;
                 }
             }
             
-            // Check alternative text
-            if (conditionalButton.getAlternativeText() != null) {
-                return replacePlaceholders(conditionalButton.getAlternativeText(), placeholders, player, messageData);
-            }
+            // Get effective text using the matched condition
+            String effectiveText = conditionalButton.getEffectiveText(matchedCondition);
+            return replacePlaceholders(effectiveText, placeholders, player, messageData);
         }
         
-        // Use default text
+        // Use default text for regular buttons
         return replacePlaceholders(button.getText(), placeholders, player, messageData);
     }
     
@@ -666,22 +680,22 @@ public class FormMenuUtil {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
             // Check conditional properties for image modifications
+            String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
                 
                 if ("image".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
-                    return property.getValue();
+                    matchedCondition = condition;
+                    break;
                 }
             }
             
-            // Check alternative image
-            if (conditionalButton.getAlternativeImage() != null) {
-                return conditionalButton.getAlternativeImage();
-            }
+            // Get effective image using the matched condition
+            return conditionalButton.getEffectiveImage(matchedCondition);
         }
         
-        // Use default image
+        // Use default image for regular buttons
         return button.getImage();
     }
     
@@ -693,22 +707,22 @@ public class FormMenuUtil {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
             // Check conditional properties for onClick modifications
+            String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
                 
                 if ("onClick".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
-                    return property.getValue();
+                    matchedCondition = condition;
+                    break;
                 }
             }
             
-            // Check alternative onClick
-            if (conditionalButton.getAlternativeOnClick() != null) {
-                return conditionalButton.getAlternativeOnClick();
-            }
+            // Get effective onClick using the matched condition
+            return conditionalButton.getEffectiveOnClick(matchedCondition);
         }
         
-        // Use default onClick
+        // Use default onClick for regular buttons
         return button.getOnClick();
     }
 }

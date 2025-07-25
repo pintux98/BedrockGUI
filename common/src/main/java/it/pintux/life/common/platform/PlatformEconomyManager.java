@@ -2,6 +2,8 @@ package it.pintux.life.common.platform;
 
 import it.pintux.life.common.utils.FormPlayer;
 
+import java.math.BigDecimal;
+
 /**
  * Platform abstraction for economy operations.
  * This interface allows the common module to handle economy
@@ -22,7 +24,7 @@ public interface PlatformEconomyManager {
      * @param player The player to get the balance for
      * @return The player's balance, or 0.0 if economy is not available
      */
-    double getBalance(FormPlayer player);
+    BigDecimal getBalance(FormPlayer player);
     
     /**
      * Add money to a player's account.
@@ -31,7 +33,7 @@ public interface PlatformEconomyManager {
      * @param amount The amount to add
      * @return true if the operation was successful, false otherwise
      */
-    boolean addMoney(FormPlayer player, double amount);
+    boolean addMoney(FormPlayer player, BigDecimal amount);
     
     /**
      * Remove money from a player's account.
@@ -40,7 +42,7 @@ public interface PlatformEconomyManager {
      * @param amount The amount to remove
      * @return true if the operation was successful, false otherwise
      */
-    boolean removeMoney(FormPlayer player, double amount);
+    boolean removeMoney(FormPlayer player, BigDecimal amount);
     
     /**
      * Check if a player has enough money.
@@ -49,7 +51,7 @@ public interface PlatformEconomyManager {
      * @param amount The amount to check for
      * @return true if the player has enough money, false otherwise
      */
-    boolean hasEnoughMoney(FormPlayer player, double amount);
+    boolean hasEnoughMoney(FormPlayer player, BigDecimal amount);
     
     /**
      * Set a player's balance.
@@ -58,7 +60,7 @@ public interface PlatformEconomyManager {
      * @param amount The new balance
      * @return true if the operation was successful, false otherwise
      */
-    boolean setBalance(FormPlayer player, double amount);
+    boolean setBalance(FormPlayer player, BigDecimal amount);
     
     /**
      * Get the currency symbol or name.
@@ -73,5 +75,5 @@ public interface PlatformEconomyManager {
      * @param amount The amount to format
      * @return The formatted amount string
      */
-    String formatMoney(double amount);
+    String formatMoney(BigDecimal amount);
 }

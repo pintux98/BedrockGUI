@@ -1,25 +1,3 @@
-# BedrockGUI Enhanced Configuration with Resource Pack Support
-# This is an example configuration showing how to use the new resource pack features
-
-# Resource Pack Configuration
-resource_packs:
-  enabled: true
-  default_pack: "bedrockgui_default.mcpack"
-  
-  # Per-menu resource packs
-  per_menu_packs:
-    main_menu: "main_theme.mcpack"
-    shop_menu: "shop_theme.mcpack"
-    admin_menu: "admin_theme.mcpack"
-    player_menu: "player_theme.mcpack"
-  
-  # Fallback image URLs for when resource packs aren't available
-  fallback_images:
-    "textures/ui/button_default.png": "https://example.com/images/button_default.png"
-    "textures/ui/shop_icon.png": "https://example.com/images/shop_icon.png"
-    "textures/ui/admin_icon.png": "https://example.com/images/admin_icon.png"
-    "textures/ui/player_icon.png": "https://example.com/images/player_icon.png"
-
 # Example menu configurations with resource pack support
 menu:
   main_menu:
@@ -112,26 +90,3 @@ menu:
         text: "&eServer Management"
         image: "textures/ui/server_icon.png"
         onClick: "open server_menu"
-
-# Message Configuration
-messages:
-  menu_not_found: "&cMenu not found!"
-  menu_nopex: "&cYou don't have permission to use this menu!"
-  menu_args: "&cThis menu requires &e{args} &carguments!"
-  resource_pack_loading: "&aLoading custom theme..."
-  resource_pack_loaded: "&aCustom theme loaded successfully!"
-  resource_pack_failed: "&cFailed to load custom theme. Using default."
-
-# Advanced Settings
-settings:
-  # Delay before showing forms after sending resource packs (milliseconds)
-  resource_pack_delay: 500
-  
-  # Whether to automatically send resource packs on player join
-  auto_send_packs: true
-  
-  # Whether to use fallback images when resource packs fail
-  use_fallback_images: true
-  
-  # Debug mode for resource pack loading
-  debug_resource_packs: false

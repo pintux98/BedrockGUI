@@ -1,7 +1,0 @@
-prefix: "&x&E&3&C&1&F&BB&x&E&2&C&8&E&8e&x&E&0&C&F&D&5d&x&D&F&D&6&C&2r&x&D&E&D&D&A&Fo&x&D&C&E&3&9&Dc&x&D&B&E&A&8&Ak&x&D&A&F&1&7&7G&x&D&8&F&8&6&4U&x&D&7&F&F&5&1I"
-noPex: "&4&lYou don't have permission to perform this command"
-menu:
-  noPex: "&4&lYou don't have permission to open this menu"
-  noJava: "&4You are not a bedrock player. Please open this menu only from bedrock client"
-  arguments: "&4This command requires at least {args} arguments."
-  notFound: "&cNo menu found with this name"

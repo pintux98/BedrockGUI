@@ -8,6 +8,7 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.PlaceholderUtil;
 
+import java.math.BigDecimal;
 import java.util.Map;
 
 /**
@@ -52,9 +53,9 @@ public class EconomyActionHandler implements ActionHandler {
             if (parts.length < 2) {
                 return ActionResult.failure("Invalid economy action format. Use: operation:amount");
             }
-            
+
             String operation = parts[0].toLowerCase();
-            
+
             switch (operation) {
                 case "add":
                     return handleAdd(player, parts);
@@ -69,27 +70,27 @@ public class EconomyActionHandler implements ActionHandler {
                 default:
                     return ActionResult.failure("Unknown economy operation: " + operation);
             }
-            
+
         } catch (Exception e) {
             logger.error("Error executing economy action for player " + player.getName() + ": " + e.getMessage());
             return ActionResult.failure("Error executing economy action: " + e.getMessage());
         }
     }
-    
+
     private ActionResult handleAdd(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return ActionResult.failure("Add operation requires amount");
         }
-        
+
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount <= 0) {
                 return ActionResult.failure("Amount must be positive");
             }
-            
-            boolean success = economyManager.addMoney(player, amount);
+
+            boolean success = economyManager.addMoney(player, BigDecimal.valueOf(amount));
             if (success) {
-                String formatted = economyManager.formatMoney(amount);
+                String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
                 logger.info("Added " + formatted + " to player " + player.getName());
                 return ActionResult.success("Added " + formatted + " to your account");
             } else {
@@ -99,26 +100,26 @@ public class EconomyActionHandler implements ActionHandler {
             return ActionResult.failure("Invalid amount: " + parts[1]);
         }
     }
-    
+
     private ActionResult handleRemove(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return ActionResult.failure("Remove operation requires amount");
         }
-        
+
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount <= 0) {
                 return ActionResult.failure("Amount must be positive");
             }
-            
-            if (!economyManager.hasEnoughMoney(player, amount)) {
-                String formatted = economyManager.formatMoney(amount);
+
+            if (!economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount))) {
+                String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
                 return ActionResult.failure("Insufficient funds. Need " + formatted);
             }
-            
-            boolean success = economyManager.removeMoney(player, amount);
+
+            boolean success = economyManager.removeMoney(player, BigDecimal.valueOf(amount));
             if (success) {
-                String formatted = economyManager.formatMoney(amount);
+                String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
                 logger.info("Removed " + formatted + " from player " + player.getName());
                 return ActionResult.success("Removed " + formatted + " from your account");
             } else {
@@ -128,21 +129,21 @@ public class EconomyActionHandler implements ActionHandler {
             return ActionResult.failure("Invalid amount: " + parts[1]);
         }
     }
-    
+
     private ActionResult handleSet(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return ActionResult.failure("Set operation requires amount");
         }
-        
+
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount < 0) {
                 return ActionResult.failure("Amount cannot be negative");
             }
-            
-            boolean success = economyManager.setBalance(player, amount);
+
+            boolean success = economyManager.setBalance(player, BigDecimal.valueOf(amount));
             if (success) {
-                String formatted = economyManager.formatMoney(amount);
+                String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
                 logger.info("Set balance of player " + player.getName() + " to " + formatted);
                 return ActionResult.success("Balance set to " + formatted);
             } else {
@@ -152,63 +153,63 @@ public class EconomyActionHandler implements ActionHandler {
             return ActionResult.failure("Invalid amount: " + parts[1]);
         }
     }
-    
+
     private ActionResult handleCheck(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return ActionResult.failure("Check operation requires amount");
         }
-        
+
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount < 0) {
                 return ActionResult.failure("Amount cannot be negative");
             }
-            
-            boolean hasEnough = economyManager.hasEnoughMoney(player, amount);
-            String formatted = economyManager.formatMoney(amount);
-            
+
+            boolean hasEnough = economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount));
+            String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
+
             if (hasEnough) {
                 return ActionResult.success("You have enough money (" + formatted + ")");
             } else {
-                double currentBalance = economyManager.getBalance(player);
-                String currentFormatted = economyManager.formatMoney(currentBalance);
+                double currentBalance = economyManager.getBalance(player).doubleValue();
+                String currentFormatted = economyManager.formatMoney(BigDecimal.valueOf(currentBalance));
                 return ActionResult.failure("Insufficient funds. You have " + currentFormatted + ", need " + formatted);
             }
         } catch (NumberFormatException e) {
-            return ActionResult.failure("Invalid amount: " + parts[1]);
+            return ActionResult.failure("Invalid BigDecimal.valueOf(amount): " + parts[1]);
         }
     }
-    
+
     private ActionResult handlePay(FormPlayer player, String[] parts, ActionContext context) {
         if (parts.length < 3) {
-            return ActionResult.failure("Pay operation requires target player and amount");
+            return ActionResult.failure("Pay operation requires target player and BigDecimal.valueOf(amount)");
         }
-        
+
         try {
             String targetPlayerName = processPlaceholders(parts[1], context);
             double amount = Double.parseDouble(parts[2]);
-            
+
             if (amount <= 0) {
                 return ActionResult.failure("Amount must be positive");
             }
-            
-            if (!economyManager.hasEnoughMoney(player, amount)) {
-                String formatted = economyManager.formatMoney(amount);
+
+            if (!economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount))) {
+                String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
                 return ActionResult.failure("Insufficient funds. Need " + formatted);
             }
-            
+
             // Remove money from sender
-            boolean removeSuccess = economyManager.removeMoney(player, amount);
+            boolean removeSuccess = economyManager.removeMoney(player, BigDecimal.valueOf(amount));
             if (!removeSuccess) {
                 return ActionResult.failure("Failed to remove money from your account");
             }
-            
+
             // Note: Adding money to target player would require a way to get FormPlayer by name
             // This is a limitation of the current architecture - we'd need a player lookup service
-            String formatted = economyManager.formatMoney(amount);
+            String formatted = economyManager.formatMoney(BigDecimal.valueOf(amount));
             logger.info("Player " + player.getName() + " paid " + formatted + " to " + targetPlayerName);
             return ActionResult.success("Paid " + formatted + " to " + targetPlayerName);
-            
+
         } catch (NumberFormatException e) {
             return ActionResult.failure("Invalid amount: " + parts[2]);
         }

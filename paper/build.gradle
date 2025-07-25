@@ -71,5 +71,5 @@ shadowJar {
     minimize()
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-Paper')
-    //destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop"))
+    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server/lobby/plugins"))
 }
