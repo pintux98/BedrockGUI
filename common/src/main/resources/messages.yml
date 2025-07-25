@@ -1,7 +1,76 @@
-prefix: "&x&E&3&C&1&F&BB&x&E&2&C&8&E&8e&x&E&0&C&F&D&5d&x&D&F&D&6&C&2r&x&D&E&D&D&A&Fo&x&D&C&E&3&9&Dc&x&D&B&E&A&8&Ak&x&D&A&F&1&7&7G&x&D&8&F&8&6&4U&x&D&7&F&F&5&1I"
+# BedrockGUI Messages Configuration
+# All user-facing messages are defined here
+
+# Main prefix for all messages
+prefix: "&8[&bBedrockGUI&8] &r"
+
+# Permission and access messages
 noPex: "&4&lYou don't have permission to perform this command"
+no_permission: "&cYou don't have permission to use this command!"
+
+# Menu-related messages
 menu:
   noPex: "&4&lYou don't have permission to open this menu"
   noJava: "&4You are not a bedrock player. Please open this menu only from bedrock client"
   arguments: "&4This command requires at least {args} arguments."
   notFound: "&cNo menu found with this name"
+  menu_not_found: "&cMenu not found: {menu}"
+
+# Action result messages
+action:
+  success: "&aAction completed successfully!"
+  failed: "&cAction failed: {error}"
+  invalid_parameters: "&cInvalid parameters for action"
+  invalid_format: "&cInvalid action format"
+  execution_error: "&cError executing action: {error}"
+  command_success: "&aCommand executed successfully"
+  command_failed: "&cCommand execution failed"
+  teleport_success: "&aTeleported successfully"
+  teleport_failed: "&cTeleport command failed"
+  message_sent: "&aMessage sent successfully"
+  message_failed: "&cFailed to send message: {error}"
+  sound_failed: "&cFailed to play sound: {sound}"
+  broadcast_success: "&aBroadcast sent successfully"
+  broadcast_failed: "&cFailed to send broadcast: {error}"
+  form_opened: "&aForm opened successfully"
+  form_not_found: "&cForm not found: {form}"
+  teleport:
+    out_of_bounds: "&cCoordinates are outside world boundaries"
+    invalid_y: "&cY coordinate must be between -64 and 320"
+  economy:
+    not_available: "&cEconomy system is not available"
+  economy_invalid_amount: "&cInvalid amount: {amount}"
+  economy_add_failed: "&cFailed to add money"
+  economy_remove_failed: "&cFailed to remove money"
+  economy_set_failed: "&cFailed to set balance"
+  economy_insufficient: "&cFailed to remove money from your account"
+
+# Form-related messages
+form:
+  timeout: "&eForm timed out. Please try again."
+  validation_failed: "&cValidation failed: {error}"
+
+# Economy messages
+economy:
+  insufficient: "&cInsufficient funds! You need {amount} more."
+  add_success: "&aSuccessfully added {amount} to your balance"
+  add_failed: "&cFailed to add money to your account"
+  add_invalid_format: "&cInvalid format for add command. Use: /economy add <amount>"
+  remove_success: "&aSuccessfully removed {amount} from your balance"
+  remove_failed: "&cFailed to remove money from your account"
+  remove_invalid_format: "&cInvalid format for remove command. Use: /economy remove <amount>"
+  set_success: "&aSuccessfully set your balance to {amount}"
+  set_failed: "&cFailed to set your balance"
+  set_invalid_format: "&cInvalid format for set command. Use: /economy set <amount>"
+  check_success: "&aYour current balance is: {amount}"
+  check_invalid_format: "&cInvalid format for check command. Use: /economy check"
+  pay_success: "&aSuccessfully paid {amount} to {player}"
+  pay_failed: "&cFailed to pay {player}"
+  pay_invalid_format: "&cInvalid format for pay command. Use: /economy pay <player> <amount>"
+  insufficient_funds: "&cInsufficient funds! You need {amount} more"
+  amount_positive: "&cAmount must be positive"
+  amount_negative: "&cAmount must be negative"
+
+# Player-related messages
+player:
+  not_found: "&cPlayer not found: {player}"

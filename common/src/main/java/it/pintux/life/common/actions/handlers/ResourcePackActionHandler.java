@@ -7,7 +7,10 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ValidationUtils;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.platform.PlatformResourcePackManager;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Handles resource pack related actions
@@ -17,10 +20,12 @@ public class ResourcePackActionHandler implements ActionHandler {
     
     private final BedrockGUIApi api;
     private final Logger logger;
+    private final MessageData messageData;
     
     public ResourcePackActionHandler(BedrockGUIApi api, Logger logger) {
         this.api = api;
         this.logger = logger;
+        this.messageData = BedrockGUIApi.getInstance().getMessageData();
     }
     
     @Override
@@ -124,16 +129,21 @@ public class ResourcePackActionHandler implements ActionHandler {
     private ActionResult handleSendAction(PlatformResourcePackManager packManager, FormPlayer player, String packName) {
         try {
             boolean success = packManager.sendResourcePack(player.getUniqueId(), packName);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("pack", packName);
+            
             if (success) {
                 logger.info("Sent resource pack '" + packName + "' to player " + player.getName());
-                return ActionResult.success("Resource pack '" + packName + "' sent successfully");
+                return ActionResult.success(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_SEND_SUCCESS, replacements, player));
             } else {
                 logger.warn("Failed to send resource pack '" + packName + "' to player " + player.getName());
-                return ActionResult.failure("Failed to send resource pack '" + packName + "'");
+                return ActionResult.failure(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_SEND_FAILED, replacements, player));
             }
         } catch (Exception e) {
             logger.error("Error sending resource pack: " + e.getMessage());
-            return ActionResult.failure("Error sending resource pack: " + e.getMessage());
+            Map<String, Object> errorReplacements = new HashMap<>();
+            errorReplacements.put("error", e.getMessage());
+            return ActionResult.failure(this.messageData.getValueNoPrefix(MessageData.ACTION_FAILED, errorReplacements, player));
         }
     }
     
@@ -158,10 +168,10 @@ public class ResourcePackActionHandler implements ActionHandler {
             packManager.clearPlayerResourcePacks(player.getUniqueId());
             
             logger.info("Removed all resource packs for player: " + player.getName());
-            return ActionResult.success("All resource packs removed successfully");
+            return ActionResult.success(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_REMOVE_ALL_SUCCESS, null, player));
         } catch (Exception e) {
             logger.warn("Failed to remove resource packs for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Failed to remove resource packs: " + e.getMessage());
+            return ActionResult.failure(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_REMOVE_ALL_FAILED, null, player));
         }
     }
     
@@ -170,11 +180,16 @@ public class ResourcePackActionHandler implements ActionHandler {
             // Remove specific resource pack
             packManager.removeResourcePack(player.getUniqueId(), packName);
             
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("pack", packName);
+            
             logger.info("Removed resource pack '" + packName + "' for player: " + player.getName());
-            return ActionResult.success("Resource pack '" + packName + "' removed successfully");
+            return ActionResult.success(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_REMOVE_SUCCESS, replacements, player));
         } catch (Exception e) {
             logger.warn("Failed to remove resource pack '" + packName + "' for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Failed to remove resource pack '" + packName + "': " + e.getMessage());
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("pack", packName);
+            return ActionResult.failure(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_REMOVE_FAILED, replacements, player));
         }
     }
     
@@ -192,7 +207,7 @@ public class ResourcePackActionHandler implements ActionHandler {
             return ActionResult.success(result.toString());
         } catch (Exception e) {
             logger.warn("Failed to list resource packs for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Failed to retrieve resource pack information: " + e.getMessage());
+            return ActionResult.failure(this.messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_LIST_FAILED, null, player));
         }
     }
     

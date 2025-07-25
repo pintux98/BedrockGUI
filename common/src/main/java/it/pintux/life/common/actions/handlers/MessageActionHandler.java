@@ -3,9 +3,13 @@ package it.pintux.life.common.actions.handlers;
 import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
+import java.util.HashMap;
+import java.util.Map;
 import it.pintux.life.common.utils.ValidationUtils;
 import org.geysermc.cumulus.form.ModalForm;
 
@@ -27,29 +31,46 @@ public class MessageActionHandler implements ActionHandler {
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            return ActionResult.failure("Message cannot be null or empty");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         try {
             String processedMessage = processPlaceholders(actionValue, context, player);
             
             if (ValidationUtils.isNullOrEmpty(processedMessage.trim())) {
-                return ActionResult.failure("Processed message is empty");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
             }
             
             // Send the message to the player
             player.sendMessage(processedMessage);
             
             logger.debug("Successfully sent message to player " + player.getName() + ": " + processedMessage);
-            return ActionResult.success("Message sent successfully");
+            // Get MessageData from context if available
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            if (messageData != null) {
+                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_MESSAGE_SENT, null, player));
+            } else {
+                return ActionResult.success("Message sent successfully");
+            }
             
         } catch (Exception e) {
             logger.error("Error sending message to player " + player.getName(), e);
-            return ActionResult.failure("Failed to send message: " + e.getMessage(), e);
+            // Get MessageData from context if available
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            if (messageData != null) {
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("error", e.getMessage());
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_MESSAGE_FAILED, replacements, player), e);
+            } else {
+                return ActionResult.failure("Failed to send message: " + e.getMessage(), e);
+            }
         }
     }
     

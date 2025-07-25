@@ -3,12 +3,14 @@ package it.pintux.life.common.actions.handlers;
 import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
 
-
+import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -29,11 +31,13 @@ public class TeleportActionHandler implements ActionHandler {
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            return ActionResult.failure("Teleport coordinates cannot be null or empty");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         try {
@@ -41,13 +45,17 @@ public class TeleportActionHandler implements ActionHandler {
             String[] parts = processedValue.trim().split("\\s+");
             
             if (parts.length != 3) {
-                return ActionResult.failure("Teleport requires exactly 3 coordinates (x y z)");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
             }
             
             // Validate coordinates
             for (String coord : parts) {
                 if (!COORDINATE_PATTERN.matcher(coord).matches()) {
-                    return ActionResult.failure("Invalid coordinate format: " + coord);
+                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                    Map<String, Object> replacements = new HashMap<>();
+                    replacements.put("coordinate", coord);
+                    return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
                 }
             }
             
@@ -57,11 +65,13 @@ public class TeleportActionHandler implements ActionHandler {
             
             // Validate coordinate ranges
             if (Math.abs(x) > 30000000 || Math.abs(z) > 30000000) {
-                return ActionResult.failure("Coordinates are outside world boundaries");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_OUT_OF_BOUNDS, null, player));
             }
             
             if (y < -64 || y > 320) {
-                return ActionResult.failure("Y coordinate must be between -64 and 320");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_INVALID_Y, null, player));
             }
             
             // Execute teleport command
@@ -74,17 +84,27 @@ public class TeleportActionHandler implements ActionHandler {
             if (success) {
                 logger.debug("Successfully teleported player " + player.getName() + 
                            " to " + x + ", " + y + ", " + z);
-                return ActionResult.success("Teleported successfully");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("x", String.valueOf(x));
+                replacements.put("y", String.valueOf(y));
+                replacements.put("z", String.valueOf(z));
+                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_SUCCESS, replacements, player));
             } else {
                 logger.warn("Failed to teleport player " + player.getName());
-                return ActionResult.failure("Teleport command failed");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_FAILED, null, player));
             }
             
         } catch (NumberFormatException e) {
-            return ActionResult.failure("Invalid number format in coordinates");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
         } catch (Exception e) {
             logger.error("Error teleporting player " + player.getName(), e);
-            return ActionResult.failure("Teleport error: " + e.getMessage(), e);
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", e.getMessage());
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player), e);
         }
     }
     

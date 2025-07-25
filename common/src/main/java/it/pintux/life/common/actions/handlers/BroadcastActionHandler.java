@@ -5,8 +5,11 @@ import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
+import it.pintux.life.common.api.BedrockGUIApi;
 
 import java.util.Map;
+import java.util.HashMap;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 
 /**
@@ -34,7 +37,8 @@ public class BroadcastActionHandler implements ActionHandler {
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Broadcast action called with empty message for player: " + player.getName());
-            return ActionResult.failure("No broadcast message specified");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         try {
@@ -70,7 +74,10 @@ public class BroadcastActionHandler implements ActionHandler {
                         broadcastCommand = "broadcast radius " + target + " " + player.getName() + " " + message;
                         break;
                     default:
-                        return ActionResult.failure("Unknown broadcast type: " + type);
+                        MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                        Map<String, Object> replacements = new HashMap<>();
+                        replacements.put("type", type);
+                        return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player));
                 }
             } else {
                 // parts.length == 2, treat as simple message with colon
@@ -85,7 +92,10 @@ public class BroadcastActionHandler implements ActionHandler {
             
             if (success) {
                 logger.info("Broadcast sent successfully: " + message);
-                return ActionResult.success("Message broadcasted: " + message);
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("message", message);
+                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_BROADCAST_SUCCESS, replacements, player));
             } else {
                 // Fallback: try alternative broadcast commands
                 String[] fallbackCommands = {
@@ -97,17 +107,24 @@ public class BroadcastActionHandler implements ActionHandler {
                 for (String fallbackCommand : fallbackCommands) {
                     if (commandExecutor.executeAsConsole(fallbackCommand)) {
                         logger.info("Broadcast sent successfully with fallback command: " + message);
-                        return ActionResult.success("Message broadcasted: " + message);
+                        MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                        Map<String, Object> replacements = new HashMap<>();
+                        replacements.put("message", message);
+                        return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_BROADCAST_SUCCESS, replacements, player));
                     }
                 }
                 
                 logger.warn("Failed to broadcast message: " + message);
-                return ActionResult.failure("Failed to broadcast message");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_BROADCAST_FAILED, null, player));
             }
             
         } catch (Exception e) {
             logger.error("Error executing broadcast action for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error broadcasting message: " + e.getMessage());
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", e.getMessage());
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
         }
     }
     

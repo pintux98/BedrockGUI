@@ -1,5 +1,9 @@
 package it.pintux.life.common.exceptions;
 
+import it.pintux.life.common.utils.MessageData;
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * Base exception for resource pack related errors
  */
@@ -47,8 +51,37 @@ public class ResourcePackException extends Exception {
     }
     
     /**
-     * Gets a user-friendly error message
+     * Gets a user-friendly error message using MessageData
      */
+    public String getUserMessage(MessageData messageData) {
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("pack", packIdentifier);
+        
+        switch (errorType) {
+            case PACK_NOT_FOUND:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_NOT_FOUND, replacements, null);
+            case PACK_LOAD_FAILED:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_LOAD_FAILED, replacements, null);
+            case PACK_INVALID_FORMAT:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_INVALID_FORMAT, replacements, null);
+            case PACK_TOO_LARGE:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_TOO_LARGE, replacements, null);
+            case GEYSER_CONNECTION_FAILED:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_GEYSER_CONNECTION_FAILED, replacements, null);
+            case PLAYER_NOT_BEDROCK:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_PLAYER_NOT_BEDROCK, replacements, null);
+            case CONFIGURATION_ERROR:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_CONFIGURATION_ERROR, replacements, null);
+            default:
+                return messageData.getValueNoPrefix(MessageData.RESOURCE_PACK_UNKNOWN_ERROR, replacements, null);
+        }
+    }
+    
+    /**
+     * Gets a user-friendly error message (deprecated - use getUserMessage(MessageData) instead)
+     * @deprecated Use getUserMessage(MessageData messageData) instead
+     */
+    @Deprecated
     public String getUserMessage() {
         switch (errorType) {
             case PACK_NOT_FOUND:

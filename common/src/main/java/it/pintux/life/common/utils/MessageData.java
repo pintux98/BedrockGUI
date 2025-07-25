@@ -6,12 +6,89 @@ import java.util.regex.Pattern;
 
 public class MessageData {
 
+    // Message path constants for messages.yml
     private static String PREFIX = "prefix";
+    
+    // Permission and access messages
     public static String NO_PEX = "noPex";
+    public static String NO_PERMISSION = "no_permission";
+    
+    // Menu-related messages
     public static String MENU_NOPEX = "menu.noPex";
     public static String MENU_NOJAVA = "menu.noJava";
     public static String MENU_ARGS = "menu.arguments";
     public static String MENU_NOT_FOUND = "menu.notFound";
+    public static String MENU_NOT_FOUND_ALT = "menu.menu_not_found";
+    
+    // Action result messages
+    public static String ACTION_SUCCESS = "action.success";
+    public static String ACTION_FAILED = "action.failed";
+    public static String ACTION_INVALID_PARAMETERS = "action.invalid_parameters";
+    public static String ACTION_INVALID_FORMAT = "action.invalid_format";
+    public static String ACTION_EXECUTION_ERROR = "action.execution_error";
+    public static String ACTION_COMMAND_SUCCESS = "action.command_success";
+    public static String ACTION_COMMAND_FAILED = "action.command_failed";
+    public static String ACTION_TELEPORT_SUCCESS = "action.teleport_success";
+    public static String ACTION_TELEPORT_FAILED = "action.teleport_failed";
+    public static String ACTION_MESSAGE_SENT = "action.message_sent";
+    public static String ACTION_MESSAGE_FAILED = "action.message_failed";
+    public static String ACTION_SOUND_FAILED = "action.sound_failed";
+    public static String ACTION_BROADCAST_SUCCESS = "action.broadcast_success";
+    public static String ACTION_BROADCAST_FAILED = "action.broadcast_failed";
+    public static String ACTION_FORM_OPENED = "action.form_opened";
+    public static String ACTION_FORM_NOT_FOUND = "action.form_not_found";
+    public static final String ACTION_TELEPORT_OUT_OF_BOUNDS = "action.teleport.out_of_bounds";
+    public static final String ACTION_TELEPORT_INVALID_Y = "action.teleport.invalid_y";
+    public static final String ACTION_ECONOMY_NOT_AVAILABLE = "action.economy.not_available";
+    public static String ACTION_ECONOMY_INVALID_AMOUNT = "action.economy_invalid_amount";
+    public static String ACTION_ECONOMY_ADD_FAILED = "action.economy_add_failed";
+    public static String ACTION_ECONOMY_REMOVE_FAILED = "action.economy_remove_failed";
+    public static String ACTION_ECONOMY_SET_FAILED = "action.economy_set_failed";
+    public static String ACTION_ECONOMY_INSUFFICIENT = "action.economy_insufficient";
+    
+    // Form-related messages
+    public static String FORM_TIMEOUT = "form.timeout";
+    public static String FORM_VALIDATION_FAILED = "form.validation_failed";
+    
+    // Economy messages
+    public static String ECONOMY_INSUFFICIENT = "economy.insufficient";
+    public static String ECONOMY_ADD_SUCCESS = "economy.add_success";
+    public static String ECONOMY_ADD_FAILED = "economy.add_failed";
+    public static String ECONOMY_ADD_INVALID_FORMAT = "economy.add_invalid_format";
+    public static String ECONOMY_REMOVE_SUCCESS = "economy.remove_success";
+    public static String ECONOMY_REMOVE_FAILED = "economy.remove_failed";
+    public static String ECONOMY_REMOVE_INVALID_FORMAT = "economy.remove_invalid_format";
+    public static String ECONOMY_SET_SUCCESS = "economy.set_success";
+    public static String ECONOMY_SET_FAILED = "economy.set_failed";
+    public static String ECONOMY_SET_INVALID_FORMAT = "economy.set_invalid_format";
+    public static String ECONOMY_CHECK_SUCCESS = "economy.check_success";
+    public static String ECONOMY_CHECK_INVALID_FORMAT = "economy.check_invalid_format";
+    public static String ECONOMY_PAY_SUCCESS = "economy.pay_success";
+    public static String ECONOMY_PAY_FAILED = "economy.pay_failed";
+    public static String ECONOMY_PAY_INVALID_FORMAT = "economy.pay_invalid_format";
+    public static String ECONOMY_INSUFFICIENT_FUNDS = "economy.insufficient_funds";
+    public static String ECONOMY_AMOUNT_POSITIVE = "economy.amount_positive";
+    public static String ECONOMY_AMOUNT_NEGATIVE = "economy.amount_negative";
+    
+    // Player-related messages
+    public static String PLAYER_NOT_FOUND = "player.not_found";
+    
+    // Resource pack messages
+    public static String RESOURCE_PACK_NOT_FOUND = "resource_pack.not_found";
+    public static String RESOURCE_PACK_LOAD_FAILED = "resource_pack.load_failed";
+    public static String RESOURCE_PACK_INVALID_FORMAT = "resource_pack.invalid_format";
+    public static String RESOURCE_PACK_TOO_LARGE = "resource_pack.too_large";
+    public static String RESOURCE_PACK_GEYSER_CONNECTION_FAILED = "resource_pack.geyser_connection_failed";
+    public static String RESOURCE_PACK_PLAYER_NOT_BEDROCK = "resource_pack.player_not_bedrock";
+    public static String RESOURCE_PACK_CONFIGURATION_ERROR = "resource_pack.configuration_error";
+    public static String RESOURCE_PACK_UNKNOWN_ERROR = "resource_pack.unknown_error";
+    public static String RESOURCE_PACK_SEND_SUCCESS = "resource_pack.send_success";
+    public static String RESOURCE_PACK_SEND_FAILED = "resource_pack.send_failed";
+    public static String RESOURCE_PACK_REMOVE_SUCCESS = "resource_pack.remove_success";
+    public static String RESOURCE_PACK_REMOVE_FAILED = "resource_pack.remove_failed";
+    public static String RESOURCE_PACK_REMOVE_ALL_SUCCESS = "resource_pack.remove_all_success";
+    public static String RESOURCE_PACK_REMOVE_ALL_FAILED = "resource_pack.remove_all_failed";
+    public static String RESOURCE_PACK_LIST_FAILED = "resource_pack.list_failed";
 
     private static final Pattern hexPattern = Pattern.compile("<#([A-Fa-f0-9]){6}>");
 

@@ -1,7 +1,7 @@
 package it.pintux.life.common.api;
 
 import it.pintux.life.common.actions.*;
-import it.pintux.life.common.actions.handlers.ResourcePackActionHandler;
+// import it.pintux.life.common.actions.handlers.ResourcePackActionHandler; // Disabled
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.platform.*;
 import it.pintux.life.common.utils.*;
@@ -63,14 +63,17 @@ public class BedrockGUIApi {
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
         
-        // Register resource pack action handler if resource pack manager is available
-        // The handler will check if resource packs are enabled at runtime
+        // Resource pack functionality has been disabled
+        // Uncomment the following lines to re-enable resource pack actions:
+        /*
         if (resourcePackManager != null) {
             registerActionHandler(new ResourcePackActionHandler(this, Logger.getLogger(BedrockGUIApi.class)));
             logger.info("ResourcePack action handler registered (enabled: " + resourcePackManager.isEnabled() + ")");
         } else {
             logger.warn("ResourcePack manager not available - ResourcePack actions will not be registered");
         }
+        */
+        logger.info("ResourcePack functionality is currently disabled");
         
         instance = this;
         logger.info("BedrockGUIApi initialized with enhanced features and resource pack support");
@@ -326,6 +329,13 @@ public class BedrockGUIApi {
      */
     public PlatformResourcePackManager getResourcePackManager() {
         return resourcePackManager;
+    }
+    
+    /**
+     * Gets the message data instance
+     */
+    public MessageData getMessageData() {
+        return messageData;
     }
     
     /**

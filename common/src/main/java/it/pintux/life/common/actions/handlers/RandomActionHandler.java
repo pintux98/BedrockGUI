@@ -4,9 +4,13 @@ import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.actions.ActionExecutor;
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
+
+import java.util.HashMap;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,7 +47,8 @@ public class RandomActionHandler implements ActionHandler {
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Random action called with empty data for player: " + player.getName());
-            return ActionResult.failure("No random actions specified");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         try {
@@ -54,7 +59,8 @@ public class RandomActionHandler implements ActionHandler {
             String[] actionOptions = processedData.split("\\|");
             
             if (actionOptions.length == 0) {
-                return ActionResult.failure("No valid actions found in random action list");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
             }
             
             // Filter out empty actions
@@ -67,7 +73,8 @@ public class RandomActionHandler implements ActionHandler {
             }
             
             if (validActions.isEmpty()) {
-                return ActionResult.failure("No valid actions found after filtering");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
             }
             
             // Select a random action
@@ -79,7 +86,10 @@ public class RandomActionHandler implements ActionHandler {
             // Parse and execute the selected action
             ActionExecutor.Action parsedAction = actionExecutor.parseAction(selectedAction);
             if (parsedAction == null) {
-                return ActionResult.failure("Failed to parse selected action: " + selectedAction);
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                HashMap<String, Object> replacements = new HashMap<>();
+                replacements.put("action", selectedAction);
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
             }
             
             ActionResult result = actionExecutor.executeAction(player, parsedAction.getType(), parsedAction.getValue(), context);
@@ -92,7 +102,10 @@ public class RandomActionHandler implements ActionHandler {
             
         } catch (Exception e) {
             logger.error("Error executing random action for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error executing random action: " + e.getMessage());
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            HashMap<String, Object> replacements = new HashMap<>();
+            replacements.put("error", e.getMessage());
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
         }
     }
     

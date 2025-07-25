@@ -9,96 +9,50 @@ settings:
   max_forms_per_player: 10
   form_timeout: 300000  # 5 minutes
   enable_analytics: true
-
-# ==================== RESOURCE PACK CONFIGURATION ====================
-resource_packs:
-  enabled: true
-  default_pack: "ui_enhanced"
-  force_packs: false
-  
-  # Available resource packs
-  packs:
-    ui_enhanced:
-      name: "Enhanced UI Pack"
-      url: "https://example.com/packs/ui_enhanced.mcpack"
-      hash: "abc123def456"
-      force: false
-      description: "Enhanced UI elements and textures"
-    
-    dark_theme:
-      name: "Dark Theme Pack"
-      url: "https://example.com/packs/dark_theme.mcpack"
-      hash: "def456ghi789"
-      force: false
-      description: "Dark themed UI for better visibility"
-    
-    custom_icons:
-      name: "Custom Icons Pack"
-      url: "https://example.com/packs/custom_icons.mcpack"
-      hash: "ghi789jkl012"
-      force: true
-      description: "Custom icons for enhanced visual experience"
-
-  # Menu-specific resource packs
-  menu_packs:
-    main_hub: "ui_enhanced"
-    admin_panel: "dark_theme"
-    shop_interface: "custom_icons"
-    settings_menu: "ui_enhanced"
-
 # ==================== COMMAND CONFIGURATION ====================
 commands:
   # Main hub command
   gui:
     description: "Open the main BedrockGUI hub"
     permission: "bedrockgui.use"
-    aliases: ["menu", "hub", "main"]
+    aliases: [ "menu", "hub", "main" ]
     form: "main_hub"
   
   # Admin commands
   admin:
     description: "Open admin control panel"
     permission: "bedrockgui.admin"
-    aliases: ["adminpanel", "control"]
+    aliases: [ "adminpanel", "control" ]
     form: "admin_panel"
   
   # Shop commands
   shop:
     description: "Open the server shop"
     permission: "bedrockgui.shop"
-    aliases: ["store", "buy"]
+    aliases: [ "store", "buy" ]
     form: "shop_interface"
   
   # Utility commands
   settings:
     description: "Open player settings"
     permission: "bedrockgui.settings"
-    aliases: ["config", "prefs"]
+    aliases: [ "config", "prefs" ]
     form: "settings_menu"
   
   warps:
     description: "Open warp locations menu"
     permission: "bedrockgui.warps"
-    aliases: ["warp", "tp"]
+    aliases: [ "warp", "tp" ]
     form: "warp_locations"
   
   report:
     description: "Report a player"
     permission: "bedrockgui.report"
-    aliases: ["reportplayer"]
+    aliases: [ "reportplayer" ]
     form: "player_report"
 
 # ==================== MESSAGE CONFIGURATION ====================
-messages:
-  prefix: "§8[§bBedrockGUI§8] §r"
-  no_permission: "§cYou don't have permission to use this command!"
-  menu_not_found: "§cMenu not found: {menu}"
-  action_success: "§aAction completed successfully!"
-  action_failed: "§cAction failed: {error}"
-  form_timeout: "§eForm timed out. Please try again."
-  validation_failed: "§cValidation failed: {error}"
-  economy_insufficient: "§cInsufficient funds! You need {amount} more."
-  player_not_found: "§cPlayer not found: {player}"
+# All messages have been moved to messages.yml for better organization
 
 # ==================== FORM DEFINITIONS ====================
 forms:
@@ -150,10 +104,7 @@ forms:
         image: "textures/ui/icon_recipe_construction"
         onClick: "open:pagination_demo"
       
-      resource_pack_demo:
-        text: "§5§l🎨 Resource Packs"
-        image: "textures/ui/icon_recipe_item"
-        onClick: "open:resource_pack_demo"
+
       
       # Player Features
       settings_menu:
@@ -273,8 +224,8 @@ forms:
         show_condition: "permission:bedrockgui.test"
       
       back:
-          text: "§8§l← Back"
-          onClick: "open:basic_actions"
+        text: "§8§l← Back"
+        onClick: "open:basic_actions"
 
   # ==================== COMPLETE ACTION HANDLER TEST SUITE ====================
   complete_test_suite:
@@ -324,8 +275,8 @@ forms:
         onClick: "message:§c§l[STRESS TEST] §7Initiating comprehensive stress test...:sound:ui.button.click:delay:100:economy:add:1:delay:100:command:time query daytime:delay:100:random:sound:ui.button.click,random.pop:delay:100:conditional:placeholder:%player_health%:>=:1:message:§a§lHealth OK:message:§c§lHealth ERROR:delay:100:broadcast:§c§l[STRESS] §e%player_name% §7is running a stress test:delay:100:server:time add 1:delay:100:teleport:%player_x% %player_y% %player_z%:delay:100:message:§c§l[STRESS TEST] §aStress test cycle 1 complete:delay:500:message:§c§l[STRESS TEST] §7Running cycle 2...:economy:add:2:sound:random.levelup:delay:200:random:message:§aRandom 1,§bRandom 2,§cRandom 3:delay:200:conditional:permission:bedrockgui.test:broadcast:§e§l[STRESS] §7Cycle 2 complete:message:§7Cycle 2 partial:delay:500:message:§c§l[STRESS TEST] §a§lAll cycles complete! System stable."
       
       back:
-          text: "§8§l← Back"
-          onClick: "open:basic_actions"
+        text: "§8§l← Back"
+        onClick: "open:basic_actions"
 
   # ==================== ADVANCED MULTI-ACTION DEMO ====================
   advanced_demo:
@@ -367,8 +318,8 @@ forms:
         onClick: "message:§2§l[ADVENTURE] §7Rolling the dice of fate...:sound:ui.button.click:delay:2000:random:teleport:forest,desert,mountain,ocean:message:§a§lAdventure awaits!:delay:1000:random:economy:add:50,100,150,200,250:message:§6§lFound some coins on your journey!:delay:2000:random:command:give %player_name% bread 5,give %player_name% cooked_beef 3,give %player_name% golden_apple 1:message:§e§lReceived adventure supplies!:sound:random.levelup"
       
       back:
-         text: "§8§l← Back"
-         onClick: "open:basic_actions"
+        text: "§8§l← Back"
+        onClick: "open:basic_actions"
 
   # ==================== BROADCAST ACTIONS DEMO ====================
   broadcast_demo:
@@ -1115,61 +1066,6 @@ forms:
         text: "§8§l← Back to Hub"
         onClick: "open:main_hub"
 
-  # ==================== RESOURCE PACK DEMO ====================
-  resource_pack_demo:
-    type: "SIMPLE"
-    title: "§5§l🎨 Resource Pack Demo"
-    description: "§7Test resource pack functionality"
-    buttons:
-      send_ui_pack:
-        text: "§a§l📦 Send UI Pack"
-        onClick: "resourcepack:ui_enhanced"
-      
-      send_dark_theme:
-        text: "§8§l🌙 Send Dark Theme"
-        onClick: "resourcepack:dark_theme"
-      
-      send_custom_icons:
-        text: "§6§l🎨 Send Custom Icons"
-        onClick: "resourcepack:custom_icons"
-      
-      pack_sequence:
-        text: "§d§l🔄 Load Pack Sequence"
-        onClick: "open:pack_sequence"
-      
-      remove_packs:
-        text: "§c§l❌ Remove All Packs"
-        onClick: "resourcepack:remove"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  pack_sequence:
-    type: "SIMPLE"
-    title: "§d§l🔄 Pack Sequence Test"
-    description: "§7Load multiple packs in sequence"
-    buttons:
-      step1:
-        text: "§a§lStep 1: Base UI"
-        onClick: "resourcepack:ui_enhanced:delay:2000:message:§aBase UI loaded!"
-      
-      step2:
-        text: "§b§lStep 2: Dark Theme"
-        onClick: "resourcepack:dark_theme:delay:2000:message:§bDark theme applied!"
-      
-      step3:
-        text: "§6§lStep 3: Custom Icons"
-        onClick: "resourcepack:custom_icons:delay:2000:message:§6Custom icons loaded!"
-      
-      load_all:
-        text: "§d§l✨ Load All Packs"
-        onClick: "resourcepack:ui_enhanced:delay:1000:resourcepack:dark_theme:delay:1000:resourcepack:custom_icons:delay:1000:message:§d§lAll packs loaded!"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:resource_pack_demo"
-
   # ==================== PLAYER SETTINGS ====================
   settings_menu:
     type: "CUSTOM"
@@ -1229,7 +1125,7 @@ forms:
           - "Minimal"
           - "High Contrast"
         default: 0
-        action: "resourcepack:$1_theme"
+        action: "message:§aTheme changed to: $1"
       
       language:
         type: "dropdown"
@@ -1398,7 +1294,7 @@ forms:
         text: "§8§l← Back"
         onClick: "open:advanced_forms"
 
-# ==================== ADVANCED FEATURES ====================
+  # ==================== ADVANCED FEATURES ====================
 
   # Random Action Demo
   random_demo:

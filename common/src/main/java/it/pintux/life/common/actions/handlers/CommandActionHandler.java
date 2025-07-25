@@ -7,8 +7,11 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
+import it.pintux.life.common.utils.MessageData;
+import it.pintux.life.common.api.BedrockGUIApi;
 
 import java.util.Map;
+import java.util.HashMap;
 import java.util.regex.Pattern;
 
 /**
@@ -26,11 +29,13 @@ public class CommandActionHandler implements ActionHandler {
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            return ActionResult.failure("Command cannot be null or empty");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         try {
@@ -41,22 +46,32 @@ public class CommandActionHandler implements ActionHandler {
             }
 
             if (ValidationUtils.isNullOrEmpty(processedCommand.trim())) {
-                return ActionResult.failure("Processed command is empty");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
             }
 
             boolean success = player.executeAction("/" + processedCommand);
 
             if (success) {
                 logger.debug("Successfully executed command '" + processedCommand + "' for player " + player.getName());
-                return ActionResult.success("Command executed successfully");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("command", processedCommand);
+                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_COMMAND_SUCCESS, replacements, player));
             } else {
                 logger.warn("Failed to execute command '" + processedCommand + "' for player " + player.getName());
-                return ActionResult.failure("Command execution failed");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("command", processedCommand);
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_COMMAND_FAILED, replacements, player));
             }
 
         } catch (Exception e) {
             logger.error("Error executing command '" + actionValue + "' for player " + player.getName(), e);
-            return ActionResult.failure("Command execution error: " + e.getMessage(), e);
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", e.getMessage());
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player), e);
         }
     }
 

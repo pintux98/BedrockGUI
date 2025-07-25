@@ -3,12 +3,15 @@ package it.pintux.life.common.actions.handlers;
 import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 /**
@@ -31,39 +34,54 @@ public class OpenFormActionHandler implements ActionHandler {
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         if (formMenuUtil == null) {
-            return ActionResult.failure("FormMenuUtil not available");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, null, player));
         }
         
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            return ActionResult.failure("Menu name cannot be null or empty");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
         
         try {
             String processedMenuName = processPlaceholders(actionValue, context, player);
             
             if (!ValidationUtils.isValidMenuName(processedMenuName)) {
-                return ActionResult.failure("Invalid menu name: " + processedMenuName);
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("menu", processedMenuName);
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player));
             }
             
             // Check if menu exists before trying to open it
             if (!formMenuUtil.hasMenu(processedMenuName)) {
                 logger.warn("Attempted to open non-existent menu '" + processedMenuName + "' for player " + player.getName());
-                return ActionResult.failure("Menu '" + processedMenuName + "' does not exist");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("menu", processedMenuName);
+                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_FORM_NOT_FOUND, replacements, player));
             }
             
             // Open the menu
             formMenuUtil.openMenu(player, processedMenuName);
             
             logger.debug("Successfully opened menu '" + processedMenuName + "' for player " + player.getName());
-            return ActionResult.success("Menu opened successfully");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("menu", processedMenuName);
+            return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_FORM_OPENED, replacements, player));
             
         } catch (Exception e) {
             logger.error("Error opening menu '" + actionValue + "' for player " + player.getName(), e);
-            return ActionResult.failure("Failed to open menu: " + e.getMessage(), e);
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", e.getMessage());
+            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player), e);
         }
     }
     
