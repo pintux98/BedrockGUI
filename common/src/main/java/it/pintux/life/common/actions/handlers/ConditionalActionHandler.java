@@ -7,6 +7,8 @@ import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.PlaceholderUtil;
+import it.pintux.life.common.utils.MessageData;
 
 import java.util.Map;
 
@@ -17,8 +19,9 @@ import java.util.Map;
  * Usage: conditional:placeholder:{balance}:>=:1000:message:You have enough money!
  * Usage: conditional:placeholder:{player}:equals:Admin:server:gamemode creative {player}
  * Usage: conditional:not:permission:vip.access:message:You need VIP access!
+ * Usage: conditional:placeholder:{world}:equals:world:message:You're in overworld:message:You're not in overworld
  * 
- * Format: conditional:[not:]condition_type:condition_value[:operator:expected_value]:action_type:action_data
+ * Format: conditional:[not:]condition_type:condition_value[:operator:expected_value]:success_action_type:success_action_data[:failure_action_type:failure_action_data]
  */
 public class ConditionalActionHandler implements ActionHandler {
     private static final Logger logger = Logger.getLogger(ConditionalActionHandler.class);
@@ -41,7 +44,7 @@ public class ConditionalActionHandler implements ActionHandler {
         }
         
         try {
-            String processedData = processPlaceholders(actionData.trim(), context);
+            String processedData = processPlaceholders(actionData.trim(), context, player);
             String[] parts = processedData.split(":", 6);
             
             if (parts.length < 4) {
@@ -88,27 +91,47 @@ public class ConditionalActionHandler implements ActionHandler {
                 conditionMet = !conditionMet;
             }
             
-            if (!conditionMet) {
-                logger.info("Condition not met for player " + player.getName() + ": " + condition);
-                return ActionResult.success("Condition not met, action skipped");
-            }
-            
             if (parts.length < offset + 4) {
                 return ActionResult.failure("Missing action type or action data");
             }
             
-            String actionType = parts[offset + 2];
-            String actionDataToExecute = parts[offset + 3];
+            String actionType;
+            String actionDataToExecute;
             
-            if (parts.length > offset + 4) {
-                StringBuilder sb = new StringBuilder(actionDataToExecute);
-                for (int i = offset + 4; i < parts.length; i++) {
-                    sb.append(":").append(parts[i]);
+            if (conditionMet) {
+                // Execute success action
+                actionType = parts[offset + 2];
+                actionDataToExecute = parts[offset + 3];
+                
+                // Check if there are failure actions after success actions
+                int successActionEnd = offset + 4;
+                if (parts.length > successActionEnd + 1) {
+                    // There might be failure actions, so we need to find where success action ends
+                    // For now, assume success action is just one action_type:action_data pair
                 }
-                actionDataToExecute = sb.toString();
+                
+                logger.info("Condition met for player " + player.getName() + ", executing success action: " + actionType + ":" + actionDataToExecute);
+            } else {
+                // Execute failure action if available
+                if (parts.length < offset + 6) {
+                    logger.info("Condition not met for player " + player.getName() + ": " + condition + " (no failure action specified)");
+                    return ActionResult.success("Condition not met, action skipped");
+                }
+                
+                actionType = parts[offset + 4];
+                actionDataToExecute = parts[offset + 5];
+                
+                // Handle additional parts for failure action
+                if (parts.length > offset + 6) {
+                    StringBuilder sb = new StringBuilder(actionDataToExecute);
+                    for (int i = offset + 6; i < parts.length; i++) {
+                        sb.append(":").append(parts[i]);
+                    }
+                    actionDataToExecute = sb.toString();
+                }
+                
+                logger.info("Condition not met for player " + player.getName() + ", executing failure action: " + actionType + ":" + actionDataToExecute);
             }
-            
-            logger.info("Condition met for player " + player.getName() + ", executing action: " + actionType + ":" + actionDataToExecute);
             
             ActionResult result = actionExecutor.executeAction(player, actionType, actionDataToExecute, context);
             
@@ -150,9 +173,9 @@ public class ConditionalActionHandler implements ActionHandler {
         
         switch (conditionType.toLowerCase()) {
             case "permission":
-                return parts.length >= offset + 4; // condition_type:condition_value:action_type:action_data
+                return parts.length >= offset + 4; // condition_type:condition_value:success_action_type:success_action_data (failure actions optional)
             case "placeholder":
-                return parts.length >= offset + 6; // condition_type:condition_value:operator:expected_value:action_type:action_data
+                return parts.length >= offset + 6; // condition_type:condition_value:operator:expected_value:success_action_type:success_action_data (failure actions optional)
             default:
                 return false;
         }
@@ -169,11 +192,13 @@ public class ConditionalActionHandler implements ActionHandler {
             "conditional:permission:some.permission:message:You have permission!",
             "conditional:placeholder:{balance}:>=:1000:message:You have enough money!",
             "conditional:not:permission:vip.access:message:You need VIP access!",
-            "conditional:placeholder:{player}:equals:Admin:server:gamemode creative {player}"
+            "conditional:placeholder:{player}:equals:Admin:server:gamemode creative {player}",
+            "conditional:placeholder:{world}:equals:world:message:You're in overworld:message:You're not in overworld",
+            "conditional:permission:vip.access:message:VIP welcome!:message:You need VIP access!"
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context) {
+    private String processPlaceholders(String data, ActionContext context, FormPlayer player) {
         if (context == null) {
             return data;
         }
@@ -196,6 +221,12 @@ public class ConditionalActionHandler implements ActionHandler {
                 String value = entry.getValue() != null ? entry.getValue().toString() : "";
                 result = result.replace(placeholder, value);
             }
+        }
+        
+        // Process PlaceholderAPI placeholders if player is provided
+        if (player != null) {
+            Object messageData = context.getMetadata().get("messageData");
+            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
         }
         
         return result;
