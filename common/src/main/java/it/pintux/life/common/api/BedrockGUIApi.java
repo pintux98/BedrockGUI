@@ -2,6 +2,7 @@ package it.pintux.life.common.api;
 
 import it.pintux.life.common.actions.*;
 // import it.pintux.life.common.actions.handlers.ResourcePackActionHandler; // Disabled
+import it.pintux.life.common.data.DataProvider;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.platform.*;
 import it.pintux.life.common.utils.*;
@@ -40,6 +41,7 @@ public class BedrockGUIApi {
     private final PlatformFormSender formSender;
     private final MessageData messageData;
     private final PlatformResourcePackManager resourcePackManager;
+    private final DataProvider dataProvider;
     
     // Form cache for dynamic forms
     private final Map<String, DynamicForm> dynamicForms = new HashMap<>();
@@ -55,10 +57,12 @@ public class BedrockGUIApi {
                         PlatformSoundManager soundManager,
                         PlatformEconomyManager economyManager,
                         PlatformFormSender formSender,
-                        PlatformResourcePackManager resourcePackManager) {
+                        PlatformResourcePackManager resourcePackManager,
+                        DataProvider dataProvider) {
         this.messageData = messageData;
         this.formSender = formSender;
         this.resourcePackManager = resourcePackManager;
+        this.dataProvider = dataProvider;
         this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
@@ -339,6 +343,13 @@ public class BedrockGUIApi {
     }
     
     /**
+     * Gets the data provider instance
+     */
+    public DataProvider getDataProvider() {
+        return dataProvider;
+    }
+    
+    /**
      * Handles player join events for resource pack management
      */
     public void onPlayerJoin(UUID playerId) {
@@ -460,6 +471,7 @@ public class BedrockGUIApi {
      */
     public class SimpleFormBuilder extends FormBuilder {
         private List<FormButtonBuilder> buttons = new ArrayList<>();
+        private FormPlayer currentPlayer; // Store the player for button handlers
         
         public SimpleFormBuilder(String title) {
             super(title);
@@ -508,15 +520,55 @@ public class BedrockGUIApi {
                 int buttonId = response.clickedButtonId();
                 if (buttonId >= 0 && buttonId < clickHandlers.size()) {
                     Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
-                    if (handler != null) {
-                        // Note: We need the FormPlayer here, but the response doesn't provide it
-                        // This would need to be handled differently in a real implementation
+                    if (handler != null && currentPlayer != null) {
+                        handler.accept(currentPlayer);
+                    } else if (handler != null) {
                         logger.warn("Button clicked but FormPlayer context not available");
                     }
                 }
             });
             
             return builder.build();
+        }
+        
+        @Override
+        public CompletableFuture<FormResult> send(FormPlayer player) {
+            this.currentPlayer = player; // Capture the player for button handlers
+            
+            // Update the validResultHandler to use the captured player from send method
+            List<Consumer<FormPlayer>> clickHandlers = new ArrayList<>();
+            for (FormButtonBuilder buttonBuilder : buttons) {
+                FormButtonData buttonData = buttonBuilder.build();
+                clickHandlers.add(buttonData.onClick);
+            }
+            
+            // Re-create the form with proper player context
+            SimpleForm.Builder builder = SimpleForm.builder();
+            builder.title(title);
+            if (content != null) {
+                builder.content(content);
+            }
+            
+            for (FormButtonBuilder buttonBuilder : buttons) {
+                FormButtonData buttonData = buttonBuilder.build();
+                if (buttonData.image != null) {
+                    builder.button(buttonData.text, FormImage.Type.URL, buttonData.image);
+                } else {
+                    builder.button(buttonData.text);
+                }
+            }
+            
+            builder.validResultHandler((form, response) -> {
+                int buttonId = response.clickedButtonId();
+                if (buttonId >= 0 && buttonId < clickHandlers.size()) {
+                    Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
+                    if (handler != null) {
+                        handler.accept(player); // Use the player from send method
+                    }
+                }
+            });
+            
+            return openForm(player, builder.build());
         }
     }
     

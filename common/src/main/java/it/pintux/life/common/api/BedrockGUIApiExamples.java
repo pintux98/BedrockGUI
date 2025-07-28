@@ -11,6 +11,7 @@ import it.pintux.life.common.platform.PlatformResourcePackManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.FormConfig;
 import it.pintux.life.common.utils.MessageData;
+import it.pintux.life.common.data.DataProvider;
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.actions.ActionRegistry;
 
@@ -32,9 +33,9 @@ public class BedrockGUIApiExamples {
     public BedrockGUIApiExamples(FormConfig formConfig, MessageData messageData, 
                                 PlatformCommandExecutor commandExecutor, PlatformSoundManager soundManager,
                                 PlatformEconomyManager economyManager, PlatformFormSender formSender,
-                                PlatformResourcePackManager resourcePackManager) {
+                                PlatformResourcePackManager resourcePackManager, DataProvider dataProvider) {
         // Initialize the complete API system
-        this.api = new BedrockGUIApi(formConfig, messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager);
+        this.api = new BedrockGUIApi(formConfig, messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager, dataProvider);
         this.templateManager = new FormTemplateManager(api);
         this.validationFramework = new FormValidationFramework();
         this.eventSystem = new FormEventSystem();

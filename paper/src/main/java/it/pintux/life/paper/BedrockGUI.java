@@ -1,6 +1,9 @@
 package it.pintux.life.paper;
 
+import it.pintux.life.common.actions.ListActionHandler;
 import it.pintux.life.common.api.BedrockGUIApi;
+import it.pintux.life.paper.data.PaperDataProvider;
+import it.pintux.life.paper.placeholders.BedrockGUIExpansion;
 import it.pintux.life.paper.platform.PaperFormSender;
 import it.pintux.life.paper.platform.PaperPlayerChecker;
 import it.pintux.life.paper.platform.PaperCommandExecutor;
@@ -14,6 +17,7 @@ import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperConfig;
 import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.paper.utils.PaperMessageConfig;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -67,8 +71,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperEconomyManager economyManager = new PaperEconomyManager(this);
         PaperFormSender formSender = new PaperFormSender();
         PaperResourcePackManager resourcePackManager = new PaperResourcePackManager(this);
+        PaperDataProvider dataProvider = new PaperDataProvider();
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager, dataProvider);
 
         // EnhancedFormMenuUtil enhancedFormMenuUtil = new EnhancedFormMenuUtil(
         //     new PaperConfig(getConfig()), 
@@ -81,6 +86,16 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         // Use the FormMenuUtil from the API to avoid duplicate registration
         formMenuUtil = api.getFormMenuUtil();
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
+
+        // Register PlaceholderAPI expansion if available
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            new BedrockGUIExpansion(this).register();
+            getLogger().info("PlaceholderAPI expansion registered");
+        }
+
+        // Register List action handler
+        ListActionHandler.register();
+        getLogger().info("List action handler registered");
 
         getLogger().info("BedrockGUI loaded and enabled");
         //getLogger().info("BedrockGUI loaded with Resource Pack API support");

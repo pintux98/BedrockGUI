@@ -89,6 +89,12 @@ public class MessageData {
     public static String RESOURCE_PACK_REMOVE_ALL_SUCCESS = "resource_pack.remove_all_success";
     public static String RESOURCE_PACK_REMOVE_ALL_FAILED = "resource_pack.remove_all_failed";
     public static String RESOURCE_PACK_LIST_FAILED = "resource_pack.list_failed";
+    
+    // List action messages
+    public static final String ACTION_LIST_SUCCESS = "action.list.success";
+    public static final String ACTION_LIST_NO_DATA = "action.list.no_data";
+    public static final String ACTION_LIST_INVALID_PAGE = "action.list.invalid_page";
+    public static final String ACTION_LIST_GENERATED = "action.list.generated";
 
     private static final Pattern hexPattern = Pattern.compile("<#([A-Fa-f0-9]){6}>");
 

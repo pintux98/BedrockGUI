@@ -1,0 +1,15 @@
+name: BedrockGUI-Paper
+version: '${version}'
+main: it.pintux.life.paper.BedrockGUI
+api-version: '1.19'
+author: "pintux"
+depend:
+  - floodgate
+softdepend:
+  - PlaceholderAPI
+commands:
+  bedrockgui:
+    usage: "/bedrockgui <reload | open>"
+    permission: "bedrockgui.admin"
+    aliases:
+      - "bgui"

@@ -37,4 +37,12 @@ public class PaperPlayer implements FormPlayer {
     public boolean hasPermission(String permission) {
         return player.hasPermission(permission);
     }
+    
+    /**
+     * Get the underlying Bukkit player
+     * @return the Bukkit player instance
+     */
+    public Player getBukkitPlayer() {
+        return player;
+    }
 }

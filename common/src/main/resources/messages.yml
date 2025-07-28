@@ -23,6 +23,9 @@ action:
   invalid_parameters: "&cInvalid parameters for action"
   invalid_format: "&cInvalid action format"
   execution_error: "&cError executing action: {error}"
+
+# Action-specific error messages
+  ACTION_INVALID_PARAMETERS: "&cInvalid parameters provided for this action"
   command_success: "&aCommand executed successfully"
   command_failed: "&cCommand execution failed"
   teleport_success: "&aTeleported successfully"
@@ -39,6 +42,35 @@ action:
     invalid_y: "&cY coordinate must be between -64 and 320"
   economy:
     not_available: "&cEconomy system is not available"
+    add:
+      success: "&aAdded ${amount} to ${player}'s balance"
+      failed: "&cFailed to add ${amount} to ${player}'s balance"
+    remove:
+      success: "&aRemoved ${amount} from ${player}'s balance"
+      failed: "&cFailed to remove ${amount} from ${player}'s balance"
+    set:
+      success: "&aSet ${player}'s balance to ${amount}"
+      failed: "&cFailed to set ${player}'s balance to ${amount}"
+    check:
+      success: "&a${player}'s balance: ${amount}"
+      failed: "&cFailed to check ${player}'s balance"
+    pay:
+      success: "&aPaid ${amount} to ${player}"
+      failed: "&cFailed to pay ${amount} to ${player}"
+    insufficient_funds: "&cInsufficient funds"
+    invalid_amount: "&cInvalid amount format"
+    amount_must_be_positive: "&cAmount must be positive"
+  list:
+    success: "&aList generated successfully"
+    no_data: "&cNo data available from placeholder"
+    invalid_page: "&cInvalid page number"
+    generated: "&aGenerated list with ${count} items"
+
+# Action messages
+action:
+  list:
+    success: "&aList generated successfully"
+    no_data: "&cNo data available from placeholder"
   economy_invalid_amount: "&cInvalid amount: {amount}"
   economy_add_failed: "&cFailed to add money"
   economy_remove_failed: "&cFailed to remove money"

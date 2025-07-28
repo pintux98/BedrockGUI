@@ -70,7 +70,7 @@ public class PlaceholderUtil {
     }
     
     /**
-     * Process only dynamic placeholders ($ prefixed)
+     * Process only dynamic placeholders ($ prefixed and {} wrapped)
      * @param text The text to process
      * @param dynamicPlaceholders Map of dynamic placeholders
      * @return Text with dynamic placeholders replaced
@@ -82,9 +82,12 @@ public class PlaceholderUtil {
         
         String result = text;
         for (Map.Entry<String, String> entry : dynamicPlaceholders.entrySet()) {
-            String placeholder = "$" + entry.getKey();
             String value = entry.getValue() != null ? entry.getValue() : "";
-            result = result.replace(placeholder, value);
+            // Handle both $ prefixed and {} wrapped placeholders
+            String dollarPlaceholder = "$" + entry.getKey();
+            String bracePlaceholder = "{" + entry.getKey() + "}";
+            result = result.replace(dollarPlaceholder, value);
+            result = result.replace(bracePlaceholder, value);
         }
         
         return result;

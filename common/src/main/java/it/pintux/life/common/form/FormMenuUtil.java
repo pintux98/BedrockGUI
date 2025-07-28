@@ -38,6 +38,14 @@ public class FormMenuUtil {
         this(config, messageData, null, null, null, null);
     }
     
+    /**
+     * Gets the form configuration
+     * @return the FormConfig instance
+     */
+    public FormConfig getConfig() {
+        return config;
+    }
+    
     public FormMenuUtil(FormConfig config, MessageData messageData, 
                        PlatformCommandExecutor commandExecutor,
                        PlatformSoundManager soundManager,

@@ -9,6 +9,12 @@ settings:
   max_forms_per_player: 10
   form_timeout: 300000  # 5 minutes
   enable_analytics: true
+  
+  # Pagination settings for list actions
+  pagination:
+    button_order: "next_first"  # Options: "next_first" or "previous_first"
+    default_previous_text: "⬅ Previous Page"
+    default_next_text: "Next Page ➡"
 # ==================== COMMAND CONFIGURATION ====================
 commands:
   # Main hub command
@@ -103,6 +109,22 @@ forms:
         text: "§3§l📄 Pagination Demo"
         image: "textures/ui/icon_recipe_construction"
         onClick: "open:pagination_demo"
+      
+      # NEW LIST FEATURE DEMOS
+      list_feature_simple:
+        text: "§a§l📋 List Feature - Simple"
+        image: "textures/ui/icon_recipe_item"
+        onClick: "open:list_simple_demo"
+      
+      list_feature_advanced:
+        text: "§b§l📊 List Feature - Advanced"
+        image: "textures/ui/icon_recipe_equipment"
+        onClick: "open:list_advanced_demo"
+      
+      list_feature_complex:
+        text: "§d§l🔥 List Feature - Complex"
+        image: "textures/ui/icon_recipe_nature"
+        onClick: "open:list_complex_demo"
       
 
       
@@ -226,6 +248,302 @@ forms:
       back:
         text: "§8§l← Back"
         onClick: "open:basic_actions"
+
+  # ==================== LIST FEATURE DEMOS ====================
+  
+  # ==================== SIMPLE LIST DEMO ====================
+  list_simple_demo:
+    type: "SIMPLE"
+    title: "§a§l📋 List Feature - Simple Examples"
+    description: "§7Basic list functionality demonstrations"
+    buttons:
+      static_list_demo:
+        text: "§e§l📝 Static List Demo"
+        onClick: "open:static_list_form"
+      
+      placeholder_list_demo:
+        text: "§b§l🔗 Placeholder List Demo"
+        onClick: "open:placeholder_list_form"
+      
+      online_players_demo:
+        text: "§2§l👥 Online Players Demo"
+        onClick: "open:online_players_form"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Static List Example - Simple fruit selection
+  static_list_form:
+    type: "SIMPLE"
+    title: "§e§l🍎 Fruit Selection"
+    description: "Choose your favorite fruit from the list below:"
+    buttons:
+      view_fruits:
+        text: "§a§l🍎 View Fruit List"
+        onClick: "list:static_list:[{name:Apple,value:fruit},{name:Orange,value:fruit},{name:Banana,value:fruit},{name:Grape,value:fruit},{name:Strawberry,value:fruit}],form_id:static_list_form,per_page:3,title:Fruit Selection,button_template:§f{name} ({value}),button_action:message:§a§lYou selected: {name}!"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_simple_demo"
+
+  # Placeholder List Example - Server stats
+  placeholder_list_form:
+    type: "SIMPLE"
+    title: "§b§l📊 Server Statistics"
+    description: "View current server information:"
+    buttons:
+      view_stats:
+        text: "§b§l📊 View Server Stats"
+        onClick: "list:placeholder:%server_online%,form_id:placeholder_list_form,per_page:5,title:Server Statistics,button_template:§7• §f{item},button_action:message:§e§lStat Info: {item}"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_simple_demo"
+
+  # Online Players Example
+  online_players_form:
+    type: "SIMPLE"
+    title: "§2§l👥 Online Players"
+    description: "View and interact with online players:"
+    buttons:
+      view_players:
+        text: "§2§l👥 View Online Players"
+        onClick: "list:custom_source:online_players,form_id:online_players_form,per_page:5,title:Online Players,button_template:§a👤 §f{name} §7({world}),button_action:message:§e§lPlayer Info: {name} in {world}"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_simple_demo"
+
+  # ==================== ADVANCED LIST DEMO ====================
+  list_advanced_demo:
+    type: "SIMPLE"
+    title: "§b§l📊 List Feature - Advanced Examples"
+    description: "§7Advanced list functionality with pagination and templates"
+    buttons:
+      server_info_demo:
+        text: "§6§l🖥️ Server Information"
+        onClick: "open:server_info_form"
+      
+      player_permissions_demo:
+        text: "§d§l🔐 Player Permissions"
+        onClick: "open:permissions_form"
+      
+      paginated_demo:
+        text: "§3§l📄 Paginated Lists"
+        onClick: "open:paginated_form"
+      
+      templated_demo:
+        text: "§e§l🎨 Custom Templates"
+        onClick: "open:templated_form"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Server Information List
+  server_info_form:
+    type: "SIMPLE"
+    title: "§6§l🖥️ Server Information"
+    description: "Detailed server statistics and information:"
+    buttons:
+      view_info:
+        text: "§6§l🖥️ View Server Info"
+        onClick: "list:custom_source:server_info,form_id:server_info_form,per_page:6,title:Server Information,button_template:§6📊 §f{name}: §e{value},button_action:message:§b§lServer Info: §f{name} = §e{value}"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_advanced_demo"
+
+  # Player Permissions List
+  permissions_form:
+    type: "SIMPLE"
+    title: "§d§l🔐 Your Permissions"
+    description: "View your current permissions:"
+    buttons:
+      view_permissions:
+        text: "§d§l🔐 View My Permissions"
+        onClick: "list:custom_source:permissions,form_id:permissions_form,per_page:8,title:Your Permissions,button_template:§d🔐 §f{name} §7({value}),button_action:message:§e§lPermission: §f{name} §7- Status: {value}"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_advanced_demo"
+
+  # Paginated List Example
+  paginated_form:
+    type: "SIMPLE"
+    title: "§3§l📄 Paginated Example"
+    description: "Large list with pagination controls:"
+    buttons:
+      view_paginated:
+        text: "§3§l📄 View Paginated List"
+        onClick: "list:static_list:[{name:Item 1,value:example},{name:Item 2,value:example},{name:Item 3,value:example},{name:Item 4,value:example},{name:Item 5,value:example},{name:Item 6,value:example},{name:Item 7,value:example},{name:Item 8,value:example},{name:Item 9,value:example},{name:Item 10,value:example},{name:Item 11,value:example},{name:Item 12,value:example},{name:Item 13,value:example},{name:Item 14,value:example},{name:Item 15,value:example},{name:Item 16,value:example},{name:Item 17,value:example},{name:Item 18,value:example},{name:Item 19,value:example},{name:Item 20,value:example}],form_id:paginated_form,per_page:4,title:Paginated Example,button_template:§3📋 §f{name} §7(#{index}),button_action:message:§a§lSelected: {name} (Position #{index})"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_advanced_demo"
+
+  # Custom Template Example
+  templated_form:
+    type: "SIMPLE"
+    title: "§e§l🎨 Custom Templates"
+    description: "Advanced template formatting:"
+    buttons:
+      view_templates:
+        text: "§e§l🎨 View Custom Templates"
+        onClick: "list:custom_source:online_players,form_id:templated_form,per_page:3,title:Custom Templates,button_template:§e⭐ §l{name}\n§7World: §a{world}\n§7Health: §c{health}❤,button_action:message:§e§lPlayer Details:\n§7Name: §f{name}\n§7World: §a{world}\n§7Health: §c{health}/20"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_advanced_demo"
+
+  # ==================== COMPLEX LIST DEMO ====================
+  list_complex_demo:
+    type: "SIMPLE"
+    title: "§d§l🔥 List Feature - Complex Examples"
+    description: "§7Complex list functionality with advanced features"
+    buttons:
+      multi_source_demo:
+        text: "§c§l🔄 Multi-Source Demo"
+        onClick: "open:multi_source_form"
+      
+      interactive_demo:
+        text: "§a§l⚡ Interactive Demo"
+        onClick: "open:interactive_form"
+      
+      admin_tools_demo:
+        text: "§4§l⚙️ Admin Tools"
+        onClick: "open:admin_tools_form"
+        show_condition: "permission:bedrockgui.admin"
+      
+      dynamic_demo:
+        text: "§b§l🌊 Dynamic Lists"
+        onClick: "open:dynamic_form"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Multi-Source Complex Example
+  multi_source_form:
+    type: "MODAL"
+    title: "§c§l🔄 Multi-Source Data"
+    description: "Choose a data source to explore:"
+    formId: "multi_source"
+    buttons:
+      players_source:
+        text: "§2§l👥 Online Players"
+        onClick: "list:source=online_players:button_template=§2👤 §l{name}\n§7🌍 {world} §8| §c❤{health} §8| §e⭐{level}:button_action=conditional:permission:bedrockgui.admin:message:§a§lTeleporting to {name}...:teleport:{x} {y} {z}:sound:entity.enderman.teleport:message:§c§lAdmin permission required to teleport:sound:entity.villager.no:per_page=4"
+      
+      server_source:
+        text: "§6§l🖥️ Server Data"
+        onClick: "list:source=server_info:button_template=§6🔧 §l{key}\n§7Value: §e{value}:button_action=conditional:permission:bedrockgui.admin:message:§b§lServer Stat: §f{key}\n§7Current Value: §e{value}:broadcast:permission:bedrockgui.admin:§6[ADMIN] §e%player_name% §7viewed server stat: {key}:message:§7Server Stat: §f{key} = §e{value}:per_page=5"
+      
+      permissions_source:
+        text: "§d§l🔐 Your Permissions"
+        onClick: "list:source=player_permissions:button_template=§d🔐 §l{permission}\n§7Status: {status}:button_action=message:§e§lPermission Details:\n§7Node: §f{permission}\n§7Status: §a{status}\n§7Description: Access to {permission} features:per_page=6"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_complex_demo"
+
+  # Interactive Complex Example
+  interactive_form:
+    type: "MODAL"
+    title: "§a§l⚡ Interactive Player List"
+    description: "Advanced player interaction system:"
+    formId: "interactive"
+    buttons:
+      interact_players:
+        text: "§a§lInteract with Players"
+        onClick: "list:source=online_players:button_template=§a⚡ §l{name} §r§7({world})\n§7Health: §c{health}❤ §8| §7Level: §e{level}⭐:button_action=open:player_interaction_menu:per_page=3"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_complex_demo"
+
+  # Player Interaction Menu (opened from interactive list)
+  player_interaction_menu:
+    type: "MODAL"
+    title: "§a§l⚡ Player Interaction"
+    description: "Choose an action for the selected player:"
+    formId: "player_interaction"
+    buttons:
+      teleport_to:
+        text: "§b§l🌟 Teleport To Player"
+        onClick: "conditional:permission:bedrockgui.teleport:message:§b§lTeleporting to {name}...:teleport:{x} {y} {z}:sound:entity.enderman.teleport:delay:1000:message:§a§lArrived at {name}'s location!:message:§c§lYou don't have permission to teleport:sound:entity.villager.no"
+      
+      send_message:
+        text: "§e§l💬 Send Message"
+        onClick: "message:§e§lSending message to {name}...:delay:1000:command:tell {name} Hello from %player_name%!:message:§a§lMessage sent to {name}!"
+      
+      view_info:
+        text: "§6§l📊 View Info"
+        onClick: "message:§6§l=== Player Information ===\n§7Name: §f{name}\n§7World: §a{world}\n§7Health: §c{health}/20\n§7Level: §e{level}\n§7Position: §b{x}, {y}, {z}:sound:ui.button.click"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:interactive_form"
+
+  # Admin Tools Complex Example
+  admin_tools_form:
+    type: "MODAL"
+    title: "§4§l⚙️ Admin Tools"
+    description: "Advanced administrative functions:"
+    formId: "admin_tools"
+    permission: "bedrockgui.admin"
+    buttons:
+      manage_players:
+        text: "§c§l👥 Manage Players"
+        onClick: "list:source=online_players:button_template=§c⚙️ §l{name} §r§7({world})\n§7Health: §c{health}❤ §8| §7Gamemode: §b{gamemode}:button_action=open:admin_player_menu:per_page=4"
+      
+      server_management:
+        text: "§6§l🖥️ Server Management"
+        onClick: "list:source=server_info:button_template=§6🔧 §l{key}\n§7Current: §e{value}\n§7§oClick to manage:button_action=conditional:placeholder:{key}:contains:tps:message:§6§lServer TPS: §e{value}\n§7Performance is good!:sound:random.levelup:conditional:placeholder:{key}:contains:memory:message:§e§lMemory Usage: §c{value}\n§7Monitor server resources:sound:ui.button.click:message:§b§lServer Info: §f{key} = §e{value}:per_page=5"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_complex_demo"
+
+  # Admin Player Management Menu
+  admin_player_menu:
+    type: "MODAL"
+    title: "§c§l⚙️ Manage Player: {name}"
+    description: "Administrative actions for the selected player:"
+    formId: "admin_player"
+    permission: "bedrockgui.admin"
+    buttons:
+      teleport_player:
+        text: "§b§l🌟 Teleport Player"
+        onClick: "message:§b§lTeleporting {name} to spawn...:server:tp {name} spawn:delay:1000:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7teleported §e{name} §7to spawn:message:§a§l{name} has been teleported to spawn!"
+      
+      heal_player:
+        text: "§a§l❤ Heal Player"
+        onClick: "message:§a§lHealing {name}...:server:heal {name}:delay:500:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7healed §e{name}:message:§a§l{name} has been healed!"
+      
+      kick_player:
+        text: "§c§l⚠ Kick Player"
+        onClick: "message:§c§lKicking {name} from the server...:server:kick {name} Kicked by admin:delay:1000:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7kicked §e{name}:message:§c§l{name} has been kicked from the server!"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:admin_tools_form"
+
+  # Dynamic Lists Example
+  dynamic_form:
+    type: "MODAL"
+    title: "§b§l🌊 Dynamic Lists"
+    description: "Lists that change based on conditions:"
+    formId: "dynamic"
+    buttons:
+      time_based_list:
+        text: "§e§l🕐 Time-Based List"
+        onClick: "conditional:placeholder:%world_time%:>=:0:placeholder:%world_time%:<=:6000:list:source=static:data=Morning Activities,Sunrise Viewing,Early Farming,Dawn Patrol:button_template=§e🌅 §f{item}:button_action=message:§e§lMorning Activity: {item}:conditional:placeholder:%world_time%:>=:6000:placeholder:%world_time%:<=:18000:list:source=static:data=Daytime Work,Building Projects,Exploration,Trading:button_template=§a☀️ §f{item}:button_action=message:§a§lDay Activity: {item}:list:source=static:data=Night Activities,Mob Hunting,Mining,Stargazing:button_template=§9🌙 §f{item}:button_action=message:§9§lNight Activity: {item}:per_page=4"
+      
+      permission_based_list:
+        text: "§d§l🔐 Permission-Based List"
+        onClick: "conditional:permission:bedrockgui.admin:list:source=static:data=Admin Commands,Server Management,Player Moderation,System Monitoring:button_template=§c⚙️ §f{item}:button_action=message:§c§lAdmin Feature: {item}:conditional:permission:bedrockgui.vip:list:source=static:data=VIP Perks,Exclusive Areas,Special Commands,Priority Support:button_template=§d👑 §f{item}:button_action=message:§d§lVIP Feature: {item}:list:source=static:data=Basic Features,General Chat,Public Areas,Standard Support:button_template=§7📋 §f{item}:button_action=message:§7§lBasic Feature: {item}:per_page=4"
+      
+      health_based_list:
+        text: "§c§l❤ Health-Based List"
+        onClick: "conditional:placeholder:%player_health%:>=:15:list:source=static:data=Healthy Activities,Combat Training,Exploration,Adventure:button_template=§a💪 §f{item}:button_action=message:§a§lHealthy Activity: {item}:conditional:placeholder:%player_health%:>=:5:list:source=static:data=Recovery Activities,Rest,Light Tasks,Healing:button_template=§e🏥 §f{item}:button_action=message:§e§lRecovery Activity: {item}:list:source=static:data=Emergency Actions,Immediate Healing,Safe Shelter,Call for Help:button_template=§c🚨 §f{item}:button_action=message:§c§lEmergency: {item}:command:heal %player_name%:per_page=3"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:list_complex_demo"
 
   # ==================== COMPLETE ACTION HANDLER TEST SUITE ====================
   complete_test_suite:
