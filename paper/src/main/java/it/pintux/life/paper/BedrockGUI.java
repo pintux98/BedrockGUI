@@ -1,6 +1,6 @@
 package it.pintux.life.paper;
 
-import it.pintux.life.common.actions.ListActionHandler;
+import it.pintux.life.common.actions.handlers.ListActionHandler;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.paper.data.PaperDataProvider;
 import it.pintux.life.paper.placeholders.BedrockGUIExpansion;
@@ -9,6 +9,7 @@ import it.pintux.life.paper.platform.PaperPlayerChecker;
 import it.pintux.life.paper.platform.PaperCommandExecutor;
 import it.pintux.life.paper.platform.PaperEconomyManager;
 import it.pintux.life.paper.platform.PaperSoundManager;
+import it.pintux.life.paper.platform.PaperTitleManager;
 
 // import it.pintux.life.common.form.EnhancedFormMenuUtil;
 import it.pintux.life.common.form.FormMenuUtil;
@@ -70,10 +71,10 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = new PaperEconomyManager(this);
         PaperFormSender formSender = new PaperFormSender();
-        PaperResourcePackManager resourcePackManager = new PaperResourcePackManager(this);
         PaperDataProvider dataProvider = new PaperDataProvider();
+        PaperTitleManager titleManager = new PaperTitleManager();
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, resourcePackManager, dataProvider);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, dataProvider);
 
         // EnhancedFormMenuUtil enhancedFormMenuUtil = new EnhancedFormMenuUtil(
         //     new PaperConfig(getConfig()), 
@@ -119,7 +120,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 String[] parts = command.split(" ");
                 String[] args = Arrays.copyOfRange(parts, 1, parts.length);
 
-                formMenuUtil.openForm(player, key, args);
+                api.openMenu(player, key, args);
             }
         });
     }
@@ -152,7 +153,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                     if (args.length >= requiredArgs) {
                         event.setCancelled(true);
                         PaperPlayer player1 = new PaperPlayer(event.getPlayer());
-                        formMenuUtil.openForm(player1, key, args);
+                        api.openMenu(player1, key, args);
                     } else {
                         player.sendMessage(messageData.getValue(MessageData.MENU_ARGS, Map.of("args", requiredArgs), null));
                     }
@@ -184,30 +185,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             }
         } catch (Exception e) {
             getLogger().warning("Failed to setup Geyser integration: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Handles player join events for resource pack management
-     */
-    @EventHandler
-    public void onPlayerJoin(PlayerJoinEvent event) {
-        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
-        if (api != null && playerChecker.isBedrockPlayer(event.getPlayer().getUniqueId())) {
-            // Send default resource packs to Bedrock players
-            getServer().getScheduler().runTaskLater(this, () -> {
-                api.onPlayerJoin(event.getPlayer().getUniqueId());
-            }, 20L); // 1 second delay to ensure player is fully loaded
-        }
-    }
-
-    /**
-     * Handles player quit events for cleanup
-     */
-    @EventHandler
-    public void onPlayerQuit(PlayerQuitEvent event) {
-        if (api != null && api.getResourcePackManager() != null) {
-            ((PaperResourcePackManager) api.getResourcePackManager()).onPlayerDisconnect(event.getPlayer().getUniqueId());
         }
     }
 

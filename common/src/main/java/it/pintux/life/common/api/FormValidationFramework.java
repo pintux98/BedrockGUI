@@ -553,8 +553,27 @@ public class FormValidationFramework {
             }
             
             SimpleFormBuilder builder = (SimpleFormBuilder) value;
-            // For now, we'll assume the form is valid since we can't access button count
-            int buttonCount = 0; // TODO: Implement proper button counting
+            int buttonCount;
+            try {
+                // Prefer dedicated getter if available
+                try {
+                    java.lang.reflect.Method m = builder.getClass().getMethod("getButtonCount");
+                    Object result = m.invoke(builder);
+                    buttonCount = (result instanceof Number) ? ((Number) result).intValue() : 0;
+                } catch (NoSuchMethodException nsme) {
+                    // Fallback to private field via reflection
+                    java.lang.reflect.Field field = builder.getClass().getDeclaredField("buttons");
+                    field.setAccessible(true);
+                    Object val = field.get(builder);
+                    if (val instanceof java.util.Collection) {
+                        buttonCount = ((java.util.Collection<?>) val).size();
+                    } else {
+                        buttonCount = 0;
+                    }
+                }
+            } catch (Exception ex) {
+                buttonCount = 0;
+            }
             
             Integer minButtons = (Integer) parameters.get("minButtons");
             Integer maxButtons = (Integer) parameters.get("maxButtons");
@@ -592,9 +611,27 @@ public class FormValidationFramework {
             }
             
             CustomFormBuilder builder = (CustomFormBuilder) value;
-            // Use reflection or a getter method to access components count
-            // For now, we'll assume the form is valid
-            int componentCount = 0; // TODO: Implement proper component counting
+            int componentCount;
+            try {
+                // Prefer dedicated getter if available
+                try {
+                    java.lang.reflect.Method m = builder.getClass().getMethod("getComponentCount");
+                    Object result = m.invoke(builder);
+                    componentCount = (result instanceof Number) ? ((Number) result).intValue() : 0;
+                } catch (NoSuchMethodException nsme) {
+                    // Fallback to private field via reflection
+                    java.lang.reflect.Field field = builder.getClass().getDeclaredField("components");
+                    field.setAccessible(true);
+                    Object val = field.get(builder);
+                    if (val instanceof java.util.Collection) {
+                        componentCount = ((java.util.Collection<?>) val).size();
+                    } else {
+                        componentCount = 0;
+                    }
+                }
+            } catch (Exception ex) {
+                componentCount = 0;
+            }
             
             Integer minComponents = (Integer) parameters.get("minComponents");
             Integer maxComponents = (Integer) parameters.get("maxComponents");

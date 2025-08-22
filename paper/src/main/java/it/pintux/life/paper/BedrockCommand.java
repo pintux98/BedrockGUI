@@ -67,7 +67,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             PaperPlayer player1 = new PaperPlayer(player);
 
             // Open form using the form menu utility
-            plugin.getFormMenuUtil().openForm(player1, menuName, menuArgs);
+            plugin.getApi().openMenu(player1, menuName, menuArgs);
         }
 
         //if (arg.equalsIgnoreCase("pack")) {

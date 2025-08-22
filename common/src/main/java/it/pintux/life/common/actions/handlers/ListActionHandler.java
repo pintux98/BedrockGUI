@@ -1,5 +1,6 @@
-package it.pintux.life.common.actions;
+package it.pintux.life.common.actions.handlers;
 
+import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionResult;

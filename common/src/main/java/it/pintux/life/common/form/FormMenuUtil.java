@@ -33,9 +33,10 @@ public class FormMenuUtil {
     private final PlatformSoundManager soundManager;
     private final PlatformEconomyManager economyManager;
     private final PlatformFormSender formSender;
+    private final PlatformTitleManager titleManager;
 
     public FormMenuUtil(FormConfig config, MessageData messageData) {
-        this(config, messageData, null, null, null, null);
+        this(config, messageData, null, null, null, null, null);
     }
     
     /**
@@ -50,7 +51,8 @@ public class FormMenuUtil {
                        PlatformCommandExecutor commandExecutor,
                        PlatformSoundManager soundManager,
                        PlatformEconomyManager economyManager,
-                       PlatformFormSender formSender) {
+                       PlatformFormSender formSender,
+                       PlatformTitleManager titleManager) {
         this.config = config;
         formMenus = new HashMap<>();
         this.messageData = messageData;
@@ -58,6 +60,7 @@ public class FormMenuUtil {
         this.soundManager = soundManager;
         this.economyManager = economyManager;
         this.formSender = formSender;
+        this.titleManager = titleManager;
         
         // Initialize action system
         this.actionRegistry = ActionRegistry.getInstance();
@@ -83,7 +86,7 @@ public class FormMenuUtil {
         // Platform-dependent action handlers (only register if platform managers are available)
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
-            //actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
         }
         
         if (soundManager != null) {
@@ -94,9 +97,17 @@ public class FormMenuUtil {
             actionRegistry.registerHandler(new EconomyActionHandler(economyManager));
         }
         
+        if (titleManager != null && titleManager.isSupported()) {
+            actionRegistry.registerHandler(new TitleActionHandler(titleManager));
+            actionRegistry.registerHandler(new ActionBarActionHandler(titleManager));
+        }
+        
         // Advanced action handlers that depend on the action executor
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
         actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
+        
+        // Register URL action handler
+        actionRegistry.registerHandler(new OpenUrlActionHandler());
         
         logger.info("Registered " + actionRegistry.size() + " action handlers");
     }

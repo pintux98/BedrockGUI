@@ -40,7 +40,7 @@ public class BedrockGUIApi {
     private final ActionRegistry actionRegistry;
     private final PlatformFormSender formSender;
     private final MessageData messageData;
-    private final PlatformResourcePackManager resourcePackManager;
+    private final PlatformTitleManager platformTitleManager;
     private final DataProvider dataProvider;
     
     // Form cache for dynamic forms
@@ -57,13 +57,13 @@ public class BedrockGUIApi {
                         PlatformSoundManager soundManager,
                         PlatformEconomyManager economyManager,
                         PlatformFormSender formSender,
-                        PlatformResourcePackManager resourcePackManager,
+                        PlatformTitleManager platformTitleManager,
                         DataProvider dataProvider) {
         this.messageData = messageData;
         this.formSender = formSender;
-        this.resourcePackManager = resourcePackManager;
         this.dataProvider = dataProvider;
-        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender);
+        this.platformTitleManager = platformTitleManager;
+        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
         
@@ -327,14 +327,7 @@ public class BedrockGUIApi {
     public FormMenuUtil getFormMenuUtil() {
         return formMenuUtil;
     }
-    
-    /**
-     * Gets the resource pack manager instance
-     */
-    public PlatformResourcePackManager getResourcePackManager() {
-        return resourcePackManager;
-    }
-    
+
     /**
      * Gets the message data instance
      */
@@ -347,32 +340,6 @@ public class BedrockGUIApi {
      */
     public DataProvider getDataProvider() {
         return dataProvider;
-    }
-    
-    /**
-     * Handles player join events for resource pack management
-     */
-    public void onPlayerJoin(UUID playerId) {
-        if (resourcePackManager != null && resourcePackManager.isEnabled()) {
-            // Send default resource pack to new players
-            try {
-                // Use a small delay to ensure player is fully loaded
-                CompletableFuture.runAsync(() -> {
-                    try {
-                        Thread.sleep(1000); // 1 second delay
-                        String defaultPack = "ui_enhanced"; // Default pack from config
-                        boolean success = resourcePackManager.sendResourcePack(playerId, defaultPack);
-                        if (success) {
-                            logger.info("Sent default resource pack to player: " + playerId);
-                        }
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                    }
-                });
-            } catch (Exception e) {
-                logger.warn("Failed to send default resource pack to player " + playerId + ": " + e.getMessage());
-            }
-        }
     }
     
     /**

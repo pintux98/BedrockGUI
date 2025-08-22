@@ -15,6 +15,17 @@ settings:
     button_order: "next_first"  # Options: "next_first" or "previous_first"
     default_previous_text: "⬅ Previous Page"
     default_next_text: "Next Page ➡"
+resource_packs:
+  enabled: true
+  default_pack: "ui_enhanced"
+  force_packs: []
+  packs:
+    ui_enhanced: "https://example.com/ui_enhanced.zip"
+    custom_icons: "https://example.com/custom_icons.zip"
+    admin_tools: "https://example.com/admin_tools.zip"
+  menu_packs:
+    default: "ui_enhanced"
+    # main_hub: "custom_icons"
 # ==================== COMMAND CONFIGURATION ====================
 commands:
   # Main hub command

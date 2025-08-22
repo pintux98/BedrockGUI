@@ -68,7 +68,8 @@ public class OpenFormActionHandler implements ActionHandler {
             }
             
             // Open the menu
-            formMenuUtil.openMenu(player, processedMenuName);
+            // Open the menu
+            BedrockGUIApi.getInstance().openMenu(player, processedMenuName);
             
             logger.debug("Successfully opened menu '" + processedMenuName + "' for player " + player.getName());
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
