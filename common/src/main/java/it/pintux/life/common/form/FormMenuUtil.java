@@ -109,6 +109,9 @@ public class FormMenuUtil {
         // Register URL action handler
         actionRegistry.registerHandler(new OpenUrlActionHandler());
         
+        // Register particle action handler
+        actionRegistry.registerHandler(new ParticleActionHandler());
+        
         logger.info("Registered " + actionRegistry.size() + " action handlers");
     }
 

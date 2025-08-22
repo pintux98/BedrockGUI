@@ -37,6 +37,8 @@ public class MessageData {
     public static String ACTION_BROADCAST_FAILED = "action.broadcast_failed";
     public static String ACTION_FORM_OPENED = "action.form_opened";
     public static String ACTION_FORM_NOT_FOUND = "action.form_not_found";
+    public static String ACTION_PARTICLE_SUCCESS = "action.particle_success";
+    public static String ACTION_PARTICLE_FAILED = "action.particle_failed";
     public static final String ACTION_TELEPORT_OUT_OF_BOUNDS = "action.teleport.out_of_bounds";
     public static final String ACTION_TELEPORT_INVALID_Y = "action.teleport.invalid_y";
     public static final String ACTION_ECONOMY_NOT_AVAILABLE = "action.economy.not_available";
