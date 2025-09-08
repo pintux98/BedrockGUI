@@ -12,7 +12,6 @@ import java.util.regex.Pattern;
 public class PlaceholderUtil {
     
     private static final Pattern DYNAMIC_PLACEHOLDER_PATTERN = Pattern.compile("\\$(\\w+)");
-    private static final Pattern MISSING_PLACEHOLDER_PATTERN = Pattern.compile("\\$(\\w+)");
     
     /**
      * Process all placeholders in a text string (overloaded for action handlers)
@@ -153,7 +152,7 @@ public class PlaceholderUtil {
             return;
         }
         
-        Matcher matcher = MISSING_PLACEHOLDER_PATTERN.matcher(text);
+        Matcher matcher = DYNAMIC_PLACEHOLDER_PATTERN.matcher(text);
         while (matcher.find()) {
             String placeholder = matcher.group(1);
             logger.warn("Missing replacement value for placeholder: $" + placeholder);

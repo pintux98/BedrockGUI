@@ -1,12 +1,10 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
-import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
-import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.api.BedrockGUIApi;
+import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 
 import java.util.Map;
 import java.util.HashMap;
@@ -20,8 +18,7 @@ import it.pintux.life.common.platform.PlatformCommandExecutor;
  * Usage: broadcast:permission:vip.access:VIP only message!
  * Usage: broadcast:world:world_nether:Nether announcement!
  */
-public class BroadcastActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(BroadcastActionHandler.class);
+public class BroadcastActionHandler extends BaseActionHandler {
     private final PlatformCommandExecutor commandExecutor;
     
     public BroadcastActionHandler(PlatformCommandExecutor commandExecutor) {
@@ -35,10 +32,10 @@ public class BroadcastActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        if (actionData == null || actionData.trim().isEmpty()) {
-            logger.warn("Broadcast action called with empty message for player: " + player.getName());
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+        // Validate basic parameters using base class method
+        ActionResult validationResult = validateBasicParameters(player, actionData);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
@@ -74,10 +71,7 @@ public class BroadcastActionHandler implements ActionHandler {
                         broadcastCommand = "broadcast radius " + target + " " + player.getName() + " " + message;
                         break;
                     default:
-                        MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                        Map<String, Object> replacements = new HashMap<>();
-                        replacements.put("type", type);
-                        return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player));
+                        return createFailureResult(MessageData.ACTION_INVALID_PARAMETERS, createReplacements("type", type), player);
                 }
             } else {
                 // parts.length == 2, treat as simple message with colon
@@ -177,41 +171,5 @@ public class BroadcastActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context, FormPlayer player) {
-        if (context == null) {
-            return data;
-        }
-        
-        String result = data;
-        Map<String, String> placeholders = context.getPlaceholders();
-        
-        if (placeholders != null && !placeholders.isEmpty()) {
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue() : "";
-                result = result.replace(placeholder, value);
-            }
-        }
-        
-        // Process form results as placeholders
-        Map<String, Object> formResults = context.getFormResults();
-        if (formResults != null && !formResults.isEmpty()) {
-            for (Map.Entry<String, Object> entry : formResults.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue().toString() : "";
-                result = result.replace(placeholder, value);
-            }
-        }
-        
-        // Process PlaceholderAPI placeholders if available
-        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
-            Object messageDataObj = context.getMetadata().get("messageData");
-            if (messageDataObj instanceof it.pintux.life.common.utils.MessageData) {
-                it.pintux.life.common.utils.MessageData messageData = (it.pintux.life.common.utils.MessageData) messageDataObj;
-                result = it.pintux.life.common.utils.PlaceholderUtil.processPlaceholders(result, null, player, messageData);
-            }
-        }
-        
-        return result;
-    }
+
 }

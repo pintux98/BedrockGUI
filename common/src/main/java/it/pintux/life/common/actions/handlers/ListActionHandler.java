@@ -1,6 +1,5 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionResult;
@@ -10,15 +9,12 @@ import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.actions.ActionRegistry;
 
 import java.util.*;
-import java.util.logging.Logger;
 
 /**
  * Action handler for creating paginated lists from placeholder data
  * Works only with SIMPLE forms to generate dynamic buttons with pagination
  */
-public class ListActionHandler implements ActionHandler {
-    
-    private static final Logger logger = Logger.getLogger(ListActionHandler.class.getName());
+public class ListActionHandler extends BaseActionHandler {
     
     /**
      * Registers this action handler with the ActionRegistry
@@ -34,6 +30,11 @@ public class ListActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        if (!validationResult.isSuccess()) {
+            return validationResult;
+        }
+        
         try {
             logger.info("Execute Debug - Received actionValue: " + actionValue);
             Map<String, String> params = parseActionValue(actionValue);
@@ -47,18 +48,18 @@ public class ListActionHandler implements ActionHandler {
             String formId = params.get("form_id");
             
             if (formId == null || formId.isEmpty()) {
-                return ActionResult.failure(getErrorMessage("ACTION_INVALID_PARAMETERS", "form_id", "Form ID parameter is required"));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Form ID parameter is required"), player);
             }
             
             // Get data from various sources
             List<Map<String, String>> items = getDataFromSource(params, player);
             
             if (items == null) {
-                return ActionResult.failure(getErrorMessage("ACTION_INVALID_PARAMETERS", "data_source", "No valid data source specified (placeholder, static_list, or file)"));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No valid data source specified (placeholder, static_list, or file)"), player);
             }
             
             if (items.isEmpty()) {
-                return ActionResult.failure(getErrorMessage("ACTION_LIST_NO_DATA", "items", "No valid items found in placeholder data"));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No valid items found in placeholder data"), player);
             }
             
             // Calculate pagination
@@ -71,7 +72,7 @@ public class ListActionHandler implements ActionHandler {
             logger.info("Pagination Debug - Total Items: " + totalItems + ", Per Page: " + perPage + ", Total Pages: " + totalPages + ", Current Page: " + page);
             
             if (page > totalPages || page < 1) {
-                return ActionResult.failure(getErrorMessage("ACTION_LIST_INVALID_PAGE", "page", "Invalid page number"));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid page number"), player);
             }
             
             // Get items for current page
@@ -81,13 +82,13 @@ public class ListActionHandler implements ActionHandler {
             // Generate the paginated form
             generatePaginatedForm(player, formId, pageItems, page, totalPages, perPage, buttonTemplate, buttonAction, params);
             
-            return ActionResult.success(getSuccessMessage("ACTION_LIST_SUCCESS", "Generated list with " + pageItems.size() + " items (page " + page + "/" + totalPages + ")"));
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Generated list with " + pageItems.size() + " items (page " + page + "/" + totalPages + ")"), player);
             
         } catch (NumberFormatException e) {
-            return ActionResult.failure(getErrorMessage("ACTION_INVALID_FORMAT", "number", "Invalid number format in parameters"));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid number format in parameters"), player);
         } catch (Exception e) {
-            logger.severe("Error executing list action: " + e.getMessage());
-            return ActionResult.failure(getErrorMessage("ACTION_EXECUTION_ERROR", "error", "Error executing list action"));
+            logger.error("Error executing list action: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing list action"), player);
         }
     }
     
@@ -135,7 +136,7 @@ public class ListActionHandler implements ActionHandler {
             
             return parseListData(placeholderValue);
         } catch (Exception e) {
-            logger.warning("Error processing placeholder: " + e.getMessage());
+            logger.warn("Error processing placeholder: " + e.getMessage());
             return new ArrayList<>();
         }
     }
@@ -159,7 +160,7 @@ public class ListActionHandler implements ActionHandler {
             // This would require proper file handling and security considerations
             logger.info("File data source not yet implemented: " + filePath);
         } catch (Exception e) {
-            logger.warning("Error reading file data: " + e.getMessage());
+            logger.warn("Error reading file data: " + e.getMessage());
         }
         
         return items;
@@ -179,7 +180,7 @@ public class ListActionHandler implements ActionHandler {
             case "permissions":
                 return getPlayerPermissionsData(player);
             default:
-                logger.warning("Unknown custom source: " + customSource);
+                logger.warn("Unknown custom source: " + customSource);
                 break;
         }
         
@@ -232,7 +233,7 @@ public class ListActionHandler implements ActionHandler {
         if (data.trim().startsWith("[") && data.trim().endsWith("]")) {
             return parseJsonLikeListData(data);
         } else {
-            logger.warning("Invalid list data format. Expected JSON-like format: [{name:value,value:data},...]");
+            logger.warn("Invalid list data format. Expected JSON-like format: [{name:value,value:data},...]");
             return items;
         }
     }
@@ -290,7 +291,7 @@ public class ListActionHandler implements ActionHandler {
                 items.add(item);
             }
         } catch (Exception e) {
-            logger.warning("Error parsing JSON-like list data: " + e.getMessage());
+            logger.warn("Error parsing JSON-like list data: " + e.getMessage());
         }
         
         return items;
@@ -346,9 +347,9 @@ public class ListActionHandler implements ActionHandler {
             
             // Get button texts from params or config defaults
             String prevButtonText = params.getOrDefault("previous_button_text", 
-                BedrockGUIApi.getInstance().getFormMenuUtil().getConfig().getString("settings.pagination.default_previous_text", "⬅ Previous Page"));
+                BedrockGUIApi.getInstance().getFormMenuUtil().getConfig().getString("settings.pagination.default_previous_text", " Previous Page"));
             String nextButtonText = params.getOrDefault("next_button_text", 
-                BedrockGUIApi.getInstance().getFormMenuUtil().getConfig().getString("settings.pagination.default_next_text", "➡ Next Page"));
+                BedrockGUIApi.getInstance().getFormMenuUtil().getConfig().getString("settings.pagination.default_next_text", " Next Page"));
             
             // Get button order from config
             String buttonOrder = BedrockGUIApi.getInstance().getFormMenuUtil().getConfig().getString("settings.pagination.button_order", "previous_first");
@@ -571,7 +572,7 @@ public class ListActionHandler implements ActionHandler {
             }
             return messageData.getValueNoPrefix(key, objectPlaceholders, null);
         } catch (Exception e) {
-            logger.warning("MessageData not available, using fallback message for key: " + key);
+            logger.warn("MessageData not available, using fallback message for key: " + key);
             return "Message not available";
         }
     }
@@ -581,7 +582,7 @@ public class ListActionHandler implements ActionHandler {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             return messageData.getValueNoPrefix(key, new HashMap<>(), null);
         } catch (Exception e) {
-            logger.warning("MessageData not available, using fallback message for key: " + key);
+            logger.warn("MessageData not available, using fallback message for key: " + key);
             return "Message not available";
         }
     }

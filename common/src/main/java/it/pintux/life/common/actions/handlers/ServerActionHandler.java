@@ -1,12 +1,11 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.PlaceholderUtil;
+import it.pintux.life.common.utils.ErrorHandlingUtil;
 
 import java.util.Map;
 
@@ -19,8 +18,7 @@ import java.util.Map;
  * Usage: server:gamemode creative {player}
  * Usage: server:tp {player} spawn
  */
-public class ServerActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(ServerActionHandler.class);
+public class ServerActionHandler extends BaseActionHandler {
     private final PlatformCommandExecutor commandExecutor;
     
     public ServerActionHandler(PlatformCommandExecutor commandExecutor) {
@@ -32,11 +30,19 @@ public class ServerActionHandler implements ActionHandler {
         return "server";
     }
     
+    private boolean validateParameters(String actionData) {
+        return actionData != null && !actionData.trim().isEmpty();
+    }
+
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+        if (!validateParameters(actionData)) {
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid action parameters"), player);
+        }
+        
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Server action called with empty command for player: " + player.getName());
-            return ActionResult.failure("No server command specified");
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No server command specified"), player);
         }
         
         try {
@@ -45,20 +51,23 @@ public class ServerActionHandler implements ActionHandler {
             
             logger.info("Executing server command for player " + player.getName() + ": " + processedCommand);
             
-            // Execute command as console/server through platform abstraction
-            boolean success = commandExecutor.executeAsConsole(processedCommand);
+            // Execute command with enhanced error handling and retry logic
+            boolean success = ErrorHandlingUtil.executeCommandWithFallback(
+                () -> commandExecutor.executeAsConsole(processedCommand),
+                "Server command: " + processedCommand,
+                player
+            );
             
             if (success) {
-                logger.info("Server command executed successfully: " + processedCommand);
-                return ActionResult.success("Server command executed: " + processedCommand);
+                logger.info("Server command executed successfully");
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Server command executed successfully"), player);
             } else {
-                logger.warn("Server command failed to execute: " + processedCommand);
-                return ActionResult.failure("Failed to execute server command: " + processedCommand);
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to execute server command after retries"), player);
             }
             
         } catch (Exception e) {
             logger.error("Error executing server command for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error executing server command: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing server command: " + e.getMessage()), player);
         }
     }
     
@@ -82,7 +91,7 @@ public class ServerActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String command, ActionContext context, FormPlayer player) {
+    protected String processPlaceholders(String command, ActionContext context, FormPlayer player) {
         if (context == null) {
             return command;
         }

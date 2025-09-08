@@ -1,6 +1,7 @@
 package it.pintux.life.common.utils;
 
 import it.pintux.life.common.actions.ActionContext;
+import it.pintux.life.common.platform.PlatformPluginManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
@@ -9,11 +10,23 @@ import java.util.Map;
 
 /**
  * Utility class for evaluating conditions used in conditional buttons and actions.
- * Supports permission-based and placeholder-based conditions.
+ * Supports permission-based, placeholder-based, and plugin-based conditions.
  */
 public class ConditionEvaluator {
     
+    private static PlatformPluginManager pluginManager;
+    
     private static final Logger logger = Logger.getLogger(ConditionEvaluator.class);
+    
+    /**
+     * Sets the plugin manager for plugin condition evaluation.
+     * This should be called during plugin initialization.
+     * 
+     * @param manager The platform plugin manager
+     */
+    public static void setPluginManager(PlatformPluginManager manager) {
+        pluginManager = manager;
+    }
     
     /**
      * Evaluates a condition string for a given player and context.
@@ -69,6 +82,9 @@ public class ConditionEvaluator {
                     String expectedValue = parts[offset + 3];
                     conditionMet = evaluatePlaceholderCondition(conditionValue, operator, expectedValue, context, player, messageData);
                     break;
+                case "plugin":
+                    conditionMet = evaluatePluginCondition(conditionValue);
+                    break;
                 default:
                     logger.warn("Unknown condition type: " + conditionType);
                     return false;
@@ -92,6 +108,17 @@ public class ConditionEvaluator {
      */
     private static boolean evaluatePermissionCondition(FormPlayer player, String permission) {
         return player.hasPermission(permission);
+    }
+    
+    /**
+     * Evaluates a plugin-based condition
+     */
+    private static boolean evaluatePluginCondition(String pluginName) {
+        if (pluginManager == null) {
+            logger.warn("Plugin manager not initialized. Plugin conditions will always return false.");
+            return false;
+        }
+        return pluginManager.isPluginEnabled(pluginName);
     }
     
     /**
@@ -184,6 +211,8 @@ public class ConditionEvaluator {
                 return parts.length >= offset + 2; // type:permission
             case "placeholder":
                 return parts.length >= offset + 4; // type:placeholder:operator:value
+            case "plugin":
+                return parts.length >= offset + 2; // type:plugin_name
             default:
                 return false;
         }

@@ -7,6 +7,12 @@ depend:
   - floodgate
 softdepend:
   - PlaceholderAPI
+  - Vault
+  - LuckPerms
+  - WorldGuard
+  - CoreProtect
+  - MythicMobs
+  - Citizens
 commands:
   bedrockgui:
     usage: "/bedrockgui <reload | open>"

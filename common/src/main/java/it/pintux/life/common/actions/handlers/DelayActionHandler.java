@@ -1,24 +1,57 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
+
 
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Handles delays in action execution.
  * Useful for creating timed sequences or adding pauses between actions.
+ * Runs asynchronously to avoid blocking the main server thread.
  * 
  * Usage: delay:1000 (delay for 1000 milliseconds = 1 second)
  * Usage: delay:5000 (delay for 5 seconds)
  * Usage: delay:500 (delay for 0.5 seconds)
  */
-public class DelayActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(DelayActionHandler.class);
+public class DelayActionHandler extends BaseActionHandler {
+
     private static final long MAX_DELAY_MS = 30000; // Maximum 30 seconds delay
+    private static final ExecutorService executorService = Executors.newCachedThreadPool(r -> {
+        Thread thread = new Thread(r, "DelayActionHandler-" + System.currentTimeMillis());
+        thread.setDaemon(true);
+        return thread;
+    });
+    
+    private final ActionExecutor actionExecutor;
+    
+    public DelayActionHandler(ActionExecutor actionExecutor) {
+        this.actionExecutor = actionExecutor;
+    }
+
+    /**
+     * Shuts down the executor service to prevent resource leaks
+     */
+    public void shutdown() {
+        if (executorService != null && !executorService.isShutdown()) {
+            executorService.shutdown();
+            try {
+                if (!executorService.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
+                    executorService.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                executorService.shutdownNow();
+                Thread.currentThread().interrupt();
+            }
+        }
+    }
     
     @Override
     public String getActionType() {
@@ -29,44 +62,66 @@ public class DelayActionHandler implements ActionHandler {
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Delay action called with empty delay time for player: " + player.getName());
-            return ActionResult.failure("No delay time specified");
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "ACTION_INVALID_PARAMETERS"), player);
         }
         
         try {
             // Process placeholders in the action data
             String processedData = processPlaceholders(actionData.trim(), context);
             
-            long delayMs = Long.parseLong(processedData);
+            // Parse delay time and optional chained action
+            String[] parts = processedData.split(":", 2);
+            long delayMs = Long.parseLong(parts[0]);
+            String chainedAction = parts.length > 1 ? parts[1] : null;
             
             if (delayMs < 0) {
-                return ActionResult.failure("Delay time cannot be negative");
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot be negative"), player);
             }
             
             if (delayMs > MAX_DELAY_MS) {
-                return ActionResult.failure("Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)");
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)"), player);
             }
             
             if (delayMs == 0) {
-                return ActionResult.success("No delay applied");
+                // Execute chained action immediately if delay is 0
+                if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                    return executeChainedAction(player, chainedAction, context);
+                }
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "No delay applied"), player);
             }
             
             logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
             
-            // Perform the delay
-            Thread.sleep(delayMs);
+            // Schedule the delay and optional chained action asynchronously
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(delayMs);
+                    
+                    // Execute chained action after delay if present
+                    if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                        executeChainedAction(player, chainedAction, context);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    logger.warn("Delay was interrupted for player " + player.getName());
+                } catch (Exception e) {
+                    logger.error("Error executing chained action after delay for player " + player.getName() + ": " + e.getMessage());
+                }
+            }, executorService);
             
-            return ActionResult.success("Delayed for " + delayMs + "ms");
+            // Return immediately - don't block the main thread
+            String message = "Delay of " + delayMs + "ms scheduled";
+            if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                message += " with chained action";
+            }
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
             
         } catch (NumberFormatException e) {
             logger.warn("Invalid delay time format for player " + player.getName() + ": " + actionData);
-            return ActionResult.failure("Invalid delay time format: " + actionData);
-        } catch (InterruptedException e) {
-            logger.warn("Delay interrupted for player " + player.getName());
-            Thread.currentThread().interrupt(); // Restore interrupted status
-            return ActionResult.failure("Delay was interrupted");
+            return createFailureResult("ACTION_INVALID_PARAMETERS", createReplacements("error", "Invalid delay time format: " + actionData), player);
         } catch (Exception e) {
             logger.error("Error executing delay action for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error executing delay: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing delay: " + e.getMessage()), player);
         }
     }
     
@@ -126,5 +181,38 @@ public class DelayActionHandler implements ActionHandler {
         }
         
         return result;
+    }
+    
+    /**
+     * Executes a chained action after a delay
+     * @param player The player to execute the action for
+     * @param chainedAction The action string to execute
+     * @param context The action context
+     * @return The result of the chained action execution
+     */
+    private ActionResult executeChainedAction(FormPlayer player, String chainedAction, ActionContext context) {
+        try {
+            // Parse the chained action
+            ActionExecutor.Action action = actionExecutor.parseAction(chainedAction);
+            if (action == null) {
+                logger.warn("Failed to parse chained action: " + chainedAction);
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid chained action format: " + chainedAction), player);
+            }
+            
+            // Execute the chained action
+            ActionResult result = actionExecutor.executeAction(player, action.getType(), action.getValue(), context);
+            
+            if (result.isSuccess()) {
+                logger.debug("Successfully executed chained action for player " + player.getName() + ": " + chainedAction);
+            } else {
+                logger.warn("Chained action failed for player " + player.getName() + ": " + result.getMessage());
+            }
+            
+            return result;
+            
+        } catch (Exception e) {
+            logger.error("Error executing chained action for player " + player.getName() + ": " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing chained action: " + e.getMessage()), player);
+        }
     }
 }

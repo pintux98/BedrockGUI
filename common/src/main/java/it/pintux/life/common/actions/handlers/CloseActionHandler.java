@@ -1,18 +1,14 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
 import org.geysermc.floodgate.api.FloodgateApi;
 
 /**
  * Handles closing the current form
  */
-public class CloseActionHandler implements ActionHandler {
-    
-    private static final Logger logger = Logger.getLogger(CloseActionHandler.class);
+public class CloseActionHandler extends BaseActionHandler {
     
     @Override
     public String getActionType() {
@@ -21,17 +17,18 @@ public class CloseActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
-        if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
             logger.debug("Closing form for player " + player.getName());
-            return ActionResult.success("Form closed successfully");
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Form closed successfully"), player);
             
         } catch (Exception e) {
             logger.error("Error closing form for player " + player.getName(), e);
-            return ActionResult.failure("Failed to close form: " + e.getMessage(), e);
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to close form: " + e.getMessage()), player, e);
         }
     }
     

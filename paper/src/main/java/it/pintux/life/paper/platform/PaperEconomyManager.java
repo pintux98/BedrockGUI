@@ -3,7 +3,8 @@ package it.pintux.life.paper.platform;
 import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.paper.BedrockGUI;
-import net.milkbowl.vault2.economy.Economy;
+import net.milkbowl.vault.economy.Economy;
+import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
@@ -48,7 +49,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return BigDecimal.valueOf(0.0);
         }
         try {
-            return economy.balance(plugin.getName(), player.getUniqueId());
+            return BigDecimal.valueOf(economy.getBalance(player.getName()));
         } catch (Exception e) {
             return BigDecimal.valueOf(0.0);
         }
@@ -60,7 +61,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return false;
         }
         try {
-            return economy.deposit(plugin.getName(), player.getUniqueId(), amount).transactionSuccess();
+            return economy.depositPlayer(player.getName(), amount.doubleValue()).transactionSuccess();
         } catch (Exception e) {
             return false;
         }
@@ -72,7 +73,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return false;
         }
         try {
-            return economy.withdraw(plugin.getName(), player.getUniqueId(), amount).transactionSuccess();
+            return economy.withdrawPlayer(player.getName(), amount.doubleValue()).transactionSuccess();
         } catch (Exception e) {
             return false;
         }
@@ -84,7 +85,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return false;
         }
         try {
-            return economy.has(plugin.getName(), player.getUniqueId(), amount);
+            return economy.has(plugin.getName(), amount.doubleValue());
         } catch (Exception e) {
             return false;
         }
@@ -96,11 +97,11 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return false;
         }
         try {
-            BigDecimal currentBalance = economy.balance(plugin.getName(), player.getUniqueId());
+            BigDecimal currentBalance = BigDecimal.valueOf(economy.getBalance(player.getName()));
             if (currentBalance.doubleValue() > amount.doubleValue()) {
-                return economy.withdraw(plugin.getName(), player.getUniqueId(), BigDecimal.valueOf(currentBalance.doubleValue() - amount.doubleValue())).transactionSuccess();
+                return removeMoney(player, BigDecimal.valueOf(currentBalance.doubleValue() - amount.doubleValue()));
             } else if (currentBalance.doubleValue() < amount.doubleValue()) {
-                return economy.deposit(plugin.getName(), player.getUniqueId(), BigDecimal.valueOf(amount.doubleValue() - currentBalance.doubleValue())).transactionSuccess();
+                return addMoney(player, BigDecimal.valueOf(amount.doubleValue() - currentBalance.doubleValue()));
             }
             return true;
         } catch (Exception e) {
@@ -114,7 +115,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return "$";
         }
         try {
-            return economy.defaultCurrencyNameSingular(plugin.getName());
+            return economy.currencyNameSingular();
         } catch (Exception e) {
             return "$";
         }
@@ -126,7 +127,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return String.format("%.2f", amount);
         }
         try {
-            return economy.format(amount);
+            return economy.format(amount.doubleValue());
         } catch (Exception e) {
             return String.format("%.2f", amount);
         }

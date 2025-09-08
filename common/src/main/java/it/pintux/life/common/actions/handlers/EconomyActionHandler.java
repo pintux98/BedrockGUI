@@ -1,14 +1,12 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderUtil;
+import it.pintux.life.common.utils.ErrorHandlingUtil;
 
 import java.math.BigDecimal;
 import java.util.HashMap;
@@ -23,8 +21,7 @@ import java.util.Map;
  * Usage: economy:check:500 (check if player has at least 500, fails if not)
  * Usage: economy:pay:OtherPlayer:100 (pay 100 to another player)
  */
-public class EconomyActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(EconomyActionHandler.class);
+public class EconomyActionHandler extends BaseActionHandler {
     private final PlatformEconomyManager economyManager;
     
     public EconomyActionHandler(PlatformEconomyManager economyManager) {
@@ -38,26 +35,28 @@ public class EconomyActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        if (!economyManager.isEconomyAvailable()) {
-            logger.warn("Economy action called but economy is not available");
+        // Validate economy availability with enhanced error handling
+        if (!ErrorHandlingUtil.validateServiceAvailability(
+                () -> economyManager.isEconomyAvailable(),
+                "Economy",
+                player)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player)), player);
         }
         
-        if (actionData == null || actionData.trim().isEmpty()) {
-            logger.warn("Economy action called with empty data for player: " + player.getName());
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+        ActionResult validationResult = validateBasicParameters(player, actionData);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
             // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context);
+            String processedData = processPlaceholders(actionData.trim(), context, player);
             String[] parts = processedData.split(":");
             
             if (parts.length < 2) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
         }
 
             String operation = parts[0].toLowerCase();
@@ -77,7 +76,7 @@ public class EconomyActionHandler implements ActionHandler {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                     Map<String, Object> replacements = new HashMap<>();
                     replacements.put("operation", operation);
-                    return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
             }
 
         } catch (Exception e) {
@@ -85,21 +84,21 @@ public class EconomyActionHandler implements ActionHandler {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("error", e.getMessage());
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player)), player);
         }
     }
 
     private ActionResult handleAdd(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_INVALID_FORMAT, null, player)), player);
         }
 
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount <= 0) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player)), player);
             }
 
             boolean success = economyManager.addMoney(player, BigDecimal.valueOf(amount));
@@ -109,30 +108,30 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_SUCCESS, replacements, player));
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_SUCCESS, replacements, player)), player);
             } else {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_FAILED, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_ADD_FAILED, null, player)), player);
             }
         } catch (NumberFormatException e) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", parts[1]);
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
         }
     }
 
     private ActionResult handleRemove(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_INVALID_FORMAT, null, player)), player);
         }
 
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount <= 0) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player)), player);
             }
 
             if (!economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount))) {
@@ -140,7 +139,7 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player)), player);
             }
 
             boolean success = economyManager.removeMoney(player, BigDecimal.valueOf(amount));
@@ -150,30 +149,30 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_SUCCESS, replacements, player));
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_SUCCESS, replacements, player)), player);
             } else {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_FAILED, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_REMOVE_FAILED, null, player)), player);
             }
         } catch (NumberFormatException e) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", parts[1]);
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
         }
     }
 
     private ActionResult handleSet(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_SET_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_SET_INVALID_FORMAT, null, player)), player);
         }
 
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount < 0) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_NEGATIVE, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_NEGATIVE, null, player)), player);
             }
 
             boolean success = economyManager.setBalance(player, BigDecimal.valueOf(amount));
@@ -183,30 +182,30 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ECONOMY_SET_SUCCESS, replacements, player));
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ECONOMY_SET_SUCCESS, replacements, player)), player);
             } else {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_SET_FAILED, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_SET_FAILED, null, player)), player);
             }
         } catch (NumberFormatException e) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", parts[1]);
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
         }
     }
 
     private ActionResult handleCheck(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_CHECK_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_CHECK_INVALID_FORMAT, null, player)), player);
         }
 
         try {
             double amount = Double.parseDouble(parts[1]);
             if (amount < 0) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_NEGATIVE, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_NEGATIVE, null, player)), player);
             }
 
             boolean hasEnough = economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount));
@@ -216,7 +215,7 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ECONOMY_CHECK_SUCCESS, replacements, player));
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ECONOMY_CHECK_SUCCESS, replacements, player)), player);
             } else {
                 double currentBalance = economyManager.getBalance(player).doubleValue();
                 String currentFormatted = economyManager.formatMoney(BigDecimal.valueOf(currentBalance));
@@ -224,29 +223,29 @@ public class EconomyActionHandler implements ActionHandler {
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("current", currentFormatted);
                 replacements.put("required", formatted);
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player)), player);
             }
         } catch (NumberFormatException e) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", parts[1]);
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
         }
     }
 
     private ActionResult handlePay(FormPlayer player, String[] parts, ActionContext context) {
         if (parts.length < 3) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_INVALID_FORMAT, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_INVALID_FORMAT, null, player)), player);
         }
 
         try {
-            String targetPlayerName = processPlaceholders(parts[1], context);
+            String targetPlayerName = processPlaceholders(parts[1], context, player);
             double amount = Double.parseDouble(parts[2]);
 
             if (amount <= 0) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_AMOUNT_POSITIVE, null, player)), player);
             }
 
             if (!economyManager.hasEnoughMoney(player, BigDecimal.valueOf(amount))) {
@@ -254,14 +253,14 @@ public class EconomyActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("amount", formatted);
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_INSUFFICIENT_FUNDS, replacements, player)), player);
             }
 
             // Remove money from sender
             boolean removeSuccess = economyManager.removeMoney(player, BigDecimal.valueOf(amount));
             if (!removeSuccess) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_FAILED, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_FAILED, null, player)), player);
             }
 
             // Note: Adding money to target player would require a way to get FormPlayer by name
@@ -272,13 +271,13 @@ public class EconomyActionHandler implements ActionHandler {
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", formatted);
             replacements.put("target", targetPlayerName);
-            return ActionResult.success(messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_SUCCESS, replacements, player));
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ECONOMY_PAY_SUCCESS, replacements, player)), player);
 
         } catch (NumberFormatException e) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("amount", parts[2]);
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
         }
     }
     
@@ -323,14 +322,5 @@ public class EconomyActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context) {
-        if (context == null) {
-            return data;
-        }
-        
-        String result = PlaceholderUtil.processDynamicPlaceholders(data, context.getPlaceholders());
-        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
-        
-        return result;
-    }
+
 }

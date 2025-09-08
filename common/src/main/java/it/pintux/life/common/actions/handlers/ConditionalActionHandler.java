@@ -1,12 +1,10 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.MessageData;
 
@@ -23,8 +21,8 @@ import java.util.Map;
  * 
  * Format: conditional:[not:]condition_type:condition_value[:operator:expected_value]:success_action_type:success_action_data[:failure_action_type:failure_action_data]
  */
-public class ConditionalActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(ConditionalActionHandler.class);
+public class ConditionalActionHandler extends BaseActionHandler {
+
     private final ActionExecutor actionExecutor;
     
     public ConditionalActionHandler(ActionExecutor actionExecutor) {
@@ -40,15 +38,15 @@ public class ConditionalActionHandler implements ActionHandler {
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Conditional action called with empty data for player: " + player.getName());
-            return ActionResult.failure("No conditional data specified");
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No conditional data specified"), player);
         }
         
         try {
             String processedData = processPlaceholders(actionData.trim(), context, player);
-            String[] parts = processedData.split(":", 6);
+            String[] parts = processedData.split(":");
             
             if (parts.length < 4) {
-                return ActionResult.failure("Invalid conditional format. Minimum: condition_type:condition_value:action_type:action_data");
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid conditional format. Minimum: condition_type:condition_value:action_type:action_data"), player);
             }
             
             boolean negate = false;
@@ -58,7 +56,7 @@ public class ConditionalActionHandler implements ActionHandler {
                 negate = true;
                 offset = 1;
                 if (parts.length < 5) {
-                    return ActionResult.failure("Invalid conditional format with 'not'. Minimum: not:condition_type:condition_value:action_type:action_data");
+                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid conditional format with 'not'. Minimum: not:condition_type:condition_value:action_type:action_data"), player);
                 }
             }
             
@@ -72,7 +70,7 @@ public class ConditionalActionHandler implements ActionHandler {
                     break;
                 case "placeholder":
                     if (parts.length < offset + 5) {
-                        return ActionResult.failure("Placeholder condition requires operator and expected value");
+                        return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Placeholder condition requires operator and expected value"), player);
                     }
                     String operator = parts[offset + 2];
                     String expectedValue = parts[offset + 3];
@@ -81,7 +79,7 @@ public class ConditionalActionHandler implements ActionHandler {
                     offset += 2;
                     break;
                 default:
-                    return ActionResult.failure("Unknown condition type: " + conditionType);
+                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Unknown condition type: " + conditionType), player);
             }
             
             String condition = conditionBuilder.toString();
@@ -92,7 +90,7 @@ public class ConditionalActionHandler implements ActionHandler {
             }
             
             if (parts.length < offset + 4) {
-                return ActionResult.failure("Missing action type or action data");
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Missing action type or action data"), player);
             }
             
             String actionType;
@@ -101,34 +99,56 @@ public class ConditionalActionHandler implements ActionHandler {
             if (conditionMet) {
                 // Execute success action
                 actionType = parts[offset + 2];
-                actionDataToExecute = parts[offset + 3];
                 
-                // Check if there are failure actions after success actions
-                int successActionEnd = offset + 4;
-                if (parts.length > successActionEnd + 1) {
-                    // There might be failure actions, so we need to find where success action ends
-                    // For now, assume success action is just one action_type:action_data pair
+                // Build success action data - handle case where action data contains colons
+                StringBuilder successActionBuilder = new StringBuilder();
+                int successActionStart = offset + 3;
+                
+                // Find where failure action starts (if any)
+                int failureActionStart = -1;
+                if (parts.length > offset + 4) {
+                    // Look for failure action pattern - we need at least 2 more parts for action_type:action_data
+                    failureActionStart = offset + 4;
+                    // If there are more parts, the failure action might start later
+                    // For now, assume failure action starts right after success action
+                }
+                
+                if (failureActionStart != -1 && parts.length > failureActionStart + 1) {
+                    // There's a failure action, so success action data is just one part
+                    actionDataToExecute = parts[successActionStart];
+                } else {
+                    // No failure action, so success action data can span multiple parts
+                    for (int i = successActionStart; i < parts.length; i++) {
+                        if (successActionBuilder.length() > 0) {
+                            successActionBuilder.append(":");
+                        }
+                        successActionBuilder.append(parts[i]);
+                    }
+                    actionDataToExecute = successActionBuilder.toString();
                 }
                 
                 logger.info("Condition met for player " + player.getName() + ", executing success action: " + actionType + ":" + actionDataToExecute);
             } else {
                 // Execute failure action if available
-                if (parts.length < offset + 6) {
+                int failureActionTypeIndex = offset + 4;
+                int failureActionDataIndex = offset + 5;
+                
+                if (parts.length < failureActionDataIndex + 1) {
                     logger.info("Condition not met for player " + player.getName() + ": " + condition + " (no failure action specified)");
-                    return ActionResult.success("Condition not met, action skipped");
+                    return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Condition not met, action skipped"), player);
                 }
                 
-                actionType = parts[offset + 4];
-                actionDataToExecute = parts[offset + 5];
+                actionType = parts[failureActionTypeIndex];
                 
-                // Handle additional parts for failure action
-                if (parts.length > offset + 6) {
-                    StringBuilder sb = new StringBuilder(actionDataToExecute);
-                    for (int i = offset + 6; i < parts.length; i++) {
-                        sb.append(":").append(parts[i]);
+                // Build failure action data - handle case where action data contains colons
+                StringBuilder failureActionBuilder = new StringBuilder();
+                for (int i = failureActionDataIndex; i < parts.length; i++) {
+                    if (failureActionBuilder.length() > 0) {
+                        failureActionBuilder.append(":");
                     }
-                    actionDataToExecute = sb.toString();
+                    failureActionBuilder.append(parts[i]);
                 }
+                actionDataToExecute = failureActionBuilder.toString();
                 
                 logger.info("Condition not met for player " + player.getName() + ", executing failure action: " + actionType + ":" + actionDataToExecute);
             }
@@ -136,14 +156,14 @@ public class ConditionalActionHandler implements ActionHandler {
             ActionResult result = actionExecutor.executeAction(player, actionType, actionDataToExecute, context);
             
             if (result.isSuccess()) {
-                return ActionResult.success("Conditional action executed: " + result.getMessage());
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Conditional action executed: " + result.getMessage()), player);
             } else {
-                return ActionResult.failure("Conditional action failed: " + result.getMessage());
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Conditional action failed: " + result.getMessage()), player);
             }
             
         } catch (Exception e) {
             logger.error("Error executing conditional action for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error executing conditional action: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing conditional action: " + e.getMessage()), player);
         }
     }
     
@@ -198,7 +218,7 @@ public class ConditionalActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context, FormPlayer player) {
+    protected String processPlaceholders(String data, ActionContext context, FormPlayer player) {
         if (context == null) {
             return data;
         }

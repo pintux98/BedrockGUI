@@ -1,27 +1,26 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
-import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderUtil;
-import java.util.HashMap;
-import java.util.Map;
 import it.pintux.life.common.utils.ValidationUtils;
-import org.geysermc.cumulus.form.ModalForm;
-
-
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.util.Map;
+import java.util.HashMap;
 
 /**
  * Handles sending messages to players
  */
-public class MessageActionHandler implements ActionHandler {
+public class MessageActionHandler extends BaseActionHandler {
     
-    private static final Logger logger = Logger.getLogger(MessageActionHandler.class);
+    private final PlatformPlayerManager playerManager;
+    
+    public MessageActionHandler(PlatformPlayerManager playerManager) {
+        this.playerManager = playerManager;
+    }
     
     @Override
     public String getActionType() {
@@ -30,47 +29,29 @@ public class MessageActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
-        if (player == null) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
-        }
-        
-        if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+        // Validate basic parameters using base class method
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
             String processedMessage = processPlaceholders(actionValue, context, player);
             
             if (ValidationUtils.isNullOrEmpty(processedMessage.trim())) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", MessageData.ACTION_INVALID_PARAMETERS), player);
             }
             
-            // Send the message to the player
-            player.sendMessage(processedMessage);
+            // Process color codes and send the message to the player
+            String coloredMessage = processColorCodes(processedMessage);
+            playerManager.sendMessage(player, coloredMessage);
             
-            logger.debug("Successfully sent message to player " + player.getName() + ": " + processedMessage);
-            // Get MessageData from context if available
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            if (messageData != null) {
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_MESSAGE_SENT, null, player));
-            } else {
-                return ActionResult.success("Message sent successfully");
-            }
+            logSuccess("message", processedMessage, player);
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", MessageData.ACTION_MESSAGE_SENT), player);
             
         } catch (Exception e) {
-            logger.error("Error sending message to player " + player.getName(), e);
-            // Get MessageData from context if available
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            if (messageData != null) {
-                Map<String, Object> replacements = new HashMap<>();
-                replacements.put("error", e.getMessage());
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_MESSAGE_FAILED, replacements, player), e);
-            } else {
-                return ActionResult.failure("Failed to send message: " + e.getMessage(), e);
-            }
+            logError("message", actionValue, player, e);
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", MessageData.ACTION_MESSAGE_FAILED), player, e);
         }
     }
     
@@ -94,35 +75,135 @@ public class MessageActionHandler implements ActionHandler {
     public String[] getUsageExamples() {
         return new String[]{
             "Welcome to the server, {player}!",
-            "You have selected: {selected_option}",
-            "Your balance is: ${balance}",
-            "Thank you for your purchase!"
+            "&aYou have selected: {selected_option}",
+            "&#FF5733Your balance is: ${balance}",
+            "<green>Thank you for your purchase!</green>",
+            "<color:#00FF00>Success!</color> <bold>Operation completed</bold>",
+            "&c&lERROR: &r&7Something went wrong",
+            "<red><bold>Warning:</bold></red> <yellow>Please be careful</yellow>"
         };
     }
     
+
+    
     /**
-     * Processes placeholders in the message
-     * @param message the message with placeholders
-     * @param context the action context containing placeholder values
-     * @param player the player for PlaceholderAPI processing
-     * @return the processed message
+     * Processes various color code formats in the message
+     * Supports:
+     * - Classic MC color codes (&a, &b, etc.)
+     * - Hex color codes (&#RRGGBB)
+     * - Legacy color codes (a, b, etc.)
+     * - MiniMessage format (<color:#RRGGBB>, <red>, <bold>, etc.)
+     * 
+     * @param message the message to process
+     * @return the message with processed color codes
      */
-    private String processPlaceholders(String message, ActionContext context, FormPlayer player) {
-        if (context == null) {
+    private String processColorCodes(String message) {
+        if (ValidationUtils.isNullOrEmpty(message)) {
             return message;
         }
         
-        // Process dynamic placeholders first
-        String result = PlaceholderUtil.processDynamicPlaceholders(message, context.getPlaceholders());
-        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
+        String result = message;
         
-        // Then process PlaceholderAPI placeholders if available
-        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
-            Object messageDataObj = context.getMetadata().get("messageData");
-            if (messageDataObj instanceof it.pintux.life.common.utils.MessageData) {
-                it.pintux.life.common.utils.MessageData messageData = (it.pintux.life.common.utils.MessageData) messageDataObj;
-                result = PlaceholderUtil.processPlaceholders(result, null, player, messageData);
-            }
+        // Process hex color codes (&#RRGGBB)
+        result = processHexColorCodes(result);
+        
+        // Process classic MC color codes (&a, &b, etc.)
+        result = processClassicColorCodes(result);
+        
+        // Process MiniMessage format
+        result = processMiniMessageFormat(result);
+        
+        return result;
+    }
+    
+    /**
+     * Processes hex color codes in format &#RRGGBB
+     */
+    private String processHexColorCodes(String message) {
+        Pattern hexPattern = Pattern.compile("&#([A-Fa-f0-9]{6})");
+        Matcher matcher = hexPattern.matcher(message);
+        
+        StringBuffer result = new StringBuffer();
+        while (matcher.find()) {
+            String hexColor = matcher.group(1);
+            // Convert to legacy format with color codes
+            String replacement = "x" + hexColor.charAt(0) +  hexColor.charAt(1) + 
+                                hexColor.charAt(2) +  hexColor.charAt(3) + 
+                                hexColor.charAt(4) +  hexColor.charAt(5);
+            matcher.appendReplacement(result, replacement);
+        }
+        matcher.appendTail(result);
+        
+        return result.toString();
+    }
+    
+    /**
+     * Processes classic MC color codes (&a, &b, etc.)
+     */
+    private String processClassicColorCodes(String message) {
+        // Convert & color codes to  color codes
+        return message.replaceAll("&([0-9a-fk-or])", "$1");
+    }
+    
+    /**
+     * Processes MiniMessage format (<color:#RRGGBB>, <red>, <bold>, etc.)
+     */
+    private String processMiniMessageFormat(String message) {
+        String result = message;
+        
+        // Process hex colors in MiniMessage format <color:#RRGGBB>
+        Pattern miniHexPattern = Pattern.compile("<color:#([A-Fa-f0-9]{6})>");
+        Matcher hexMatcher = miniHexPattern.matcher(result);
+        StringBuffer hexResult = new StringBuffer();
+        while (hexMatcher.find()) {
+            String hexColor = hexMatcher.group(1);
+            String replacement = "x" + hexColor.charAt(0) +  hexColor.charAt(1) + 
+                                hexColor.charAt(2) +  hexColor.charAt(3) + 
+                                hexColor.charAt(4) +  hexColor.charAt(5);
+            hexMatcher.appendReplacement(hexResult, replacement);
+        }
+        hexMatcher.appendTail(hexResult);
+        result = hexResult.toString();
+        
+        // Process named colors and formatting
+        Map<String, String> miniMessageMap = new HashMap<>();
+        // Colors
+        miniMessageMap.put("<black>", "0");
+        miniMessageMap.put("<dark_blue>", "1");
+        miniMessageMap.put("<dark_green>", "2");
+        miniMessageMap.put("<dark_aqua>", "3");
+        miniMessageMap.put("<dark_red>", "4");
+        miniMessageMap.put("<dark_purple>", "5");
+        miniMessageMap.put("<gold>", "6");
+        miniMessageMap.put("<gray>", "7");
+        miniMessageMap.put("<dark_gray>", "8");
+        miniMessageMap.put("<blue>", "9");
+        miniMessageMap.put("<green>", "a");
+        miniMessageMap.put("<aqua>", "b");
+        miniMessageMap.put("<red>", "c");
+        miniMessageMap.put("<light_purple>", "d");
+        miniMessageMap.put("<yellow>", "e");
+        miniMessageMap.put("<white>", "f");
+        
+        // Formatting
+        miniMessageMap.put("<bold>", "l");
+        miniMessageMap.put("<italic>", "o");
+        miniMessageMap.put("<underlined>", "n");
+        miniMessageMap.put("<strikethrough>", "m");
+        miniMessageMap.put("<obfuscated>", "k");
+        miniMessageMap.put("<reset>", "r");
+        
+        // Closing tags
+        miniMessageMap.put("</bold>", "r");
+        miniMessageMap.put("</italic>", "r");
+        miniMessageMap.put("</underlined>", "r");
+        miniMessageMap.put("</strikethrough>", "r");
+        miniMessageMap.put("</obfuscated>", "r");
+        miniMessageMap.put("</color>", "r");
+        
+        // Apply all replacements
+        for (Map.Entry<String, String> entry : miniMessageMap.entrySet()) {
+            result = result.replace(entry.getKey(), entry.getValue());
         }
         
         return result;

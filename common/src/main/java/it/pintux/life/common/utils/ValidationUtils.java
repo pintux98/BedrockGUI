@@ -1,7 +1,5 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.constants.ResourcePackConstants;
-
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Set;
@@ -13,29 +11,10 @@ import java.util.regex.Pattern;
  */
 public final class ValidationUtils {
     
-    private static final Pattern PACK_IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z0-9_-]+$");
     private static final Pattern MENU_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
-    private static final Pattern FILE_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+\\.(mcpack|zip)$");
     
     private ValidationUtils() {
         // Utility class - prevent instantiation
-    }
-    
-    /**
-     * Validates a resource pack identifier
-     * @param identifier the identifier to validate
-     * @return true if valid, false otherwise
-     */
-    public static boolean isValidPackIdentifier(String identifier) {
-        if (isNullOrEmpty(identifier)) {
-            return false;
-        }
-        
-        if (identifier.length() > 50) {
-            return false;
-        }
-        
-        return PACK_IDENTIFIER_PATTERN.matcher(identifier).matches();
     }
     
     /**
@@ -53,23 +32,6 @@ public final class ValidationUtils {
         }
         
         return MENU_NAME_PATTERN.matcher(menuName).matches();
-    }
-    
-    /**
-     * Validates a resource pack file name
-     * @param fileName the file name to validate
-     * @return true if valid, false otherwise
-     */
-    public static boolean isValidPackFileName(String fileName) {
-        if (isNullOrEmpty(fileName)) {
-            return false;
-        }
-        
-        if (fileName.length() > 255) {
-            return false;
-        }
-        
-        return FILE_NAME_PATTERN.matcher(fileName).matches();
     }
     
     /**
@@ -100,9 +62,8 @@ public final class ValidationUtils {
             Path path = Paths.get(filePath);
             Path normalizedPath = path.normalize();
             
-            // Ensure the path stays within the expected directory
-            return normalizedPath.toString().startsWith(ResourcePackConstants.PACK_DIRECTORY) ||
-                   normalizedPath.toString().startsWith(ResourcePackConstants.CONFIG_DIRECTORY);
+            // Ensure the path stays within safe directories
+            return !normalizedPath.toString().contains("..");
         } catch (Exception e) {
             return false;
         }
@@ -122,23 +83,6 @@ public final class ValidationUtils {
         return input.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "")
                    .replaceAll("\\s+", " ")
                    .trim();
-    }
-    
-    /**
-     * Validates that a set of pack identifiers is valid
-     * @param packIdentifiers the set of identifiers to validate
-     * @return true if all are valid, false otherwise
-     */
-    public static boolean areValidPackIdentifiers(Set<String> packIdentifiers) {
-        if (packIdentifiers == null) {
-            return false;
-        }
-        
-        if (packIdentifiers.size() > ResourcePackConstants.MAX_PACKS_PER_PLAYER) {
-            return false;
-        }
-        
-        return packIdentifiers.stream().allMatch(ValidationUtils::isValidPackIdentifier);
     }
     
     /**
@@ -174,10 +118,9 @@ public final class ValidationUtils {
             return false;
         }
         
-        // Allow texture paths, pack paths, and HTTP(S) URLs
-        return imageSource.startsWith(ResourcePackConstants.TEXTURE_PREFIX) ||
-               imageSource.startsWith(ResourcePackConstants.PACK_PREFIX) ||
-               imageSource.startsWith(ResourcePackConstants.HTTP_PREFIX) ||
-               imageSource.startsWith(ResourcePackConstants.HTTPS_PREFIX);
+        // Allow HTTP(S) URLs and basic file paths
+        return imageSource.startsWith("http://") ||
+               imageSource.startsWith("https://") ||
+               imageSource.startsWith("textures/");
     }
 }

@@ -5,16 +5,14 @@
 prefix: "&8[&bBedrockGUI&8] &r"
 
 # Permission and access messages
-noPex: "&4&lYou don't have permission to perform this command"
 no_permission: "&cYou don't have permission to use this command!"
 
 # Menu-related messages
 menu:
-  noPex: "&4&lYou don't have permission to open this menu"
-  noJava: "&4You are not a bedrock player. Please open this menu only from bedrock client"
+  no_permission: "&4&lYou don't have permission to open this menu"
+  no_java: "&4You are not a bedrock player. Please open this menu only from bedrock client"
   arguments: "&4This command requires at least {args} arguments."
-  notFound: "&cNo menu found with this name"
-  menu_not_found: "&cMenu not found: {menu}"
+  not_found: "&cMenu not found: {menu}"
 
 # Action result messages
 action:
@@ -23,9 +21,7 @@ action:
   invalid_parameters: "&cInvalid parameters for action"
   invalid_format: "&cInvalid action format"
   execution_error: "&cError executing action: {error}"
-
-# Action-specific error messages
-  ACTION_INVALID_PARAMETERS: "&cInvalid parameters provided for this action"
+  form_not_found: "&cForm not found: {form}. Please check the form name in config.yml"
   command_success: "&aCommand executed successfully"
   command_failed: "&cCommand execution failed"
   teleport_success: "&aTeleported successfully"
@@ -36,46 +32,20 @@ action:
   broadcast_success: "&aBroadcast sent successfully"
   broadcast_failed: "&cFailed to send broadcast: {error}"
   form_opened: "&aForm opened successfully"
-  form_not_found: "&cForm not found: {form}"
+  particle_success: "&aParticle effect played successfully"
+  particle_failed: "&cFailed to play particle effect: {error}"
+  
+  # Teleport-specific messages
   teleport:
     out_of_bounds: "&cCoordinates are outside world boundaries"
     invalid_y: "&cY coordinate must be between -64 and 320"
-  economy:
-    not_available: "&cEconomy system is not available"
-    add:
-      success: "&aAdded ${amount} to ${player}'s balance"
-      failed: "&cFailed to add ${amount} to ${player}'s balance"
-    remove:
-      success: "&aRemoved ${amount} from ${player}'s balance"
-      failed: "&cFailed to remove ${amount} from ${player}'s balance"
-    set:
-      success: "&aSet ${player}'s balance to ${amount}"
-      failed: "&cFailed to set ${player}'s balance to ${amount}"
-    check:
-      success: "&a${player}'s balance: ${amount}"
-      failed: "&cFailed to check ${player}'s balance"
-    pay:
-      success: "&aPaid ${amount} to ${player}"
-      failed: "&cFailed to pay ${amount} to ${player}"
-    insufficient_funds: "&cInsufficient funds"
-    invalid_amount: "&cInvalid amount format"
-    amount_must_be_positive: "&cAmount must be positive"
+  
+  # List-specific messages
   list:
     success: "&aList generated successfully"
     no_data: "&cNo data available from placeholder"
     invalid_page: "&cInvalid page number"
-    generated: "&aGenerated list with ${count} items"
-
-# Action messages
-action:
-  list:
-    success: "&aList generated successfully"
-    no_data: "&cNo data available from placeholder"
-  economy_invalid_amount: "&cInvalid amount: {amount}"
-  economy_add_failed: "&cFailed to add money"
-  economy_remove_failed: "&cFailed to remove money"
-  economy_set_failed: "&cFailed to set balance"
-  economy_insufficient: "&cFailed to remove money from your account"
+    generated: "&aGenerated list with {count} items"
 
 # Form-related messages
 form:
@@ -84,25 +54,69 @@ form:
 
 # Economy messages
 economy:
-  insufficient: "&cInsufficient funds! You need {amount} more."
-  add_success: "&aSuccessfully added {amount} to your balance"
-  add_failed: "&cFailed to add money to your account"
-  add_invalid_format: "&cInvalid format for add command. Use: /economy add <amount>"
-  remove_success: "&aSuccessfully removed {amount} from your balance"
-  remove_failed: "&cFailed to remove money from your account"
-  remove_invalid_format: "&cInvalid format for remove command. Use: /economy remove <amount>"
-  set_success: "&aSuccessfully set your balance to {amount}"
-  set_failed: "&cFailed to set your balance"
-  set_invalid_format: "&cInvalid format for set command. Use: /economy set <amount>"
-  check_success: "&aYour current balance is: {amount}"
-  check_invalid_format: "&cInvalid format for check command. Use: /economy check"
-  pay_success: "&aSuccessfully paid {amount} to {player}"
-  pay_failed: "&cFailed to pay {player}"
-  pay_invalid_format: "&cInvalid format for pay command. Use: /economy pay <player> <amount>"
+  not_available: "&cEconomy system is not available"
   insufficient_funds: "&cInsufficient funds! You need {amount} more"
-  amount_positive: "&cAmount must be positive"
-  amount_negative: "&cAmount must be negative"
+  invalid_amount: "&cInvalid amount format"
+  amount_must_be_positive: "&cAmount must be positive"
+  
+  add:
+    success: "&aAdded {amount} to {player}'s balance"
+    failed: "&cFailed to add {amount} to {player}'s balance"
+  
+  remove:
+    success: "&aRemoved {amount} from {player}'s balance"
+    failed: "&cFailed to remove {amount} from {player}'s balance"
+  
+  set:
+    success: "&aSet {player}'s balance to {amount}"
+    failed: "&cFailed to set {player}'s balance to {amount}"
+  
+  check:
+    success: "&a{player}'s balance: {amount}"
+    failed: "&cFailed to check {player}'s balance"
+  
+  pay:
+    success: "&aPaid {amount} to {player}"
+    failed: "&cFailed to pay {amount} to {player}"
 
 # Player-related messages
 player:
   not_found: "&cPlayer not found: {player}"
+
+# Delay action messages
+delay:
+  invalid_time: "&cInvalid delay time format"
+  max_exceeded: "&cDelay time cannot exceed 30 seconds"
+  execution_failed: "&cFailed to execute delayed action"
+
+# Citizens NPC messages
+citizens:
+  not_available: "&cCitizens plugin is not available"
+  create_success: "&aNPC created successfully"
+  create_failed: "&cFailed to create NPC: {error}"
+  remove_success: "&aNPC removed successfully"
+  remove_failed: "&cFailed to remove NPC: {error}"
+
+# Vault integration messages
+vault:
+  not_available: "&cVault plugin is not available"
+  group_add_success: "&aAdded {player} to group {group}"
+  group_add_failed: "&cFailed to add {player} to group {group}"
+  group_remove_success: "&aRemoved {player} from group {group}"
+  group_remove_failed: "&cFailed to remove {player} from group {group}"
+
+# WorldGuard integration messages
+worldguard:
+  not_available: "&cWorldGuard plugin is not available"
+  region_create_success: "&aRegion {region} created successfully"
+  region_create_failed: "&cFailed to create region {region}: {error}"
+  region_delete_success: "&aRegion {region} deleted successfully"
+  region_delete_failed: "&cFailed to delete region {region}: {error}"
+
+# CoreProtect integration messages
+coreprotect:
+  not_available: "&cCoreProtect plugin is not available"
+  rollback_success: "&aRollback completed successfully"
+  rollback_failed: "&cRollback failed: {error}"
+  lookup_success: "&aLookup completed successfully"
+  lookup_failed: "&cLookup failed: {error}"

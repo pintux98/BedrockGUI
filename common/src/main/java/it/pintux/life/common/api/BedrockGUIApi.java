@@ -1,11 +1,11 @@
 package it.pintux.life.common.api;
 
 import it.pintux.life.common.actions.*;
-// import it.pintux.life.common.actions.handlers.ResourcePackActionHandler; // Disabled
 import it.pintux.life.common.data.DataProvider;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.platform.*;
 import it.pintux.life.common.utils.*;
+import it.pintux.life.common.utils.ErrorHandlingUtil;
 import it.pintux.life.common.utils.Logger;
 import org.geysermc.cumulus.form.*;
 import org.geysermc.cumulus.util.FormImage;
@@ -58,29 +58,19 @@ public class BedrockGUIApi {
                         PlatformEconomyManager economyManager,
                         PlatformFormSender formSender,
                         PlatformTitleManager platformTitleManager,
-                        DataProvider dataProvider) {
+                        DataProvider dataProvider,
+                        PlatformPluginManager pluginManager,
+                        PlatformPlayerManager playerManager) {
         this.messageData = messageData;
         this.formSender = formSender;
         this.dataProvider = dataProvider;
         this.platformTitleManager = platformTitleManager;
-        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager);
+        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager, pluginManager, playerManager);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
         
-        // Resource pack functionality has been disabled
-        // Uncomment the following lines to re-enable resource pack actions:
-        /*
-        if (resourcePackManager != null) {
-            registerActionHandler(new ResourcePackActionHandler(this, Logger.getLogger(BedrockGUIApi.class)));
-            logger.info("ResourcePack action handler registered (enabled: " + resourcePackManager.isEnabled() + ")");
-        } else {
-            logger.warn("ResourcePack manager not available - ResourcePack actions will not be registered");
-        }
-        */
-        logger.info("ResourcePack functionality is currently disabled");
-        
         instance = this;
-        logger.info("BedrockGUIApi initialized with enhanced features and resource pack support");
+        logger.info("BedrockGUIApi initialized with enhanced features");
     }
     
     /**
@@ -224,12 +214,17 @@ public class BedrockGUIApi {
                 return future;
             }
             
-            // Send form with enhanced handling
-            boolean sent = formSender.sendForm(player, form);
-            if (!sent) {
-                future.complete(FormResult.failure("Failed to send form"));
-            } else {
+            // Send form with enhanced error handling and retry logic
+            boolean sent = ErrorHandlingUtil.sendFormWithFallback(
+                player,
+                () -> formSender.sendForm(player, form),
+                "§eForm could not be displayed. Please try using commands or contact an administrator."
+            );
+            
+            if (sent) {
                 future.complete(FormResult.success("Form sent successfully"));
+            } else {
+                future.complete(FormResult.failure("Failed to send form after retries"));
             }
             
         } catch (Exception e) {

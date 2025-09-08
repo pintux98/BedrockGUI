@@ -1,13 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.platform.PlatformSoundManager;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
-
-import java.util.Map;
 
 /**
  * Handles playing sounds to players.
@@ -16,8 +12,7 @@ import java.util.Map;
  * Usage: sound:entity.experience_orb.pickup:0.5:1.2 (sound:volume:pitch)
  * Usage: sound:block.note_block.harp:1.0:0.8
  */
-public class SoundActionHandler implements ActionHandler {
-    private static final Logger logger = Logger.getLogger(SoundActionHandler.class);
+public class SoundActionHandler extends BaseActionHandler {
     private final PlatformSoundManager soundManager;
     
     public SoundActionHandler(PlatformSoundManager soundManager) {
@@ -29,16 +24,20 @@ public class SoundActionHandler implements ActionHandler {
         return "sound";
     }
     
+    private boolean validateParameters(FormPlayer player, String actionData) {
+        return player != null && actionData != null && !actionData.trim().isEmpty();
+    }
+
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        if (actionData == null || actionData.trim().isEmpty()) {
-            logger.warn("Sound action called with empty sound data for player: " + player.getName());
-            return ActionResult.failure("No sound specified");
+        if (!validateParameters(player, actionData)) {
+            logger.warn("Sound action called with invalid parameters for player: " + player.getName());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No sound specified"), player);
         }
         
         try {
             // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context);
+            String processedData = processPlaceholders(actionData.trim(), context, player);
             
             // Parse sound data: sound[:volume[:pitch]]
             String[] parts = processedData.split(":");
@@ -69,15 +68,15 @@ public class SoundActionHandler implements ActionHandler {
             boolean success = soundManager.playSound(player, soundName, volume, pitch);
             
             if (success) {
-                return ActionResult.success("Sound played: " + soundName);
+                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Sound played: " + soundName), player);
             } else {
                 logger.warn("Failed to play sound: " + soundName);
-                return ActionResult.failure("Failed to play sound: " + soundName);
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to play sound: " + soundName), player);
             }
             
         } catch (Exception e) {
             logger.error("Error playing sound for player " + player.getName() + ": " + e.getMessage());
-            return ActionResult.failure("Error playing sound: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error playing sound: " + e.getMessage()), player);
         }
     }
     
@@ -134,32 +133,5 @@ public class SoundActionHandler implements ActionHandler {
         };
     }
     
-    private String processPlaceholders(String data, ActionContext context) {
-        if (context == null) {
-            return data;
-        }
-        
-        String result = data;
-        Map<String, String> placeholders = context.getPlaceholders();
-        
-        if (placeholders != null && !placeholders.isEmpty()) {
-            for (Map.Entry<String, String> entry : placeholders.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue() : "";
-                result = result.replace(placeholder, value);
-            }
-        }
-        
-        // Process form results as placeholders
-        Map<String, Object> formResults = context.getFormResults();
-        if (formResults != null && !formResults.isEmpty()) {
-            for (Map.Entry<String, Object> entry : formResults.entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                String value = entry.getValue() != null ? entry.getValue().toString() : "";
-                result = result.replace(placeholder, value);
-            }
-        }
-        
-        return result;
-    }
+
 }

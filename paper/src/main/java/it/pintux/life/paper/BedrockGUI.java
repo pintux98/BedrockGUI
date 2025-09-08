@@ -10,21 +10,21 @@ import it.pintux.life.paper.platform.PaperCommandExecutor;
 import it.pintux.life.paper.platform.PaperEconomyManager;
 import it.pintux.life.paper.platform.PaperSoundManager;
 import it.pintux.life.paper.platform.PaperTitleManager;
+import it.pintux.life.paper.platform.PaperPluginManager;
+import it.pintux.life.paper.platform.PaperPlayerManager;
 
-// import it.pintux.life.common.form.EnhancedFormMenuUtil;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperConfig;
 import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.paper.utils.PaperMessageConfig;
+import it.pintux.life.paper.utils.DependencyValidator;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -36,7 +36,6 @@ import java.util.Map;
 public final class BedrockGUI extends JavaPlugin implements Listener {
 
     private FormMenuUtil formMenuUtil;
-    //private EnhancedFormMenuUtil enhancedFormMenuUtil;
     private MessageData messageData;
     private BedrockGUIApi api;
 
@@ -47,19 +46,28 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         getServer().getPluginManager().registerEvents(this, this);
         saveDefaultConfig();
         reloadData();
-        //setupGeyserIntegration();
         new Metrics(this, 23364);
     }
 
     @Override
     public void onDisable() {
         if (api != null) {
-            // Cleanup any resources
-            getLogger().info("BedrockGUI with Resource Pack API disabled");
+            try {
+                api.shutdown();
+                getLogger().info("BedrockGUI shutdown completed successfully");
+            } catch (Exception e) {
+                getLogger().severe("Error during BedrockGUI shutdown: " + e.getMessage());
+                e.printStackTrace();
+            }
         }
+        getLogger().info("BedrockGUI disabled");
     }
 
     public void reloadData() {
+        // Validate dependencies before initialization
+        if (!DependencyValidator.validateDependencies()) {
+            getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
+        }
         reloadConfig();
         this.saveResource("messages.yml", false);
 
@@ -69,48 +77,48 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
-        PaperEconomyManager economyManager = new PaperEconomyManager(this);
+        PaperEconomyManager economyManager = null;
+        if (DependencyValidator.isPluginCompatible("Vault", "1.7.0")) {
+            economyManager = new PaperEconomyManager(this);
+            getLogger().info("Vault integration enabled");
+        } else if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+            getLogger().warning("Vault found but version is incompatible. Economy features disabled.");
+        }
         PaperFormSender formSender = new PaperFormSender();
         PaperDataProvider dataProvider = new PaperDataProvider();
         PaperTitleManager titleManager = new PaperTitleManager();
+        PaperPluginManager pluginManager = new PaperPluginManager();
+        PaperPlayerManager playerManager = new PaperPlayerManager();
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, dataProvider);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, dataProvider, pluginManager, playerManager);
 
-        // EnhancedFormMenuUtil enhancedFormMenuUtil = new EnhancedFormMenuUtil(
-        //     new PaperConfig(getConfig()), 
-        //     messageData, 
-        //     null,
-        //     new PaperPlayerChecker(), 
-        //     formSender
-        // );
-        
-        // Use the FormMenuUtil from the API to avoid duplicate registration
         formMenuUtil = api.getFormMenuUtil();
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
-        // Register PlaceholderAPI expansion if available
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        if (DependencyValidator.isPluginCompatible("PlaceholderAPI", "2.10.0")) {
             new BedrockGUIExpansion(this).register();
             getLogger().info("PlaceholderAPI expansion registered");
+        } else if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+            getLogger().warning("PlaceholderAPI found but version is incompatible. Placeholder features disabled.");
         }
 
-        // Register List action handler
         ListActionHandler.register();
         getLogger().info("List action handler registered");
 
         getLogger().info("BedrockGUI loaded and enabled");
-        //getLogger().info("BedrockGUI loaded with Resource Pack API support");
-        //if (api.isResourcePacksEnabled()) {
-        //    getLogger().info("Resource packs are enabled!");
-        //} else {
-        //    getLogger().info("Resource packs are disabled. Enable in config.yml to use enhanced features.");
-        //}
     }
 
     @EventHandler
     public void onCmd(ServerCommandEvent event) {
         if (!(event.getSender() instanceof Player)) return;
-        PaperPlayer player = new PaperPlayer((Player) event.getSender());
+        
+        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
+        Player player = (Player) event.getSender();
+        if (!playerChecker.isBedrockPlayer(player.getUniqueId())) {
+            return;
+        }
+        
+        PaperPlayer paperPlayer = new PaperPlayer(player);
         String command = event.getCommand();
 
         formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
@@ -120,7 +128,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 String[] parts = command.split(" ");
                 String[] args = Arrays.copyOfRange(parts, 1, parts.length);
 
-                api.openMenu(player, key, args);
+                api.openMenu(paperPlayer, key, args);
             }
         });
     }
@@ -172,43 +180,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     }
 
     /**
-     * Sets up Geyser integration for resource pack management
-     */
-    private void setupGeyserIntegration() {
-        try {
-            if (getServer().getPluginManager().getPlugin("Geyser-Spigot") != null) {
-                // Platform-specific resource pack listener initialization removed
-                // GeyserApi.api().eventBus().register(this, geyserListener);
-                getLogger().info("Geyser integration enabled for resource pack management");
-            } else {
-                getLogger().warning("Geyser not found. Resource pack features will be limited.");
-            }
-        } catch (Exception e) {
-            getLogger().warning("Failed to setup Geyser integration: " + e.getMessage());
-        }
-    }
-
-    /**
-     * Gets the enhanced form menu utility
-     */
-    // public EnhancedFormMenuUtil getEnhancedFormMenuUtil() {
-    //     return null;
-    // }
-
-    /**
      * Gets the BedrockGUI API instance
      */
     public BedrockGUIApi getApi() {
         return api;
     }
-
-    /**
-     * Reloads resource packs
-     */
-    // public void reloadResourcePacks() {
-    //     if (api != null) {
-    //         api.reload();
-    //         getLogger().info("Resource packs reloaded");
-    //     }
-    // }
 }

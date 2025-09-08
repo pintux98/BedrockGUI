@@ -1,12 +1,11 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
+
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -17,9 +16,9 @@ import java.util.Map;
 /**
  * Handles opening other forms/menus
  */
-public class OpenFormActionHandler implements ActionHandler {
+public class OpenFormActionHandler extends BaseActionHandler {
     
-    private static final Logger logger = Logger.getLogger(OpenFormActionHandler.class);
+
     private final FormMenuUtil formMenuUtil;
     
     public OpenFormActionHandler(FormMenuUtil formMenuUtil) {
@@ -35,17 +34,18 @@ public class OpenFormActionHandler implements ActionHandler {
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
         if (player == null) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
         }
         
         if (formMenuUtil == null) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, null, player));
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, null, player)), player);
         }
         
-        if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+        // Validate basic parameters using base class method
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
@@ -55,7 +55,7 @@ public class OpenFormActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("menu", processedMenuName);
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player)), player);
             }
             
             // Check if menu exists before trying to open it
@@ -64,7 +64,7 @@ public class OpenFormActionHandler implements ActionHandler {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("menu", processedMenuName);
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_FORM_NOT_FOUND, replacements, player));
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_FORM_NOT_FOUND, replacements, player)), player);
             }
             
             // Open the menu
@@ -75,14 +75,14 @@ public class OpenFormActionHandler implements ActionHandler {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("menu", processedMenuName);
-            return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_FORM_OPENED, replacements, player));
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData.getValueNoPrefix(MessageData.ACTION_FORM_OPENED, replacements, player)), player);
             
         } catch (Exception e) {
             logger.error("Error opening menu '" + actionValue + "' for player " + player.getName(), e);
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("error", e.getMessage());
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player), e);
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player)), player, e);
         }
     }
     
@@ -121,7 +121,7 @@ public class OpenFormActionHandler implements ActionHandler {
      * @param player the player for PlaceholderAPI processing
      * @return the processed menu name
      */
-    private String processPlaceholders(String menuName, ActionContext context, FormPlayer player) {
+    protected String processPlaceholders(String menuName, ActionContext context, FormPlayer player) {
         if (context == null) {
             return menuName;
         }

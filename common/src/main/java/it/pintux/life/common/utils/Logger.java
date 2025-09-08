@@ -75,6 +75,13 @@ public class Logger {
         log(Level.FINE, message, args);
     }
     
+    /**
+     * Checks if debug logging is enabled
+     */
+    public boolean isDebugEnabled() {
+        return platformLogger.isLoggable(Level.FINE);
+    }
+    
     private void log(Level level, String message, Object... args) {
         if (platformLogger.isLoggable(level)) {
             String formattedMessage = formatMessage(message, args);

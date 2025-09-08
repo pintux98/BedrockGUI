@@ -1,15 +1,11 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
 import it.pintux.life.common.actions.ActionResult;
-import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
-
+import it.pintux.life.common.utils.PlaceholderUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -18,9 +14,8 @@ import java.util.regex.Pattern;
  * Example action handler for teleporting players
  * Demonstrates how to create custom action handlers
  */
-public class TeleportActionHandler implements ActionHandler {
+public class TeleportActionHandler extends BaseActionHandler {
     
-    private static final Logger logger = Logger.getLogger(TeleportActionHandler.class);
     private static final Pattern COORDINATE_PATTERN = Pattern.compile("^-?\\d+(\\.\\d+)?$");
     
     @Override
@@ -30,32 +25,24 @@ public class TeleportActionHandler implements ActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
-        if (player == null) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
-        }
-        
-        if (ValidationUtils.isNullOrEmpty(actionValue)) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+        // Validate basic parameters using base class method
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
-            String processedValue = processPlaceholders(actionValue, context);
+            String processedValue = processPlaceholders(actionValue, context, player);
             String[] parts = processedValue.trim().split("\\s+");
             
             if (parts.length != 3) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
+                return createFailureResult(MessageData.ACTION_INVALID_FORMAT, null, player);
             }
             
             // Validate coordinates
             for (String coord : parts) {
                 if (!COORDINATE_PATTERN.matcher(coord).matches()) {
-                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    Map<String, Object> replacements = new HashMap<>();
-                    replacements.put("coordinate", coord);
-                    return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player));
+                    return createFailureResult(MessageData.ACTION_INVALID_FORMAT, createReplacements("coordinate", coord), player);
                 }
             }
             
@@ -65,13 +52,11 @@ public class TeleportActionHandler implements ActionHandler {
             
             // Validate coordinate ranges
             if (Math.abs(x) > 30000000 || Math.abs(z) > 30000000) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_OUT_OF_BOUNDS, null, player));
+                return createFailureResult(MessageData.ACTION_TELEPORT_OUT_OF_BOUNDS, null, player);
             }
             
             if (y < -64 || y > 320) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_INVALID_Y, null, player));
+                return createFailureResult(MessageData.ACTION_TELEPORT_INVALID_Y, null, player);
             }
             
             // Execute teleport command
@@ -82,29 +67,22 @@ public class TeleportActionHandler implements ActionHandler {
             boolean success = true; // Assume success since executeAction doesn't return a boolean
             
             if (success) {
-                logger.debug("Successfully teleported player " + player.getName() + 
-                           " to " + x + ", " + y + ", " + z);
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                logSuccess("teleport", String.format("%.2f, %.2f, %.2f", x, y, z), player);
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("x", String.valueOf(x));
                 replacements.put("y", String.valueOf(y));
                 replacements.put("z", String.valueOf(z));
-                return ActionResult.success(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_SUCCESS, replacements, player));
+                return createSuccessResult(MessageData.ACTION_TELEPORT_SUCCESS, replacements, player);
             } else {
-                logger.warn("Failed to teleport player " + player.getName());
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_TELEPORT_FAILED, null, player));
+                logFailure("teleport", actionValue, player);
+                return createFailureResult(MessageData.ACTION_TELEPORT_FAILED, null, player);
             }
             
         } catch (NumberFormatException e) {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player));
+            return createFailureResult(MessageData.ACTION_INVALID_FORMAT, null, player);
         } catch (Exception e) {
-            logger.error("Error teleporting player " + player.getName(), e);
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            Map<String, Object> replacements = new HashMap<>();
-            replacements.put("error", e.getMessage());
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player), e);
+            logError("teleport", actionValue, player, e);
+            return createFailureResult(MessageData.ACTION_EXECUTION_ERROR, createReplacements("error", e.getMessage()), player, e);
         }
     }
     
@@ -151,22 +129,7 @@ public class TeleportActionHandler implements ActionHandler {
         };
     }
     
-    /**
-     * Processes placeholders in the coordinates
-     * @param coordinates the coordinates with placeholders
-     * @param context the action context containing placeholder values
-     * @return the processed coordinates
-     */
-    private String processPlaceholders(String coordinates, ActionContext context) {
-        if (context == null) {
-            return coordinates;
-        }
-        
-        String result = PlaceholderUtil.processDynamicPlaceholders(coordinates, context.getPlaceholders());
-        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
-        
-        return result;
-    }
+
     
     /**
      * Checks if the string contains placeholders

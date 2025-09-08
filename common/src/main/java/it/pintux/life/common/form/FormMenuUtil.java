@@ -4,20 +4,23 @@ import it.pintux.life.common.actions.*;
 import it.pintux.life.common.actions.handlers.*;
 import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.ConditionalButton;
+import it.pintux.life.common.form.obj.PriorityItem;
 import it.pintux.life.common.form.obj.FormMenu;
+import it.pintux.life.common.form.priority.PriorityResolver;
 import it.pintux.life.common.platform.*;
+import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.utils.FormConfig;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderUtil;
-import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.utils.PlaceholderPopulator;
+import it.pintux.life.common.utils.PlaceholderUtil;
+import it.pintux.life.common.utils.ConfigValidator;
+import it.pintux.life.common.utils.ErrorHandlingUtil;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.cumulus.util.FormImage;
-import it.pintux.life.common.platform.PlatformFormSender;
 
 import java.util.*;
 
@@ -34,9 +37,16 @@ public class FormMenuUtil {
     private final PlatformEconomyManager economyManager;
     private final PlatformFormSender formSender;
     private final PlatformTitleManager titleManager;
+    private final PlatformPluginManager pluginManager;
+    private final PlatformPlayerManager playerManager;
+    
+    // Action handlers that need shutdown
+    private DelayActionHandler delayActionHandler;
+    private RandomActionHandler randomActionHandler;
+    private PermissionActionHandler permissionActionHandler;
 
     public FormMenuUtil(FormConfig config, MessageData messageData) {
-        this(config, messageData, null, null, null, null, null);
+        this(config, messageData, null, null, null, null, null, null, null);
     }
     
     /**
@@ -52,7 +62,9 @@ public class FormMenuUtil {
                        PlatformSoundManager soundManager,
                        PlatformEconomyManager economyManager,
                        PlatformFormSender formSender,
-                       PlatformTitleManager titleManager) {
+                       PlatformTitleManager titleManager,
+                       PlatformPluginManager pluginManager,
+                       PlatformPlayerManager playerManager) {
         this.config = config;
         formMenus = new HashMap<>();
         this.messageData = messageData;
@@ -61,15 +73,25 @@ public class FormMenuUtil {
         this.economyManager = economyManager;
         this.formSender = formSender;
         this.titleManager = titleManager;
+        this.pluginManager = pluginManager;
+        this.playerManager = playerManager;
         
         // Initialize action system
         this.actionRegistry = ActionRegistry.getInstance();
         this.actionExecutor = new ActionExecutor(actionRegistry);
         
+        // Initialize condition evaluator with plugin manager
+        if (pluginManager != null) {
+            ConditionEvaluator.setPluginManager(pluginManager);
+        }
+        
         // Register default action handlers
         registerDefaultActionHandlers();
         
         loadFormMenus();
+        
+        // Validate configuration after loading
+        validateConfiguration();
     }
 
     /**
@@ -79,14 +101,22 @@ public class FormMenuUtil {
         // Core action handlers
         actionRegistry.registerHandler(new CommandActionHandler());
         actionRegistry.registerHandler(new OpenFormActionHandler(this));
-        actionRegistry.registerHandler(new MessageActionHandler());
+        actionRegistry.registerHandler(new MessageActionHandler(playerManager));
         actionRegistry.registerHandler(new CloseActionHandler());
-        actionRegistry.registerHandler(new DelayActionHandler());
+        this.delayActionHandler = new DelayActionHandler(actionExecutor);
+        actionRegistry.registerHandler(delayActionHandler);
         
         // Platform-dependent action handlers (only register if platform managers are available)
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
             actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
+            this.permissionActionHandler = new PermissionActionHandler(commandExecutor);
+            actionRegistry.registerHandler(permissionActionHandler);
+            actionRegistry.registerHandler(new PotionActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new GameModeActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new HealthActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new TeleportActionHandler());
         }
         
         if (soundManager != null) {
@@ -104,13 +134,20 @@ public class FormMenuUtil {
         
         // Advanced action handlers that depend on the action executor
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
-        actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
+        this.randomActionHandler = new RandomActionHandler(actionExecutor);
+        actionRegistry.registerHandler(randomActionHandler);
         
         // Register URL action handler
-        actionRegistry.registerHandler(new OpenUrlActionHandler());
+        actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
         
-        // Register particle action handler
-        actionRegistry.registerHandler(new ParticleActionHandler());
+        // Plugin integration action handlers (require commandExecutor, PlaceholderProcessor, and platform managers)
+        if (commandExecutor != null && pluginManager != null && playerManager != null) {
+            // Create a placeholder processor instance for plugin handlers
+            it.pintux.life.common.utils.PlaceholderProcessor placeholderProcessor = new it.pintux.life.common.utils.PlaceholderProcessor();
+            
+            // Register plugin integration handlers
+            actionRegistry.registerHandler(new PlaceholderAPIActionHandler(commandExecutor, placeholderProcessor, pluginManager, playerManager));
+          }
         
         logger.info("Registered " + actionRegistry.size() + " action handlers");
     }
@@ -127,7 +164,36 @@ public class FormMenuUtil {
                 for (String button : config.getKeys("forms." + key + ".buttons")) {
                     String text = config.getString("forms." + key + ".buttons." + button + ".text");
                     String image = config.getString("forms." + key + ".buttons." + button + ".image");
-                    String onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
+                    
+                    // Handle onClick as either string or list
+                    String onClick = null;
+                    try {
+                        List<String> onClickList = config.getStringList("forms." + key + ".buttons." + button + ".onClick");
+                        if (onClickList != null && !onClickList.isEmpty()) {
+                            // Convert list to our internal format for multi-actions
+                            onClick = "[" + String.join(", ", onClickList) + "]";
+                        }
+                    } catch (Exception e) {
+                        // Fallback to string format
+                        onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
+                    }
+                    
+                    // If still null, try string format
+                    if (onClick == null) {
+                        onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
+                    }
+                    
+                    // Check for priority properties
+                    String priorityStr = config.getString("forms." + key + ".buttons." + button + ".priority");
+                    Integer priority = null;
+                    if (priorityStr != null) {
+                        try {
+                            priority = Integer.parseInt(priorityStr);
+                        } catch (NumberFormatException e) {
+                            // Ignore invalid priority values
+                        }
+                    }
+                    String viewRequirement = config.getString("forms." + key + ".buttons." + button + ".view_requirement");
                     
                     // Check for conditional properties
                     String showCondition = config.getString("forms." + key + ".buttons." + button + ".show_condition");
@@ -135,7 +201,18 @@ public class FormMenuUtil {
                     String alternativeImage = config.getString("forms." + key + ".buttons." + button + ".alternative_image");
                     String alternativeOnClick = config.getString("forms." + key + ".buttons." + button + ".alternative_onClick");
                     
-                    if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
+                    // Determine button type based on available properties
+                    if (priority != null || viewRequirement != null) {
+                        // Create priority item
+                        PriorityItem priorityItem = new PriorityItem(text, image, onClick);
+                        if (priority != null) {
+                            priorityItem.setPriority(priority);
+                        }
+                        if (viewRequirement != null) {
+                            priorityItem.setViewRequirement(viewRequirement);
+                        }
+                        buttons.add(priorityItem);
+                    } else if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
                         // Create conditional button
                         ConditionalButton conditionalButton = new ConditionalButton(text, image, onClick, showCondition);
                         conditionalButton.setAlternativeText(alternativeText);
@@ -289,9 +366,14 @@ public class FormMenuUtil {
                 .build();
 
         if (formSender != null) {
-            formSender.sendForm(player, formBuilder.build());
+            ErrorHandlingUtil.sendFormWithFallback(
+                player,
+                () -> formSender.sendForm(player, formBuilder.build()),
+                "§eModal form could not be displayed. Please use the command interface or contact an administrator."
+            );
         } else {
             logger.warn("FormSender is null, cannot send modal form to player: " + player.getName());
+            player.sendMessage("§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -311,7 +393,36 @@ public class FormMenuUtil {
         // Create action context for condition evaluation with built-in placeholders
         ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
-        for (FormButton button : buttons) {
+        // Check if form contains priority items
+        boolean hasPriorityItems = buttons.stream().anyMatch(button -> button instanceof PriorityItem);
+        
+        List<FormButton> processedButtons;
+        if (hasPriorityItems) {
+            // Convert all buttons to priority items and resolve priorities
+            List<PriorityItem> priorityItems = new ArrayList<>();
+            for (FormButton button : buttons) {
+                if (button instanceof PriorityItem) {
+                    priorityItems.add((PriorityItem) button);
+                } else {
+                    // Convert regular buttons to priority items with default priority
+                    PriorityItem priorityItem = new PriorityItem(button.getText(), button.getImage(), button.getOnClick());
+                    priorityItems.add(priorityItem);
+                }
+            }
+            
+            // Resolve priority conflicts
+            List<PriorityItem> resolvedItems = PriorityResolver.createFormLayout(priorityItems, player, context, messageData);
+            processedButtons = new ArrayList<>(resolvedItems);
+            
+            // Log priority resolution for debugging
+            if (logger.isDebugEnabled()) {
+                PriorityResolver.logPriorityResolution(priorityItems, resolvedItems);
+            }
+        } else {
+            processedButtons = buttons;
+        }
+        
+        for (FormButton button : processedButtons) {
             // Handle conditional buttons
             if (button instanceof ConditionalButton) {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
@@ -361,9 +472,14 @@ public class FormMenuUtil {
 
         SimpleForm form = formBuilder.build();
         if (formSender != null) {
-            formSender.sendForm(player, form);
+            ErrorHandlingUtil.sendFormWithFallback(
+                player,
+                () -> formSender.sendForm(player, form),
+                "§eMenu '" + formMenu.getFormTitle() + "' could not be displayed. Please use commands or contact an administrator."
+            );
         } else {
             logger.warn("FormSender is null, cannot send simple form to player: " + player.getName());
+            player.sendMessage("§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -384,7 +500,8 @@ public class FormMenuUtil {
 
             switch (type.toLowerCase()) {
                 case "input":
-                    String inputText = replacePlaceholders((String) component.get("text"), placeholders, player, messageData);
+                    String inputTextRaw = (String) component.get("text");
+                    String inputText = inputTextRaw != null ? replacePlaceholders(inputTextRaw, placeholders, player, messageData) : "";
                     String placeholder = (String) component.get("placeholder");
                     String defaultValue = (String) component.get("default");
                     formBuilder.input(inputText, placeholder, defaultValue);
@@ -392,7 +509,8 @@ public class FormMenuUtil {
                     componentResults.put(componentKey, "");
                     break;
                 case "slider":
-                    String sliderText = replacePlaceholders((String) component.get("text"), placeholders, player, messageData);
+                    String sliderTextRaw = (String) component.get("text");
+                    String sliderText = sliderTextRaw != null ? replacePlaceholders(sliderTextRaw, placeholders, player, messageData) : "";
                     int min = (int) component.get("min");
                     int max = (int) component.get("max");
                     int step = (int) component.get("step");
@@ -402,7 +520,8 @@ public class FormMenuUtil {
                     componentResults.put(componentKey, 0);
                     break;
                 case "dropdown":
-                    String dropdownText = replacePlaceholders((String) component.get("text"), placeholders, player, messageData);
+                    String dropdownTextRaw = (String) component.get("text");
+                    String dropdownText = dropdownTextRaw != null ? replacePlaceholders(dropdownTextRaw, placeholders, player, messageData) : "";
                     @SuppressWarnings("unchecked")
                     List<String> options = (List<String>) component.get("options");
                     int defaultDropdown = (int) component.get("default");
@@ -411,7 +530,8 @@ public class FormMenuUtil {
                     componentResults.put(componentKey, "");
                     break;
                 case "toggle":
-                    String toggleText = replacePlaceholders((String) component.get("text"), placeholders, player, messageData);
+                    String toggleTextRaw = (String) component.get("text");
+                    String toggleText = toggleTextRaw != null ? replacePlaceholders(toggleTextRaw, placeholders, player, messageData) : "";
                     boolean defaultToggle = (boolean) component.get("default");
                     formBuilder.toggle(toggleText, defaultToggle);
                     componentActions.put(componentIndex[0], (String) component.get("action"));
@@ -477,9 +597,14 @@ public class FormMenuUtil {
 
         CustomForm form = formBuilder.build();
         if (formSender != null) {
-            formSender.sendForm(player, form);
+            ErrorHandlingUtil.sendFormWithFallback(
+                player,
+                () -> formSender.sendForm(player, form),
+                "§eCustom form '" + formMenu.getFormTitle() + "' could not be displayed. Please use alternative methods or contact an administrator."
+            );
         } else {
             logger.warn("FormSender is null, cannot send custom form to player: " + player.getName());
+            player.sendMessage("§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -494,6 +619,19 @@ public class FormMenuUtil {
         // Create action context with built-in placeholders
         ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
+        // Check if this is a multi-action format (starts with [ and ends with ])
+        if (onClickAction.startsWith("[") && onClickAction.endsWith("]")) {
+            handleMultipleActions(player, onClickAction, context);
+        } else {
+            // Handle single action (existing behavior)
+            handleSingleAction(player, onClickAction, context);
+        }
+    }
+    
+    /**
+     * Handles execution of a single action
+     */
+    private void handleSingleAction(FormPlayer player, String onClickAction, ActionContext context) {
         // Parse and execute action
         ActionExecutor.Action action = actionExecutor.parseAction(onClickAction);
         if (action == null) {
@@ -503,7 +641,7 @@ public class FormMenuUtil {
         }
 
         ActionResult result = actionExecutor.executeAction(player, action.getType(), action.getValue(), context);
-        logger.warn(result.toString());
+        logger.debug(result.toString());
         if (result.isFailure()) {
             logger.warn("Action execution failed for player " + player.getName() + ": " + result.getMessage());
             if (result.getMessage() != null) {
@@ -511,6 +649,63 @@ public class FormMenuUtil {
             }
         } else {
             logger.debug("Successfully executed action for player " + player.getName() + ": " + onClickAction);
+        }
+    }
+    
+    /**
+     * Handles execution of multiple actions in sequence
+     */
+    private void handleMultipleActions(FormPlayer player, String onClickAction, ActionContext context) {
+        try {
+            // Remove brackets and split by comma
+            String actionsString = onClickAction.substring(1, onClickAction.length() - 1);
+            String[] actionStrings = actionsString.split(",");
+            
+            List<ActionExecutor.Action> actions = new ArrayList<>();
+            
+            // Parse each action
+            for (String actionString : actionStrings) {
+                String trimmed = actionString.trim();
+                if (!trimmed.isEmpty()) {
+                    ActionExecutor.Action action = actionExecutor.parseAction(trimmed);
+                    if (action != null) {
+                        actions.add(action);
+                    } else {
+                        logger.warn("Failed to parse action in multi-action sequence: " + trimmed);
+                        player.sendMessage("Invalid action in sequence: " + trimmed);
+                        return;
+                    }
+                }
+            }
+            
+            if (actions.isEmpty()) {
+                logger.warn("No valid actions found in multi-action sequence for player: " + player.getName());
+                player.sendMessage("No valid actions found in sequence");
+                return;
+            }
+            
+            // Execute actions in sequence using ActionExecutor's built-in support
+            List<ActionResult> results = actionExecutor.executeActions(player, actions, context);
+            
+            // Check results and log any failures
+            boolean hasFailures = false;
+            for (int i = 0; i < results.size(); i++) {
+                ActionResult result = results.get(i);
+                if (result.isFailure()) {
+                    hasFailures = true;
+                    logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.getMessage());
+                }
+            }
+            
+            if (hasFailures) {
+                player.sendMessage("Some actions in the sequence failed. Check logs for details.");
+            } else {
+                logger.debug("Successfully executed all actions in sequence for player " + player.getName());
+            }
+            
+        } catch (Exception e) {
+            logger.error("Error executing multi-action sequence for player " + player.getName(), e);
+            player.sendMessage("Error executing action sequence: " + e.getMessage());
         }
     }
 
@@ -572,7 +767,23 @@ public class FormMenuUtil {
     }
 
     protected String replacePlaceholders(String text, Map<String, String> placeholders, FormPlayer player, MessageData messageData) {
-        return PlaceholderUtil.processPlaceholders(text, placeholders, player, messageData);
+        if (text == null) {
+            return null;
+        }
+        
+        String result = text;
+        
+        // First, process dynamic placeholders (both $ and {} formats)
+        if (placeholders != null && !placeholders.isEmpty()) {
+            result = PlaceholderUtil.processDynamicPlaceholders(result, placeholders);
+        }
+        
+        // Then, process PlaceholderAPI placeholders (% prefixed) if messageData is available
+        if (messageData != null && result.contains("%")) {
+            result = messageData.replaceVariables(result, null, player);
+        }
+        
+        return result;
     }
 
     /**
@@ -641,7 +852,49 @@ public class FormMenuUtil {
         if (actionExecutor != null) {
             actionExecutor.shutdown();
         }
+        
+        // Shutdown action handlers with ExecutorService instances
+        if (delayActionHandler != null) {
+            delayActionHandler.shutdown();
+        }
+        if (randomActionHandler != null) {
+            randomActionHandler.shutdown();
+        }
+        if (permissionActionHandler != null) {
+            permissionActionHandler.shutdown();
+        }
+        
         logger.info("FormMenuUtil shutdown completed");
+    }
+    
+    /**
+     * Validates the loaded configuration
+     */
+    private void validateConfiguration() {
+        ConfigValidator validator = new ConfigValidator();
+        ConfigValidator.ValidationResult result = validator.validateConfiguration(formMenus);
+        
+        // Log errors
+        if (result.hasErrors()) {
+            logger.warn("Configuration validation found " + result.getErrors().size() + " errors:");
+            for (String error : result.getErrors()) {
+                logger.warn("  - " + error);
+            }
+        }
+        
+        // Log warnings
+        if (result.hasWarnings()) {
+            logger.info("Configuration validation found " + result.getWarnings().size() + " warnings:");
+            for (String warning : result.getWarnings()) {
+                logger.info("  - " + warning);
+            }
+        }
+        
+        if (result.isValid()) {
+            logger.info("Configuration validation completed successfully");
+        } else {
+            logger.warn("Configuration validation completed with errors. Some features may not work properly.");
+        }
     }
 
     public Map<String, FormMenu> getFormMenus() {

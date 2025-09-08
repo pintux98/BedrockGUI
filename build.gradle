@@ -3,8 +3,8 @@ plugins {
 }
 
 allprojects {
-    group = 'it.pintux'
-    version = '1.0'
+    group = 'it.pintux.life'
+    version = '2.0.1-BETA'
     repositories {
         mavenCentral()
     }

@@ -75,22 +75,7 @@ public class MessageData {
     // Player-related messages
     public static String PLAYER_NOT_FOUND = "player.not_found";
     
-    // Resource pack messages
-    public static String RESOURCE_PACK_NOT_FOUND = "resource_pack.not_found";
-    public static String RESOURCE_PACK_LOAD_FAILED = "resource_pack.load_failed";
-    public static String RESOURCE_PACK_INVALID_FORMAT = "resource_pack.invalid_format";
-    public static String RESOURCE_PACK_TOO_LARGE = "resource_pack.too_large";
-    public static String RESOURCE_PACK_GEYSER_CONNECTION_FAILED = "resource_pack.geyser_connection_failed";
-    public static String RESOURCE_PACK_PLAYER_NOT_BEDROCK = "resource_pack.player_not_bedrock";
-    public static String RESOURCE_PACK_CONFIGURATION_ERROR = "resource_pack.configuration_error";
-    public static String RESOURCE_PACK_UNKNOWN_ERROR = "resource_pack.unknown_error";
-    public static String RESOURCE_PACK_SEND_SUCCESS = "resource_pack.send_success";
-    public static String RESOURCE_PACK_SEND_FAILED = "resource_pack.send_failed";
-    public static String RESOURCE_PACK_REMOVE_SUCCESS = "resource_pack.remove_success";
-    public static String RESOURCE_PACK_REMOVE_FAILED = "resource_pack.remove_failed";
-    public static String RESOURCE_PACK_REMOVE_ALL_SUCCESS = "resource_pack.remove_all_success";
-    public static String RESOURCE_PACK_REMOVE_ALL_FAILED = "resource_pack.remove_all_failed";
-    public static String RESOURCE_PACK_LIST_FAILED = "resource_pack.list_failed";
+
     
     // List action messages
     public static final String ACTION_LIST_SUCCESS = "action.list.success";
@@ -142,7 +127,7 @@ public class MessageData {
         Matcher matcher = Pattern.compile("\\$(\\w+)").matcher(value);
         while (matcher.find()) {
             String placeholder = matcher.group(1);
-            System.out.println("Missing replacement value for placeholder: $" + placeholder);
+            // Debug logging removed for security - placeholder not found
         }
 
         return value;

@@ -1,5 +1,5 @@
-# BedrockGUI Configuration - Comprehensive Feature Showcase
-# This config demonstrates ALL available features and capabilities
+# BedrockGUI Configuration - Fixed and Complete Action Handler Showcase
+# This config demonstrates ALL available action handlers with correct syntax
 
 # ==================== GLOBAL SETTINGS ====================
 settings:
@@ -15,17 +15,7 @@ settings:
     button_order: "next_first"  # Options: "next_first" or "previous_first"
     default_previous_text: "⬅ Previous Page"
     default_next_text: "Next Page ➡"
-resource_packs:
-  enabled: true
-  default_pack: "ui_enhanced"
-  force_packs: []
-  packs:
-    ui_enhanced: "https://example.com/ui_enhanced.zip"
-    custom_icons: "https://example.com/custom_icons.zip"
-    admin_tools: "https://example.com/admin_tools.zip"
-  menu_packs:
-    default: "ui_enhanced"
-    # main_hub: "custom_icons"
+
 # ==================== COMMAND CONFIGURATION ====================
 commands:
   # Main hub command
@@ -35,41 +25,19 @@ commands:
     aliases: [ "menu", "hub", "main" ]
     form: "main_hub"
   
+  # Basic actions demo
+  basic:
+    description: "Open basic actions demo"
+    permission: "bedrockgui.basic"
+    aliases: [ "basicdemo" ]
+    form: "basic_actions"
+  
   # Admin commands
   admin:
     description: "Open admin control panel"
     permission: "bedrockgui.admin"
     aliases: [ "adminpanel", "control" ]
     form: "admin_panel"
-  
-  # Shop commands
-  shop:
-    description: "Open the server shop"
-    permission: "bedrockgui.shop"
-    aliases: [ "store", "buy" ]
-    form: "shop_interface"
-  
-  # Utility commands
-  settings:
-    description: "Open player settings"
-    permission: "bedrockgui.settings"
-    aliases: [ "config", "prefs" ]
-    form: "settings_menu"
-  
-  warps:
-    description: "Open warp locations menu"
-    permission: "bedrockgui.warps"
-    aliases: [ "warp", "tp" ]
-    form: "warp_locations"
-  
-  report:
-    description: "Report a player"
-    permission: "bedrockgui.report"
-    aliases: [ "reportplayer" ]
-    form: "player_report"
-
-# ==================== MESSAGE CONFIGURATION ====================
-# All messages have been moved to messages.yml for better organization
 
 # ==================== FORM DEFINITIONS ====================
 forms:
@@ -78,8 +46,8 @@ forms:
   main_hub:
     command: gui
     type: "SIMPLE"
-    title: "§6§l✦ BedrockGUI Hub ✦"
-    description: "§7Welcome to the comprehensive BedrockGUI showcase!\n§eExplore all features and capabilities below."
+    title: "§6§l✦ BedrockGUI Complete Showcase ✦"
+    description: "§7Welcome to the comprehensive BedrockGUI demonstration!\n§eExplore all action handlers and platform integrations below."
     buttons:
       # Core Features
       basic_actions:
@@ -87,22 +55,16 @@ forms:
         image: "textures/ui/icon_recipe_nature"
         onClick: "open:basic_actions"
       
-      advanced_forms:
-        text: "§b§l🔧 Advanced Forms"
+      plugin_integrations:
+        text: "§b§l🔧 Plugin Integrations"
         image: "textures/ui/icon_recipe_construction"
-        onClick: "open:advanced_forms"
+        onClick: "open:plugin_integrations"
       
-      validation_demo:
-        text: "§d§l✓ Validation Demo"
-        image: "textures/ui/icon_recipe_equipment"
-        onClick: "open:validation_demo"
-      
-      # Utility Features
-      shop_interface:
-        text: "§2§l🛒 Shop Interface"
+      economy_hub:
+        text: "§2§l💰 Economy Features"
         image: "textures/ui/icon_recipe_item"
-        onClick: "open:shop_interface"
-        show_condition: "permission:bedrockgui.shop"
+        onClick: "open:economy_hub"
+        show_condition: "permission:bedrockgui.economy"
       
       admin_panel:
         text: "§c§l⚙ Admin Panel"
@@ -111,97 +73,60 @@ forms:
         show_condition: "permission:bedrockgui.admin"
       
       # Advanced Features
-      conditional_demo:
-        text: "§e§l🔀 Conditional Logic"
+      advanced_forms:
+        text: "§d§l🔥 Advanced Forms"
         image: "textures/ui/icon_recipe_nature"
-        onClick: "open:conditional_demo"
+        onClick: "open:advanced_forms"
       
-      pagination_demo:
-        text: "§3§l📄 Pagination Demo"
+      validation_demo:
+        text: "§e§l✓ Validation Demo"
+        image: "textures/ui/icon_recipe_equipment"
+        onClick: "open:validation_demo"
+      
+      # List Features
+      list_features:
+        text: "§3§l📄 List Features"
         image: "textures/ui/icon_recipe_construction"
-        onClick: "open:pagination_demo"
+        onClick: "open:list_features"
       
-      # NEW LIST FEATURE DEMOS
-      list_feature_simple:
-        text: "§a§l📋 List Feature - Simple"
-        image: "textures/ui/icon_recipe_item"
-        onClick: "open:list_simple_demo"
-      
-      list_feature_advanced:
-        text: "§b§l📊 List Feature - Advanced"
-        image: "textures/ui/icon_recipe_equipment"
-        onClick: "open:list_advanced_demo"
-      
-      list_feature_complex:
-        text: "§d§l🔥 List Feature - Complex"
+      # Wizard Demo
+      wizard_demo:
+        text: "§5§l🧙 Setup Wizard"
         image: "textures/ui/icon_recipe_nature"
-        onClick: "open:list_complex_demo"
+        onClick: "open:wizard_step1"
       
-
-      
-      # Player Features
-      settings_menu:
-        text: "§6§l⚙ Player Settings"
-        image: "textures/ui/icon_recipe_equipment"
-        onClick: "open:settings_menu"
-      
-      warp_locations:
-        text: "§9§l🌍 Warp Locations"
-        image: "textures/ui/icon_recipe_nature"
-        onClick: "open:warp_locations"
-      
-      player_report:
-        text: "§c§l⚠ Report Player"
+      # Example Forms
+      examples_menu:
+        text: "§6§l📋 Example Forms"
         image: "textures/ui/icon_recipe_item"
-        onClick: "open:player_report"
+        onClick: "open:examples_menu"
 
-  # ==================== BASIC ACTIONS (SIMPLE FORM) ====================
+  # ==================== BASIC ACTIONS DEMO ====================
   basic_actions:
     type: "SIMPLE"
     title: "§a§l⚡ Basic Actions Demo"
-    description: "§7Test all basic action types available in BedrockGUI"
+    description: "§7Demonstrate core action handlers with proper syntax"
     buttons:
-      # Message Actions
       message_demo:
         text: "§e§l💬 Message Actions"
         onClick: "open:message_demo"
       
-      # Command Actions
       command_demo:
         text: "§b§l⌨ Command Actions"
         onClick: "open:command_demo"
       
-      # Teleport Actions
-      teleport_demo:
-        text: "§d§l🌟 Teleport Actions"
-        onClick: "open:teleport_demo"
-      
-      # Sound Actions
       sound_demo:
-        text: "§6§l🔊 Sound Actions"
+        text: "§d§l🔊 Sound Actions"
         onClick: "open:sound_demo"
       
-      # Economy Actions
-      economy_demo:
-        text: "§2§l💰 Economy Actions"
-        onClick: "open:economy_demo"
-        show_condition: "permission:bedrockgui.economy"
+      teleport_demo:
+        text: "§6§l🌟 Teleport Actions"
+        onClick: "open:teleport_demo"
       
-      # Delay Actions
-      delay_demo:
-        text: "§c§l⏱ Delay Actions"
-        onClick: "open:delay_demo"
-      
-      # Random Actions
-      random_demo:
-        text: "§5§l🎲 Random Actions"
-        onClick: "open:random_demo"
-      
-      # Server Actions
-      server_demo:
-        text: "§4§l🖥 Server Actions"
-        onClick: "open:server_demo"
-        show_condition: "permission:bedrockgui.admin"
+      inventory_demo:
+        text: "§a§l📦 Inventory Actions"
+        onClick: "open:inventory_demo"
+        show_condition: "permission:bedrockgui.inventory"
       
       back:
         text: "§8§l← Back to Hub"
@@ -211,513 +136,23 @@ forms:
   message_demo:
     type: "SIMPLE"
     title: "§e§l💬 Message Actions Demo"
-    description: "§7Test different message types and formatting"
+    description: "§7Test different message formats and styles"
     buttons:
       simple_message:
-        text: "§a§lSimple Message"
-        onClick: "message:§aHello %player_name%! Welcome to BedrockGUI!"
+        text: "§a§l📝 Simple Message"
+        onClick: "message:§a§lHello! This is a simple message."
       
-      formatted_message:
-        text: "§b§lFormatted Message"
-        onClick: "message:§b§l[INFO] §r§7Player: §e%player_name% §7| World: §a%player_world% §7| Health: §c%player_health%"
+      colored_message:
+        text: "§b§l🎨 Colored Message"
+        onClick: "message:§c§lRed §e§lYellow §a§lGreen §b§lBlue §d§lPurple"
       
       multiline_message:
-        text: "§d§lMultiline Message"
-        onClick: "message:§d§l=== Server Information ===\n§7Server: §eBedrockGUI Demo\n§7Players: §a%server_online%/%server_max%\n§7TPS: §b%server_tps%"
+        text: "§d§l📄 Multi-line Message"
+        onClick: "message:§6§lMulti-line Message:\n§7Line 1: Welcome!\n§7Line 2: This is line 2\n§7Line 3: End of message"
       
-      warning_message:
-        text: "§e§lWarning Message"
-        onClick: "message:§e§l⚠ WARNING ⚠\n§cThis is a test warning message!\n§7Please read server rules carefully."
-      
-      success_message:
-        text: "§2§lSuccess Message"
-        onClick: "message:§2§l✓ SUCCESS\n§aOperation completed successfully!\n§7Thank you for using BedrockGUI."
-      
-      # Broadcast Actions
-      broadcast_demo:
-        text: "§6§l📢 Broadcast Actions"
-        onClick: "open:broadcast_demo"
-        show_condition: "permission:bedrockgui.broadcast"
-      
-      # Conditional Actions
-      conditional_demo:
-        text: "§5§l🔀 Conditional Actions"
-        onClick: "open:conditional_demo"
-      
-      # Advanced Multi-Action Demo
-      advanced_demo:
-        text: "§c§l⚡ Advanced Multi-Actions"
-        onClick: "open:advanced_demo"
-        show_condition: "permission:bedrockgui.advanced"
-      
-      # Complete Action Handler Test Suite
-      complete_test_suite:
-        text: "§f§l🧪 Complete Test Suite"
-        onClick: "open:complete_test_suite"
-        show_condition: "permission:bedrockgui.test"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== LIST FEATURE DEMOS ====================
-  
-  # ==================== SIMPLE LIST DEMO ====================
-  list_simple_demo:
-    type: "SIMPLE"
-    title: "§a§l📋 List Feature - Simple Examples"
-    description: "§7Basic list functionality demonstrations"
-    buttons:
-      static_list_demo:
-        text: "§e§l📝 Static List Demo"
-        onClick: "open:static_list_form"
-      
-      placeholder_list_demo:
-        text: "§b§l🔗 Placeholder List Demo"
-        onClick: "open:placeholder_list_form"
-      
-      online_players_demo:
-        text: "§2§l👥 Online Players Demo"
-        onClick: "open:online_players_form"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # Static List Example - Simple fruit selection
-  static_list_form:
-    type: "SIMPLE"
-    title: "§e§l🍎 Fruit Selection"
-    description: "Choose your favorite fruit from the list below:"
-    buttons:
-      view_fruits:
-        text: "§a§l🍎 View Fruit List"
-        onClick: "list:static_list:[{name:Apple,value:fruit},{name:Orange,value:fruit},{name:Banana,value:fruit},{name:Grape,value:fruit},{name:Strawberry,value:fruit}],form_id:static_list_form,per_page:3,title:Fruit Selection,button_template:§f{name} ({value}),button_action:message:§a§lYou selected: {name}!"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_simple_demo"
-
-  # Placeholder List Example - Server stats
-  placeholder_list_form:
-    type: "SIMPLE"
-    title: "§b§l📊 Server Statistics"
-    description: "View current server information:"
-    buttons:
-      view_stats:
-        text: "§b§l📊 View Server Stats"
-        onClick: "list:placeholder:%server_online%,form_id:placeholder_list_form,per_page:5,title:Server Statistics,button_template:§7• §f{item},button_action:message:§e§lStat Info: {item}"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_simple_demo"
-
-  # Online Players Example
-  online_players_form:
-    type: "SIMPLE"
-    title: "§2§l👥 Online Players"
-    description: "View and interact with online players:"
-    buttons:
-      view_players:
-        text: "§2§l👥 View Online Players"
-        onClick: "list:custom_source:online_players,form_id:online_players_form,per_page:5,title:Online Players,button_template:§a👤 §f{name} §7({world}),button_action:message:§e§lPlayer Info: {name} in {world}"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_simple_demo"
-
-  # ==================== ADVANCED LIST DEMO ====================
-  list_advanced_demo:
-    type: "SIMPLE"
-    title: "§b§l📊 List Feature - Advanced Examples"
-    description: "§7Advanced list functionality with pagination and templates"
-    buttons:
-      server_info_demo:
-        text: "§6§l🖥️ Server Information"
-        onClick: "open:server_info_form"
-      
-      player_permissions_demo:
-        text: "§d§l🔐 Player Permissions"
-        onClick: "open:permissions_form"
-      
-      paginated_demo:
-        text: "§3§l📄 Paginated Lists"
-        onClick: "open:paginated_form"
-      
-      templated_demo:
-        text: "§e§l🎨 Custom Templates"
-        onClick: "open:templated_form"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # Server Information List
-  server_info_form:
-    type: "SIMPLE"
-    title: "§6§l🖥️ Server Information"
-    description: "Detailed server statistics and information:"
-    buttons:
-      view_info:
-        text: "§6§l🖥️ View Server Info"
-        onClick: "list:custom_source:server_info,form_id:server_info_form,per_page:6,title:Server Information,button_template:§6📊 §f{name}: §e{value},button_action:message:§b§lServer Info: §f{name} = §e{value}"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_advanced_demo"
-
-  # Player Permissions List
-  permissions_form:
-    type: "SIMPLE"
-    title: "§d§l🔐 Your Permissions"
-    description: "View your current permissions:"
-    buttons:
-      view_permissions:
-        text: "§d§l🔐 View My Permissions"
-        onClick: "list:custom_source:permissions,form_id:permissions_form,per_page:8,title:Your Permissions,button_template:§d🔐 §f{name} §7({value}),button_action:message:§e§lPermission: §f{name} §7- Status: {value}"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_advanced_demo"
-
-  # Paginated List Example
-  paginated_form:
-    type: "SIMPLE"
-    title: "§3§l📄 Paginated Example"
-    description: "Large list with pagination controls:"
-    buttons:
-      view_paginated:
-        text: "§3§l📄 View Paginated List"
-        onClick: "list:static_list:[{name:Item 1,value:example},{name:Item 2,value:example},{name:Item 3,value:example},{name:Item 4,value:example},{name:Item 5,value:example},{name:Item 6,value:example},{name:Item 7,value:example},{name:Item 8,value:example},{name:Item 9,value:example},{name:Item 10,value:example},{name:Item 11,value:example},{name:Item 12,value:example},{name:Item 13,value:example},{name:Item 14,value:example},{name:Item 15,value:example},{name:Item 16,value:example},{name:Item 17,value:example},{name:Item 18,value:example},{name:Item 19,value:example},{name:Item 20,value:example}],form_id:paginated_form,per_page:4,title:Paginated Example,button_template:§3📋 §f{name} §7(#{index}),button_action:message:§a§lSelected: {name} (Position #{index})"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_advanced_demo"
-
-  # Custom Template Example
-  templated_form:
-    type: "SIMPLE"
-    title: "§e§l🎨 Custom Templates"
-    description: "Advanced template formatting:"
-    buttons:
-      view_templates:
-        text: "§e§l🎨 View Custom Templates"
-        onClick: "list:custom_source:online_players,form_id:templated_form,per_page:3,title:Custom Templates,button_template:§e⭐ §l{name}\n§7World: §a{world}\n§7Health: §c{health}❤,button_action:message:§e§lPlayer Details:\n§7Name: §f{name}\n§7World: §a{world}\n§7Health: §c{health}/20"
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_advanced_demo"
-
-  # ==================== COMPLEX LIST DEMO ====================
-  list_complex_demo:
-    type: "SIMPLE"
-    title: "§d§l🔥 List Feature - Complex Examples"
-    description: "§7Complex list functionality with advanced features"
-    buttons:
-      multi_source_demo:
-        text: "§c§l🔄 Multi-Source Demo"
-        onClick: "open:multi_source_form"
-      
-      interactive_demo:
-        text: "§a§l⚡ Interactive Demo"
-        onClick: "open:interactive_form"
-      
-      admin_tools_demo:
-        text: "§4§l⚙️ Admin Tools"
-        onClick: "open:admin_tools_form"
-        show_condition: "permission:bedrockgui.admin"
-      
-      dynamic_demo:
-        text: "§b§l🌊 Dynamic Lists"
-        onClick: "open:dynamic_form"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # Multi-Source Complex Example
-  multi_source_form:
-    type: "MODAL"
-    title: "§c§l🔄 Multi-Source Data"
-    description: "Choose a data source to explore:"
-    formId: "multi_source"
-    buttons:
-      players_source:
-        text: "§2§l👥 Online Players"
-        onClick: "list:source=online_players:button_template=§2👤 §l{name}\n§7🌍 {world} §8| §c❤{health} §8| §e⭐{level}:button_action=conditional:permission:bedrockgui.admin:message:§a§lTeleporting to {name}...:teleport:{x} {y} {z}:sound:entity.enderman.teleport:message:§c§lAdmin permission required to teleport:sound:entity.villager.no:per_page=4"
-      
-      server_source:
-        text: "§6§l🖥️ Server Data"
-        onClick: "list:source=server_info:button_template=§6🔧 §l{key}\n§7Value: §e{value}:button_action=conditional:permission:bedrockgui.admin:message:§b§lServer Stat: §f{key}\n§7Current Value: §e{value}:broadcast:permission:bedrockgui.admin:§6[ADMIN] §e%player_name% §7viewed server stat: {key}:message:§7Server Stat: §f{key} = §e{value}:per_page=5"
-      
-      permissions_source:
-        text: "§d§l🔐 Your Permissions"
-        onClick: "list:source=player_permissions:button_template=§d🔐 §l{permission}\n§7Status: {status}:button_action=message:§e§lPermission Details:\n§7Node: §f{permission}\n§7Status: §a{status}\n§7Description: Access to {permission} features:per_page=6"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_complex_demo"
-
-  # Interactive Complex Example
-  interactive_form:
-    type: "MODAL"
-    title: "§a§l⚡ Interactive Player List"
-    description: "Advanced player interaction system:"
-    formId: "interactive"
-    buttons:
-      interact_players:
-        text: "§a§lInteract with Players"
-        onClick: "list:source=online_players:button_template=§a⚡ §l{name} §r§7({world})\n§7Health: §c{health}❤ §8| §7Level: §e{level}⭐:button_action=open:player_interaction_menu:per_page=3"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_complex_demo"
-
-  # Player Interaction Menu (opened from interactive list)
-  player_interaction_menu:
-    type: "MODAL"
-    title: "§a§l⚡ Player Interaction"
-    description: "Choose an action for the selected player:"
-    formId: "player_interaction"
-    buttons:
-      teleport_to:
-        text: "§b§l🌟 Teleport To Player"
-        onClick: "conditional:permission:bedrockgui.teleport:message:§b§lTeleporting to {name}...:teleport:{x} {y} {z}:sound:entity.enderman.teleport:delay:1000:message:§a§lArrived at {name}'s location!:message:§c§lYou don't have permission to teleport:sound:entity.villager.no"
-      
-      send_message:
-        text: "§e§l💬 Send Message"
-        onClick: "message:§e§lSending message to {name}...:delay:1000:command:tell {name} Hello from %player_name%!:message:§a§lMessage sent to {name}!"
-      
-      view_info:
-        text: "§6§l📊 View Info"
-        onClick: "message:§6§l=== Player Information ===\n§7Name: §f{name}\n§7World: §a{world}\n§7Health: §c{health}/20\n§7Level: §e{level}\n§7Position: §b{x}, {y}, {z}:sound:ui.button.click"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:interactive_form"
-
-  # Admin Tools Complex Example
-  admin_tools_form:
-    type: "MODAL"
-    title: "§4§l⚙️ Admin Tools"
-    description: "Advanced administrative functions:"
-    formId: "admin_tools"
-    permission: "bedrockgui.admin"
-    buttons:
-      manage_players:
-        text: "§c§l👥 Manage Players"
-        onClick: "list:source=online_players:button_template=§c⚙️ §l{name} §r§7({world})\n§7Health: §c{health}❤ §8| §7Gamemode: §b{gamemode}:button_action=open:admin_player_menu:per_page=4"
-      
-      server_management:
-        text: "§6§l🖥️ Server Management"
-        onClick: "list:source=server_info:button_template=§6🔧 §l{key}\n§7Current: §e{value}\n§7§oClick to manage:button_action=conditional:placeholder:{key}:contains:tps:message:§6§lServer TPS: §e{value}\n§7Performance is good!:sound:random.levelup:conditional:placeholder:{key}:contains:memory:message:§e§lMemory Usage: §c{value}\n§7Monitor server resources:sound:ui.button.click:message:§b§lServer Info: §f{key} = §e{value}:per_page=5"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_complex_demo"
-
-  # Admin Player Management Menu
-  admin_player_menu:
-    type: "MODAL"
-    title: "§c§l⚙️ Manage Player: {name}"
-    description: "Administrative actions for the selected player:"
-    formId: "admin_player"
-    permission: "bedrockgui.admin"
-    buttons:
-      teleport_player:
-        text: "§b§l🌟 Teleport Player"
-        onClick: "message:§b§lTeleporting {name} to spawn...:server:tp {name} spawn:delay:1000:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7teleported §e{name} §7to spawn:message:§a§l{name} has been teleported to spawn!"
-      
-      heal_player:
-        text: "§a§l❤ Heal Player"
-        onClick: "message:§a§lHealing {name}...:server:heal {name}:delay:500:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7healed §e{name}:message:§a§l{name} has been healed!"
-      
-      kick_player:
-        text: "§c§l⚠ Kick Player"
-        onClick: "message:§c§lKicking {name} from the server...:server:kick {name} Kicked by admin:delay:1000:broadcast:permission:bedrockgui.admin:§c[ADMIN] §e%player_name% §7kicked §e{name}:message:§c§l{name} has been kicked from the server!"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:admin_tools_form"
-
-  # Dynamic Lists Example
-  dynamic_form:
-    type: "MODAL"
-    title: "§b§l🌊 Dynamic Lists"
-    description: "Lists that change based on conditions:"
-    formId: "dynamic"
-    buttons:
-      time_based_list:
-        text: "§e§l🕐 Time-Based List"
-        onClick: "conditional:placeholder:%world_time%:>=:0:placeholder:%world_time%:<=:6000:list:source=static:data=Morning Activities,Sunrise Viewing,Early Farming,Dawn Patrol:button_template=§e🌅 §f{item}:button_action=message:§e§lMorning Activity: {item}:conditional:placeholder:%world_time%:>=:6000:placeholder:%world_time%:<=:18000:list:source=static:data=Daytime Work,Building Projects,Exploration,Trading:button_template=§a☀️ §f{item}:button_action=message:§a§lDay Activity: {item}:list:source=static:data=Night Activities,Mob Hunting,Mining,Stargazing:button_template=§9🌙 §f{item}:button_action=message:§9§lNight Activity: {item}:per_page=4"
-      
-      permission_based_list:
-        text: "§d§l🔐 Permission-Based List"
-        onClick: "conditional:permission:bedrockgui.admin:list:source=static:data=Admin Commands,Server Management,Player Moderation,System Monitoring:button_template=§c⚙️ §f{item}:button_action=message:§c§lAdmin Feature: {item}:conditional:permission:bedrockgui.vip:list:source=static:data=VIP Perks,Exclusive Areas,Special Commands,Priority Support:button_template=§d👑 §f{item}:button_action=message:§d§lVIP Feature: {item}:list:source=static:data=Basic Features,General Chat,Public Areas,Standard Support:button_template=§7📋 §f{item}:button_action=message:§7§lBasic Feature: {item}:per_page=4"
-      
-      health_based_list:
-        text: "§c§l❤ Health-Based List"
-        onClick: "conditional:placeholder:%player_health%:>=:15:list:source=static:data=Healthy Activities,Combat Training,Exploration,Adventure:button_template=§a💪 §f{item}:button_action=message:§a§lHealthy Activity: {item}:conditional:placeholder:%player_health%:>=:5:list:source=static:data=Recovery Activities,Rest,Light Tasks,Healing:button_template=§e🏥 §f{item}:button_action=message:§e§lRecovery Activity: {item}:list:source=static:data=Emergency Actions,Immediate Healing,Safe Shelter,Call for Help:button_template=§c🚨 §f{item}:button_action=message:§c§lEmergency: {item}:command:heal %player_name%:per_page=3"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:list_complex_demo"
-
-  # ==================== COMPLETE ACTION HANDLER TEST SUITE ====================
-  complete_test_suite:
-    type: "SIMPLE"
-    title: "§f§l🧪 Complete Action Handler Test Suite"
-    description: "§7Comprehensive testing environment for all action handlers"
-    permission: "bedrockgui.test"
-    buttons:
-      test_all_basic:
-        text: "§a§l✅ Test All Basic Actions"
-        onClick: "message:§a§l[TEST] §7Testing basic actions...:sound:ui.button.click:delay:500:command:time set day:delay:500:economy:add:10:delay:500:teleport:spawn:delay:500:sound:random.levelup:delay:500:message:§a§l[TEST] §7Basic actions test complete!"
-      
-      test_conditional_logic:
-        text: "§5§l🔀 Test Conditional Logic"
-        onClick: "message:§5§l[TEST] §7Testing conditional logic...:conditional:permission:bedrockgui.admin:message:§a§l✅ Admin permission test PASSED:message:§c§l❌ Admin permission test FAILED:conditional:placeholder:%player_health%:>=:1:message:§a§l✅ Health check test PASSED (%player_health%/20):message:§c§l❌ Health check test FAILED:conditional:placeholder:%player_world%:equals:world:message:§a§l✅ World check test PASSED (in %player_world%):message:§e§l⚠ World check test PARTIAL (in %player_world%):message:§5§l[TEST] §7Conditional logic test complete!"
-      
-      test_random_actions:
-        text: "§6§l🎲 Test Random Actions"
-        onClick: "message:§6§l[TEST] §7Testing random actions...:random:message:§a§lRandom message 1!,§b§lRandom message 2!,§c§lRandom message 3!:delay:1000:random:sound:ui.button.click,random.levelup,mob.villager.yes:delay:1000:random:economy:add:10,20,30,40,50:delay:1000:message:§6§l[TEST] §7Random actions test complete!"
-      
-      test_broadcast_system:
-        text: "§6§l📢 Test Broadcast System"
-        onClick: "message:§6§l[TEST] §7Testing broadcast system...:delay:500:broadcast:§e§l[TEST] §7Global broadcast test message from %player_name%:delay:1000:broadcast:permission:bedrockgui.admin:§c§l[ADMIN TEST] §7This message is only visible to admins:delay:1000:message:§6§l[TEST] §7Broadcast system test complete!"
-      
-      test_economy_integration:
-        text: "§2§l💰 Test Economy Integration"
-        onClick: "message:§2§l[TEST] §7Testing economy integration...:economy:add:100:delay:500:message:§a§l+100 coins added:economy:remove:50:delay:500:message:§c§l-50 coins removed:delay:500:message:§2§l[TEST] §7Economy integration test complete! Net gain: +50 coins"
-      
-      test_server_commands:
-        text: "§c§l⚙️ Test Server Commands"
-        onClick: "conditional:permission:bedrockgui.admin:message:§c§l[TEST] §7Testing server commands...:server:time set 1000:delay:1000:server:weather clear:delay:1000:server:difficulty peaceful:delay:1000:message:§c§l[TEST] §7Server commands test complete!:message:§c§l❌ Admin permission required for server command tests"
-      
-      test_teleport_system:
-        text: "§9§l🌍 Test Teleport System"
-        onClick: "message:§9§l[TEST] §7Testing teleport system...:teleport:spawn:delay:2000:message:§a§l✅ Spawn teleport successful:delay:1000:random:teleport:0 100 0,100 100 100,-100 100 -100:delay:2000:message:§b§l✅ Random coordinate teleport successful:delay:1000:teleport:spawn:message:§9§l[TEST] §7Teleport system test complete!"
-      
-      test_sound_effects:
-        text: "§d§l🔊 Test Sound Effects"
-        onClick: "message:§d§l[TEST] §7Testing sound effects...:sound:ui.button.click:delay:500:sound:random.levelup:delay:500:sound:mob.villager.yes:delay:500:sound:ambient.cave:delay:500:sound:random.pop:delay:500:message:§d§l[TEST] §7Sound effects test complete!"
-      
-      test_delay_timing:
-        text: "§e§l⏰ Test Delay Timing"
-        onClick: "message:§e§l[TEST] §7Testing delay timing (10 seconds total)...:delay:1000:message:§71 second:delay:1000:message:§72 seconds:delay:1000:message:§73 seconds:delay:1000:message:§74 seconds:delay:1000:message:§75 seconds:delay:1000:message:§76 seconds:delay:1000:message:§77 seconds:delay:1000:message:§78 seconds:delay:1000:message:§79 seconds:delay:1000:message:§e§l[TEST] §a10 seconds - Delay timing test complete!"
-      
-      stress_test:
-        text: "§c§l🔥 Stress Test (All Handlers)"
-        onClick: "message:§c§l[STRESS TEST] §7Initiating comprehensive stress test...:sound:ui.button.click:delay:100:economy:add:1:delay:100:command:time query daytime:delay:100:random:sound:ui.button.click,random.pop:delay:100:conditional:placeholder:%player_health%:>=:1:message:§a§lHealth OK:message:§c§lHealth ERROR:delay:100:broadcast:§c§l[STRESS] §e%player_name% §7is running a stress test:delay:100:server:time add 1:delay:100:teleport:%player_x% %player_y% %player_z%:delay:100:message:§c§l[STRESS TEST] §aStress test cycle 1 complete:delay:500:message:§c§l[STRESS TEST] §7Running cycle 2...:economy:add:2:sound:random.levelup:delay:200:random:message:§aRandom 1,§bRandom 2,§cRandom 3:delay:200:conditional:permission:bedrockgui.test:broadcast:§e§l[STRESS] §7Cycle 2 complete:message:§7Cycle 2 partial:delay:500:message:§c§l[STRESS TEST] §a§lAll cycles complete! System stable."
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== ADVANCED MULTI-ACTION DEMO ====================
-  advanced_demo:
-    type: "SIMPLE"
-    title: "§c§l⚡ Advanced Multi-Action Demo"
-    description: "§7Complex combinations of all action handlers"
-    permission: "bedrockgui.advanced"
-    buttons:
-      welcome_sequence:
-        text: "§a§l🎊 Welcome Sequence"
-        onClick: "message:§e§lWelcome to the server!:sound:random.levelup:delay:1000:broadcast:§a§l[JOIN] §e%player_name% §7has joined the server!:delay:2000:economy:add:100:message:§2§l+100 coins welcome bonus!:teleport:spawn"
-      
-      vip_treatment:
-        text: "§d§l👑 VIP Treatment"
-        onClick: "conditional:permission:bedrockgui.vip:message:§d§l[VIP] §eWelcome back, VIP member!:sound:random.levelup:economy:add:500:command:give %player_name% diamond 10:delay:1000:broadcast:§d§l[VIP] §e%player_name% §7is online!:teleport:vip_lounge:message:§c§lVIP access required!:sound:mob.villager.no"
-      
-      daily_reward:
-        text: "§6§l🎁 Daily Reward System"
-        onClick: "conditional:placeholder:%player_playtime_hours%:>=:1:random:economy:add:100,200,300,500:message:§a§lDaily reward claimed!:sound:random.levelup:command:give %player_name% emerald %random_1_5%:delay:2000:broadcast:§6§l[REWARD] §e%player_name% §7claimed their daily reward!:message:§e§lPlay for at least 1 hour to claim daily rewards!:sound:mob.villager.no"
-      
-      event_participation:
-        text: "§b§l🏆 Event Participation"
-        onClick: "conditional:placeholder:%server_online%:>=:5:message:§b§l[EVENT] §eJoining server event...:sound:random.levelup:delay:1000:broadcast:§b§l[EVENT] §e%player_name% §7joined the event! (%server_online% players participating):economy:add:250:teleport:event_arena:random:command:give %player_name% iron_sword,give %player_name% bow,give %player_name% golden_apple:message:§c§lNot enough players for event (need 5+):sound:mob.villager.no"
-      
-      admin_emergency:
-        text: "§c§l🚨 Emergency Protocol"
-        onClick: "conditional:permission:bedrockgui.admin:broadcast:§c§l[EMERGENCY] §eEmergency protocol activated by %player_name%!:delay:1000:server:save-all:delay:2000:broadcast:§e§l[INFO] §7Server saved. Preparing emergency measures...:delay:3000:message:§a§l[ADMIN] §7Emergency protocol complete.:sound:random.levelup:message:§c§lAdmin permission required!:sound:mob.villager.no"
-      
-      loyalty_program:
-        text: "§e§l⭐ Loyalty Program"
-        onClick: "conditional:placeholder:%player_playtime_hours%:>=:10:conditional:placeholder:%player_deaths%:<=:5:message:§e§l[LOYALTY] §aExcellent performance! Tier 3 rewards!:economy:add:1000:command:give %player_name% diamond 20:sound:random.levelup:delay:2000:broadcast:§e§l[LOYALTY] §e%player_name% §7achieved Tier 3 loyalty status!:conditional:placeholder:%player_playtime_hours%:>=:5:message:§e§l[LOYALTY] §7Tier 2 rewards!:economy:add:500:command:give %player_name% gold_ingot 10:sound:ui.button.click:message:§e§l[LOYALTY] §7Tier 1 rewards!:economy:add:100:sound:ui.button.click"
-      
-      server_status:
-        text: "§9§l📊 Server Status Check"
-        onClick: "message:§9§l[STATUS] §7Checking server status...:delay:1000:conditional:placeholder:%server_tps%:>=:18:message:§a§l[STATUS] §7Server performance: EXCELLENT (TPS: %server_tps%):sound:random.levelup:conditional:placeholder:%server_tps%:>=:15:message:§e§l[STATUS] §7Server performance: GOOD (TPS: %server_tps%):sound:ui.button.click:message:§c§l[STATUS] §7Server performance: POOR (TPS: %server_tps%):sound:mob.villager.no:delay:2000:message:§7§lOnline players: %server_online%:message:§7§lServer uptime: %server_uptime%"
-      
-      random_adventure:
-        text: "§2§l🎲 Random Adventure"
-        onClick: "message:§2§l[ADVENTURE] §7Rolling the dice of fate...:sound:ui.button.click:delay:2000:random:teleport:forest,desert,mountain,ocean:message:§a§lAdventure awaits!:delay:1000:random:economy:add:50,100,150,200,250:message:§6§lFound some coins on your journey!:delay:2000:random:command:give %player_name% bread 5,give %player_name% cooked_beef 3,give %player_name% golden_apple 1:message:§e§lReceived adventure supplies!:sound:random.levelup"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== BROADCAST ACTIONS DEMO ====================
-  broadcast_demo:
-    type: "SIMPLE"
-    title: "§6§l📢 Broadcast Actions Demo"
-    description: "§7Test server-wide broadcast messages"
-    permission: "bedrockgui.broadcast"
-    buttons:
-      global_announcement:
-        text: "§a§l📣 Global Announcement"
-        onClick: "broadcast:§6§l[ANNOUNCEMENT] §eWelcome to our server! Enjoy your stay!"
-      
-      event_notification:
-        text: "§b§l🎉 Event Notification"
-        onClick: "broadcast:§d§l[EVENT] §5Double XP Weekend is now active! Get grinding!"
-      
-      maintenance_alert:
-        text: "§e§l⚠ Maintenance Alert"
-        onClick: "broadcast:§c§l[MAINTENANCE] §eServer restart scheduled in 10 minutes. Please save your progress!"
-      
-      player_achievement:
-        text: "§2§l🏆 Player Achievement"
-        onClick: "broadcast:§a§l[ACHIEVEMENT] §e%player_name% §ahas reached level 100! Congratulations!"
-      
-      permission_broadcast:
-        text: "§d§l👑 Admin Broadcast"
-        onClick: "broadcast:permission:bedrockgui.admin:§c§l[ADMIN] §7This message is only visible to administrators."
-      
-      timed_broadcast:
-        text: "§c§l⏰ Timed Broadcast Sequence"
-        onClick: "broadcast:§e§l[INFO] §7Preparing server announcement...:delay:2000:broadcast:§a§l[SUCCESS] §7Server announcement complete!"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== CONDITIONAL ACTIONS DEMO ====================
-  conditional_demo:
-    type: "SIMPLE"
-    title: "§5§l🔀 Conditional Actions Demo"
-    description: "§7Test conditional logic and branching actions"
-    buttons:
-      permission_check:
-        text: "§a§l🔐 Permission Check"
-        onClick: "conditional:permission:bedrockgui.admin:message:§a§lYou are an admin!:sound:random.levelup:message:§c§lYou are not an admin!:sound:mob.villager.no"
-      
-      health_check:
-        text: "§c§l❤ Health Check"
-        onClick: "conditional:placeholder:%player_health%:>=:15:message:§a§lYou are healthy! (%player_health%/20):sound:random.levelup:message:§e§lYou need healing! (%player_health%/20):command:heal %player_name%:sound:random.levelup"
-      
-      time_based_action:
-        text: "§6§l🌅 Time-Based Action"
-        onClick: "conditional:placeholder:%world_time%:>=:0:placeholder:%world_time%:<=:12000:message:§e§lGood morning! The sun is shining.:sound:ambient.weather.rain:message:§9§lGood evening! The stars are out.:sound:ambient.cave"
-      
-      gamemode_check:
-        text: "§d§l🎮 Gamemode Check"
-        onClick: "conditional:placeholder:%player_gamemode%:equals:creative:message:§d§lYou are in Creative mode!:command:give %player_name% diamond 64:message:§7§lYou are in %player_gamemode% mode.:economy:add:50"
-      
-      world_check:
-        text: "§2§l🌍 World Check"
-        onClick: "conditional:placeholder:%player_world%:equals:world:message:§a§lWelcome to the Overworld!:teleport:spawn:conditional:placeholder:%player_world%:equals:world_nether:message:§c§lYou're in the Nether! Be careful!:command:give %player_name% fire_resistance_potion:message:§e§lYou're in: %player_world%"
-      
-      complex_conditional:
-        text: "§b§l🧠 Complex Logic"
-        onClick: "conditional:permission:bedrockgui.vip:placeholder:%player_health%:>=:15:placeholder:%player_world%:equals:world:message:§b§l[VIP] §aYou meet all conditions! Here's a bonus!:economy:add:500:command:give %player_name% diamond 5:sound:random.levelup:message:§7§lSome conditions not met. Basic reward only.:economy:add:50:sound:ui.button.click"
-      
-      nested_conditional:
-        text: "§e§l🔗 Nested Conditions"
-        onClick: "conditional:placeholder:%server_online%:>=:10:conditional:permission:bedrockgui.admin:broadcast:§6§l[ADMIN] §e%player_name% §7triggered a server event with §a%server_online% §7players online!:message:§a§lServer event triggered!:message:§e§lServer has %server_online% players. Event requires 10+ players.:message:§c§lNot enough players online for this event."
+      placeholder_message:
+        text: "§e§l🔧 Placeholder Message"
+        onClick: "message:§a§lHello {player}!\n§7Your world: §e{world}\n§7Your health: §c{health}/20"
       
       back:
         text: "§8§l← Back"
@@ -729,57 +164,35 @@ forms:
     title: "§b§l⌨ Command Actions Demo"
     description: "§7Execute various server commands"
     buttons:
-      give_item:
-        text: "§a§lGive Diamond"
-        onClick: "command:give %player_name% diamond 1"
+      gamemode_creative:
+        text: "§6§l🎨 Creative Mode"
+        onClick: "command:gamemode creative {player}"
+        show_condition: "permission:minecraft.command.gamemode"
+      
+      gamemode_survival:
+        text: "§2§l⚔ Survival Mode"
+        onClick: "command:gamemode survival {player}"
+        show_condition: "permission:minecraft.command.gamemode"
       
       heal_player:
-        text: "§c§lHeal Player"
-        onClick: "command:heal %player_name%"
-        show_condition: "permission:bedrockgui.heal"
+        text: "§c§l❤ Heal Player"
+        onClick: "command:heal {player}"
+        show_condition: "permission:minecraft.command.heal"
+      
+      feed_player:
+        text: "§e§l🍖 Feed Player"
+        onClick: "command:feed {player}"
+        show_condition: "permission:minecraft.command.feed"
       
       time_day:
-        text: "§e§lSet Time Day"
+        text: "§e§l☀ Set Day"
         onClick: "command:time set day"
-        show_condition: "permission:bedrockgui.time"
+        show_condition: "permission:minecraft.command.time"
       
       weather_clear:
-        text: "§b§lClear Weather"
+        text: "§b§l☀ Clear Weather"
         onClick: "command:weather clear"
-        show_condition: "permission:bedrockgui.weather"
-      
-      gamemode_creative:
-        text: "§d§lCreative Mode"
-        onClick: "command:gamemode creative %player_name%"
-        show_condition: "permission:bedrockgui.gamemode"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== TELEPORT ACTIONS DEMO ====================
-  teleport_demo:
-    type: "SIMPLE"
-    title: "§d§l🌟 Teleport Actions Demo"
-    description: "§7Test different teleportation methods"
-    buttons:
-      spawn_teleport:
-        text: "§a§lTeleport to Spawn"
-        onClick: "teleport:spawn"
-      
-      coordinates_teleport:
-        text: "§b§lTeleport to Coordinates"
-        onClick: "teleport:0,100,0,world"
-      
-      player_teleport:
-        text: "§e§lTeleport to Random Player"
-        onClick: "teleport:@r"
-        show_condition: "permission:bedrockgui.teleport.player"
-      
-      world_teleport:
-        text: "§c§lTeleport to Nether"
-        onClick: "teleport:0,64,0,world_nether"
-        show_condition: "permission:bedrockgui.teleport.world"
+        show_condition: "permission:minecraft.command.weather"
       
       back:
         text: "§8§l← Back"
@@ -788,911 +201,1363 @@ forms:
   # ==================== SOUND ACTIONS DEMO ====================
   sound_demo:
     type: "SIMPLE"
-    title: "§6§l🔊 Sound Actions Demo"
-    description: "§7Play different sounds and effects"
+    title: "§d§l🔊 Sound Actions Demo"
+    description: "§7Play various sounds with different volumes and pitches"
     buttons:
       ui_sounds:
-        text: "§a§lUI Sounds"
+        text: "§a§l🖱 UI Sounds"
         onClick: "sound:ui.button.click"
       
-      notification_sound:
-        text: "§b§lNotification"
-        onClick: "sound:random.levelup:1.0:1.0"
+      note_sounds:
+        text: "§e§l🎵 Note Block Sounds"
+        onClick: "sound:block.note_block.pling:1.0:1.5"
       
-      warning_sound:
-        text: "§e§lWarning Sound"
-        onClick: "sound:mob.villager.no:1.0:0.8"
+      entity_sounds:
+        text: "§c§l👹 Entity Sounds"
+        onClick: "sound:entity.experience_orb.pickup:0.8:1.2"
       
-      success_sound:
-        text: "§2§lSuccess Sound"
-        onClick: "sound:entity.experience_orb.pickup:1.0:1.2"
+      ambient_sounds:
+        text: "§b§l🌊 Ambient Sounds"
+        onClick: "sound:ambient.cave:0.5:0.8"
       
-      ambient_sound:
-        text: "§d§lAmbient Sound"
-        onClick: "sound:ambient.cave:0.5:0.5"
+      custom_volume:
+        text: "§d§l🔊 Custom Volume"
+        onClick: "sound:entity.player.levelup:0.3:2.0"
+      
+      sound_sequence:
+        text: "§6§l🎼 Sound Sequence"
+        onClick:
+          - "sound:block.note_block.harp:1.0:1.0"
+          - "delay:500"
+          - "sound:block.note_block.harp:1.0:1.2"
+          - "delay:500"
+          - "sound:block.note_block.harp:1.0:1.5"
       
       back:
         text: "§8§l← Back"
         onClick: "open:basic_actions"
 
-  # ==================== ECONOMY ACTIONS DEMO ====================
-  economy_demo:
+  # ==================== TELEPORT ACTIONS DEMO ====================
+  teleport_demo:
     type: "SIMPLE"
-    title: "§2§l💰 Economy Actions Demo"
-    description: "§7Test economy system integration"
+    title: "§6§l🌟 Teleport Actions Demo"
+    description: "§7Teleport to various locations"
     buttons:
-      check_balance:
-        text: "§a§lCheck Balance"
-        onClick: "economy:check"
+      spawn_teleport:
+        text: "§2§l🏠 Teleport to Spawn"
+        onClick: "teleport:0 100 0"
       
-      add_money:
-        text: "§b§lAdd 100 Coins"
-        onClick: "economy:add:100"
-        show_condition: "permission:bedrockgui.economy.add"
+      high_teleport:
+        text: "§b§l☁ High in Sky"
+        onClick: "teleport:0 200 0"
       
-      remove_money:
-        text: "§c§lRemove 50 Coins"
-        onClick: "economy:remove:50"
-        show_condition: "permission:bedrockgui.economy.remove"
+      custom_location:
+        text: "§d§l📍 Custom Location"
+        onClick: "open:teleport_form"
       
-      set_balance:
-        text: "§e§lSet Balance to 1000"
-        onClick: "economy:set:1000"
-        show_condition: "permission:bedrockgui.economy.set"
+      back:
+        text: "§8§l← Back"
+        onClick: "open:basic_actions"
+
+  # Custom Teleport Form
+  teleport_form:
+    type: "CUSTOM"
+    title: "§d§l📍 Custom Teleport"
+    description: "§7Enter coordinates to teleport to"
+    components:
+      x_coord:
+        type: "input"
+        text: "§e§lX Coordinate:"
+        placeholder: "0"
+      y_coord:
+        type: "input"
+        text: "§e§lY Coordinate:"
+        placeholder: "100"
+      z_coord:
+        type: "input"
+        text: "§e§lZ Coordinate:"
+        placeholder: "0"
+    
+    onSubmit:
+      - "teleport:{x_coord} {y_coord} {z_coord}"
+      - "message:§a§lTeleported to §e{x_coord}, {y_coord}, {z_coord}§a!"
+      - "sound:entity.enderman.teleport"
+
+  # ==================== INVENTORY ACTIONS DEMO ====================
+  inventory_demo:
+    type: "SIMPLE"
+    title: "§a§l📦 Inventory Actions Demo"
+    description: "§7Manage player inventory with various items"
+    buttons:
+      give_diamond:
+        text: "§b§l💎 Give Diamond"
+        onClick: "inventory:give:diamond:1"
+      
+      give_food:
+        text: "§e§l🍖 Give Food"
+        onClick: "inventory:give:cooked_beef:5"
+      
+      give_tools:
+        text: "§6§l⚒ Give Tools"
+        onClick:
+          - "inventory:give:diamond_sword:1"
+          - "inventory:give:diamond_pickaxe:1"
+          - "inventory:give:diamond_axe:1"
+          - "message:§a§lGiven diamond tools!"
+      
+      clear_inventory:
+        text: "§c§l🗑 Clear Inventory"
+        onClick: "inventory:clear"
+        show_condition: "permission:bedrockgui.inventory.clear"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:basic_actions"
+
+  # ==================== PLUGIN INTEGRATIONS HUB ====================
+  plugin_integrations:
+    type: "SIMPLE"
+    title: "§b§l🔧 Plugin Integrations Showcase"
+    description: "§7Explore supported plugin integrations with correct syntax"
+    buttons:
+      # Vault Integration
+      vault_demo:
+        text: "§2§l💰 Vault Economy"
+        image: "textures/ui/icon_recipe_nature"
+        onClick: "open:vault_demo"
+        show_condition: "plugin:Vault"
+      
+      # WorldGuard Integration
+      worldguard_demo:
+        text: "§4§l🛡 WorldGuard"
+        image: "textures/ui/icon_recipe_equipment"
+        onClick: "open:worldguard_demo"
+        show_condition: "plugin:WorldGuard"
+      
+      # Citizens Integration
+      citizens_demo:
+        text: "§6§l👤 Citizens NPCs"
+        image: "textures/ui/icon_recipe_construction"
+        onClick: "open:citizens_demo"
+        show_condition: "plugin:Citizens"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # ==================== VAULT INTEGRATION ====================
+  vault_demo:
+    type: "SIMPLE"
+    title: "§2§l💰 Vault Economy Integration"
+    description: "§7Manage economy and permissions with Vault"
+    buttons:
+      balance_check:
+        text: "§a§l💵 Check Balance"
+        onClick:
+          - "vault:balance"
+          - "message:§a§lYour current balance: §2$%vault_balance%"
+          - "sound:entity.experience_orb.pickup"
+      
+      deposit_money:
+        text: "§2§l💰 Deposit Money"
+        onClick: "open:deposit_form"
+      
+      withdraw_money:
+        text: "§c§l💸 Withdraw Money"
+        onClick: "open:withdraw_form"
+      
+      group_info:
+        text: "§b§l👥 Group Information"
+        onClick:
+          - "vault:get_groups"
+          - "message:§b§lYour Groups:\n§7Primary: §e%vault_primary_group%\n§7All Groups: §a%vault_all_groups%"
+          - "sound:block.note_block.pling"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:plugin_integrations"
+
+  # Deposit Form
+  deposit_form:
+    type: "CUSTOM"
+    title: "§2§l💰 Deposit Money"
+    description: "§7Enter the amount you want to deposit"
+    components:
+      amount:
+        type: "input"
+        text: "§e§lAmount to Deposit:"
+        placeholder: "100"
+    
+    onSubmit:
+      - "vault:deposit;amount={amount}"
+      - "conditional:{vault_success}:true:message=§a§lSuccessfully deposited $§e{amount}§a!:sound=entity.player.levelup:message=§c§lDeposit failed! Check your input.:sound=entity.villager.no"
+
+  # Withdraw Form
+  withdraw_form:
+    type: "CUSTOM"
+    title: "§c§l💸 Withdraw Money"
+    description: "§7Enter the amount you want to withdraw"
+    components:
+      amount:
+        type: "input"
+        text: "§e§lAmount to Withdraw:"
+        placeholder: "50"
+    
+    onSubmit:
+      - "vault:withdraw;amount={amount}"
+      - "conditional:{vault_success}:true:message=§a§lSuccessfully withdrew $§e{amount}§a!:sound=entity.player.levelup:message=§c§lWithdraw failed! Insufficient funds.:sound=entity.villager.no"
+
+  # ==================== WORLDGUARD INTEGRATION ====================
+  worldguard_demo:
+    type: "SIMPLE"
+    title: "§4§l🛡 WorldGuard Integration"
+    description: "§7Manage regions and protection with WorldGuard"
+    buttons:
+      region_info:
+        text: "§a§l🏠 Current Region Info"
+        onClick:
+          - "worldguard:region_info"
+          - "message:§a§lRegion Information:\n§7Current Region: §e{wg_region_name}\n§7Owner: §b{wg_region_owner}"
+          - "sound:block.note_block.pling"
+      
+      region_list:
+        text: "§b§l📋 List Regions"
+        onClick:
+          - "worldguard:region_list"
+          - "message:§b§lRegions in this world:\n%wg_region_list%"
+          - "sound:ui.button.click"
+      
+      protection_check:
+        text: "§c§l🛡 Protection Check"
+        onClick:
+          - "worldguard:protection_check"
+          - "message:§c§lProtection Status:\n§7Build: §e{wg_can_build}\n§7PvP: §a{wg_pvp_allowed}"
+          - "sound:block.anvil.use"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:plugin_integrations"
+
+  # ==================== CITIZENS INTEGRATION ====================
+  citizens_demo:
+    type: "SIMPLE"
+    title: "§6§l👤 Citizens NPC Integration"
+    description: "§7Manage and interact with Citizens NPCs"
+    buttons:
+      npc_list:
+        text: "§3§l📜 List All NPCs"
+        onClick:
+          - "citizens:operation=list"
+          - "message:§3§lAll NPCs:\n%citizens_npc_list%"
+          - "sound:ui.button.click"
+      
+      npc_info:
+        text: "§a§l📋 NPC Information"
+        onClick: "open:npc_info_form"
+      
+      create_npc:
+        text: "§2§l➕ Create NPC"
+        onClick: "open:create_npc_form"
+        show_condition: "permission:citizens.npc.create"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:plugin_integrations"
+
+  # NPC Info Form
+  npc_info_form:
+    type: "CUSTOM"
+    title: "§a§l📋 NPC Information"
+    description: "§7Get detailed information about an NPC"
+    components:
+      npc_id:
+        type: "input"
+        text: "§e§lNPC ID or Name:"
+        placeholder: "1"
+    
+    onSubmit:
+      - "citizens:operation=info;npc_id={npc_id}"
+      - "message:§a§lNPC Information:\n§7ID: §e%citizens_npc_id%\n§7Name: §f%citizens_npc_name%\n§7Type: §b%citizens_npc_type%"
+      - "sound:block.note_block.pling"
+
+  # Create NPC Form
+  create_npc_form:
+    type: "CUSTOM"
+    title: "§2§l➕ Create New NPC"
+    description: "§7Create a new Citizens NPC at your location"
+    components:
+      npc_name:
+        type: "input"
+        text: "§e§lNPC Name:"
+        placeholder: "MyNPC"
+      npc_type:
+        type: "dropdown"
+        text: "§b§lNPC Type:"
+        options:
+          - "player"
+          - "villager"
+          - "zombie"
+          - "skeleton"
+        default: 0
+    
+    onSubmit:
+      - "citizens:create;name={npc_name};type={npc_type}"
+      - "conditional:{citizens_success}:true:message=§a§lNPC '§e{npc_name}§a' created successfully!:sound=entity.player.levelup:message=§c§lFailed to create NPC.:sound=entity.villager.no"
+
+  # ==================== ECONOMY HUB ====================
+  economy_hub:
+    type: "SIMPLE"
+    title: "§2§l💰 Economy Features"
+    description: "§7Comprehensive economy management tools"
+    buttons:
+      balance_info:
+         text: "§a§l💵 Balance Information"
+         onClick:
+           - "economy:check"
+           - "message:§a§lYour Balance: §2$%economy_balance%"
+           - "sound:entity.experience_orb.pickup"
       
       pay_player:
-        text: "§d§lPay Random Player 25"
-        onClick: "economy:pay:@r:25"
+        text: "§e§l💸 Pay Player"
+        onClick: "open:pay_form"
       
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
-
-  # ==================== ADVANCED FORMS (MODAL & CUSTOM) ====================
-  advanced_forms:
-    type: "SIMPLE"
-    title: "§b§l🔧 Advanced Forms Demo"
-    description: "§7Explore MODAL and CUSTOM form types"
-    buttons:
-      modal_forms:
-        text: "§c§l❓ Modal Forms"
-        onClick: "open:modal_demo"
-      
-      custom_forms:
-        text: "§a§l📝 Custom Forms"
-        onClick: "open:custom_demo"
-      
-      multi_step_forms:
-        text: "§d§l📋 Multi-Step Forms"
-        onClick: "open:character_creator_step1"
-      
-      dynamic_forms:
-        text: "§e§l🔄 Dynamic Forms"
-        onClick: "open:dynamic_demo"
+      economy_top:
+        text: "§6§l🏆 Economy Leaderboard"
+        onClick:
+          - "economy:top:10"
+          - "message:§6§lTop 10 Richest Players:\n%economy_top_list%"
+          - "sound:ui.toast.challenge_complete"
       
       back:
         text: "§8§l← Back to Hub"
         onClick: "open:main_hub"
 
-  # ==================== MODAL FORMS DEMO ====================
-  modal_demo:
-    type: "SIMPLE"
-    title: "§c§l❓ Modal Forms Demo"
-    description: "§7Test yes/no confirmation dialogs"
-    buttons:
-      simple_confirmation:
-        text: "§a§lSimple Confirmation"
-        onClick: "open:simple_confirmation"
-      
-      delete_confirmation:
-        text: "§c§lDelete Confirmation"
-        onClick: "open:delete_confirmation"
-      
-      purchase_confirmation:
-        text: "§e§lPurchase Confirmation"
-        onClick: "open:purchase_confirmation"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:advanced_forms"
-
-  simple_confirmation:
-    type: "MODAL"
-    title: "§a§lSimple Confirmation"
-    description: "§7This is a basic yes/no confirmation dialog.\n\n§eWould you like to proceed?"
-    buttons:
-      confirm:
-        text: "§a§lYes, Proceed"
-        onClick: "message:§aYou confirmed the action!"
-      cancel:
-        text: "§c§lNo, Cancel"
-        onClick: "message:§cAction cancelled."
-
-  delete_confirmation:
-    type: "MODAL"
-    title: "§c§l⚠ Delete Confirmation"
-    description: "§c§lWARNING: This action cannot be undone!\n\n§7Are you sure you want to delete your data?\n§eThis will permanently remove all your progress."
-    buttons:
-      confirm:
-        text: "§c§lYes, Delete"
-        onClick: "message:§c§lData deleted! (This is just a demo)"
-      cancel:
-        text: "§a§lNo, Keep Data"
-        onClick: "message:§aData preserved. Good choice!"
-
-  purchase_confirmation:
-    type: "MODAL"
-    title: "§e§l💰 Purchase Confirmation"
-    description: "§7You are about to purchase:\n\n§b§lDiamond Sword §7(Sharpness V)\n§ePrice: §a500 coins\n\n§7Your balance: §a{balance} coins\n\nConfirm purchase?"
-    buttons:
-      confirm:
-        text: "§a§lBuy Now"
-        onClick: "conditional:economy:check:500:economy:remove:500:command:give %player_name% diamond_sword 1:message:§aPurchase successful!:sound:random.levelup"
-      cancel:
-        text: "§c§lCancel"
-        onClick: "message:§cPurchase cancelled."
-
-  # ==================== CUSTOM FORMS DEMO ====================
-  custom_demo:
+  # Pay Form
+  pay_form:
     type: "CUSTOM"
-    title: "§a§l📝 Custom Forms Demo"
-    description: "§7Test all available input components"
+    title: "§e§l💸 Pay Player"
+    description: "§7Transfer money to another player"
     components:
-      # Input Component
-      player_name:
+      target_player:
         type: "input"
-        text: "§e§lPlayer Name"
-        placeholder: "Enter player name..."
-        default: "%player_name%"
-        action: "message:§aPlayer name set to: $1"
-      
-      # Dropdown Component
-      item_category:
-        type: "dropdown"
-        text: "§b§lItem Category"
-        options:
-          - "Weapons"
-          - "Armor"
-          - "Tools"
-          - "Food"
-          - "Blocks"
-          - "Redstone"
-        default: 0
-        action: "message:§aSelected category: $1"
-      
-      # Slider Component
-      item_quantity:
-        type: "slider"
-        text: "§d§lQuantity"
-        min: 1
-        max: 64
-        step: 1
-        default: 1
-        action: "message:§aQuantity set to: $1"
-      
-      # Toggle Component
-      enchanted:
-        type: "toggle"
-        text: "§6§lEnchanted Item"
-        default: false
-        action: "message:§aEnchanted: $1"
-      
-      # Another Slider for Price
-      max_price:
-        type: "slider"
-        text: "§2§lMax Price (coins)"
-        min: 0
-        max: 1000
-        step: 50
-        default: 100
-        action: "message:§aMax price set to: $1 coins"
-    
-    global_actions:
-      - "message:§a§l✓ Form submitted successfully!"
-      - "message:§7Player: §e$player_name"
-      - "message:§7Category: §b$item_category"
-      - "message:§7Quantity: §d$item_quantity"
-      - "message:§7Enchanted: §6$enchanted"
-      - "message:§7Max Price: §2$max_price coins"
-      - "sound:random.levelup"
-      - "delay:3000"
-      - "open:main_hub"
-
-  # ==================== MULTI-STEP CHARACTER CREATOR ====================
-  character_creator_step1:
-    type: "CUSTOM"
-    title: "§6§l👤 Character Creator - Step 1/3"
-    description: "§7Create your character - Basic Information"
-    components:
-      character_name:
+        text: "§e§lPlayer Name:"
+        placeholder: "PlayerName"
+      amount:
         type: "input"
-        text: "§e§lCharacter Name"
-        placeholder: "Enter character name..."
-        default: ""
-        action: "message:§aCharacter name: $1"
-      
-      character_class:
-        type: "dropdown"
-        text: "§b§lCharacter Class"
-        options:
-          - "Warrior - High strength and defense"
-          - "Mage - Master of magical arts"
-          - "Archer - Precise ranged combat"
-          - "Healer - Support and restoration"
-          - "Rogue - Stealth and agility"
-          - "Paladin - Holy warrior"
-        default: 0
-        action: "message:§aClass selected: $1"
-      
-      starting_region:
-        type: "dropdown"
-        text: "§d§lStarting Region"
-        options:
-          - "Peaceful Meadows"
-          - "Dark Forest"
-          - "Mountain Peaks"
-          - "Desert Oasis"
-          - "Frozen Tundra"
-        default: 0
-        action: "message:§aStarting region: $1"
+        text: "§e§lAmount:"
+        placeholder: "100"
     
-    global_actions:
-      - "message:§a§lStep 1 completed!"
-      - "sound:random.levelup"
-      - "delay:1000"
-      - "open:character_creator_step2"
-
-  character_creator_step2:
-    type: "CUSTOM"
-    title: "§6§l👤 Character Creator - Step 2/3"
-    description: "§7Create your character - Attributes (Total: 20 points)"
-    components:
-      strength:
-        type: "slider"
-        text: "§c§lStrength"
-        min: 1
-        max: 10
-        step: 1
-        default: 5
-        action: "message:§aStrength: $1"
-      
-      intelligence:
-        type: "slider"
-        text: "§b§lIntelligence"
-        min: 1
-        max: 10
-        step: 1
-        default: 5
-        action: "message:§aIntelligence: $1"
-      
-      dexterity:
-        type: "slider"
-        text: "§a§lDexterity"
-        min: 1
-        max: 10
-        step: 1
-        default: 5
-        action: "message:§aDexterity: $1"
-      
-      constitution:
-        type: "slider"
-        text: "§e§lConstitution"
-        min: 1
-        max: 10
-        step: 1
-        default: 5
-        action: "message:§aConstitution: $1"
-    
-    global_actions:
-      - "message:§a§lStep 2 completed!"
-      - "sound:random.levelup"
-      - "delay:1000"
-      - "open:character_creator_step3"
-
-  character_creator_step3:
-    type: "CUSTOM"
-    title: "§6§l👤 Character Creator - Step 3/3"
-    description: "§7Create your character - Appearance & Final Details"
-    components:
-      skin_tone:
-        type: "dropdown"
-        text: "§e§lSkin Tone"
-        options:
-          - "Light"
-          - "Medium"
-          - "Dark"
-          - "Pale"
-          - "Tan"
-          - "Olive"
-        default: 0
-        action: "message:§aSkin tone: $1"
-      
-      hair_style:
-        type: "dropdown"
-        text: "§6§lHair Style"
-        options:
-          - "Short"
-          - "Long"
-          - "Curly"
-          - "Straight"
-          - "Braided"
-          - "Bald"
-        default: 0
-        action: "message:§aHair style: $1"
-      
-      hair_color:
-        type: "dropdown"
-        text: "§d§lHair Color"
-        options:
-          - "Black"
-          - "Brown"
-          - "Blonde"
-          - "Red"
-          - "White"
-          - "Blue"
-          - "Green"
-          - "Purple"
-        default: 0
-        action: "message:§aHair color: $1"
-      
-      backstory:
-        type: "input"
-        text: "§7§lCharacter Backstory (Optional)"
-        placeholder: "Enter character backstory..."
-        default: ""
-        action: "message:§aBackstory set"
-    
-    global_actions:
-      - "message:§a§l✓ Character creation complete!"
-      - "message:§6§lYour character has been saved!"
-      - "sound:random.levelup:1.0:0.5"
-      - "delay:2000"
-      - "broadcast:§7%player_name% created a new character!"
-      - "delay:1000"
-      - "open:main_hub"
-
-  # ==================== VALIDATION DEMO ====================
-  validation_demo:
-    type: "CUSTOM"
-    title: "§d§l✓ Validation Demo"
-    description: "§7Test form validation features"
-    components:
-      username:
-        type: "input"
-        text: "§e§lUsername (3-16 characters)"
-        placeholder: "Enter username..."
-        default: ""
-        action: "message:§aUsername: $1"
-      
-      email:
-        type: "input"
-        text: "§b§lEmail Address"
-        placeholder: "user@example.com"
-        default: ""
-        action: "message:§aEmail: $1"
-      
-      age:
-        type: "slider"
-        text: "§a§lAge"
-        min: 13
-        max: 100
-        step: 1
-        default: 18
-        action: "message:§aAge: $1"
-      
-      terms_accepted:
-        type: "toggle"
-        text: "§c§lI accept the terms and conditions"
-        default: false
-        action: "message:§aTerms accepted: $1"
-    
-    global_actions:
-      - "conditional:placeholder:$username:equals::message:§cUsername cannot be empty!:sound:mob.villager.no"
-      - "conditional:placeholder:$email:equals::message:§cEmail cannot be empty!:sound:mob.villager.no"
-      - "conditional:placeholder:$terms_accepted:equals:false:message:§cYou must accept the terms!:sound:mob.villager.no"
-      - "conditional:placeholder:$username:not_equals::conditional:placeholder:$email:not_equals::conditional:placeholder:$terms_accepted:equals:true:message:§a§lValidation successful!:sound:random.levelup:open:main_hub"
-
-  # ==================== SHOP INTERFACE ====================
-  shop_interface:
-    type: "SIMPLE"
-    title: "§2§l🛒 Server Shop"
-    description: "§7Purchase items with your coins\n§eYour balance: §a{balance} coins"
-    buttons:
-      # Weapons Category
-      weapons_category:
-        text: "§c§l⚔ Weapons"
-        image: "textures/items/diamond_sword"
-        onClick: "open:shop_weapons"
-      
-      # Armor Category
-      armor_category:
-        text: "§9§l🛡 Armor"
-        image: "textures/items/diamond_chestplate"
-        onClick: "open:shop_armor"
-      
-      # Tools Category
-      tools_category:
-        text: "§6§l🔧 Tools"
-        image: "textures/items/diamond_pickaxe"
-        onClick: "open:shop_tools"
-      
-      # Food Category
-      food_category:
-        text: "§a§l🍖 Food"
-        image: "textures/items/cooked_beef"
-        onClick: "open:shop_food"
-      
-      # Blocks Category
-      blocks_category:
-        text: "§7§l🧱 Blocks"
-        image: "textures/blocks/stone"
-        onClick: "open:shop_blocks"
-      
-      # Special Items
-      special_category:
-        text: "§d§l✨ Special Items"
-        image: "textures/items/nether_star"
-        onClick: "open:shop_special"
-        show_condition: "permission:bedrockgui.shop.special"
-      
-      # Player Shop
-      player_shop:
-        text: "§e§l👥 Player Shop"
-        image: "textures/items/emerald"
-        onClick: "open:player_shop"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # Shop Categories
-  shop_weapons:
-    type: "SIMPLE"
-    title: "§c§l⚔ Weapons Shop"
-    description: "§7Purchase powerful weapons"
-    buttons:
-      diamond_sword:
-        text: "§b§lDiamond Sword §7(100 coins)"
-        image: "textures/items/diamond_sword"
-        onClick: "conditional:economy:check:100:economy:remove:100:command:give %player_name% diamond_sword 1:message:§aPurchased Diamond Sword!:sound:random.levelup"
-      
-      iron_sword:
-        text: "§f§lIron Sword §7(50 coins)"
-        image: "textures/items/iron_sword"
-        onClick: "conditional:economy:check:50:economy:remove:50:command:give %player_name% iron_sword 1:message:§aPurchased Iron Sword!:sound:random.levelup"
-      
-      bow:
-        text: "§6§lBow §7(75 coins)"
-        image: "textures/items/bow_standby"
-        onClick: "conditional:economy:check:75:economy:remove:75:command:give %player_name% bow 1:message:§aPurchased Bow!:sound:random.levelup"
-      
-      back:
-        text: "§8§l← Back to Shop"
-        onClick: "open:shop_interface"
-
-  # ==================== PAGINATION DEMO ====================
-  pagination_demo:
-    type: "SIMPLE"
-    title: "§3§l📄 Pagination Demo"
-    description: "§7Browse through multiple pages of content"
-    buttons:
-      paginated_warps:
-        text: "§a§l🌍 Warp Locations"
-        onClick: "open:warp_locations"
-      
-      paginated_players:
-        text: "§b§l👥 Online Players"
-        onClick: "open:online_players"
-      
-      paginated_items:
-        text: "§e§l📦 Item Catalog"
-        onClick: "open:item_catalog"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # Paginated Warp Locations
-  warp_locations:
-    type: "SIMPLE"
-    title: "§3§l🌍 Warp Locations (Page {page})"
-    description: "§7Click on a location to teleport\n§ePage {page} of {total_pages}"
-    buttons:
-      # Page 1 Warps
-      spawn:
-        text: "§a§l🏠 Spawn"
-        image: "textures/ui/icon_recipe_nature"
-        onClick: "teleport:spawn"
-        show_condition: "placeholder:{page}:equals:1"
-      
-      mine:
-        text: "§7§l⛏ Mining World"
-        image: "textures/ui/icon_recipe_construction"
-        onClick: "teleport:mine"
-        show_condition: "placeholder:{page}:equals:1"
-      
-      nether:
-        text: "§c§l🔥 Nether Portal"
-        image: "textures/ui/icon_recipe_equipment"
-        onClick: "teleport:nether"
-        show_condition: "placeholder:{page}:equals:1"
-      
-      end:
-        text: "§5§l🌌 End Portal"
-        image: "textures/ui/icon_recipe_nature"
-        onClick: "teleport:end"
-        show_condition: "placeholder:{page}:equals:1"
-      
-      # Page 2 Warps
-      pvp:
-        text: "§4§l⚔ PvP Arena"
-        image: "textures/ui/icon_recipe_equipment"
-        onClick: "teleport:pvp"
-        show_condition: "placeholder:{page}:equals:2"
-      
-      shop:
-        text: "§2§l🛒 Shopping District"
-        image: "textures/ui/icon_recipe_item"
-        onClick: "teleport:shop"
-        show_condition: "placeholder:{page}:equals:2"
-      
-      farm:
-        text: "§a§l🌾 Farming Area"
-        image: "textures/ui/icon_recipe_nature"
-        onClick: "teleport:farm"
-        show_condition: "placeholder:{page}:equals:2"
-      
-      casino:
-        text: "§6§l🎰 Casino"
-        image: "textures/ui/icon_recipe_item"
-        onClick: "teleport:casino"
-        show_condition: "placeholder:{page}:equals:2"
-      
-      # Navigation
-      next_page:
-        text: "§a§l→ Next Page"
-        onClick: "open:warp_locations:2"
-        show_condition: "placeholder:{page}:equals:1"
-      
-      prev_page:
-        text: "§a§l← Previous Page"
-        onClick: "open:warp_locations:1"
-        show_condition: "placeholder:{page}:equals:2"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:pagination_demo"
-
-  # ==================== CONDITIONAL LOGIC DEMO ====================
-  conditional_demo:
-    type: "SIMPLE"
-    title: "§e§l🔀 Conditional Logic Demo"
-    description: "§7Test conditional actions and display logic"
-    buttons:
-      permission_test:
-        text: "§c§l🔒 Admin Only Button"
-        onClick: "conditional:permission:bedrockgui.admin:message:§aYou have admin permissions!:message:§cYou don't have admin permissions!"
-        show_condition: "permission:bedrockgui.admin"
-      
-      balance_test:
-        text: "§2§l💰 Rich Player Button"
-        onClick: "conditional:placeholder:{balance}:>=:1000:message:§aYou're rich! Balance: {balance}:message:§cYou need more money! Balance: {balance}"
-        show_condition: "placeholder:{balance}:>=:100"
-      
-      time_based:
-        text: "§6§l🌅 Time-Based Action"
-        onClick: "conditional:placeholder:{time}:>=:6000:conditional:placeholder:{time}:<=:18000:message:§eGood day!:message:§bGood night!"
-      
-      world_specific:
-        text: "§d§l🌍 World-Specific Action"
-        onClick: "conditional:placeholder:{world}:equals:world:message:§aYou're in the overworld!:message:§cYou're not in the overworld!"
-      
-      complex_condition:
-        text: "§5§l🧩 Complex Condition"
-        onClick: "conditional:permission:bedrockgui.vip:conditional:placeholder:{balance}:>=:500:message:§6VIP with sufficient funds!:message:§eVIP but insufficient funds:message:§cNot a VIP member"
-      
-      back:
-        text: "§8§l← Back to Hub"
-        onClick: "open:main_hub"
-
-  # ==================== PLAYER SETTINGS ====================
-  settings_menu:
-    type: "CUSTOM"
-    title: "§6§l⚙ Player Settings"
-    description: "§7Customize your gameplay experience"
-    components:
-      notifications:
-        type: "toggle"
-        text: "§e§l🔔 Enable Notifications"
-        default: true
-        action: "message:§aNotifications: $1"
-      
-      sounds:
-        type: "toggle"
-        text: "§b§l🔊 Enable Sound Effects"
-        default: true
-        action: "message:§aSound effects: $1"
-      
-      particles:
-        type: "toggle"
-        text: "§d§l✨ Enable Particles"
-        default: true
-        action: "message:§aParticles: $1"
-      
-      auto_save:
-        type: "toggle"
-        text: "§a§l💾 Auto-Save Progress"
-        default: true
-        action: "message:§aAuto-save: $1"
-      
-      render_distance:
-        type: "slider"
-        text: "§3§l👁 Render Distance"
-        min: 2
-        max: 16
-        step: 2
-        default: 8
-        action: "message:§aRender distance: $1 chunks"
-      
-      ui_scale:
-        type: "slider"
-        text: "§6§l📏 UI Scale"
-        min: 50
-        max: 150
-        step: 10
-        default: 100
-        action: "message:§aUI scale: $1%"
-      
-      theme:
-        type: "dropdown"
-        text: "§5§l🎨 UI Theme"
-        options:
-          - "Default"
-          - "Dark"
-          - "Light"
-          - "Neon"
-          - "Minimal"
-          - "High Contrast"
-        default: 0
-        action: "message:§aTheme changed to: $1"
-      
-      language:
-        type: "dropdown"
-        text: "§7§l🌍 Language"
-        options:
-          - "English"
-          - "Spanish"
-          - "French"
-          - "German"
-          - "Japanese"
-          - "Chinese"
-        default: 0
-        action: "message:§aLanguage: $1"
-    
-    global_actions:
-      - "message:§a§l✓ Settings saved successfully!"
-      - "sound:random.levelup"
-      - "delay:2000"
-      - "open:main_hub"
-
-  # ==================== PLAYER REPORT SYSTEM ====================
-  player_report:
-    type: "CUSTOM"
-    title: "§c§l⚠ Player Report Form"
-    description: "§7Report a player for rule violations"
-    components:
-      reported_player:
-        type: "input"
-        text: "§e§lReported Player Name"
-        placeholder: "Enter player name..."
-        default: ""
-        action: "message:§aReported player: $1"
-      
-      report_reason:
-        type: "dropdown"
-        text: "§b§lViolation Type"
-        options:
-          - "Hacking/Cheating"
-          - "Inappropriate Language"
-          - "Griefing/Vandalism"
-          - "Spamming"
-          - "Harassment"
-          - "Exploiting Bugs"
-          - "Inappropriate Skin/Name"
-          - "Other"
-        default: 0
-        action: "message:§aReason: $1"
-      
-      report_details:
-        type: "input"
-        text: "§d§lDetailed Description"
-        placeholder: "Describe what happened..."
-        default: ""
-        action: "message:§aDetails provided"
-      
-      evidence_available:
-        type: "toggle"
-        text: "§a§l📷 I have evidence (screenshots/video)"
-        default: false
-        action: "message:§aEvidence available: $1"
-      
-      severity:
-        type: "slider"
-        text: "§c§l⚠ Severity Level"
-        min: 1
-        max: 5
-        step: 1
-        default: 3
-        action: "message:§aSeverity: $1/5"
-      
-      anonymous:
-        type: "toggle"
-        text: "§7§l🕶 Submit Anonymously"
-        default: false
-        action: "message:§aAnonymous report: $1"
-    
-    global_actions:
-      - "conditional:placeholder:$reported_player:equals::message:§cPlayer name is required!:sound:mob.villager.no"
-      - "conditional:placeholder:$report_details:equals::message:§cDescription is required!:sound:mob.villager.no"
-      - "conditional:placeholder:$reported_player:not_equals::conditional:placeholder:$report_details:not_equals::message:§a§lReport submitted successfully!:sound:random.levelup:broadcast:permission:bedrockgui.admin:§c[REPORT] %player_name% reported $reported_player for $report_reason (Severity: $severity/5):delay:2000:open:main_hub"
+    onSubmit:
+      - "economy:pay:{target_player}:{amount}"
+      - "conditional:{economy_success}:true:message=§a§lPaid §e{amount} §ato §b{target_player}§a!:sound=entity.player.levelup:message=§c§lPayment failed!:sound=entity.villager.no"
 
   # ==================== ADMIN PANEL ====================
   admin_panel:
     type: "SIMPLE"
     title: "§c§l⚙ Admin Control Panel"
-    description: "§7Administrative tools and controls"
-    permission: "bedrockgui.admin"
+    description: "§7Administrative tools and server management"
     buttons:
+      server_info:
+        text: "§b§l🖥 Server Information"
+        onClick:
+          - "server:info"
+          - "message:§b§lServer Information:\n§7Players: §a%server_online%/%server_max%\n§7TPS: §e%server_tps%\n§7RAM: §c%server_ram_used%MB"
+          - "sound:ui.button.click"
+      
       player_management:
-        text: "§b§l👥 Player Management"
+        text: "§e§l👥 Player Management"
         onClick: "open:player_management"
       
-      server_management:
-        text: "§e§l🖥 Server Management"
-        onClick: "open:server_management"
+      server_commands:
+        text: "§d§l⌨ Server Commands"
+        onClick: "open:server_commands"
       
-      economy_management:
-        text: "§2§l💰 Economy Management"
-        onClick: "open:economy_management"
-      
-      world_management:
-        text: "§a§l🌍 World Management"
-        onClick: "open:world_management"
-      
-      punishment_tools:
-        text: "§c§l⚖ Punishment Tools"
-        onClick: "open:punishment_tools"
-      
-      system_info:
-        text: "§d§l📊 System Information"
-        onClick: "open:system_info"
+      broadcast_message:
+        text: "§a§l📢 Broadcast Message"
+        onClick: "open:broadcast_form"
       
       back:
         text: "§8§l← Back to Hub"
         onClick: "open:main_hub"
 
-  # Admin Sub-menus
+  # Player Management
   player_management:
     type: "SIMPLE"
-    title: "§b§l👥 Player Management"
-    description: "§7Manage online and offline players"
-    permission: "bedrockgui.admin"
+    title: "§e§l👥 Player Management"
+    description: "§7Manage online players"
     buttons:
-      online_players:
-        text: "§a§l📋 Online Players ({online_players})"
-        onClick: "open:online_players_admin"
+      kick_player:
+        text: "§c§l👢 Kick Player"
+        onClick: "open:kick_form"
       
-      player_lookup:
-        text: "§e§l🔍 Player Lookup"
-        onClick: "open:player_lookup"
+      ban_player:
+        text: "§4§l🔨 Ban Player"
+        onClick: "open:ban_form"
       
-      mass_actions:
-        text: "§c§l⚡ Mass Actions"
-        onClick: "open:mass_actions"
+      teleport_to_player:
+        text: "§d§l🌟 Teleport to Player"
+        onClick: "open:tp_to_player_form"
       
       back:
         text: "§8§l← Back"
         onClick: "open:admin_panel"
 
-  # ==================== DYNAMIC DEMO ====================
-  dynamic_demo:
+  # Kick Form
+  kick_form:
+    type: "CUSTOM"
+    title: "§c§l👢 Kick Player"
+    description: "§7Kick a player from the server"
+    components:
+      player_name:
+        type: "input"
+        text: "§e§lPlayer Name:"
+        placeholder: "PlayerName"
+      reason:
+        type: "input"
+        text: "§e§lReason (optional):"
+        placeholder: "Kicked by admin"
+    
+    onSubmit:
+      - "command:kick {player_name} {reason}"
+      - "message:§c§lKicked player §e{player_name}§c for: §f{reason}"
+      - "sound:entity.player.hurt"
+
+  # Broadcast Form
+  broadcast_form:
+    type: "CUSTOM"
+    title: "§a§l📢 Broadcast Message"
+    description: "§7Send a message to all players"
+    components:
+      message:
+        type: "input"
+        text: "§e§lBroadcast Message:"
+        placeholder: "Server announcement"
+    
+    onSubmit:
+      - "broadcast:§6§l[BROADCAST] §f{message}"
+      - "message:§a§lBroadcast sent successfully!"
+      - "sound:entity.player.levelup"
+
+  # ==================== ADVANCED FORMS ====================
+  advanced_forms:
     type: "SIMPLE"
-    title: "§e§l🔄 Dynamic Forms Demo"
-    description: "§7Forms that change based on conditions\n§eTime: {time} | Weather: {weather}"
+    title: "§d§l🔥 Advanced Forms Demo"
+    description: "§7Showcase advanced form features and validation"
     buttons:
-      time_based_menu:
-        text: "§6§l🌅 Day Menu"
-        onClick: "open:day_activities"
-        show_condition: "placeholder:{time}:>=:0:placeholder:{time}:<=:12000"
+      modal_demo:
+        text: "§c§l❓ Modal Form Demo"
+        onClick: "open:modal_demo"
       
-      time_based_menu_night:
-        text: "§9§l🌙 Night Menu"
-        onClick: "open:night_activities"
-        show_condition: "placeholder:{time}:>=:12000:placeholder:{time}:<=:24000"
+      complex_custom:
+        text: "§b§l📋 Complex Custom Form"
+        onClick: "open:complex_custom_form"
       
-      weather_menu:
-        text: "§b§l🌧 Weather Activities"
-        onClick: "open:weather_activities"
-        show_condition: "placeholder:{weather}:equals:rain"
+      conditional_demo:
+        text: "§e§l🔀 Conditional Actions"
+        onClick: "open:conditional_demo"
       
-      seasonal_menu:
-        text: "§a§l🌸 Seasonal Events"
-        onClick: "open:seasonal_events"
+      random_demo:
+        text: "§d§l🎲 Random Actions"
+        onClick: "open:random_demo"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Modal Demo
+  modal_demo:
+    type: "MODAL"
+    title: "§c§l❓ Confirmation Dialog"
+    description: "§7This is a modal form example.\n§eAre you sure you want to proceed?"
+    button1: "§a§lYes, Continue"
+    button2: "§c§lNo, Cancel"
+    onButton1:
+      - "message:§a§lYou chose to continue!"
+      - "sound:entity.player.levelup"
+    onButton2:
+      - "message:§c§lOperation cancelled."
+      - "sound:entity.villager.no"
+
+  # Complex Custom Form
+  complex_custom_form:
+    type: "CUSTOM"
+    title: "§b§l📋 Complex Custom Form"
+    description: "§7Demonstrate various input types and validation"
+    components:
+      player_name:
+        type: "input"
+        text: "§e§lPlayer Name:"
+        placeholder: "Enter player name"
+      game_mode:
+        type: "dropdown"
+        text: "§b§lGame Mode:"
+        options:
+          - "Survival"
+          - "Creative"
+          - "Adventure"
+          - "Spectator"
+        default: 0
+      give_items:
+        type: "toggle"
+        text: "§a§lGive starter items?"
+        default: true
+      item_amount:
+        type: "slider"
+        text: "§d§lItem Amount:"
+        min: 1
+        max: 64
+        step: 1
+        default: 10
+    
+    onSubmit:
+      - "command:gamemode {game_mode} {player_name}"
+      - "conditional:{give_items}:true:inventory=give:diamond:{item_amount}:message=§a§lGave {item_amount} diamonds to {player_name}!"
+      - "message:§b§lSet {player_name}'s gamemode to {game_mode}!"
+      - "sound:entity.player.levelup"
+
+  # ==================== CONDITIONAL EXAMPLES ====================
+  conditional_demo:
+    type: "SIMPLE"
+    title: "§e§l🔀 Conditional Examples"
+    description: "§7Explore different types of conditional logic"
+    buttons:
+      permission_based:
+        text: "§d§l🔐 Permission Based"
+        onClick: "open:permission_conditional_demo"
+      
+      placeholder_based:
+        text: "§b§l📊 Placeholder Based"
+        onClick: "open:placeholder_conditional_demo"
+      
+      complex_logic:
+        text: "§c§l🧠 Complex Logic"
+        onClick: "open:complex_conditional_demo"
+      
+      conditional_actions:
+        text: "§a§l⚡ Conditional Actions"
+        onClick: "open:conditional_action_demo"
+      
+      dynamic_forms:
+        text: "§6§l🔄 Dynamic Forms"
+        onClick: "open:dynamic_form_demo"
+      
+      back:
+        text: "§8§l← Back to Examples"
+        onClick: "open:examples_menu"
+
+  # Permission-based conditional examples
+  permission_conditional_demo:
+    type: "SIMPLE"
+    title: "§d§l🔐 Permission Conditionals"
+    description: "§7Forms that change based on player permissions"
+    buttons:
+      admin_only:
+        text: "§c§l👑 Admin Panel"
+        onClick: "open:admin_menu"
+        show_condition: "permission:bedrockgui.admin"
+      
+      moderator_tools:
+        text: "§e§l🛠️ Moderator Tools"
+        onClick:
+          - "message:§e§lAccessing moderator tools..."
+          - "command:gamemode spectator {player}"
+        show_condition: "permission:bedrockgui.moderator"
+      
+      vip_perks:
+        text: "§6§l✨ VIP Perks"
+        onClick: "open:vip_menu"
+        show_condition: "permission:bedrockgui.vip"
+      
+      regular_user:
+        text: "§7§l👤 Regular Features"
+        onClick: "open:player_menu"
+        show_condition: "!permission:bedrockgui.vip"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:conditional_demo"
+
+  # Placeholder-based conditional examples
+  placeholder_conditional_demo:
+    type: "SIMPLE"
+    title: "§b§l📊 Placeholder Conditionals"
+    description: "§7Forms that adapt to player statistics and status"
+    buttons:
+      gamemode_creative:
+        text: "§6§l🎨 Creative Tools"
+        onClick:
+          - "message:§6§lAccessing creative mode tools!"
+          - "command:give {player} command_block 1"
+        show_condition: "placeholder:%player_gamemode%=creative"
+      
+      high_level:
+        text: "§a§l⭐ High Level Rewards"
+        onClick:
+          - "message:§a§lCongratulations on reaching high level!"
+          - "economy:add,amount:1000"
+        show_condition: "placeholder:%player_level%>=50"
+      
+      low_health:
+        text: "§c§l❤️ Emergency Heal"
+        onClick:
+          - "message:§c§lEmergency healing activated!"
+          - "command:heal {player}"
+        show_condition: "placeholder:%player_health%<=5"
+      
+      rich_player:
+        text: "§2§l💰 Luxury Shop"
+        onClick: "open:luxury_shop"
+        show_condition: "placeholder:%vault_eco_balance%>=10000"
+      
+      back:
+         text: "§8§l← Back"
+         onClick: "open:conditional_demo"
+
+  # Complex conditional logic examples
+  complex_conditional_demo:
+    type: "SIMPLE"
+    title: "§c§l🧠 Complex Conditionals"
+    description: "§7Advanced conditional logic with multiple conditions"
+    buttons:
+      vip_access:
+        text: "§6§l🌟 VIP Area Access"
+        onClick:
+          - "message:§6§lWelcome to the VIP area!"
+          - "command:tp {player} vip_world 0 100 0"
+        show_condition: "permission:bedrockgui.vip AND placeholder:%player_level%>=25"
+      
+      pvp_zone_entry:
+        text: "§c§l⚔️ Enter PvP Zone"
+        onClick:
+          - "message:§c§lEntering PvP zone! Be careful!"
+          - "command:tp {player} pvp_world 0 64 0"
+        show_condition: "placeholder:%player_gamemode%=survival AND placeholder:%player_health%>10"
+      
+      achievement_reward:
+        text: "§e§l🏆 Achievement Reward"
+        onClick:
+          - "message:§e§lCongratulations on your achievement!"
+          - "economy:add,amount:5000"
+        show_condition: "plugin:achievements AND placeholder:%achievements_count%>=10"
+      
+      night_bonus:
+        text: "§9§l🌙 Night Time Bonus"
+        onClick:
+          - "message:§9§lNight time bonus activated!"
+          - "command:effect give {player} night_vision 300 1"
+        show_condition: "placeholder:%server_time%>=18000 OR placeholder:%server_time%<=6000"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:conditional_demo"
+
+  # Conditional actions examples
+  conditional_action_demo:
+    type: "SIMPLE"
+    title: "§a§l⚡ Conditional Actions"
+    description: "§7Actions that execute different commands based on conditions"
+    buttons:
+      balance_action:
+        text: "§2§l💰 Balance Action"
+        onClick:
+          - "conditional:placeholder=%vault_eco_balance%>=1000:true:message=§a§lYou're rich! Here's a bonus!:economy=add,amount:100:message=§c§lYou need more money! Here's some help.:economy=add,amount:50"
+      
+      gamemode_action:
+        text: "§b§l🎮 Gamemode Action"
+        onClick:
+          - "conditional:placeholder=%player_gamemode%=creative:true:message=§6§lSwitching to survival mode:command=gamemode survival {player}:message=§a§lSwitching to creative mode:command=gamemode creative {player}"
+      
+      world_action:
+        text: "§e§l🌍 World Action"
+        onClick:
+          - "conditional:placeholder=%player_world%=world_nether:true:message=§c§lTeleporting to overworld:command=tp {player} world 0 64 0:message=§d§lTeleporting to nether:command=tp {player} world_nether 0 64 0"
+      
+      time_action:
+        text: "§9§l🕐 Time-based Action"
+        onClick:
+          - "conditional:placeholder=%server_time%>=12000:true:message=§9§lGood evening! Here's a night bonus:economy=add,amount:200:message=§e§lGood morning! Here's a day bonus:economy=add,amount:100"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:conditional_demo"
+
+  # Dynamic forms examples
+  dynamic_form_demo:
+    type: "SIMPLE"
+    title: "§6§l🔄 Dynamic Forms"
+    description: "§7Forms with buttons that appear based on user status"
+    buttons:
+      admin_button:
+        text: "§c§l👑 Admin Controls"
+        onClick: "open:admin_controls"
+        show_condition: "permission:bedrockgui.admin"
+      
+      moderator_button:
+        text: "§e§l🛡️ Moderator Panel"
+        onClick: "open:moderator_panel"
+        show_condition: "permission:bedrockgui.moderator AND !permission:bedrockgui.admin"
+      
+      vip_button:
+        text: "§6§l✨ VIP Features"
+        onClick: "open:vip_features"
+        show_condition: "permission:bedrockgui.vip AND !permission:bedrockgui.moderator"
+      
+      regular_button:
+        text: "§7§l👤 Player Menu"
+        onClick: "open:regular_player_menu"
+        show_condition: "!permission:bedrockgui.vip"
+      
+      rich_player_button:
+        text: "§2§l💎 Luxury Services"
+        onClick: "open:luxury_services"
+        show_condition: "placeholder:%vault_eco_balance%>=50000"
+      
+      poor_player_button:
+        text: "§8§l🆘 Financial Help"
+        onClick:
+          - "message:§8§lHere's some starter money!"
+          - "economy:add,amount:1000"
+        show_condition: "placeholder:%vault_eco_balance%<=100"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:conditional_demo"
+
+  # Random Demo
+  random_demo:
+    type: "SIMPLE"
+    title: "§d§l🎲 Random Actions Demo"
+    description: "§7Test random action selection"
+    buttons:
+      random_message:
+        text: "§e§l💬 Random Message"
+        onClick:
+          - "random:message:§a§lYou got a green message!|message:§b§lYou got a blue message!|message:§c§lYou got a red message!|message:§e§lYou got a yellow message!"
+      
+      random_sound:
+        text: "§d§l🔊 Random Sound"
+        onClick:
+          - "random:sound:ui.button.click|sound:block.note_block.pling|sound:entity.experience_orb.pickup|sound:entity.player.levelup"
+      
+      random_reward:
+        text: "§6§l🎁 Random Reward"
+        onClick:
+          - "random:command:give {player} diamond 1|command:give {player} gold_ingot 5|command:give {player} emerald 3"
+      
+      weighted_example:
+        text: "§5§l⚖️ Weighted Random"
+        onClick:
+          - "random:message:§5§lYou got a rare message!:0.1|message:§e§lYou got a common message!:0.9"
       
       back:
         text: "§8§l← Back"
         onClick: "open:advanced_forms"
 
-  # ==================== ADVANCED FEATURES ====================
-
-  # Random Action Demo
-  random_demo:
+  # ==================== LIST FEATURES ====================
+  list_features:
     type: "SIMPLE"
-    title: "§5§l🎲 Random Actions Demo"
-    description: "§7Test random action execution"
+    title: "§3§l📄 List Features Demo"
+    description: "§7Demonstrate dynamic list generation and pagination"
     buttons:
-      random_reward:
-        text: "§a§l🎁 Random Reward"
-        onClick: "random:economy:add:100|economy:add:200|economy:add:500|command:give %player_name% diamond 1|command:give %player_name% emerald 5"
+      online_players_list:
+        text: "§a§l👥 Online Players"
+        onClick: "list:custom_source=online_players,form_id=online_players_list,per_page=5,title=§a§lOnline Players,button_template={name} - {description},button_action=message:Selected player {name}"
       
-      random_sound:
-        text: "§b§l🔊 Random Sound"
-        onClick: "random:sound:ui.button.click|sound:random.levelup|sound:entity.experience_orb.pickup|sound:block.note_block.harp"
+      server_info_list:
+        text: "§b§l🖥 Server Information"
+        onClick: "list:custom_source=server_info,form_id=server_info_list,per_page=8,title=§b§lServer Stats,button_template={name}: {value},button_action=message:Server {name} is {value}"
       
-      random_message:
-        text: "§e§l💬 Random Message"
-        onClick: "random:message:§aHave a great day!|message:§bKeep up the good work!|message:§dYou're awesome!|message:§6Stay positive!"
+      static_list_demo:
+        text: "§e§l📋 Static List Demo"
+        onClick: "list:static_list=Apple:fruit,Banana:fruit,Carrot:vegetable,Potato:vegetable,form_id=food_list,per_page=3,title=§e§lFood Items,button_template={name} ({value}),button_action=message:You selected {name} which is a {value}"
       
-      random_teleport:
-        text: "§d§l🌟 Random Teleport"
-        onClick: "random:teleport:spawn|teleport:mine|teleport:shop|teleport:farm"
-        show_condition: "permission:bedrockgui.teleport"
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Generated list forms (these will be created dynamically by the list action)
+  online_players_list:
+    type: "SIMPLE"
+    title: "§a§lOnline Players"
+    description: "§7Dynamically generated player list"
+    # Buttons will be generated by ListActionHandler
+
+  server_info_list:
+    type: "SIMPLE"
+    title: "§b§lServer Stats"
+    description: "§7Dynamically generated server information"
+    # Buttons will be generated by ListActionHandler
+
+  food_list:
+    type: "SIMPLE"
+    title: "§e§lFood Items"
+    description: "§7Static list demonstration"
+    # Buttons will be generated by ListActionHandler
+
+  # ==================== VALIDATION DEMO ====================
+  validation_demo:
+    type: "SIMPLE"
+    title: "§e§l✓ Validation Demo"
+    description: "§7Test form validation and error handling"
+    buttons:
+      input_validation:
+        text: "§a§l📝 Input Validation"
+        onClick: "open:input_validation_form"
+      
+      number_validation:
+        text: "§b§l🔢 Number Validation"
+        onClick: "open:number_validation_form"
+      
+      permission_validation:
+        text: "§d§l🔐 Permission Validation"
+        onClick: "open:permission_validation_form"
+      
+      back:
+        text: "§8§l← Back to Hub"
+        onClick: "open:main_hub"
+
+  # Input Validation Form
+  input_validation_form:
+    type: "CUSTOM"
+    title: "§a§l📝 Input Validation Test"
+    description: "§7Test various input validation scenarios"
+    components:
+      required_field:
+        type: "input"
+        text: "§e§lRequired Field:"
+        placeholder: "This field is required"
+      optional_field:
+        type: "input"
+        text: "§7§lOptional Field:"
+        placeholder: "This field is optional"
+    
+    onSubmit:
+      - "conditional:{required_field}!=:true:message=§a§lValidation passed! Required: '{required_field}', Optional: '{optional_field}':message=§c§lValidation failed! Required field cannot be empty.:sound=entity.villager.no"
+
+  # Number Validation Form
+  number_validation_form:
+    type: "CUSTOM"
+    title: "§b§l🔢 Number Validation Test"
+    description: "§7Test numeric input validation"
+    components:
+      number_input:
+        type: "input"
+        text: "§e§lEnter a number (1-100):"
+        placeholder: "50"
+    
+    onSubmit:
+      - "conditional:{number_input}>=1&&{number_input}<=100:true:message=§a§lValid number: {number_input}:message=§c§lInvalid number! Please enter a number between 1 and 100."
+
+  # Permission Validation Form
+  permission_validation_form:
+    type: "CUSTOM"
+    title: "§d§l🔐 Permission Validation Test"
+    description: "§7Test permission-based validation"
+    components:
+      admin_action:
+        type: "toggle"
+        text: "§c§lPerform admin action?"
+        default: false
+    
+    onSubmit:
+      - "conditional:{admin_action}==true&&permission=bedrockgui.admin:true:message=§a§lAdmin action performed successfully!:conditional:{admin_action}==true:true:message=§c§lYou don't have permission for admin actions!:message=§7§lNo admin action requested."
+
+  # ==================== WIZARD FORMS ====================
+  # Step 1: Basic Information
+  wizard_step1:
+    type: "CUSTOM"
+    title: "§e§l📋 Setup Wizard (1/3)"
+    description: "§7Welcome to the server setup wizard!\n§eThis will help configure your experience."
+    components:
+      username:
+        type: "input"
+        text: "§7Preferred Display Name:"
+        placeholder: "Enter display name"
+      language:
+        type: "dropdown"
+        text: "§7Select Language:"
+        options:
+          - "🇺🇸 English"
+          - "🇪🇸 Español"
+          - "🇫🇷 Français"
+          - "🇩🇪 Deutsch"
+          - "🇯🇵 日本語"
+        default: 0
+    
+    onSubmit:
+      - "message:§a§lWizard Step 1 completed! Display Name: §e{username}§a, Language: §e{language}"
+      - "sound:entity.player.levelup"
+      - "open:wizard_step2"
+
+  # ==================== EXAMPLE FORMS MENU ====================
+  examples_menu:
+    type: "SIMPLE"
+    title: "§6§l📋 Example Forms"
+    description: "§7Browse comprehensive examples of BedrockGUI features"
+    buttons:
+      list_examples:
+        text: "§3§l📄 List Actions"
+        onClick: "open:list_action_demo"
+      
+      conditional_examples:
+        text: "§e§l🔀 Conditionals"
+        onClick: "open:conditional_demo"
+      
+      economy_examples:
+        text: "§2§l💰 Economy"
+        onClick: "open:economy_demo_basic"
+      
+      advanced_examples:
+        text: "§d§l⚡ Advanced Actions"
+        onClick: "open:advanced_demo_delays"
+      
+      back:
+        text: "§8§l← Back to Main Hub"
+        onClick: "open:main_hub"
+
+  # ==================== LIST ACTION EXAMPLES ====================
+  list_action_demo:
+    type: "SIMPLE"
+    title: "§3§l📄 List Action Examples"
+    description: "§7Explore different list action implementations"
+    buttons:
+      online_players:
+        text: "§a§l👥 Online Players"
+        onClick: "open:list_demo_players"
+      
+      player_management:
+        text: "§c§l🎮 Player Management"
+        onClick: "open:list_demo_management"
+      
+      static_lists:
+        text: "§e§l📜 Static Lists"
+        onClick: "open:list_demo_static"
+      
+      advanced_lists:
+        text: "§b§l🔧 Advanced Lists"
+        onClick: "open:list_demo_advanced"
+      
+      back:
+        text: "§8§l← Back to Examples"
+        onClick: "open:examples_menu"
+
+  # List Action Examples - Comprehensive Demonstrations
+  list_demo_players:
+    type: "SIMPLE"
+    title: "§a§l👥 Online Players Demo"
+    description: "§7This form demonstrates basic list functionality with online players."
+    buttons:
+      view_players:
+        text: "§a§l📋 View Online Players"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:players_list_form,per_page:5,title:Online Players (Page {page}/{total_pages}),description:Total players online: {total_items},button_template:👤 {name},button_action:message:Selected player: {name}"
+      
+      back:
+        text: "§8§l← Back to List Examples"
+        onClick: "open:list_action_demo"
+
+  players_list_form:
+    type: "SIMPLE"
+    title: "§a§lOnline Players"
+    description: "§7Select a player from the list:"
+    # Buttons will be dynamically generated by the list action
+
+  # Player management list
+  list_demo_management:
+    type: "SIMPLE"
+    title: "§c§l🎮 Player Management Demo"
+    description: "§7Choose how you want to interact with online players:"
+    buttons:
+      teleport_menu:
+        text: "§d§l🚀 Teleport to Player"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:teleport_players_form,per_page:4,title:Teleport Menu,description:Choose a player to teleport to,button_template:📍 Teleport to {name},button_action:command:tp {player} {name}"
+      
+      message_menu:
+        text: "§e§l💬 Send Message to Player"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:message_players_form,per_page:6,title:Send Message,description:Select a player to send a greeting,button_template:💌 Message {name},button_action:message:Hello {name}! Greetings from {player}!"
+      
+      economy_menu:
+        text: "§2§l💰 Give Money to Player"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:economy_players_form,per_page:5,title:Give Money,description:Select a player to give 100 coins,button_template:💵 Give money to {name},button_action:economy:add,player:{name},amount:100"
+      
+      back:
+        text: "§8§l← Back to List Examples"
+        onClick: "open:list_action_demo"
+
+  teleport_players_form:
+    type: "SIMPLE"
+    title: "§d§lTeleport Menu"
+    description: "§7Select a player to teleport to:"
+
+  message_players_form:
+    type: "SIMPLE"
+    title: "§e§lSend Message"
+    description: "§7Select a player to send a message to:"
+
+  economy_players_form:
+    type: "SIMPLE"
+    title: "§2§lGive Money"
+    description: "§7Select a player to give money to:"
+
+  # Static list demo
+  list_demo_static:
+    type: "SIMPLE"
+    title: "§e§l📜 Static List Demo"
+    description: "§7This demonstrates using static data instead of placeholders."
+    buttons:
+      food_items:
+        text: "§a§l🍎 Food Items"
+        onClick: "list:static_list:Apple:fruit,Banana:fruit,Orange:fruit,Carrot:vegetable,Potato:vegetable,Tomato:vegetable,form_id:food_list_form,per_page:3,title:Food Categories,description:Choose your favorite food item,button_template:🥗 {name} ({value}),button_action:message:You selected {name} which is a {value}!"
+      
+      game_modes:
+        text: "§b§l🎮 Game Modes"
+        onClick: "list:static_list:Creative:build,Survival:survive,Adventure:explore,Spectator:watch,form_id:gamemode_list_form,per_page:4,title:Game Modes,description:Select a game mode to learn about,button_template:🎯 {name} Mode,button_action:message:{name} mode is for players who want to {value}!"
+      
+      back:
+        text: "§8§l← Back to List Examples"
+        onClick: "open:list_action_demo"
+
+  food_list_form:
+    type: "SIMPLE"
+    title: "§a§lFood Categories"
+    description: "§7Select a food item:"
+
+  gamemode_list_form:
+    type: "SIMPLE"
+    title: "§b§lGame Modes"
+    description: "§7Select a game mode:"
+
+  # Advanced list demo
+  list_demo_advanced:
+    type: "SIMPLE"
+    title: "§b§l🔧 Advanced List Features"
+    description: "§7Advanced list features with custom formatting and actions."
+    buttons:
+      player_stats:
+        text: "§d§l📊 Player Statistics"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:stats_list_form,per_page:3,title:Player Stats (Page {page} of {total_pages}),description:Viewing statistics for {total_items} players,button_template:📈 {name} Stats (#{index}),button_action:command:stats {name}"
+      
+      player_rankings:
+        text: "§6§l🏆 Player Rankings"
+        onClick: "list:placeholder:%bgui_online_players_list%,form_id:ranking_list_form,per_page:5,title:Player Rankings,description:Top {total_items} players currently online,button_template:🥇 #{index} - {name},button_action:message:Player {name} is ranked #{index} in the current session!"
+      
+      back:
+        text: "§8§l← Back to List Examples"
+        onClick: "open:list_action_demo"
+
+  stats_list_form:
+    type: "SIMPLE"
+    title: "§d§lPlayer Statistics"
+    description: "§7Select a player to view stats:"
+
+  ranking_list_form:
+    type: "SIMPLE"
+    title: "§6§lPlayer Rankings"
+    description: "§7Select a player to see their ranking:"
+
+  # ==================== ECONOMY EXAMPLES ====================
+  economy_demo_basic:
+    type: "SIMPLE"
+    title: "§2§l💰 Economy Examples"
+    description: "§7Explore different economy integration features"
+    buttons:
+      basic_actions:
+        text: "§a§l💵 Basic Actions"
+        onClick: "open:economy_basic_actions"
+      
+      shop_system:
+        text: "§6§l🏪 Shop System"
+        onClick: "open:economy_shop_demo"
+      
+      daily_bonuses:
+        text: "§e§l🎁 Daily Bonuses"
+        onClick: "open:economy_daily_bonuses"
+      
+      gambling_system:
+        text: "§d§l🎲 Gambling System"
+        onClick: "open:economy_gambling_demo"
+      
+      auction_system:
+        text: "§b§l🔨 Auction System"
+        onClick: "open:economy_auction_demo"
+      
+      admin_panel:
+        text: "§c§l⚙️ Admin Panel"
+        onClick: "open:economy_admin_panel"
+        show_condition: "permission:bedrockgui.admin"
+      
+      back:
+        text: "§8§l← Back to Examples"
+        onClick: "open:examples_menu"
+
+  # Basic economy actions
+  economy_basic_actions:
+    type: "SIMPLE"
+    title: "§a§l💵 Basic Economy Actions"
+    description: "§7Fundamental economy operations"
+    buttons:
+      check_balance:
+        text: "§2§l💰 Check Balance"
+        onClick:
+          - "message:§a§lYour current balance: §2$%vault_eco_balance%"
+          - "sound:entity.experience_orb.pickup"
+      
+      add_money:
+        text: "§a§l➕ Add $100"
+        onClick:
+          - "economy:add,amount:100"
+          - "message:§a§l+$100 added to your account!"
+          - "sound:entity.player.levelup"
+      
+      remove_money:
+        text: "§c§l➖ Remove $50"
+        onClick:
+          - "economy:remove,amount:50"
+          - "message:§c§l-$50 removed from your account!"
+          - "sound:entity.item.break"
+      
+      set_balance:
+        text: "§e§l🔄 Set Balance to $1000"
+        onClick:
+          - "economy:set,amount:1000"
+          - "message:§e§lBalance set to $1000!"
+          - "sound:block.note_block.pling"
+      
+      pay_player:
+        text: "§b§l💸 Pay Another Player"
+        onClick: "open:economy_pay_form"
+      
+      back:
+         text: "§8§l← Back"
+         onClick: "open:economy_demo_basic"
+
+  # Pay player form
+  economy_pay_form:
+    type: "CUSTOM"
+    title: "§b§l💸 Pay Another Player"
+    description: "§7Send money to another player"
+    components:
+      target_player:
+        type: "input"
+        text: "§7Player Name:"
+        placeholder: "Enter player name"
+      amount:
+        type: "slider"
+        text: "§7Amount to Pay:"
+        min: 1
+        max: 1000
+        step: 10
+        default: 100
+    
+    onSubmit:
+      - "conditional:placeholder=%vault_eco_balance%>={amount}:true:economy=pay,target:{target_player},amount:{amount}:message=§a§lPaid ${amount} to {target_player}!:sound=entity.player.levelup:message=§c§lInsufficient funds! You need ${amount} but only have $%vault_eco_balance%:sound=entity.villager.no"
+
+  # Shop system demo
+  economy_shop_demo:
+    type: "SIMPLE"
+    title: "§6§l🏪 Shop System Demo"
+    description: "§7Buy and sell items with economy integration"
+    buttons:
+      buy_diamond:
+        text: "§b§l💎 Buy Diamond - $500"
+        onClick:
+          - "conditional:placeholder=%vault_eco_balance%>=500:true:economy=remove,amount:500:inventory=give:diamond:1:message=§a§lPurchased 1 Diamond for $500!:sound=entity.player.levelup:message=§c§lInsufficient funds! Need $500, have $%vault_eco_balance%:sound=entity.villager.no"
+      
+      buy_iron:
+        text: "§7§l⚙️ Buy Iron Ingot - $100"
+        onClick:
+          - "conditional:placeholder=%vault_eco_balance%>=100:true:economy=remove,amount:100:inventory=give:iron_ingot:1:message=§a§lPurchased 1 Iron Ingot for $100!:sound=entity.player.levelup:message=§c§lInsufficient funds! Need $100, have $%vault_eco_balance%:sound=entity.villager.no"
+      
+      sell_gold:
+        text: "§e§l🥇 Sell Gold Ingot - $150"
+        onClick:
+          - "conditional:inventory=has:gold_ingot:1:true:inventory=remove:gold_ingot:1:economy=add,amount:150:message=§a§lSold 1 Gold Ingot for $150!:sound=entity.player.levelup:message=§c§lYou don't have any Gold Ingots to sell!:sound=entity.villager.no"
+      
+      transaction_history:
+        text: "§d§l📊 Transaction History"
+        onClick:
+          - "message:§d§lRecent Transactions:"
+          - "message:§7§l• Last purchase: Diamond ($500)"
+          - "message:§7§l• Last sale: Gold Ingot (+$150)"
+          - "message:§7§l• Current balance: $%vault_eco_balance%"
       
       back:
         text: "§8§l← Back"
-        onClick: "open:basic_actions"
+        onClick: "open:economy_demo_basic"
 
-  # Delay Actions Demo
-  delay_demo:
+  # Daily bonuses system
+  economy_daily_bonuses:
     type: "SIMPLE"
-    title: "§c§l⏱ Delay Actions Demo"
-    description: "§7Test timed action sequences"
+    title: "§e§l🎁 Daily Bonuses"
+    description: "§7Claim your daily rewards and bonuses"
     buttons:
-      countdown_sequence:
-        text: "§a§l⏰ Countdown Sequence"
-        onClick: "message:§e3...:delay:1000:message:§e2...:delay:1000:message:§e1...:delay:1000:message:§a§lGO!:sound:random.levelup"
+      daily_login:
+        text: "§a§l📅 Daily Login Bonus - $200"
+        onClick:
+          - "economy:add,amount:200"
+          - "message:§a§lDaily login bonus claimed! +$200"
+          - "sound:entity.player.levelup"
+        show_condition: "placeholder:%player_time_played%>=86400"
+      
+      weekly_bonus:
+        text: "§6§l📆 Weekly Bonus - $1000"
+        onClick:
+          - "economy:add,amount:1000"
+          - "message:§6§lWeekly bonus claimed! +$1000"
+          - "sound:ui.toast.challenge_complete"
+        show_condition: "placeholder:%player_time_played%>=604800"
+      
+      vip_bonus:
+        text: "§d§l✨ VIP Daily Bonus - $500"
+        onClick:
+          - "economy:add,amount:500"
+          - "message:§d§lVIP daily bonus claimed! +$500"
+          - "sound:entity.player.levelup"
+        show_condition: "permission:bedrockgui.vip"
+      
+      streak_bonus:
+        text: "§c§l🔥 Login Streak Bonus"
+        onClick:
+          - "conditional:placeholder:%login_streak%>=7:true:economy=add,amount:2000:message=§c§l7-day streak bonus! +$2000:sound=ui.toast.challenge_complete:economy=add,amount:100:message=§e§lStreak bonus! +$100:sound=entity.experience_orb.pickup"
+      
+      back:
+        text: "§8§l← Back"
+        onClick: "open:economy_demo_basic"
+
+  # ==================== ADVANCED ACTION EXAMPLES ====================
+  advanced_demo_delays:
+    type: "SIMPLE"
+    title: "§d§l⚡ Advanced Actions"
+    description: "§7Explore advanced action features and sequences"
+    buttons:
+      delayed_actions:
+        text: "§e§l⏰ Delayed Actions"
+        onClick: "open:advanced_delayed_actions"
+      
+      random_actions:
+        text: "§d§l🎲 Random Actions"
+        onClick: "open:advanced_random_actions"
+      
+      complex_conditionals:
+        text: "§c§l🧠 Complex Logic"
+        onClick: "open:advanced_complex_logic"
+      
+      multi_step_processes:
+        text: "§a§l📋 Multi-Step Processes"
+        onClick: "open:advanced_multi_step"
+      
+      server_management:
+        text: "§6§l🖥️ Server Management"
+        onClick: "open:advanced_server_mgmt"
+        show_condition: "permission:bedrockgui.admin"
+      
+      event_system:
+        text: "§b§l🎉 Event System"
+        onClick: "open:advanced_event_system"
+      
+      back:
+        text: "§8§l← Back to Examples"
+        onClick: "open:examples_menu"
+
+  # Delayed actions examples
+  advanced_delayed_actions:
+    type: "SIMPLE"
+    title: "§e§l⏰ Delayed Actions"
+    description: "§7Actions with timing and sequences"
+    buttons:
+      countdown_demo:
+        text: "§c§l⏱️ Countdown Demo"
+        onClick:
+          - "message:§c§lCountdown starting..."
+          - "delay:1000"
+          - "message:§e§l3..."
+          - "delay:1000"
+          - "message:§e§l2..."
+          - "delay:1000"
+          - "message:§e§l1..."
+          - "delay:1000"
+          - "message:§a§lGO!"
+          - "sound:entity.player.levelup"
       
       delayed_reward:
-        text: "§b§l🎁 Delayed Reward"
-        onClick: "message:§eProcessing reward...:delay:3000:economy:add:100:message:§a+100 coins added!:sound:random.levelup"
+        text: "§6§l🎁 Delayed Reward"
+        onClick:
+          - "message:§6§lPreparing your reward..."
+          - "sound:ui.button.click"
+          - "delay:3000"
+          - "message:§a§lReward ready!"
+          - "economy:add,amount:500"
+          - "inventory:give:diamond:1"
+          - "sound:entity.player.levelup"
       
-      timed_teleport:
-        text: "§d§l🌟 Timed Teleport"
-        onClick: "message:§eTeleporting in 5 seconds...:delay:5000:teleport:spawn:message:§aWelcome to spawn!"
+      teleport_warning:
+        text: "§d§l🌀 Teleport with Warning"
+        onClick:
+          - "message:§d§lTeleporting in 5 seconds... Don't move!"
+          - "sound:block.portal.ambient"
+          - "delay:5000"
+          - "message:§a§lTeleporting now!"
+          - "command:tp {player} 0 100 0"
+          - "sound:entity.enderman.teleport"
+      
+      repeating_action:
+        text: "§b§l🔄 Repeating Action"
+        onClick:
+          - "message:§b§lStarting repeating sequence..."
+          - "delay:1000"
+          - "message:§e§lTick 1"
+          - "delay:1000"
+          - "message:§e§lTick 2"
+          - "delay:1000"
+          - "message:§e§lTick 3"
+          - "delay:1000"
+          - "message:§a§lSequence complete!"
       
       back:
         text: "§8§l← Back"
-        onClick: "open:basic_actions"
+        onClick: "open:advanced_demo_delays"
 
-  # Server Actions Demo
-  server_demo:
-    type: "SIMPLE"
-    title: "§4§l🖥 Server Actions Demo"
-    description: "§7Execute server-wide commands"
-    permission: "bedrockgui.admin"
-    buttons:
-      broadcast_message:
-        text: "§a§l📢 Broadcast Message"
-        onClick: "broadcast:§6[SERVER] §eThis is a test broadcast message!"
-      
-      server_restart_warning:
-        text: "§c§l⚠ Restart Warning"
-        onClick: "broadcast:§c§l[WARNING] Server restart in 5 minutes!"
-      
-      maintenance_mode:
-        text: "§e§l🔧 Maintenance Mode"
-        onClick: "server:whitelist on:broadcast:§e[MAINTENANCE] Server is now in maintenance mode"
-      
-      back:
-        text: "§8§l← Back"
-        onClick: "open:basic_actions"
+  # Step 2: Preferences
+  wizard_step2:
+    type: "CUSTOM"
+    title: "§e§l📋 Setup Wizard (2/3)"
+    description: "§7Step 2: Configure your preferences"
+    components:
+      notifications:
+        type: "toggle"
+        text: "§7Enable Notifications:"
+        default: true
+      auto_save:
+        type: "toggle"
+        text: "§7Auto-save Progress:"
+        default: true
+      theme:
+        type: "dropdown"
+        text: "§7UI Theme:"
+        options:
+          - "🌞 Light Theme"
+          - "🌙 Dark Theme"
+          - "🌈 Colorful Theme"
+        default: 0
+    
+    onSubmit:
+      - "message:§a§lWizard Step 2 completed! Notifications: §e{notifications}§a, Auto-save: §e{auto_save}§a, Theme: §e{theme}"
+      - "sound:entity.player.levelup"
+      - "open:wizard_step3"
+
+  # Step 3: Completion
+  wizard_step3:
+    type: "CUSTOM"
+    title: "§e§l📋 Setup Wizard (3/3)"
+    description: "§7Final step: Review and complete setup"
+    components:
+      terms:
+        type: "toggle"
+        text: "§7I agree to the server terms of service"
+        default: false
+      newsletter:
+        type: "toggle"
+        text: "§7Subscribe to server newsletter"
+        default: false
+    
+    onSubmit:
+      - "conditional:{terms}:true:message=§a§l✅ Setup wizard completed successfully! Welcome to the server!:sound=entity.player.levelup:message=§c§lYou must agree to the terms of service to complete setup.:sound=entity.villager.no"
