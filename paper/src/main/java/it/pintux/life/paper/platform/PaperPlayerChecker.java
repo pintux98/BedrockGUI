@@ -5,9 +5,7 @@ import org.geysermc.floodgate.api.FloodgateApi;
 
 import java.util.UUID;
 
-/**
- * Paper implementation of PlatformPlayerChecker using Floodgate API.
- */
+
 public class PaperPlayerChecker implements PlatformPlayerChecker {
     
     @Override

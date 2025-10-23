@@ -2,18 +2,15 @@ package it.pintux.life.common.form;
 
 import it.pintux.life.common.actions.*;
 import it.pintux.life.common.actions.handlers.*;
-import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.ConditionalButton;
-import it.pintux.life.common.form.obj.PriorityItem;
+import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.FormMenu;
-import it.pintux.life.common.form.priority.PriorityResolver;
 import it.pintux.life.common.platform.*;
 import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.utils.FormConfig;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderPopulator;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ConfigValidator;
 import it.pintux.life.common.utils.ErrorHandlingUtil;
@@ -40,7 +37,7 @@ public class FormMenuUtil {
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
     
-    // Action handlers that need shutdown
+    
     private DelayActionHandler delayActionHandler;
     private RandomActionHandler randomActionHandler;
     private PermissionActionHandler permissionActionHandler;
@@ -49,10 +46,7 @@ public class FormMenuUtil {
         this(config, messageData, null, null, null, null, null, null, null);
     }
     
-    /**
-     * Gets the form configuration
-     * @return the FormConfig instance
-     */
+    
     public FormConfig getConfig() {
         return config;
     }
@@ -76,29 +70,27 @@ public class FormMenuUtil {
         this.pluginManager = pluginManager;
         this.playerManager = playerManager;
         
-        // Initialize action system
+        
         this.actionRegistry = ActionRegistry.getInstance();
         this.actionExecutor = new ActionExecutor(actionRegistry);
         
-        // Initialize condition evaluator with plugin manager
+        
         if (pluginManager != null) {
             ConditionEvaluator.setPluginManager(pluginManager);
         }
         
-        // Register default action handlers
+        
         registerDefaultActionHandlers();
         
         loadFormMenus();
         
-        // Validate configuration after loading
+        
         validateConfiguration();
     }
 
-    /**
-     * Registers default action handlers
-     */
+    
     private void registerDefaultActionHandlers() {
-        // Core action handlers
+        
         actionRegistry.registerHandler(new CommandActionHandler());
         actionRegistry.registerHandler(new OpenFormActionHandler(this));
         actionRegistry.registerHandler(new MessageActionHandler(playerManager));
@@ -106,7 +98,7 @@ public class FormMenuUtil {
         this.delayActionHandler = new DelayActionHandler(actionExecutor);
         actionRegistry.registerHandler(delayActionHandler);
         
-        // Platform-dependent action handlers (only register if platform managers are available)
+        
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
             actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
@@ -132,21 +124,21 @@ public class FormMenuUtil {
             actionRegistry.registerHandler(new ActionBarActionHandler(titleManager));
         }
         
-        // Advanced action handlers that depend on the action executor
+        
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
         this.randomActionHandler = new RandomActionHandler(actionExecutor);
         actionRegistry.registerHandler(randomActionHandler);
         
-        // Register URL action handler
+        
         actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
         
-        // Plugin integration action handlers (require commandExecutor, PlaceholderProcessor, and platform managers)
+        
+        actionRegistry.registerHandler(new ListActionHandler());
+        
+        
         if (commandExecutor != null && pluginManager != null && playerManager != null) {
-            // Create a placeholder processor instance for plugin handlers
-            it.pintux.life.common.utils.PlaceholderProcessor placeholderProcessor = new it.pintux.life.common.utils.PlaceholderProcessor();
             
-            // Register plugin integration handlers
-            actionRegistry.registerHandler(new PlaceholderAPIActionHandler(commandExecutor, placeholderProcessor, pluginManager, playerManager));
+            actionRegistry.registerHandler(new PlaceholderAPIActionHandler(commandExecutor, pluginManager, playerManager));
           }
         
         logger.info("Registered " + actionRegistry.size() + " action handlers");
@@ -165,61 +157,57 @@ public class FormMenuUtil {
                     String text = config.getString("forms." + key + ".buttons." + button + ".text");
                     String image = config.getString("forms." + key + ".buttons." + button + ".image");
                     
-                    // Handle onClick as either string or list
+                    
                     String onClick = null;
                     try {
                         List<String> onClickList = config.getStringList("forms." + key + ".buttons." + button + ".onClick");
                         if (onClickList != null && !onClickList.isEmpty()) {
-                            // Convert list to our internal format for multi-actions
+                            
                             onClick = "[" + String.join(", ", onClickList) + "]";
                         }
                     } catch (Exception e) {
-                        // Fallback to string format
+                        
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
                     
-                    // If still null, try string format
+                    
                     if (onClick == null) {
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
                     
-                    // Check for priority properties
+                    
                     String priorityStr = config.getString("forms." + key + ".buttons." + button + ".priority");
                     Integer priority = null;
                     if (priorityStr != null) {
                         try {
                             priority = Integer.parseInt(priorityStr);
                         } catch (NumberFormatException e) {
-                            // Ignore invalid priority values
+                            
                         }
                     }
                     String viewRequirement = config.getString("forms." + key + ".buttons." + button + ".view_requirement");
                     
-                    // Check for conditional properties
+                    
                     String showCondition = config.getString("forms." + key + ".buttons." + button + ".show_condition");
                     String alternativeText = config.getString("forms." + key + ".buttons." + button + ".alternative_text");
                     String alternativeImage = config.getString("forms." + key + ".buttons." + button + ".alternative_image");
                     String alternativeOnClick = config.getString("forms." + key + ".buttons." + button + ".alternative_onClick");
                     
-                    // Determine button type based on available properties
-                    if (priority != null || viewRequirement != null) {
-                        // Create priority item
-                        PriorityItem priorityItem = new PriorityItem(text, image, onClick);
-                        if (priority != null) {
-                            priorityItem.setPriority(priority);
-                        }
-                        if (viewRequirement != null) {
-                            priorityItem.setViewRequirement(viewRequirement);
-                        }
-                        buttons.add(priorityItem);
-                    } else if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
-                        // Create conditional button
+                    
+                    if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
+                        
                         ConditionalButton conditionalButton = new ConditionalButton(text, image, onClick, showCondition);
                         conditionalButton.setAlternativeText(alternativeText);
                         conditionalButton.setAlternativeImage(alternativeImage);
                         conditionalButton.setAlternativeOnClick(alternativeOnClick);
                         
-                        // Load conditional property modifications
+                        
+                        if (onClick != null && !onClick.trim().isEmpty()) {
+                            ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
+                            conditionalButton.setAction(actionDef);
+                        }
+                        
+                        
                         for (String condKey : config.getKeys("forms." + key + ".buttons." + button + ".conditions")) {
                             String condition = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".condition");
                             String property = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".property");
@@ -232,8 +220,16 @@ public class FormMenuUtil {
                         
                         buttons.add(conditionalButton);
                     } else {
-                        // Create regular button
-                        buttons.add(new FormButton(text, image, onClick));
+                        
+                        FormButton formButton = new FormButton(text, image, onClick);
+                        
+                        
+                        if (onClick != null && !onClick.trim().isEmpty()) {
+                            ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
+                            formButton.setAction(actionDef);
+                        }
+                        
+                        buttons.add(formButton);
                     }
                 }
                 if (type.equalsIgnoreCase("MODAL")) {
@@ -258,6 +254,22 @@ public class FormMenuUtil {
             formMenus.put(key.toLowerCase(), menu);
             logger.info("Loaded form: " + key + " type: " + type);
         }
+    }
+
+    
+    public void reloadFormMenus() {
+        logger.info("Reloading form menus from configuration...");
+        
+        
+        formMenus.clear();
+        
+        
+        loadFormMenus();
+        
+        
+        validateConfiguration();
+        
+        logger.info("Successfully reloaded " + formMenus.size() + " form menus");
     }
 
     public void openForm(FormPlayer player, String menuName, String[] args) {
@@ -311,21 +323,21 @@ public class FormMenuUtil {
             formBuilder.content(replacePlaceholders(content, placeholders, player, messageData));
         }
         
-        // Create action context for condition evaluation with built-in placeholders
-        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
-        // Get effective button properties
+        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        
+        
         String button1Text, button2Text;
         String button1OnClick, button2OnClick;
         
-        // Check if buttons should be shown based on conditions
+        
         if (b1 instanceof ConditionalButton) {
             ConditionalButton cb1 = (ConditionalButton) b1;
-            // Check if button has a show condition and evaluate it
+            
             if (cb1.hasShowCondition() && 
                 !ConditionEvaluator.evaluateCondition(player, cb1.getShowCondition(), context, messageData)) {
                 logger.warn("Modal form button 1 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-                // For modal forms, we can't hide buttons, so we'll still show it but with modified properties
+                
             }
             button1Text = getEffectiveButtonText(cb1, player, context, placeholders, messageData);
             button1OnClick = getEffectiveButtonOnClick(cb1, player, context);
@@ -336,11 +348,11 @@ public class FormMenuUtil {
         
         if (b2 instanceof ConditionalButton) {
             ConditionalButton cb2 = (ConditionalButton) b2;
-            // Check if button has a show condition and evaluate it
+            
             if (cb2.hasShowCondition() && 
                 !ConditionEvaluator.evaluateCondition(player, cb2.getShowCondition(), context, messageData)) {
                 logger.warn("Modal form button 2 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-                // For modal forms, we can't hide buttons, so we'll still show it but with modified properties
+                
             }
             button2Text = getEffectiveButtonText(cb2, player, context, placeholders, messageData);
             button2OnClick = getEffectiveButtonOnClick(cb2, player, context);
@@ -369,11 +381,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, formBuilder.build()),
-                "§eModal form could not be displayed. Please use the command interface or contact an administrator."
+                "Â§eModal form could not be displayed. Please use the command interface or contact an administrator."
             );
         } else {
             logger.warn("FormSender is null, cannot send modal form to player: " + player.getName());
-            player.sendMessage("§cForm system is unavailable. Please try again later.");
+            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -390,56 +402,30 @@ public class FormMenuUtil {
 
         List<String> onClickActions = new ArrayList<>();
         
-        // Create action context for condition evaluation with built-in placeholders
-        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
-        // Check if form contains priority items
-        boolean hasPriorityItems = buttons.stream().anyMatch(button -> button instanceof PriorityItem);
+        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
-        List<FormButton> processedButtons;
-        if (hasPriorityItems) {
-            // Convert all buttons to priority items and resolve priorities
-            List<PriorityItem> priorityItems = new ArrayList<>();
-            for (FormButton button : buttons) {
-                if (button instanceof PriorityItem) {
-                    priorityItems.add((PriorityItem) button);
-                } else {
-                    // Convert regular buttons to priority items with default priority
-                    PriorityItem priorityItem = new PriorityItem(button.getText(), button.getImage(), button.getOnClick());
-                    priorityItems.add(priorityItem);
-                }
-            }
-            
-            // Resolve priority conflicts
-            List<PriorityItem> resolvedItems = PriorityResolver.createFormLayout(priorityItems, player, context, messageData);
-            processedButtons = new ArrayList<>(resolvedItems);
-            
-            // Log priority resolution for debugging
-            if (logger.isDebugEnabled()) {
-                PriorityResolver.logPriorityResolution(priorityItems, resolvedItems);
-            }
-        } else {
-            processedButtons = buttons;
-        }
+        
+        List<FormButton> processedButtons = buttons;
         
         for (FormButton button : processedButtons) {
-            // Handle conditional buttons
+            
             if (button instanceof ConditionalButton) {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
                 
-                // Check if button has a show condition and evaluate it
+                
                 if (conditionalButton.hasShowCondition() && 
                     !ConditionEvaluator.evaluateCondition(player, conditionalButton.getShowCondition(), context, messageData)) {
-                    // Button should be hidden, skip it
+                    
                     continue;
                 }
                 
-                // Evaluate conditional properties and get effective values
+                
                 String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
                 String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
                 String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
                 
-                // Add button with effective properties
+                
                 if (effectiveImage != null) {
                     formBuilder.button(effectiveText, FormImage.Type.URL, effectiveImage);
                 } else {
@@ -450,7 +436,7 @@ public class FormMenuUtil {
                     onClickActions.add(effectiveOnClick);
                 }
             } else {
-                // Handle regular buttons
+                
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
                 if (button.getImage() != null) {
                     formBuilder.button(buttonText, FormImage.Type.URL, button.getImage());
@@ -475,11 +461,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, form),
-                "§eMenu '" + formMenu.getFormTitle() + "' could not be displayed. Please use commands or contact an administrator."
+                "Â§eMenu '" + formMenu.getFormTitle() + "' could not be displayed. Please use commands or contact an administrator."
             );
         } else {
             logger.warn("FormSender is null, cannot send simple form to player: " + player.getName());
-            player.sendMessage("§cForm system is unavailable. Please try again later.");
+            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -487,8 +473,8 @@ public class FormMenuUtil {
         String title = replacePlaceholders(formMenu.getFormTitle(), placeholders, player, messageData);
         CustomForm.Builder formBuilder = CustomForm.builder().title(title);
 
-        // Create action context for condition evaluation with built-in placeholders
-        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        
+        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         Map<Integer, String> componentActions = new HashMap<>();
         Map<String, Object> componentResults = new HashMap<>();
@@ -600,11 +586,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, form),
-                "§eCustom form '" + formMenu.getFormTitle() + "' could not be displayed. Please use alternative methods or contact an administrator."
+                "Â§eCustom form '" + formMenu.getFormTitle() + "' could not be displayed. Please use alternative methods or contact an administrator."
             );
         } else {
             logger.warn("FormSender is null, cannot send custom form to player: " + player.getName());
-            player.sendMessage("§cForm system is unavailable. Please try again later.");
+            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
         }
     }
 
@@ -616,23 +602,21 @@ public class FormMenuUtil {
         
         onClickAction = replacePlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders, player, messageData);
 
-        // Create action context with built-in placeholders
-        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        
+        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
-        // Check if this is a multi-action format (starts with [ and ends with ])
+        
         if (onClickAction.startsWith("[") && onClickAction.endsWith("]")) {
             handleMultipleActions(player, onClickAction, context);
         } else {
-            // Handle single action (existing behavior)
+            
             handleSingleAction(player, onClickAction, context);
         }
     }
     
-    /**
-     * Handles execution of a single action
-     */
+    
     private void handleSingleAction(FormPlayer player, String onClickAction, ActionContext context) {
-        // Parse and execute action
+        
         ActionExecutor.Action action = actionExecutor.parseAction(onClickAction);
         if (action == null) {
             logger.warn("Failed to parse onClick action: " + onClickAction);
@@ -640,7 +624,7 @@ public class FormMenuUtil {
             return;
         }
 
-        ActionResult result = actionExecutor.executeAction(player, action.getType(), action.getValue(), context);
+        ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
         logger.debug(result.toString());
         if (result.isFailure()) {
             logger.warn("Action execution failed for player " + player.getName() + ": " + result.getMessage());
@@ -652,18 +636,16 @@ public class FormMenuUtil {
         }
     }
     
-    /**
-     * Handles execution of multiple actions in sequence
-     */
+    
     private void handleMultipleActions(FormPlayer player, String onClickAction, ActionContext context) {
         try {
-            // Remove brackets and split by comma
+            
             String actionsString = onClickAction.substring(1, onClickAction.length() - 1);
             String[] actionStrings = actionsString.split(",");
             
             List<ActionExecutor.Action> actions = new ArrayList<>();
             
-            // Parse each action
+            
             for (String actionString : actionStrings) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
@@ -684,10 +666,10 @@ public class FormMenuUtil {
                 return;
             }
             
-            // Execute actions in sequence using ActionExecutor's built-in support
+            
             List<ActionResult> results = actionExecutor.executeActions(player, actions, context);
             
-            // Check results and log any failures
+            
             boolean hasFailures = false;
             for (int i = 0; i < results.size(); i++) {
                 ActionResult result = results.get(i);
@@ -728,21 +710,21 @@ public class FormMenuUtil {
             return;
         }
         
-        // Replace $1 placeholder with the component value
+        
         if (value != null) {
             action = action.replace("$1", value);
         }
         
-        // Create action context with component value and built-in placeholders
+        
         Map<String, String> customPlaceholders = new HashMap<>();
         if (value != null) {
             customPlaceholders.put("value", value);
-            customPlaceholders.put("1", value); // Support both {value} and {1}
+            customPlaceholders.put("1", value); 
         }
         
-        ActionContext context = PlaceholderPopulator.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
+        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
         
-        // Parse and execute action
+        
         ActionExecutor.Action parsedAction = actionExecutor.parseAction(action);
         if (parsedAction == null) {
             logger.warn("Failed to parse custom action: " + action);
@@ -750,7 +732,7 @@ public class FormMenuUtil {
             return;
         }
         
-        ActionResult result = actionExecutor.executeAction(player, parsedAction.getType(), parsedAction.getValue(), context);
+        ActionResult result = actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
         
         if (result.isFailure()) {
             logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.getMessage());
@@ -773,12 +755,12 @@ public class FormMenuUtil {
         
         String result = text;
         
-        // First, process dynamic placeholders (both $ and {} formats)
+        
         if (placeholders != null && !placeholders.isEmpty()) {
             result = PlaceholderUtil.processDynamicPlaceholders(result, placeholders);
         }
         
-        // Then, process PlaceholderAPI placeholders (% prefixed) if messageData is available
+        
         if (messageData != null && result.contains("%")) {
             result = messageData.replaceVariables(result, null, player);
         }
@@ -786,11 +768,7 @@ public class FormMenuUtil {
         return result;
     }
 
-    /**
-     * Checks if a menu exists
-     * @param menuName the menu name to check
-     * @return true if menu exists, false otherwise
-     */
+    
     public boolean hasMenu(String menuName) {
         if (menuName == null) {
             return false;
@@ -798,29 +776,18 @@ public class FormMenuUtil {
         return formMenus.containsKey(menuName.toLowerCase());
     }
     
-    /**
-     * Opens a menu for a player
-     * @param player the player
-     * @param menuName the menu name
-     */
+    
     public void openMenu(FormPlayer player, String menuName) {
         openForm(player, menuName, new String[0]);
     }
     
-    /**
-     * Registers a custom action handler
-     * @param handler the action handler to register
-     */
+    
     public void registerActionHandler(ActionHandler handler) {
         actionRegistry.registerHandler(handler);
         logger.info("Registered custom action handler: " + handler.getActionType());
     }
     
-    /**
-     * Unregisters an action handler
-     * @param actionType the action type to unregister
-     * @return true if handler was removed, false if not found
-     */
+    
     public boolean unregisterActionHandler(String actionType) {
         boolean removed = actionRegistry.unregisterHandler(actionType);
         if (removed) {
@@ -829,31 +796,23 @@ public class FormMenuUtil {
         return removed;
     }
     
-    /**
-     * Gets the action registry for advanced usage
-     * @return the action registry
-     */
+    
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
     }
     
-    /**
-     * Gets the action executor for advanced usage
-     * @return the action executor
-     */
+    
     public ActionExecutor getActionExecutor() {
         return actionExecutor;
     }
     
-    /**
-     * Shuts down the FormMenuUtil and cleans up resources
-     */
+    
     public void shutdown() {
         if (actionExecutor != null) {
             actionExecutor.shutdown();
         }
         
-        // Shutdown action handlers with ExecutorService instances
+        
         if (delayActionHandler != null) {
             delayActionHandler.shutdown();
         }
@@ -867,14 +826,12 @@ public class FormMenuUtil {
         logger.info("FormMenuUtil shutdown completed");
     }
     
-    /**
-     * Validates the loaded configuration
-     */
+    
     private void validateConfiguration() {
-        ConfigValidator validator = new ConfigValidator();
+        ConfigValidator validator = new ConfigValidator(messageData, actionRegistry);
         ConfigValidator.ValidationResult result = validator.validateConfiguration(formMenus);
         
-        // Log errors
+        
         if (result.hasErrors()) {
             logger.warn("Configuration validation found " + result.getErrors().size() + " errors:");
             for (String error : result.getErrors()) {
@@ -882,7 +839,7 @@ public class FormMenuUtil {
             }
         }
         
-        // Log warnings
+        
         if (result.hasWarnings()) {
             logger.info("Configuration validation found " + result.getWarnings().size() + " warnings:");
             for (String warning : result.getWarnings()) {
@@ -901,14 +858,12 @@ public class FormMenuUtil {
         return formMenus;
     }
     
-    /**
-     * Gets the effective text for a conditional button based on conditions
-     */
+    
     private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionContext context, Map<String, String> placeholders, MessageData messageData) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
-            // Check conditional properties for text modifications
+            
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
@@ -920,23 +875,21 @@ public class FormMenuUtil {
                 }
             }
             
-            // Get effective text using the matched condition
+            
             String effectiveText = conditionalButton.getEffectiveText(matchedCondition);
             return replacePlaceholders(effectiveText, placeholders, player, messageData);
         }
         
-        // Use default text for regular buttons
+        
         return replacePlaceholders(button.getText(), placeholders, player, messageData);
     }
     
-    /**
-     * Gets the effective image for a conditional button based on conditions
-     */
+    
     private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionContext context) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
-            // Check conditional properties for image modifications
+            
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
@@ -948,22 +901,73 @@ public class FormMenuUtil {
                 }
             }
             
-            // Get effective image using the matched condition
+            
             return conditionalButton.getEffectiveImage(matchedCondition);
         }
         
-        // Use default image for regular buttons
+        
         return button.getImage();
     }
     
-    /**
-     * Gets the effective onClick action for a conditional button based on conditions
-     */
-    private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionContext context) {
-        if (button instanceof ConditionalButton) {
+    
+    private ActionDefinition convertOnClickToActionDefinition(String onClick) {
+        if (onClick == null || onClick.trim().isEmpty()) {
+            return null;
+        }
+        
+        ActionDefinition actionDef = new ActionDefinition();
+        
+        
+        if (onClick.startsWith("[") && onClick.endsWith("]")) {
+            
+            String actionsString = onClick.substring(1, onClick.length() - 1);
+            String[] actionStrings = actionsString.split(",");
+            
+            for (String actionString : actionStrings) {
+                String trimmed = actionString.trim();
+                if (!trimmed.isEmpty()) {
+                    parseAndAddAction(actionDef, trimmed);
+                }
+            }
+        } else {
+            
+            parseAndAddAction(actionDef, onClick);
+        }
+        
+        return actionDef;
+    }
+    
+    
+    private void parseAndAddAction(ActionDefinition actionDef, String actionString) {
+        String trimmed = actionString.trim();
+        
+        
+        if (trimmed.contains("{") && trimmed.contains("}")) {
+            
+            int braceIndex = trimmed.indexOf('{');
+            if (braceIndex > 0) {
+                String actionType = trimmed.substring(0, braceIndex).trim();
+                
+                actionDef.addAction(actionType, trimmed);
+                return;
+            }
+        }
+        
+        
+        if (trimmed.contains(":")) {
+            
+            throw new IllegalArgumentException("Legacy colon-separated format is no longer supported. Use curly-brace format instead: action { ... }");
+        }
+        
+        
+        throw new IllegalArgumentException("Invalid action format. Actions must use curly-brace format: action { ... }");
+    }
+    
+     private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionContext context) {
+         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
-            // Check conditional properties for onClick modifications
+            
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
@@ -975,11 +979,11 @@ public class FormMenuUtil {
                 }
             }
             
-            // Get effective onClick using the matched condition
+            
             return conditionalButton.getEffectiveOnClick(matchedCondition);
         }
         
-        // Use default onClick for regular buttons
+        
         return button.getOnClick();
     }
 }

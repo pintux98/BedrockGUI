@@ -17,19 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-/**
- * Handles random action execution from a list of possible actions.
- * Supports weighted random selection for more control over probabilities.
- * 
- * Usage: random:command:give {player} diamond|command:give {player} emerald|message:You got lucky!
- * Usage: random:sound:ui.button.click|sound:entity.experience_orb.pickup|sound:block.note_block.harp
- * Usage: random:economy:add:100|economy:add:200|economy:add:500
- * Usage with weights: random:message:Rare!:0.1|message:Common!:0.9
- * 
- * Format: random:action1|action2|action3|...
- * Each action can be: action_type:action_data or action_type:action_data:weight
- * Weights are optional and default to 1.0 if not specified
- */
+
 public class RandomActionHandler extends BaseActionHandler {
     private final ActionExecutor actionExecutor;
     private final Random random;
@@ -44,9 +32,7 @@ public class RandomActionHandler extends BaseActionHandler {
         this.random = new Random();
     }
 
-    /**
-     * Shuts down the executor service to prevent resource leaks
-     */
+    
     public void shutdown() {
         if (executorService != null && !executorService.isShutdown()) {
             executorService.shutdown();
@@ -87,10 +73,10 @@ public class RandomActionHandler extends BaseActionHandler {
         }
         
         try {
-            // Process placeholders in the action data
+            
             String processedData = processPlaceholders(actionData.trim(), context, player);
             
-            // Split by pipe character to get individual actions
+            
             String[] actionOptions = processedData.split("\\|");
             
             if (actionOptions.length == 0) {
@@ -98,7 +84,7 @@ public class RandomActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
             
-            // Parse actions with weights
+            
             List<WeightedAction> weightedActions = new ArrayList<>();
             for (String action : actionOptions) {
                 String trimmedAction = action.trim();
@@ -115,14 +101,14 @@ public class RandomActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
             
-            // Select a weighted random action
+            
             String selectedAction = selectWeightedRandom(weightedActions);
             
             logger.info("Selected random action for player " + player.getName() + ": " + selectedAction + " (1/" + weightedActions.size() + ")");
             
-            // Execute the selected action asynchronously to avoid blocking
+            
             CompletableFuture<ActionResult> future = CompletableFuture.supplyAsync(() -> {
-                // Parse and execute the selected action
+                
                 ActionExecutor.Action parsedAction = actionExecutor.parseAction(selectedAction);
                 if (parsedAction == null) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
@@ -131,7 +117,7 @@ public class RandomActionHandler extends BaseActionHandler {
                     return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
                 }
                 
-                return actionExecutor.executeAction(player, parsedAction.getType(), parsedAction.getValue(), context);
+                return actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
             }, executorService);
             
             try {
@@ -161,18 +147,18 @@ public class RandomActionHandler extends BaseActionHandler {
             return false;
         }
         
-        // Split by pipe character to get individual actions
+        
         String[] actionOptions = actionValue.trim().split("\\|");
         
         if (actionOptions.length == 0) {
             return false;
         }
         
-        // Check that at least one action is valid
+        
         for (String action : actionOptions) {
             String trimmedAction = action.trim();
             if (!trimmedAction.isEmpty() && trimmedAction.contains(":")) {
-                return true; // At least one action looks valid
+                return true; 
             }
         }
         
@@ -203,15 +189,15 @@ public class RandomActionHandler extends BaseActionHandler {
         
         String trimmed = actionString.trim();
         
-        // Check if action has weight (format: action_type:action_data:weight)
+        
         String[] parts = trimmed.split(":");
         if (parts.length >= 3) {
-            // Try to parse the last part as weight
+            
             String lastPart = parts[parts.length - 1];
             try {
                 double weight = Double.parseDouble(lastPart);
                 if (weight > 0) {
-                    // Reconstruct action without weight
+                    
                     StringBuilder actionBuilder = new StringBuilder();
                     for (int i = 0; i < parts.length - 1; i++) {
                         if (i > 0) actionBuilder.append(":");
@@ -220,25 +206,25 @@ public class RandomActionHandler extends BaseActionHandler {
                     return new WeightedAction(actionBuilder.toString(), weight);
                 }
             } catch (NumberFormatException e) {
-                // Last part is not a weight, treat as normal action
+                
             }
         }
         
-        // No weight specified, use default weight of 1.0
+        
         return new WeightedAction(trimmed, 1.0);
     }
     
     private String selectWeightedRandom(List<WeightedAction> weightedActions) {
-        // Calculate total weight
+        
         double totalWeight = 0.0;
         for (WeightedAction action : weightedActions) {
             totalWeight += action.getWeight();
         }
         
-        // Generate random value between 0 and totalWeight
+        
         double randomValue = random.nextDouble() * totalWeight;
         
-        // Select action based on weight
+        
         double currentWeight = 0.0;
         for (WeightedAction action : weightedActions) {
             currentWeight += action.getWeight();
@@ -247,7 +233,7 @@ public class RandomActionHandler extends BaseActionHandler {
             }
         }
         
-        // Fallback to last action (should not happen)
+        
         return weightedActions.get(weightedActions.size() - 1).getAction();
     }
 }

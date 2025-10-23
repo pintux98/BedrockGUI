@@ -16,20 +16,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-/**
- * BedrockGUIApi - A robust, developer-friendly API for creating, managing, and sending
- * complex Bedrock forms with enhanced flexibility and advanced features.
- * 
- * This API provides:
- * - Fluent builder pattern for form creation
- * - Dynamic form modification and validation
- * - Advanced conditional logic and templating
- * - Comprehensive action system integration
- * - Platform abstraction for cross-server compatibility
- * - Asynchronous form handling
- * - Form state management and caching
- * - Rich component library with custom extensions
- */
+
 public class BedrockGUIApi {
     
     private static final Logger logger = Logger.getLogger(BedrockGUIApi.class);
@@ -43,13 +30,13 @@ public class BedrockGUIApi {
     private final PlatformTitleManager platformTitleManager;
     private final DataProvider dataProvider;
     
-    // Form cache for dynamic forms
+    
     private final Map<String, DynamicForm> dynamicForms = new HashMap<>();
     
-    // Form templates for reusable form structures
+    
     private final Map<String, FormTemplate> formTemplates = new HashMap<>();
     
-    // Form validation rules
+    
     private final Map<String, List<FormValidator>> formValidators = new HashMap<>();
     
     public BedrockGUIApi(FormConfig config, MessageData messageData,
@@ -73,9 +60,7 @@ public class BedrockGUIApi {
         logger.info("BedrockGUIApi initialized with enhanced features");
     }
     
-    /**
-     * Gets the singleton instance of BedrockGUIApi
-     */
+    
     public static BedrockGUIApi getInstance() {
         if (instance == null) {
             throw new IllegalStateException("BedrockGUIApi has not been initialized yet");
@@ -83,48 +68,48 @@ public class BedrockGUIApi {
         return instance;
     }
     
-    // ==================== FORM BUILDERS ====================
     
-    /**
-     * Creates a new simple form builder
-     */
+    public void reloadConfiguration() {
+        logger.info("Reloading BedrockGUI configuration...");
+        
+        if (formMenuUtil != null) {
+            formMenuUtil.reloadFormMenus();
+            logger.info("Configuration reloaded successfully");
+        } else {
+            logger.warn("FormMenuUtil is null, cannot reload configuration");
+        }
+    }
+    
+    
+    
+    
     public SimpleFormBuilder createSimpleForm(String title) {
         return new SimpleFormBuilder(title);
     }
     
-    /**
-     * Creates a new modal form builder
-     */
+    
     public ModalFormBuilder createModalForm(String title) {
         return new ModalFormBuilder(title);
     }
     
-    /**
-     * Creates a new modal form builder with content
-     */
+    
     public ModalFormBuilder createModalForm(String title, String content) {
         ModalFormBuilder builder = new ModalFormBuilder(title);
         builder.content(content);
         return builder;
     }
     
-    /**
-     * Creates a new custom form builder
-     */
+    
     public CustomFormBuilder createCustomForm(String title) {
         return new CustomFormBuilder(title);
     }
     
-    /**
-     * Creates a new dynamic form builder
-     */
+    
     public DynamicFormBuilder createDynamicForm(String title) {
         return new DynamicFormBuilder(title);
     }
     
-    /**
-     * Creates a form component based on type
-     */
+    
     public FormComponentBuilder createComponent(String type, String text, String defaultValue) {
         switch (type.toLowerCase()) {
             case "input":
@@ -134,9 +119,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Creates a form component based on type
-     */
+    
     public FormComponentBuilder createComponent(String type, String text, boolean defaultValue) {
         switch (type.toLowerCase()) {
             case "toggle":
@@ -146,9 +129,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Creates a form component based on type
-     */
+    
     public FormComponentBuilder createComponent(String type, String text, List<String> options) {
         switch (type.toLowerCase()) {
             case "dropdown":
@@ -158,9 +139,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Creates a form from a template
-     */
+    
     public FormBuilder createFromTemplate(String templateName, Map<String, Object> parameters) {
         FormTemplate template = formTemplates.get(templateName);
         if (template == null) {
@@ -169,56 +148,46 @@ public class BedrockGUIApi {
         return template.createForm(parameters);
     }
     
-    // ==================== FORM MANAGEMENT ====================
     
-    /**
-     * Registers a dynamic form that can be modified at runtime
-     */
+    
+    
     public void registerDynamicForm(String formId, DynamicForm form) {
         dynamicForms.put(formId, form);
         logger.info("Registered dynamic form: " + formId);
     }
     
-    /**
-     * Gets a dynamic form by ID
-     */
+    
     public DynamicForm getDynamicForm(String formId) {
         return dynamicForms.get(formId);
     }
     
-    /**
-     * Registers a form template for reuse
-     */
+    
     public void registerTemplate(String templateName, FormTemplate template) {
         formTemplates.put(templateName, template);
         logger.info("Registered form template: " + templateName);
     }
     
-    /**
-     * Opens a form for a player with enhanced error handling
-     */
+    
     public CompletableFuture<FormResult> openForm(FormPlayer player, Form form) {
         return openForm(player, form, new HashMap<>());
     }
     
-    /**
-     * Opens a form for a player with context and validation
-     */
+    
     public CompletableFuture<FormResult> openForm(FormPlayer player, Form form, Map<String, Object> context) {
         CompletableFuture<FormResult> future = new CompletableFuture<>();
         
         try {
-            // Validate player can receive forms
+            
             if (!canReceiveForms(player)) {
                 future.complete(FormResult.failure("Player cannot receive forms"));
                 return future;
             }
             
-            // Send form with enhanced error handling and retry logic
+            
             boolean sent = ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, form),
-                "§eForm could not be displayed. Please try using commands or contact an administrator."
+                "Â§eForm could not be displayed. Please try using commands or contact an administrator."
             );
             
             if (sent) {
@@ -235,25 +204,19 @@ public class BedrockGUIApi {
         return future;
     }
     
-    /**
-     * Opens a menu form by name
-     */
+    
     public void openMenu(FormPlayer player, String menuName, String... args) {
         formMenuUtil.openForm(player, menuName, args);
     }
     
-    // ==================== VALIDATION SYSTEM ====================
     
-    /**
-     * Adds a validator for a specific form type
-     */
+    
+    
     public void addFormValidator(String formType, FormValidator validator) {
         formValidators.computeIfAbsent(formType, k -> new ArrayList<>()).add(validator);
     }
     
-    /**
-     * Validates form data
-     */
+    
     public ValidationResult validateForm(String formType, Map<String, Object> formData, FormPlayer player) {
         List<FormValidator> validators = formValidators.get(formType);
         if (validators == null || validators.isEmpty()) {
@@ -270,76 +233,58 @@ public class BedrockGUIApi {
         return ValidationResult.success();
     }
     
-    // ==================== ACTION SYSTEM INTEGRATION ====================
     
-    /**
-     * Registers a custom action handler
-     */
+    
+    
     public void registerActionHandler(ActionHandler handler) {
         formMenuUtil.registerActionHandler(handler);
     }
     
-    /**
-     * Executes an action with context
-     */
-    public ActionResult executeAction(FormPlayer player, String actionType, String actionValue, ActionContext context) {
-        return actionExecutor.executeAction(player, actionType, actionValue, context);
+    
+    
+    
+    public ActionResult executeAction(FormPlayer player, ActionDefinition action, ActionContext context) {
+        return actionExecutor.executeAction(player, action, context);
     }
     
-    /**
-     * Executes multiple actions in sequence
-     */
+    
     public List<ActionResult> executeActions(FormPlayer player, List<ActionExecutor.Action> actions, ActionContext context) {
         return actionExecutor.executeActions(player, actions, context);
     }
+
     
-    // ==================== UTILITY METHODS ====================
     
-    /**
-     * Checks if a player can receive forms
-     */
+    
     public boolean canReceiveForms(FormPlayer player) {
         return formSender.isBedrockPlayer(player.getUniqueId());
     }
     
-    /**
-     * Checks if a menu exists
-     */
+    
     public boolean hasMenu(String menuName) {
         return formMenuUtil.hasMenu(menuName);
     }
     
-    /**
-     * Gets all available menu names
-     */
+    
     public Set<String> getMenuNames() {
         return formMenuUtil.getFormMenus().keySet();
     }
     
-    /**
-     * Gets the FormMenuUtil instance
-     */
+    
     public FormMenuUtil getFormMenuUtil() {
         return formMenuUtil;
     }
 
-    /**
-     * Gets the message data instance
-     */
+    
     public MessageData getMessageData() {
         return messageData;
     }
     
-    /**
-     * Gets the data provider instance
-     */
+    
     public DataProvider getDataProvider() {
         return dataProvider;
     }
     
-    /**
-     * Shuts down the API and cleans up resources
-     */
+    
     public void shutdown() {
         formMenuUtil.shutdown();
         dynamicForms.clear();
@@ -348,11 +293,9 @@ public class BedrockGUIApi {
         logger.info("BedrockGUIApi shutdown completed");
     }
     
-    // ==================== FORM BUILDERS ====================
     
-    /**
-     * Base form builder with common functionality
-     */
+    
+    
     public abstract class FormBuilder {
         protected String title;
         protected String content;
@@ -428,12 +371,10 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Simple form builder
-     */
+    
     public class SimpleFormBuilder extends FormBuilder {
         private List<FormButtonBuilder> buttons = new ArrayList<>();
-        private FormPlayer currentPlayer; // Store the player for button handlers
+        private FormPlayer currentPlayer; 
         
         public SimpleFormBuilder(String title) {
             super(title);
@@ -495,16 +436,16 @@ public class BedrockGUIApi {
         
         @Override
         public CompletableFuture<FormResult> send(FormPlayer player) {
-            this.currentPlayer = player; // Capture the player for button handlers
+            this.currentPlayer = player; 
             
-            // Update the validResultHandler to use the captured player from send method
+            
             List<Consumer<FormPlayer>> clickHandlers = new ArrayList<>();
             for (FormButtonBuilder buttonBuilder : buttons) {
                 FormButtonData buttonData = buttonBuilder.build();
                 clickHandlers.add(buttonData.onClick);
             }
             
-            // Re-create the form with proper player context
+            
             SimpleForm.Builder builder = SimpleForm.builder();
             builder.title(title);
             if (content != null) {
@@ -525,7 +466,7 @@ public class BedrockGUIApi {
                 if (buttonId >= 0 && buttonId < clickHandlers.size()) {
                     Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
                     if (handler != null) {
-                        handler.accept(player); // Use the player from send method
+                        handler.accept(player); 
                     }
                 }
             });
@@ -534,9 +475,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Modal form builder
-     */
+    
     public class ModalFormBuilder extends FormBuilder {
         private String button1Text = "Yes";
         private String button2Text = "No";
@@ -584,9 +523,9 @@ public class BedrockGUIApi {
             
             builder.validResultHandler((form, response) -> {
                 if (response.clickedButtonId() == 0 && onButton1 != null) {
-                    // onButton1.accept(player); // Need FormPlayer context
+                    
                 } else if (response.clickedButtonId() == 1 && onButton2 != null) {
-                    // onButton2.accept(player); // Need FormPlayer context
+                    
                 }
             });
             
@@ -594,9 +533,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Custom form builder
-     */
+    
     public class CustomFormBuilder extends FormBuilder {
         private List<FormComponentBuilder> components = new ArrayList<>();
         private Consumer<Map<String, Object>> onSubmit;
@@ -661,11 +598,9 @@ public class BedrockGUIApi {
         }
     }
     
-    // ==================== SUPPORTING CLASSES ====================
     
-    /**
-     * Form button builder
-     */
+    
+    
     public class FormButtonBuilder {
         private String text;
         private String image;
@@ -696,9 +631,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Form button data
-     */
+    
     public static class FormButtonData {
         public final String text;
         public final String image;
@@ -713,9 +646,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Base form component builder
-     */
+    
     public abstract class FormComponentBuilder {
         protected String name;
         protected String text;
@@ -738,9 +669,7 @@ public class BedrockGUIApi {
         public abstract Object extractValue(org.geysermc.cumulus.response.CustomFormResponse response, int index);
     }
     
-    /**
-     * Input component builder
-     */
+    
     public class InputComponentBuilder extends FormComponentBuilder {
         private String placeholder;
         private String defaultValue;
@@ -762,9 +691,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Slider component builder
-     */
+    
     public class SliderComponentBuilder extends FormComponentBuilder {
         private int min, max, step, defaultValue;
         
@@ -787,9 +714,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Dropdown component builder
-     */
+    
     public class DropdownComponentBuilder extends FormComponentBuilder {
         private List<String> options;
         private int defaultIndex;
@@ -812,9 +737,7 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Toggle component builder
-     */
+    
     public class ToggleComponentBuilder extends FormComponentBuilder {
         private boolean defaultValue;
         
@@ -834,11 +757,9 @@ public class BedrockGUIApi {
         }
     }
     
-    // ==================== INTERFACES AND ABSTRACTIONS ====================
     
-    /**
-     * Dynamic form builder for creating forms with conditional components
-     */
+    
+    
     public class DynamicFormBuilder extends FormBuilder {
         private Map<String, Predicate<Map<String, Object>>> conditions = new HashMap<>();
         private Map<String, List<FormComponentBuilder>> conditionalComponents = new HashMap<>();
@@ -865,15 +786,15 @@ public class BedrockGUIApi {
         
         @Override
         public Form build() {
-            // Create a custom form with components based on conditions
+            
             CustomFormBuilder builder = createCustomForm(title);
             
-            // Add components that match conditions
+            
             for (Map.Entry<String, List<FormComponentBuilder>> entry : conditionalComponents.entrySet()) {
                 String conditionName = entry.getKey();
                 List<FormComponentBuilder> components = entry.getValue();
                 
-                // Always condition or condition is met
+                
                 if ("always".equals(conditionName) || 
                     (conditions.containsKey(conditionName) && conditions.get(conditionName).test(new HashMap<>()))) {
                     for (FormComponentBuilder component : components) {
@@ -895,7 +816,7 @@ public class BedrockGUIApi {
                 }
             }
             
-            // Set submit callback
+            
             if (onSubmitCallback != null) {
                 builder.onSubmit((player, results) -> {
                     onSubmitCallback.accept(player, results);
@@ -906,35 +827,27 @@ public class BedrockGUIApi {
         }
     }
     
-    /**
-     * Interface for dynamic forms that can be modified at runtime
-     */
+    
     public interface DynamicForm {
         Form generateForm(FormPlayer player, Map<String, Object> context);
         void updateForm(String property, Object value);
         boolean isValid();
     }
     
-    /**
-     * Interface for form templates
-     */
+    
     public interface FormTemplate {
         FormBuilder createForm(Map<String, Object> parameters);
         String getTemplateName();
         List<String> getRequiredParameters();
     }
     
-    /**
-     * Interface for form validation
-     */
+    
     public interface FormValidator {
         ValidationResult validate(Map<String, Object> formData, FormPlayer player);
         String getValidatorName();
     }
     
-    /**
-     * Form validation result
-     */
+    
     public static class ValidationResult {
         private final boolean valid;
         private final String message;
@@ -963,9 +876,7 @@ public class BedrockGUIApi {
         public List<String> getErrors() { return new ArrayList<>(errors); }
     }
     
-    /**
-     * Form operation result
-     */
+    
     public static class FormResult {
         private final boolean success;
         private final String message;

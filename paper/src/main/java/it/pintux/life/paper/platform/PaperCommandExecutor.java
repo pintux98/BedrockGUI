@@ -4,9 +4,7 @@ import it.pintux.life.common.platform.PlatformCommandExecutor;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-/**
- * Paper implementation of PlatformCommandExecutor using Bukkit API.
- */
+
 public class PaperCommandExecutor implements PlatformCommandExecutor {
     
     @Override

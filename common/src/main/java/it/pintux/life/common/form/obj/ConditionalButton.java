@@ -1,35 +1,68 @@
 package it.pintux.life.common.form.obj;
 
+import it.pintux.life.common.actions.ActionDefinition;
+import it.pintux.life.common.actions.ActionParser;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.StringJoiner;
 
-/**
- * Represents a button that can be conditionally shown or modified based on conditions.
- * Supports permission-based and placeholder-based conditions.
- */
+
 public class ConditionalButton extends FormButton {
     
-    // Condition for showing/hiding the button
+    
     private String showCondition;
     
-    // Alternative button properties when condition is not met
+    
     private String alternativeText;
     private String alternativeImage;
     private String alternativeOnClick;
     
-    // Conditional modifications
+    
     private Map<String, ConditionalProperty> conditionalProperties;
+    
+    
+    private int priority;
+    private String priorityCondition;
+    
+    
+    private ActionDefinition actionDefinition;
+    private ActionDefinition alternativeActionDefinition;
+    private Map<String, ActionDefinition> conditionalActions;
     
     public ConditionalButton(String text, String image, String onClick) {
         super(text, image, onClick);
         this.conditionalProperties = new HashMap<>();
+        this.conditionalActions = new HashMap<>();
+        this.priority = 0;
+        
+        this.actionDefinition = ActionParser.parse(onClick);
     }
     
     public ConditionalButton(String text, String image, String onClick, String showCondition) {
         super(text, image, onClick);
         this.showCondition = showCondition;
         this.conditionalProperties = new HashMap<>();
+        this.conditionalActions = new HashMap<>();
+        this.priority = 0;
+        
+        this.actionDefinition = ActionParser.parse(onClick);
+    }
+    
+    public ConditionalButton(String text, String image, ActionDefinition actionDefinition) {
+        super(text, image, actionDefinition);
+        this.conditionalProperties = new HashMap<>();
+        this.conditionalActions = new HashMap<>();
+        this.priority = 0;
+        this.actionDefinition = actionDefinition;
+    }
+    
+    public ConditionalButton(String text, String image, ActionDefinition actionDefinition, String showCondition, int priority) {
+        super(text, image, actionDefinition);
+        this.showCondition = showCondition;
+        this.conditionalProperties = new HashMap<>();
+        this.conditionalActions = new HashMap<>();
+        this.priority = priority;
+        this.actionDefinition = actionDefinition;
     }
     
     public String getShowCondition() {
@@ -72,24 +105,63 @@ public class ConditionalButton extends FormButton {
         conditionalProperties.put(condition, new ConditionalProperty(property, value));
     }
     
-    /**
-     * Checks if the button should be shown based on its show condition
-     * 
-     * Note: This method only checks if a condition exists, it doesn't evaluate it.
-     * The actual condition evaluation is done in FormMenuUtil using ConditionEvaluator.
-     */
+    
+    public int getPriority() {
+        return priority;
+    }
+    
+    public void setPriority(int priority) {
+        this.priority = priority;
+    }
+    
+    public String getPriorityCondition() {
+        return priorityCondition;
+    }
+    
+    public void setPriorityCondition(String priorityCondition) {
+        this.priorityCondition = priorityCondition;
+    }
+    
+    
+    public ActionDefinition getActionDefinition() {
+        return actionDefinition;
+    }
+    
+    public void setActionDefinition(ActionDefinition actionDefinition) {
+        this.actionDefinition = actionDefinition;
+    }
+    
+    public ActionDefinition getAlternativeActionDefinition() {
+        return alternativeActionDefinition;
+    }
+    
+    public void setAlternativeActionDefinition(ActionDefinition alternativeActionDefinition) {
+        this.alternativeActionDefinition = alternativeActionDefinition;
+    }
+    
+    public Map<String, ActionDefinition> getConditionalActions() {
+        return conditionalActions;
+    }
+    
+    public void addConditionalAction(String condition, ActionDefinition action) {
+        conditionalActions.put(condition, action);
+    }
+    
+    public void addConditionalAction(String condition, String actionString) {
+        ActionDefinition action = ActionParser.parse(actionString);
+        if (action != null) {
+            conditionalActions.put(condition, action);
+        }
+    }
+    
+    
     public boolean hasShowCondition() {
         return showCondition != null && !showCondition.trim().isEmpty();
     }
     
-    /**
-     * Gets the effective text based on conditions
-     * 
-     * @param condition The condition that was evaluated to true, or null if using alternative
-     * @return The effective text to display
-     */
+    
     public String getEffectiveText(String condition) {
-        // If a specific condition was met
+        
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(condition);
             if (property != null && "text".equals(property.getProperty())) {
@@ -97,23 +169,18 @@ public class ConditionalButton extends FormButton {
             }
         }
         
-        // If using alternative text
+        
         if (alternativeText != null) {
             return alternativeText;
         }
         
-        // Default to base text
+        
         return getText();
     }
     
-    /**
-     * Gets the effective image based on conditions
-     * 
-     * @param condition The condition that was evaluated to true, or null if using alternative
-     * @return The effective image to display
-     */
+    
     public String getEffectiveImage(String condition) {
-        // If a specific condition was met
+        
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(condition);
             if (property != null && "image".equals(property.getProperty())) {
@@ -121,23 +188,18 @@ public class ConditionalButton extends FormButton {
             }
         }
         
-        // If using alternative image
+        
         if (alternativeImage != null) {
             return alternativeImage;
         }
         
-        // Default to base image
+        
         return getImage();
     }
     
-    /**
-     * Gets the effective onClick action based on conditions
-     * 
-     * @param condition The condition that was evaluated to true, or null if using alternative
-     * @return The effective onClick action to execute
-     */
+    
     public String getEffectiveOnClick(String condition) {
-        // If a specific condition was met
+        
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(condition);
             if (property != null && "onClick".equals(property.getProperty())) {
@@ -145,18 +207,58 @@ public class ConditionalButton extends FormButton {
             }
         }
         
-        // If using alternative onClick
+        
         if (alternativeOnClick != null) {
             return alternativeOnClick;
         }
         
-        // Default to base onClick
+        
         return getOnClick();
     }
     
-    /**
-     * Represents a conditional property modification
-     */
+    
+    public ActionDefinition getEffectiveActionDefinition(String condition) {
+        
+        if (condition != null) {
+            ActionDefinition conditionalAction = conditionalActions.get(condition);
+            if (conditionalAction != null) {
+                return conditionalAction;
+            }
+            
+            
+        }
+        
+        
+        if (alternativeActionDefinition != null) {
+            return alternativeActionDefinition;
+        }
+        
+        
+        
+        
+        return actionDefinition;
+    }
+    
+    
+    public boolean hasPriority() {
+        return priority != 0 || (priorityCondition != null && !priorityCondition.trim().isEmpty());
+    }
+    
+    
+    public int getEffectivePriority() {
+        
+        
+        return priority;
+    }
+    
+    
+    @Override
+    public void setOnClick(String onClick) {
+        super.setOnClick(onClick);
+        this.actionDefinition = ActionParser.parse(onClick);
+    }
+    
+    
     public static class ConditionalProperty {
         private final String property;
         private final String value;
@@ -191,6 +293,11 @@ public class ConditionalButton extends FormButton {
                 .add("alternativeImage='" + alternativeImage + "'")
                 .add("alternativeOnClick='" + alternativeOnClick + "'")
                 .add("conditionalProperties=" + conditionalProperties)
+                .add("priority=" + priority)
+                .add("priorityCondition='" + priorityCondition + "'")
+                .add("actionDefinition=" + actionDefinition)
+                .add("alternativeActionDefinition=" + alternativeActionDefinition)
+                .add("conditionalActions=" + conditionalActions)
                 .toString();
     }
 }

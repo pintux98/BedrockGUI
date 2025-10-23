@@ -3,9 +3,7 @@ package it.pintux.life.common.actions;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Provides contextual information for action execution
- */
+
 public class ActionContext {
     
     private final Map<String, String> placeholders;

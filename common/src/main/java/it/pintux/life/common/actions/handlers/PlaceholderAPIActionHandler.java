@@ -5,58 +5,26 @@ import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.platform.PlatformPluginManager;
 import it.pintux.life.common.platform.PlatformPlayerManager;
-import it.pintux.life.common.utils.PlaceholderProcessor;
+import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ErrorHandlingUtil;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-/**
- * PlaceholderAPIActionHandler integrates with PlaceholderAPI to provide
- * dynamic placeholder management functionality.
- * 
- * Supported operations:
- * - set_placeholder: Set a custom placeholder value
- * - remove_placeholder: Remove a custom placeholder
- * - get_placeholder: Get placeholder value
- * - parse_placeholder: Parse placeholders in text
- * - register_expansion: Register a custom expansion
- * - unregister_expansion: Unregister an expansion
- * - reload_expansions: Reload all expansions
- * - list_expansions: List all registered expansions
- * 
- * Usage examples:
- * - action: placeholderapi
- *   operation: set_placeholder
- *   placeholder: "custom_points"
- *   value: "100"
- *   player: "%player%"
- * 
- * - action: placeholderapi
- *   operation: parse_placeholder
- *   text: "Hello %player_name%, you have %vault_eco_balance% coins!"
- *   player: "%player%"
- *   message: true
- * 
- * - action: placeholderapi
- *   operation: get_placeholder
- *   placeholder: "%player_health%"
- *   player: "%player%"
- */
+
 public class PlaceholderAPIActionHandler extends BaseActionHandler {
     private final PlatformCommandExecutor commandExecutor;
-    private final PlaceholderProcessor placeholderProcessor;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
     
     private boolean placeholderAPIEnabled = false;
     private Object placeholderAPI;
     
-    public PlaceholderAPIActionHandler(PlatformCommandExecutor commandExecutor, PlaceholderProcessor placeholderProcessor, 
+    public PlaceholderAPIActionHandler(PlatformCommandExecutor commandExecutor, 
                                      PlatformPluginManager pluginManager, PlatformPlayerManager playerManager) {
         this.commandExecutor = commandExecutor;
-        this.placeholderProcessor = placeholderProcessor;
         this.pluginManager = pluginManager;
         this.playerManager = playerManager;
         initializePlaceholderAPI();
@@ -69,7 +37,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
                 return;
             }
             
-            // Try to get PlaceholderAPI class
+            
             if (pluginManager.hasClass("me.clip.placeholderapi.PlaceholderAPI")) {
                 placeholderAPI = pluginManager.getClass("me.clip.placeholderapi.PlaceholderAPI");
                 placeholderAPIEnabled = true;
@@ -89,340 +57,364 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
     }
     
     @Override
-    public String getDescription() {
-        return "Handles PlaceholderAPI integration for parsing and setting placeholders";
-    }
-
-    @Override
-    public boolean isValidAction(String action) {
-        return action != null && (action.equals("parse") || action.equals("set"));
-    }
-
-    public String[] getUsageExamples() {
-        return new String[]{
-            "placeholderapi_parse %player_name%",
-            "placeholderapi_set player_health 20",
-            "placeholderapi_parse %player_world%"
-        };
-    }
-
-    @Override
-    public ActionResult execute(FormPlayer player, String actionValue, it.pintux.life.common.actions.ActionContext context) {
-        ActionResult validationResult = validateBasicParameters(player, actionValue);
+    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+        
+        ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
         
-        // Parse parameters from actionValue
-        Map<String, Object> parameters = parseActionValue(actionValue);
         try {
-            String operation = (String) parameters.get("operation");
-            if (operation == null) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Operation parameter is required"), player);
+            List<String> operations = parseActionData(actionData, context, player);
+            
+            if (operations.isEmpty()) {
+                Map<String, Object> errorReplacements = createReplacements("error", "No valid PlaceholderAPI operations found");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
             
-            operation = operation.toLowerCase();
             
-            switch (operation) {
-                case "set_placeholder":
-                    return handleSetPlaceholder(parameters, player);
-                case "remove_placeholder":
-                    return handleRemovePlaceholder(parameters, player);
-                case "get_placeholder":
-                    return handleGetPlaceholder(parameters, player);
-                case "parse_placeholder":
-                    return handleParsePlaceholder(parameters, player);
-                case "register_expansion":
-                    return handleRegisterExpansion(parameters, player);
-                case "unregister_expansion":
-                    return handleUnregisterExpansion(parameters, player);
-                case "reload_expansions":
-                    return handleReloadExpansions(parameters, player);
-                case "list_expansions":
-                    return handleListExpansions(parameters, player);
-                default:
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Unknown operation: " + operation), player);
+            if (operations.size() == 1) {
+                return executeSinglePlaceholderOperation(operations.get(0), player);
             }
+            
+            
+            return executeMultiplePlaceholderOperations(operations, player);
+            
         } catch (Exception e) {
-            logger.error("Error executing placeholderapi action: " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to execute placeholderapi action: " + e.getMessage()), player);
+            logError("PlaceholderAPI operation", actionData, player, e);
+            Map<String, Object> errorReplacements = createReplacements("error", "Error executing PlaceholderAPI operation: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+    
+    private ActionResult executeSinglePlaceholderOperation(String operationData, FormPlayer player) {
+        try {
+            logger.info("Executing PlaceholderAPI operation: " + operationData + " for player " + player.getName());
+            
+            Map<String, Object> parameters = parseOperationData(operationData);
+            String operation = (String) parameters.get("operation");
+            
+            if (operation == null) {
+                Map<String, Object> errorReplacements = createReplacements("error", "Operation parameter is required");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+            }
+            
+            
+            boolean success = executeWithErrorHandling(
+                () -> {
+                    ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                    return result != null && result.isSuccess();
+                },
+                "PlaceholderAPI operation: " + operation,
+                player
+            );
+            
+            if (success) {
+                logSuccess("PlaceholderAPI operation", operation, player);
+                ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                return result;
+            } else {
+                Map<String, Object> errorReplacements = createReplacements("error", "Failed to execute operation: " + operation);
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+            }
+            
+        } catch (Exception e) {
+            logError("PlaceholderAPI operation", operationData, player, e);
+            Map<String, Object> errorReplacements = createReplacements("error", "Error executing operation: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+    
+    private ActionResult executeMultiplePlaceholderOperations(List<String> operations, FormPlayer player) {
+        int successCount = 0;
+        int totalCount = operations.size();
+        StringBuilder results = new StringBuilder();
+        
+        for (int i = 0; i < operations.size(); i++) {
+            String operationData = operations.get(i);
+            
+            try {
+                logger.info("Executing PlaceholderAPI operation " + (i + 1) + "/" + totalCount + ": " + operationData + " for player " + player.getName());
+                
+                Map<String, Object> parameters = parseOperationData(operationData);
+                String operation = (String) parameters.get("operation");
+                
+                if (operation == null) {
+                    results.append("âś— Operation ").append(i + 1).append(": ").append(operationData).append(" - Missing operation parameter");
+                    continue;
+                }
+                
+                boolean success = executeWithErrorHandling(
+                    () -> {
+                        ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                        return result != null && result.isSuccess();
+                    },
+                    "PlaceholderAPI operation: " + operation,
+                    player
+                );
+                
+                if (success) {
+                    successCount++;
+                    results.append("âś“ Operation ").append(i + 1).append(": ").append(operation).append(" - Success");
+                    logSuccess("PlaceholderAPI operation", operation, player);
+                } else {
+                    results.append("âś— Operation ").append(i + 1).append(": ").append(operation).append(" - Failed");
+                }
+                
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                    
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                results.append("âś— Operation ").append(i + 1).append(": ").append(operationData).append(" - Error: ").append(e.getMessage());
+                logError("PlaceholderAPI operation", operationData, player, e);
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                }
+            }
+        }
+        
+        String finalMessage = String.format("Executed %d/%d PlaceholderAPI operations successfully:\n%s", 
+            successCount, totalCount, results.toString());
+        
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", finalMessage);
+        replacements.put("success_count", successCount);
+        replacements.put("total_count", totalCount);
+        
+        if (successCount == totalCount) {
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } else if (successCount > 0) {
+            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+        } else {
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+        }
+    }
+    
+    private ActionResult executeOperation(String operation, Map<String, Object> parameters, FormPlayer player) {
+        switch (operation) {
+            case "set_placeholder":
+                return handleSetPlaceholder(parameters, player);
+            case "remove_placeholder":
+                return handleRemovePlaceholder(parameters, player);
+            case "get_placeholder":
+                return handleGetPlaceholder(parameters, player);
+            case "parse_placeholder":
+                return handleParsePlaceholder(parameters, player);
+            case "register_expansion":
+                return handleRegisterExpansion(parameters, player);
+            case "unregister_expansion":
+                return handleUnregisterExpansion(parameters, player);
+            case "reload_expansions":
+                return handleReloadExpansions(parameters, player);
+            case "list_expansions":
+                return handleListExpansions(parameters, player);
+            default:
+                Map<String, Object> errorReplacements = createReplacements("error", "Unknown operation: " + operation);
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
     }
     
     private ActionResult handleSetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
-        String placeholder = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("placeholder"), player
-        );
-        
-        String value = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("value"), player
-        );
-        
-        String targetPlayer = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("player", player.getName()), player
-        );
+        String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
+        String value = processPlaceholders((String) parameters.get("value"), null, player);
+        String targetPlayer = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
         
         if (placeholder == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Placeholder parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Placeholder parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
         if (value == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Value parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Value parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
-        
-        // Note: PlaceholderAPI doesn't have a direct "set placeholder" method
-        // This would typically require a custom expansion or external storage
-        // For now, we'll use a command-based approach
         
         String command = "papi set " + targetPlayer + " " + placeholder + " " + value;
         commandExecutor.executeAsConsole(command);
         
-        String message = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("success_message", "Placeholder set successfully"), player
-        );
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", "Set placeholder " + placeholder + " to " + value + " for " + targetPlayer);
+        replacements.put("placeholder", placeholder);
+        replacements.put("value", value);
+        replacements.put("target_player", targetPlayer);
         
-        if (parameters.containsKey("success_message")) {
-            playerManager.sendMessage(player, message.replace("{placeholder}", placeholder).replace("{value}", value));
-        }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Set placeholder " + placeholder + " to " + value + " for " + targetPlayer), player);
+        return createSuccessResult("ACTION_SUCCESS", replacements, player);
     }
     
     private ActionResult handleRemovePlaceholder(Map<String, Object> parameters, FormPlayer player) {
-        String placeholder = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("placeholder"), player
-        );
-        
-        String targetPlayer = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("player", player.getName()), player
-        );
+        String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
+        String targetPlayer = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
         
         if (placeholder == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Placeholder parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Placeholder parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
         String command = "papi remove " + targetPlayer + " " + placeholder;
         commandExecutor.executeAsConsole(command);
         
-        String message = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("success_message", "Placeholder removed successfully"), player
-        );
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", "Removed placeholder " + placeholder + " for " + targetPlayer);
+        replacements.put("placeholder", placeholder);
+        replacements.put("target_player", targetPlayer);
         
-        if (parameters.containsKey("success_message")) {
-            playerManager.sendMessage(player, message.replace("{placeholder}", placeholder));
-        }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Removed placeholder " + placeholder + " for " + targetPlayer), player);
+        return createSuccessResult("ACTION_SUCCESS", replacements, player);
     }
     
     private ActionResult handleGetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
-        String placeholder = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("placeholder"), player
-        );
-        
-        String targetPlayerName = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("player", player.getName()), player
-        );
+        String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
+        String targetPlayerName = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
         
         if (placeholder == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Placeholder parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Placeholder parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
-        if (placeholderAPIEnabled && placeholderAPI != null) {
-            try {
-                Object targetPlayer = playerManager.getPlayer(targetPlayerName);
-                if (targetPlayer == null) {
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Target player not found: " + targetPlayerName), player);
-                }
-                
-                String result = (String) placeholderAPI.getClass()
-                    .getMethod("setPlaceholders", Object.class, String.class)
-                    .invoke(null, targetPlayer, placeholder);
-                
-                String message = placeholderProcessor.processPlaceholders(
-                    (String) parameters.getOrDefault("message", "Placeholder value: " + result), player
-                );
-                
-                if (parameters.containsKey("message")) {
-                    playerManager.sendMessage(player, message.replace("{placeholder}", placeholder).replace("{value}", result));
-                }
-                
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Placeholder " + placeholder + " = " + result), player);
-            } catch (Exception e) {
-                logger.warn("Failed to get placeholder via PlaceholderAPI: " + e.getMessage());
+        try {
+            Object playerObj = playerManager.getPlayer(targetPlayerName);
+            if (playerObj == null) {
+                Map<String, Object> errorReplacements = createReplacements("error", "Target player not found: " + targetPlayerName);
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
-        }
-        
-        // Fallback to command with enhanced error handling
-        String command = "papi parse " + targetPlayerName + " " + placeholder;
-        boolean success = ErrorHandlingUtil.executeCommandWithFallback(
-            () -> commandExecutor.executeAsConsole(command),
-            "PlaceholderAPI parse command",
-            player
-        );
-        
-        if (success) {
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Get placeholder command executed"), player);
-        } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to execute placeholder command"), player);
+            
+            FormPlayer targetPlayer = playerManager.toFormPlayer(playerObj);
+            String value = processPlaceholders("%" + placeholder + "%", null, targetPlayer);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("value", value);
+            replacements.put("placeholder", placeholder);
+            replacements.put("target_player", targetPlayerName);
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to get placeholder value");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
     }
     
     private ActionResult handleParsePlaceholder(Map<String, Object> parameters, FormPlayer player) {
-        String text = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("text"), player
-        );
-        
-        String targetPlayerName = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("player", player.getName()), player
-        );
-        
-        boolean sendMessage = Boolean.parseBoolean(
-            parameters.getOrDefault("message", "false").toString()
-        );
+        String text = processPlaceholders((String) parameters.get("text"), null, player);
+        String targetPlayerName = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
         
         if (text == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Text parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Text parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
-        if (placeholderAPIEnabled && placeholderAPI != null) {
-            try {
-                Object targetPlayer = playerManager.getPlayer(targetPlayerName);
-                if (targetPlayer == null) {
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Target player not found: " + targetPlayerName), player);
-                }
-                
-                String parsedText = (String) placeholderAPI.getClass()
-                    .getMethod("setPlaceholders", Object.class, String.class)
-                    .invoke(null, targetPlayer, text);
-                
-                if (sendMessage) {
-                    playerManager.sendMessage(player, parsedText);
-                }
-                
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Parsed text: " + parsedText), player);
-            } catch (Exception e) {
-                logger.warn("Failed to parse placeholders via PlaceholderAPI: " + e.getMessage());
+        try {
+            Object playerObj = playerManager.getPlayer(targetPlayerName);
+            if (playerObj == null) {
+                Map<String, Object> errorReplacements = createReplacements("error", "Target player not found: " + targetPlayerName);
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
+            
+            FormPlayer targetPlayer = playerManager.toFormPlayer(playerObj);
+            String parsedText = processPlaceholders(text, null, targetPlayer);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("parsed_text", parsedText);
+            replacements.put("original_text", text);
+            replacements.put("target_player", targetPlayerName);
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to parse placeholders");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
-        
-        // Fallback - just process with our own placeholder processor
-        String parsedText = placeholderProcessor.processPlaceholders(text, player);
-        
-        if (sendMessage) {
-            playerManager.sendMessage(player, parsedText);
-        }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Parsed text: " + parsedText), player);
     }
     
     private ActionResult handleRegisterExpansion(Map<String, Object> parameters, FormPlayer player) {
-        String expansionName = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("expansion"), player
-        );
+        String expansionName = processPlaceholders((String) parameters.get("expansion"), null, player);
         
         if (expansionName == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Expansion parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Expansion parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
-        String command = "papi register " + expansionName;
-        commandExecutor.executeAsConsole(command);
-        
-        String message = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("success_message", "Expansion registered successfully"), player
-        );
-        
-        if (parameters.containsKey("success_message")) {
-            playerManager.sendMessage(player, message.replace("{expansion}", expansionName));
+        try {
+            String command = "papi register " + expansionName;
+            commandExecutor.executeAsConsole(command);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("expansion", expansionName);
+            replacements.put("message", "Registered expansion: " + expansionName);
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to register expansion");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Registered expansion: " + expansionName), player);
     }
     
     private ActionResult handleUnregisterExpansion(Map<String, Object> parameters, FormPlayer player) {
-        String expansionName = placeholderProcessor.processPlaceholders(
-            (String) parameters.get("expansion"), player
-        );
+        String expansionName = processPlaceholders((String) parameters.get("expansion"), null, player);
         
         if (expansionName == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Expansion parameter is required"), player);
+            Map<String, Object> errorReplacements = createReplacements("error", "Expansion parameter is required");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
         }
         
-        String command = "papi unregister " + expansionName;
-        commandExecutor.executeAsConsole(command);
-        
-        String message = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("success_message", "Expansion unregistered successfully"), player
-        );
-        
-        if (parameters.containsKey("success_message")) {
-            playerManager.sendMessage(player, message.replace("{expansion}", expansionName));
+        try {
+            String command = "papi unregister " + expansionName;
+            commandExecutor.executeAsConsole(command);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("expansion", expansionName);
+            replacements.put("message", "Unregistered expansion: " + expansionName);
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to unregister expansion");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Unregistered expansion: " + expansionName), player);
     }
     
     private ActionResult handleReloadExpansions(Map<String, Object> parameters, FormPlayer player) {
-        String command = "papi reload";
-        commandExecutor.executeAsConsole(command);
-        
-        String message = placeholderProcessor.processPlaceholders(
-            (String) parameters.getOrDefault("success_message", "Expansions reloaded successfully"), player
-        );
-        
-        if (parameters.containsKey("success_message")) {
-            playerManager.sendMessage(player, message);
+        try {
+            String command = "papi reload";
+            commandExecutor.executeAsConsole(command);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", "Reloaded PlaceholderAPI expansions");
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to reload expansions");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Reloaded PlaceholderAPI expansions"), player);
     }
     
     private ActionResult handleListExpansions(Map<String, Object> parameters, FormPlayer player) {
-        if (placeholderAPIEnabled && placeholderAPI != null) {
-            try {
-                // Get expansion manager
-                Object expansionManager = placeholderAPI.getClass()
-                    .getMethod("getExpansionManager")
-                    .invoke(null);
-                
-                if (expansionManager != null) {
-                    // Get registered expansions
-                    Object expansions = expansionManager.getClass()
-                        .getMethod("getRegisteredExpansions")
-                        .invoke(expansionManager);
-                    
-                    String expansionList = expansions.toString();
-                    
-                    String message = placeholderProcessor.processPlaceholders(
-                        (String) parameters.getOrDefault("message", "Registered expansions: " + expansionList), player
-                    );
-                    
-                    if (parameters.containsKey("message")) {
-                        playerManager.sendMessage(player, message.replace("{expansions}", expansionList));
-                    }
-                    
-                    return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Listed expansions: " + expansionList), player);
-                }
-            } catch (Exception e) {
-                logger.warn("Failed to list expansions via PlaceholderAPI: " + e.getMessage());
-            }
+        try {
+            String command = "papi list";
+            commandExecutor.executeAsConsole(command);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", "Listed PlaceholderAPI expansions in console");
+            
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } catch (Exception e) {
+            Map<String, Object> errorReplacements = createReplacements("error", "Failed to list expansions");
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
-        
-        // Fallback to command
-        String command = "papi list";
-        commandExecutor.executeAsConsole(command);
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "List expansions command executed"), player);
     }
     
-    // Add parseActionValue method
-    private Map<String, Object> parseActionValue(String actionValue) {
-        Map<String, Object> parameters = new java.util.HashMap<>();
-        if (actionValue == null || actionValue.trim().isEmpty()) {
+    private Map<String, Object> parseOperationData(String operationData) {
+        Map<String, Object> parameters = new HashMap<>();
+        if (operationData == null || operationData.trim().isEmpty()) {
             return parameters;
         }
         
-        // Simple parsing - expecting format like "operation:set_placeholder;placeholder:test;value:hello"
-        String[] pairs = actionValue.split(";");
+        
+        String[] pairs = operationData.split(";");
         for (String pair : pairs) {
             String[] keyValue = pair.split(":", 2);
             if (keyValue.length == 2) {
@@ -430,5 +422,56 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
             }
         }
         return parameters;
+    }
+    
+    @Override
+    public boolean isValidAction(String actionValue) {
+        if (actionValue == null || actionValue.trim().isEmpty()) {
+            return false;
+        }
+        
+        
+        List<String> operations = parseActionDataForValidation(actionValue);
+        
+        for (String operation : operations) {
+            if (!isValidOperation(operation)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private boolean isValidOperation(String operation) {
+        if (operation == null || operation.trim().isEmpty()) {
+            return false;
+        }
+        
+        
+        return operation.contains("operation:");
+    }
+    
+    @Override
+    public String getDescription() {
+        return "Handles PlaceholderAPI integration for parsing and setting placeholders. Supports multiple operations with sequential execution and enhanced error handling.";
+    }
+    
+    @Override
+    public String[] getUsageExamples() {
+        return new String[]{
+            
+            "operation:set_placeholder;placeholder:custom_points;value:100 - Set custom placeholder",
+            "operation:get_placeholder;placeholder:player_health - Get placeholder value",
+            "operation:parse_placeholder;text:Hello %player_name%! - Parse placeholders in text",
+            "operation:remove_placeholder;placeholder:temp_data - Remove placeholder",
+            "operation:reload_expansions - Reload all expansions",
+            "operation:list_expansions - List all expansions",
+            
+            
+            "[\"operation:set_placeholder;placeholder:points;value:100\", \"operation:set_placeholder;placeholder:level;value:5\"] - Set multiple placeholders",
+            "[\"operation:parse_placeholder;text:Welcome %player_name%\", \"operation:get_placeholder;placeholder:player_balance\"] - Parse and get operations",
+            "[\"operation:reload_expansions\", \"operation:list_expansions\"] - Reload then list expansions",
+            "[\"operation:register_expansion;expansion:custom\", \"operation:set_placeholder;placeholder:custom_data;value:test\"] - Register and set sequence"
+        };
     }
 }

@@ -10,9 +10,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.math.BigDecimal;
 
-/**
- * Paper implementation of PlatformEconomyManager using Vault API.
- */
+
 public class PaperEconomyManager implements PlatformEconomyManager {
 
     private Economy economy;

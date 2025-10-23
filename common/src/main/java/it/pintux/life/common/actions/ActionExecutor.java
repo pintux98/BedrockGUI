@@ -9,15 +9,25 @@ import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 
-/**
- * Executes actions using registered action handlers
- */
+
 public class ActionExecutor {
     
     private static final Logger logger = Logger.getLogger(ActionExecutor.class);
     private final ActionRegistry registry;
     private final ExecutorService executorService;
+    
+    
+    private static final Pattern NEW_FORMAT_PATTERN = Pattern.compile(
+        "^\\s*(\\w+)\\s*\\{[\\s\\S]*\\}\\s*$", Pattern.DOTALL
+    );
+    
+    
+    private static final Pattern VALUE_PATTERN = Pattern.compile(
+        "-\\s*\"([^\"]+)\""
+    );
     
     public ActionExecutor(ActionRegistry registry) {
         this.registry = registry;
@@ -29,14 +39,47 @@ public class ActionExecutor {
     }
     
     /**
-     * Executes a single action synchronously
+     * Executes a single ActionDefinition synchronously
+     * @param player the player executing the action
+     * @param action the action definition to execute
+     * @param context the action context
+     * @return the action result
+     */
+    public ActionResult executeAction(FormPlayer player, ActionDefinition action, ActionContext context) {
+        if (player == null) {
+            return ActionResult.failure("Player cannot be null");
+        }
+        
+        if (action == null || action.isEmpty()) {
+            return ActionResult.failure("Action cannot be null or empty");
+        }
+        
+        // Execute all actions in the definition
+        List<ActionResult> results = new ArrayList<>();
+        for (String actionType : action.getActionTypes()) {
+            Object actionValue = action.getAction(actionType);
+            ActionResult result = executeSingleAction(player, actionType, actionValue, context);
+            results.add(result);
+            
+            // Stop on first failure for now (can be made configurable later)
+            if (result.isFailure()) {
+                return result;
+            }
+        }
+        
+        // Return success if all actions succeeded
+        return results.isEmpty() ? ActionResult.success("No actions to execute") : results.get(results.size() - 1);
+    }
+    
+    /**
+     * Executes a single action type with value
      * @param player the player executing the action
      * @param actionType the type of action
      * @param actionValue the action value/parameters
      * @param context the action context
      * @return the action result
      */
-    public ActionResult executeAction(FormPlayer player, String actionType, String actionValue, ActionContext context) {
+    public ActionResult executeSingleAction(FormPlayer player, String actionType, Object actionValue, ActionContext context) {
         if (player == null) {
             return ActionResult.failure("Player cannot be null");
         }
@@ -47,41 +90,67 @@ public class ActionExecutor {
         
         ActionHandler handler = registry.getHandler(actionType);
         if (handler == null) {
+            System.out.println("[BedrockGUI] Invalid action type '" + actionType + "' - not registered. Available actions: " + registry.getRegisteredActionTypes());
             logger.warn("No handler found for action type: " + actionType);
             return ActionResult.failure("Unknown action type: " + actionType);
         }
         
-        if (!handler.isValidAction(actionValue)) {
-            logger.warn("Invalid action value '" + actionValue + "' for action type: " + actionType);
+        String valueStr = actionValue != null ? actionValue.toString() : "";
+        
+        if (!handler.isValidAction(valueStr)) {
+            logger.warn("Invalid action value '" + valueStr + "' for action type: " + actionType);
             return ActionResult.failure("Invalid action value for type: " + actionType);
         }
         
         try {
-            logger.debug("Executing action: " + actionType + " with value: " + actionValue + " for player: " + player.getName());
-            ActionResult result = handler.execute(player, actionValue, context);
-            
-            if (result.isFailure()) {
-                logger.warn("Action execution failed: " + result.getMessage());
-            }
-            
-            return result;
-            
+            logger.debug("Executing action: " + actionType + " with value: " + valueStr + " for player: " + player.getName());
+            return handler.execute(player, valueStr, context);
         } catch (Exception e) {
-            logger.error("Unexpected error executing action: " + actionType, e);
-            return ActionResult.failure("Unexpected error: " + e.getMessage(), e);
+            logger.error("Error executing action: " + actionType + " with value: " + actionValue, e);
+            return ActionResult.failure("Action execution failed: " + e.getMessage());
         }
+    }
+    
+    /**
+     * Evaluates a condition string (simplified implementation)
+     */
+    private boolean evaluateCondition(FormPlayer player, String condition, ActionContext context) {
+        // This is a simplified implementation - in a real system you'd want
+        // a proper expression parser for complex conditions
+        
+        if (condition.contains("placeholder=")) {
+            // Handle placeholder conditions like: placeholder=%vault_eco_balance%>=100
+            // For now, just return true (implement proper placeholder evaluation later)
+            return true;
+        }
+        
+        if (condition.contains("permission=")) {
+            // Handle permission conditions like: permission=vip.access
+            String permission = condition.substring(condition.indexOf("permission=") + 11);
+            return player.hasPermission(permission.trim());
+        }
+        
+        if (condition.contains("world=")) {
+            // TODO: Handle world conditions like: world=survival
+            // FormPlayer interface doesn't have getWorld() method
+            // This requires platform-specific implementation via PlatformPlayerManager
+            logger.warn("World conditions are not yet supported in simplified condition evaluation");
+            return true; // Default to true for now
+        }
+        
+        // Default to true for unknown conditions (should be enhanced)
+        return true;
     }
     
     /**
      * Executes a single action asynchronously
      * @param player the player executing the action
-     * @param actionType the type of action
-     * @param actionValue the action value/parameters
+     * @param action the action definition to execute
      * @param context the action context
      * @return CompletableFuture with the action result
      */
-    public CompletableFuture<ActionResult> executeActionAsync(FormPlayer player, String actionType, String actionValue, ActionContext context) {
-        return CompletableFuture.supplyAsync(() -> executeAction(player, actionType, actionValue, context), executorService);
+    public CompletableFuture<ActionResult> executeActionAsync(FormPlayer player, ActionDefinition action, ActionContext context) {
+        return CompletableFuture.supplyAsync(() -> executeAction(player, action, context), executorService);
     }
     
     /**
@@ -104,7 +173,7 @@ public class ActionExecutor {
                 continue;
             }
             
-            ActionResult result = executeAction(player, action.getType(), action.getValue(), context);
+            ActionResult result = executeAction(player, action.getActionDefinition(), context);
             results.add(result);
             
             // Stop execution if action failed and is marked as critical
@@ -140,28 +209,61 @@ public class ActionExecutor {
         
         String trimmed = actionString.trim();
         
-        // Check if action string contains type separator
+        // Check for the new unified format first
+        Matcher newFormatMatcher = NEW_FORMAT_PATTERN.matcher(trimmed);
+        if (newFormatMatcher.matches()) {
+            return parseNewFormat(trimmed);
+        }
+        
+        // Legacy format support for backward compatibility
+        // Handle simple "type: value" format
         if (trimmed.contains(":")) {
             String[] parts = trimmed.split(":", 2);
             if (parts.length == 2) {
-                String type = parts[0].trim();
-                String value = parts[1].trim();
-                return new Action(type, value);
+                String actionType = parts[0].trim();
+                String actionValue = parts[1].trim();
+                
+                ActionDefinition actionDef = new ActionDefinition();
+                actionDef.addAction(actionType, actionValue);
+                return new Action(actionDef);
             }
         }
         
-        // Check if the first word matches a registered action type
-        String[] words = trimmed.split("\\s+", 2);
-        if (words.length >= 1) {
-            String firstWord = words[0].toLowerCase();
-            if (registry.hasHandler(firstWord)) {
-                String value = words.length > 1 ? words[1] : "";
-                return new Action(firstWord, value);
-            }
+        // Default to command if no type specified
+        ActionDefinition actionDef = new ActionDefinition();
+        actionDef.addAction("command", trimmed);
+        return new Action(actionDef);
+    }
+    
+    /**
+     * Parses the new unified action format
+     */
+    private Action parseNewFormat(String actionString) {
+        Matcher matcher = NEW_FORMAT_PATTERN.matcher(actionString);
+        if (!matcher.matches()) {
+            return null;
         }
         
-        // Default to command action if no type specified
-        return new Action("command", trimmed);
+        String actionType = matcher.group(1).toLowerCase();
+        
+        // Extract all values from the action string
+        List<String> values = new ArrayList<>();
+        Matcher valueMatcher = VALUE_PATTERN.matcher(actionString);
+        while (valueMatcher.find()) {
+            values.add(valueMatcher.group(1));
+        }
+        
+        if (values.isEmpty()) {
+            logger.warn("No values found in new format action: " + actionString);
+            return null;
+        }
+        
+        // Create ActionDefinition with the entire action string
+        // The individual action handlers will parse the curly brace format themselves
+        ActionDefinition actionDef = new ActionDefinition();
+        actionDef.addAction(actionType, actionString);
+        
+        return new Action(actionDef);
     }
     
     /**
@@ -175,29 +277,25 @@ public class ActionExecutor {
     }
     
     /**
-     * Represents a single action
+     * Represents a single action with metadata
      */
     public static class Action {
-        private final String type;
-        private final String value;
+        private final ActionDefinition actionDefinition;
         private final boolean critical;
         
-        public Action(String type, String value) {
-            this(type, value, false);
+        public Action(ActionDefinition actionDefinition) {
+            this(actionDefinition, false);
         }
         
-        public Action(String type, String value, boolean critical) {
-            this.type = type;
-            this.value = value;
+        public Action(ActionDefinition actionDefinition, boolean critical) {
+            this.actionDefinition = actionDefinition;
             this.critical = critical;
         }
         
-        public String getType() {
-            return type;
-        }
+        // Legacy constructors removed - use ActionDefinition instead
         
-        public String getValue() {
-            return value;
+        public ActionDefinition getActionDefinition() {
+            return actionDefinition;
         }
         
         public boolean isCritical() {
@@ -206,7 +304,7 @@ public class ActionExecutor {
         
         @Override
         public String toString() {
-            return "Action{type='" + type + "', value='" + value + "', critical=" + critical + "}";
+            return "Action{actionDefinition=" + actionDefinition + ", critical=" + critical + "}";
         }
     }
 }

@@ -6,22 +6,16 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
-/**
- * Utility class for input validation and sanitization
- */
+
 public final class ValidationUtils {
     
     private static final Pattern MENU_NAME_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
     
     private ValidationUtils() {
-        // Utility class - prevent instantiation
+        
     }
     
-    /**
-     * Validates a menu name
-     * @param menuName the menu name to validate
-     * @return true if valid, false otherwise
-     */
+    
     public static boolean isValidMenuName(String menuName) {
         if (isNullOrEmpty(menuName)) {
             return false;
@@ -34,26 +28,18 @@ public final class ValidationUtils {
         return MENU_NAME_PATTERN.matcher(menuName).matches();
     }
     
-    /**
-     * Validates a UUID
-     * @param uuid the UUID to validate
-     * @return true if valid, false otherwise
-     */
+    
     public static boolean isValidUUID(UUID uuid) {
         return uuid != null;
     }
     
-    /**
-     * Validates a file path for security
-     * @param filePath the file path to validate
-     * @return true if safe, false otherwise
-     */
+    
     public static boolean isSafeFilePath(String filePath) {
         if (isNullOrEmpty(filePath)) {
             return false;
         }
         
-        // Prevent directory traversal attacks
+        
         if (filePath.contains("..") || filePath.contains("~")) {
             return false;
         }
@@ -62,35 +48,26 @@ public final class ValidationUtils {
             Path path = Paths.get(filePath);
             Path normalizedPath = path.normalize();
             
-            // Ensure the path stays within safe directories
+            
             return !normalizedPath.toString().contains("..");
         } catch (Exception e) {
             return false;
         }
     }
     
-    /**
-     * Sanitizes a string by removing potentially dangerous characters
-     * @param input the input string
-     * @return sanitized string
-     */
+    
     public static String sanitizeString(String input) {
         if (input == null) {
             return "";
         }
         
-        // Remove control characters and normalize whitespace
+        
         return input.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "")
                    .replaceAll("\\s+", " ")
                    .trim();
     }
     
-    /**
-     * Validates a configuration value
-     * @param value the value to validate
-     * @param expectedType the expected type
-     * @return true if valid, false otherwise
-     */
+    
     public static boolean isValidConfigValue(Object value, Class<?> expectedType) {
         if (value == null) {
             return false;
@@ -99,28 +76,121 @@ public final class ValidationUtils {
         return expectedType.isAssignableFrom(value.getClass());
     }
     
-    /**
-     * Checks if a string is null or empty
-     * @param str the string to check
-     * @return true if null or empty, false otherwise
-     */
+    
     public static boolean isNullOrEmpty(String str) {
         return str == null || str.trim().isEmpty();
     }
     
-    /**
-     * Validates an image URL or path
-     * @param imageSource the image source to validate
-     * @return true if valid, false otherwise
-     */
+    
     public static boolean isValidImageSource(String imageSource) {
         if (isNullOrEmpty(imageSource)) {
             return false;
         }
         
-        // Allow HTTP(S) URLs and basic file paths
+        
         return imageSource.startsWith("http://") ||
                imageSource.startsWith("https://") ||
                imageSource.startsWith("textures/");
+    }
+    
+    
+    public static boolean isValidActionFormat(String actionValue, int minParts) {
+        if (isNullOrEmpty(actionValue)) {
+            return false;
+        }
+        
+        String[] parts = actionValue.split(":");
+        return parts.length >= minParts;
+    }
+    
+    
+    public static boolean isValidCommand(String command) {
+        if (isNullOrEmpty(command)) {
+            return false;
+        }
+        
+        
+        String lowerCommand = command.toLowerCase().trim();
+        String[] dangerousCommands = {
+            "rm ", "del ", "format", "shutdown", "reboot", 
+            "kill", "sudo", "chmod", "chown", "passwd"
+        };
+        
+        for (String dangerous : dangerousCommands) {
+            if (lowerCommand.startsWith(dangerous)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    
+    public static boolean isValidNumericRange(String value, double min, double max) {
+        if (isNullOrEmpty(value)) {
+            return false;
+        }
+        
+        try {
+            double numValue = Double.parseDouble(value);
+            return numValue >= min && numValue <= max;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    
+    public static boolean isValidPlayerName(String playerName) {
+        if (isNullOrEmpty(playerName)) {
+            return false;
+        }
+        
+        
+        return playerName.matches("^[a-zA-Z0-9_]{3,16}$");
+    }
+    
+    
+    public static boolean isValidCoordinates(String x, String y, String z) {
+        try {
+            Double.parseDouble(x);
+            Double.parseDouble(y);
+            Double.parseDouble(z);
+            return true;
+        } catch (NumberFormatException e) {
+            return false;
+        }
+    }
+    
+    
+    public static boolean isValidGameMode(String gameMode) {
+        if (isNullOrEmpty(gameMode)) {
+            return false;
+        }
+        
+        String mode = gameMode.toLowerCase();
+        return mode.equals("survival") || mode.equals("creative") || 
+               mode.equals("adventure") || mode.equals("spectator") ||
+               mode.equals("0") || mode.equals("1") || mode.equals("2") || mode.equals("3") ||
+               mode.equals("s") || mode.equals("c") || mode.equals("a") || mode.equals("sp");
+    }
+    
+    
+    public static boolean isValidItemId(String itemId) {
+        if (isNullOrEmpty(itemId)) {
+            return false;
+        }
+        
+        
+        return itemId.matches("^[a-z0-9_:]+$") && !itemId.startsWith(":") && !itemId.endsWith(":");
+    }
+    
+    
+    public static boolean isValidPotionEffect(String effectName) {
+        if (isNullOrEmpty(effectName)) {
+            return false;
+        }
+        
+        
+        return effectName.matches("^[a-z0-9_:]+$");
     }
 }

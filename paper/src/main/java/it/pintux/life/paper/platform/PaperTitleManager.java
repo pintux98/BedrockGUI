@@ -5,9 +5,7 @@ import it.pintux.life.common.utils.FormPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
-/**
- * Paper implementation for sending titles and action bars.
- */
+
 public class PaperTitleManager implements PlatformTitleManager {
     @Override
     public boolean sendTitle(FormPlayer player, String title, String subtitle, int fadeIn, int stay, int fadeOut) {
@@ -33,11 +31,11 @@ public class PaperTitleManager implements PlatformTitleManager {
                 return false;
             }
             String msg = translate(message);
-            // Paper 1.19 provides Player.sendActionBar(String)
+            
             bukkitPlayer.sendActionBar(msg);
             return true;
         } catch (NoSuchMethodError err) {
-            // Fallback to Spigot API if available
+            
             try {
                 Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
                 if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {

@@ -8,41 +8,26 @@ import it.pintux.life.common.utils.MessageData;
 
 import java.util.Map;
 
-/**
- * Utility class for evaluating conditions used in conditional buttons and actions.
- * Supports permission-based, placeholder-based, and plugin-based conditions.
- */
+
 public class ConditionEvaluator {
     
     private static PlatformPluginManager pluginManager;
     
     private static final Logger logger = Logger.getLogger(ConditionEvaluator.class);
     
-    /**
-     * Sets the plugin manager for plugin condition evaluation.
-     * This should be called during plugin initialization.
-     * 
-     * @param manager The platform plugin manager
-     */
+    
     public static void setPluginManager(PlatformPluginManager manager) {
         pluginManager = manager;
     }
     
-    /**
-     * Evaluates a condition string for a given player and context.
-     * 
-     * @param player The player to evaluate the condition for
-     * @param condition The condition string (e.g., "permission:some.permission" or "placeholder:$balance:>=:1000")
-     * @param context The action context containing placeholders and form results
-     * @return true if the condition is met, false otherwise
-     */
+    
     public static boolean evaluateCondition(FormPlayer player, String condition, ActionContext context, MessageData messageData) {
         if (condition == null || condition.trim().isEmpty()) {
-            return true; // No condition means always show
+            return true; 
         }
         
         try {
-            // Process placeholders in the condition
+            
             String processedCondition = PlaceholderUtil.processPlaceholders(condition.trim(), context.getPlaceholders(), player, messageData);
             String[] parts = processedCondition.split(":");
             
@@ -54,7 +39,7 @@ public class ConditionEvaluator {
             boolean negate = false;
             int offset = 0;
             
-            // Check for negation
+            
             if ("not".equals(parts[0])) {
                 negate = true;
                 offset = 1;
@@ -85,12 +70,18 @@ public class ConditionEvaluator {
                 case "plugin":
                     conditionMet = evaluatePluginCondition(conditionValue);
                     break;
+                case "bedrock_player":
+                    conditionMet = evaluateBedrockPlayerCondition(player);
+                    break;
+                case "java_player":
+                    conditionMet = evaluateJavaPlayerCondition(player);
+                    break;
                 default:
                     logger.warn("Unknown condition type: " + conditionType);
                     return false;
             }
             
-            // Apply negation if specified
+            
             if (negate) {
                 conditionMet = !conditionMet;
             }
@@ -103,16 +94,12 @@ public class ConditionEvaluator {
         }
     }
     
-    /**
-     * Evaluates a permission-based condition
-     */
+    
     private static boolean evaluatePermissionCondition(FormPlayer player, String permission) {
         return player.hasPermission(permission);
     }
     
-    /**
-     * Evaluates a plugin-based condition
-     */
+    
     private static boolean evaluatePluginCondition(String pluginName) {
         if (pluginManager == null) {
             logger.warn("Plugin manager not initialized. Plugin conditions will always return false.");
@@ -121,15 +108,35 @@ public class ConditionEvaluator {
         return pluginManager.isPluginEnabled(pluginName);
     }
     
-    /**
-     * Evaluates a placeholder-based condition
-     */
+    
+    private static boolean evaluateBedrockPlayerCondition(FormPlayer player) {
+        try {
+            
+            return false;
+        } catch (Exception e) {
+            logger.warn("Error checking if player is Bedrock player: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    
+    private static boolean evaluateJavaPlayerCondition(FormPlayer player) {
+        try {
+            
+            return true;
+        } catch (Exception e) {
+            logger.warn("Error checking if player is Java player: " + e.getMessage());
+            return false;
+        }
+    }
+    
+    
     private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionContext context, FormPlayer player, MessageData messageData) {
         try {
-            // Process any remaining placeholders in the placeholder value (including PlaceholderAPI)
+            
             String processedPlaceholderValue = PlaceholderUtil.processPlaceholders(placeholderValue, context.getPlaceholders(), player, messageData);
             
-            // Also process any remaining placeholders in the expected value (including PlaceholderAPI)
+            
             String processedExpectedValue = PlaceholderUtil.processPlaceholders(expectedValue, context.getPlaceholders(), player, messageData);
             
             switch (operator.toLowerCase()) {
@@ -173,21 +180,17 @@ public class ConditionEvaluator {
         }
     }
     
-    /**
-     * Compares two numeric values
-     */
+    
     private static int compareNumeric(String value1, String value2) throws NumberFormatException {
         double num1 = Double.parseDouble(value1);
         double num2 = Double.parseDouble(value2);
         return Double.compare(num1, num2);
     }
     
-    /**
-     * Validates if a condition string has the correct format
-     */
+    
     public static boolean isValidCondition(String condition) {
         if (condition == null || condition.trim().isEmpty()) {
-            return true; // Empty condition is valid (always true)
+            return true; 
         }
         
         String[] parts = condition.trim().split(":");
@@ -208,11 +211,11 @@ public class ConditionEvaluator {
         
         switch (conditionType.toLowerCase()) {
             case "permission":
-                return parts.length >= offset + 2; // type:permission
+                return parts.length >= offset + 2; 
             case "placeholder":
-                return parts.length >= offset + 4; // type:placeholder:operator:value
+                return parts.length >= offset + 4; 
             case "plugin":
-                return parts.length >= offset + 2; // type:plugin_name
+                return parts.length >= offset + 2; 
             default:
                 return false;
         }

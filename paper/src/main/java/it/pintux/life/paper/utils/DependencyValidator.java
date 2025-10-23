@@ -10,18 +10,15 @@ public class DependencyValidator {
     
     private static final Logger logger = Logger.getLogger(DependencyValidator.class.getName());
     
-    // Minimum required versions for soft dependencies
+    
     private static final String MIN_VAULT_VERSION = "1.7.0";
     private static final String MIN_PLACEHOLDERAPI_VERSION = "2.10.0";
     
-    /**
-     * Validates all soft dependencies and their versions
-     * @return true if all dependencies are compatible, false otherwise
-     */
+    
     public static boolean validateDependencies() {
         boolean allValid = true;
         
-        // Check Vault
+        
         Plugin vaultPlugin = Bukkit.getPluginManager().getPlugin("Vault");
         if (vaultPlugin != null) {
             if (!isVersionCompatible(vaultPlugin, MIN_VAULT_VERSION)) {
@@ -34,7 +31,7 @@ public class DependencyValidator {
             }
         }
         
-        // Check PlaceholderAPI
+        
         Plugin placeholderPlugin = Bukkit.getPluginManager().getPlugin("PlaceholderAPI");
         if (placeholderPlugin != null) {
             if (!isVersionCompatible(placeholderPlugin, MIN_PLACEHOLDERAPI_VERSION)) {
@@ -50,12 +47,7 @@ public class DependencyValidator {
         return allValid;
     }
     
-    /**
-     * Checks if a plugin version is compatible with the minimum required version
-     * @param plugin The plugin to check
-     * @param minVersion The minimum required version
-     * @return true if compatible, false otherwise
-     */
+    
     private static boolean isVersionCompatible(Plugin plugin, String minVersion) {
         try {
             PluginDescriptionFile description = plugin.getDescription();
@@ -68,14 +60,9 @@ public class DependencyValidator {
         }
     }
     
-    /**
-     * Compares two version strings
-     * @param version1 First version
-     * @param version2 Second version
-     * @return negative if version1 < version2, 0 if equal, positive if version1 > version2
-     */
+    
     private static int compareVersions(String version1, String version2) {
-        // Remove any non-numeric suffixes (like -SNAPSHOT, -beta, etc.)
+        
         String cleanVersion1 = version1.replaceAll("[^0-9.]", "");
         String cleanVersion2 = version2.replaceAll("[^0-9.]", "");
         
@@ -96,11 +83,7 @@ public class DependencyValidator {
         return 0;
     }
     
-    /**
-     * Safely parses a version part to integer
-     * @param part The version part string
-     * @return The parsed integer, or 0 if parsing fails
-     */
+    
     private static int parseVersionPart(String part) {
         try {
             return Integer.parseInt(part);
@@ -109,12 +92,7 @@ public class DependencyValidator {
         }
     }
     
-    /**
-     * Checks if a specific plugin is present and compatible
-     * @param pluginName The name of the plugin
-     * @param minVersion The minimum required version
-     * @return true if present and compatible, false otherwise
-     */
+    
     public static boolean isPluginCompatible(String pluginName, String minVersion) {
         Plugin plugin = Bukkit.getPluginManager().getPlugin(pluginName);
         return plugin != null && isVersionCompatible(plugin, minVersion);

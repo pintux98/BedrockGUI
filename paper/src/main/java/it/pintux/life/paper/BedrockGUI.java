@@ -26,6 +26,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+
 import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -64,7 +65,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     }
 
     public void reloadData() {
-        // Validate dependencies before initialization
+        
         if (!DependencyValidator.validateDependencies()) {
             getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
         }
@@ -75,6 +76,15 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         MessageConfig configHandler = new PaperMessageConfig(dataFolder, "messages.yml");
         messageData = new MessageData(configHandler);
 
+        
+        if (api != null) {
+            getLogger().info("Reloading existing BedrockGUI configuration...");
+            api.reloadConfiguration();
+            getLogger().info("Configuration reloaded successfully");
+            return;
+        }
+
+        
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = null;
@@ -102,9 +112,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             getLogger().warning("PlaceholderAPI found but version is incompatible. Placeholder features disabled.");
         }
 
-        ListActionHandler.register();
-        getLogger().info("List action handler registered");
-
+        
         getLogger().info("BedrockGUI loaded and enabled");
     }
 
@@ -179,10 +187,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         return messageData;
     }
 
-    /**
-     * Gets the BedrockGUI API instance
-     */
+    
     public BedrockGUIApi getApi() {
         return api;
     }
 }
+

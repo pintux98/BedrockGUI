@@ -8,11 +8,7 @@ import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
 
-/**
- * Handles sending a clickable URL to the player chat.
- * Note: Most Minecraft clients render http(s) links in chat as clickable.
- * Usage: url:https://example.com
- */
+
 public class OpenUrlActionHandler extends BaseActionHandler {
 
     private final PlatformPlayerManager playerManager;
@@ -40,7 +36,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         try {
             String processed = processPlaceholders(actionValue.trim(), context, player);
 
-            // Basic sanitization
+            
             processed = ValidationUtils.sanitizeString(processed);
 
             if (processed == null || processed.trim().isEmpty()) {
@@ -48,12 +44,12 @@ public class OpenUrlActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
             }
 
-            // Validate that it looks like a URL. Be permissive here as placeholders may produce valid links.
+            
             if (!(processed.startsWith("http://") || processed.startsWith("https://"))) {
                 logger.warn("URL action value does not start with http/https after placeholder processing: " + processed);
             }
 
-            // Send the URL to chat. Most clients will show it as a clickable link with confirmation.
+            
             playerManager.sendMessage(player, processed);
 
             logger.debug("Sent URL to player " + player.getName() + ": " + processed);
@@ -77,7 +73,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         if (trimmed.length() > 2048) {
             return false;
         }
-        // Allow placeholders in validation phase. Accept if it already looks like a URL or contains placeholders.
+        
         return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.contains("{") || trimmed.contains("}");
     }
 

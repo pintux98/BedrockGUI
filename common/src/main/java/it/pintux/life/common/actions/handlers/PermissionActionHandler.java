@@ -4,32 +4,23 @@ import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.PlaceholderUtil;
+import it.pintux.life.common.utils.ValidationUtils;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-/**
- * Action handler for managing player permissions
- * Supports granting, removing, and temporarily managing permissions
- */
+
 public class PermissionActionHandler extends BaseActionHandler {
+    
     private final PlatformCommandExecutor commandExecutor;
-    private final ScheduledExecutorService scheduler;
-    private final Map<String, ScheduledTask> temporaryPermissions;
+    private final Map<String, Long> temporaryPermissions = new ConcurrentHashMap<>();
+    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(2);
     
     public PermissionActionHandler(PlatformCommandExecutor commandExecutor) {
         this.commandExecutor = commandExecutor;
-        this.scheduler = Executors.newScheduledThreadPool(2, r -> {
-            Thread thread = new Thread(r, "PermissionHandler-" + System.currentTimeMillis());
-            thread.setDaemon(true);
-            return thread;
-        });
-        this.temporaryPermissions = new ConcurrentHashMap<>();
     }
     
     @Override
@@ -39,234 +30,301 @@ public class PermissionActionHandler extends BaseActionHandler {
     
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        ActionResult validation = validateBasicParameters(player, actionData);
-        if (validation != null) {
-            return validation;
+        
+        ActionResult validationResult = validateBasicParameters(player, actionData);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
-            // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context, player);
-            String[] parts = processedData.split(":", 4);
+            List<String> operations = parseActionData(actionData, context, player);
             
-            if (parts.length < 3) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid permission action format. Expected: operation:player:permission[:duration]"), player);
+            if (operations.isEmpty()) {
+                Map<String, Object> errorReplacements = createReplacements("error", "No valid permission operations found");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
             
-            String operation = parts[0].toLowerCase();
-            String targetPlayer = parts[1];
-            String permission = parts[2];
-            String duration = parts.length > 3 ? parts[3] : null;
             
-            // Replace %player_name% placeholder if used
-            if (targetPlayer.equals("%player_name%") || targetPlayer.equals("@s")) {
-                targetPlayer = player.getName();
+            if (operations.size() == 1) {
+                return executeSinglePermissionOperation(operations.get(0), player);
             }
             
-            switch (operation) {
-                case "grant":
-                case "give":
-                case "add":
-                    return handleGrantPermission(targetPlayer, permission, duration, player);
-                    
-                case "remove":
-                case "revoke":
-                case "take":
-                    return handleRemovePermission(targetPlayer, permission, player);
-                    
-                case "check":
-                case "test":
-                    return handleCheckPermission(targetPlayer, permission, player);
-                    
-                case "temp":
-                case "temporary":
-                    if (duration == null) {
-                        return ActionResult.failure("Duration is required for temporary permissions");
-                    }
-                    return handleTemporaryPermission(targetPlayer, permission, duration, player);
-                    
-                case "group":
-                    return handleGroupOperation(targetPlayer, permission, duration, player);
-                    
-                default:
-                    logger.warn("Unknown permission operation: " + operation + " for player: " + player.getName());
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Unknown permission operation: " + operation), player);
+            
+            return executeMultiplePermissionOperations(operations, player);
+            
+        } catch (Exception e) {
+            logError("permission operation", actionData, player, e);
+            Map<String, Object> errorReplacements = createReplacements("error", "Error executing permission operation: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+    
+    private ActionResult executeSinglePermissionOperation(String operationData, FormPlayer player) {
+        try {
+            logger.info("Executing permission operation: " + operationData + " for player " + player.getName());
+            
+            Map<String, Object> permissionData = parsePermissionData(operationData);
+            
+            if (permissionData.isEmpty()) {
+                Map<String, Object> errorReplacements = createReplacements("error", "No valid permission data found");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+            }
+            
+            
+            boolean success = executeWithErrorHandling(
+                () -> performPermissionOperation(permissionData, player),
+                "Permission operation: " + permissionData.get("operation"),
+                player
+            );
+            
+            if (success) {
+                logSuccess("permission operation", String.valueOf(permissionData.get("operation")), player);
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("message", "Permission operation completed successfully");
+                return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            } else {
+                Map<String, Object> errorReplacements = createReplacements("error", "Failed to execute permission operation");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
             
         } catch (Exception e) {
-            logger.error("Error executing permission action for player " + player.getName(), e);
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing permission action: " + e.getMessage()), player);
+            logError("permission operation", operationData, player, e);
+            Map<String, Object> errorReplacements = createReplacements("error", "Error executing permission operation: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
     }
     
-    private ActionResult handleGrantPermission(String targetPlayer, String permission, String duration, FormPlayer player) {
-        String command;
+    private ActionResult executeMultiplePermissionOperations(List<String> operations, FormPlayer player) {
+        int successCount = 0;
+        int totalCount = operations.size();
+        StringBuilder results = new StringBuilder();
         
-        // Try LuckPerms first, then fallback to other permission plugins
-        if (duration != null) {
-            // Temporary permission with LuckPerms
-            command = "lp user " + targetPlayer + " permission settemp " + permission + " true " + duration;
-        } else {
-            // Permanent permission with LuckPerms
-            command = "lp user " + targetPlayer + " permission set " + permission + " true";
-        }
-        
-        boolean success = commandExecutor.executeAsConsole(command);
-        
-        if (!success) {
-            // Fallback to other permission plugins
-            command = "pex user " + targetPlayer + " add " + permission;
-            success = commandExecutor.executeAsConsole(command);
+        for (int i = 0; i < operations.size(); i++) {
+            String operationData = operations.get(i);
             
-            if (!success) {
-                // Fallback to GroupManager
-                command = "manuadd " + targetPlayer + " " + permission;
-                success = commandExecutor.executeAsConsole(command);
+            try {
+                logger.info("Executing permission operation " + (i + 1) + "/" + totalCount + ": " + operationData + " for player " + player.getName());
+                
+                Map<String, Object> permissionData = parsePermissionData(operationData);
+                
+                if (permissionData.isEmpty()) {
+                    results.append("âś— Operation ").append(i + 1).append(": ").append(operationData).append(" - Invalid data");
+                    continue;
+                }
+                
+                boolean success = executeWithErrorHandling(
+                    () -> performPermissionOperation(permissionData, player),
+                    "Permission operation: " + permissionData.get("operation"),
+                    player
+                );
+                
+                if (success) {
+                    successCount++;
+                    results.append("âś“ Operation ").append(i + 1).append(": ").append(permissionData.get("operation")).append(" - Success");
+                    logSuccess("permission operation", String.valueOf(permissionData.get("operation")), player);
+                } else {
+                    results.append("âś— Operation ").append(i + 1).append(": ").append(permissionData.get("operation")).append(" - Failed");
+                }
+                
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                    
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                results.append("âś— Operation ").append(i + 1).append(": ").append(operationData).append(" - Error: ").append(e.getMessage());
+                logError("permission operation", operationData, player, e);
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                }
             }
         }
         
-        if (success) {
-            logger.debug("Successfully granted permission " + permission + " to player " + targetPlayer);
-            String message = duration != null ? 
-                "Successfully granted temporary permission " + permission + " to " + targetPlayer + " for " + duration :
-                "Successfully granted permission " + permission + " to " + targetPlayer;
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+        String finalMessage = String.format("Executed %d/%d permission operations successfully:\n%s", 
+            successCount, totalCount, results.toString());
+        
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", finalMessage);
+        replacements.put("success_count", successCount);
+        replacements.put("total_count", totalCount);
+        
+        if (successCount == totalCount) {
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } else if (successCount > 0) {
+            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to grant permission. No compatible permission plugin found."), player);
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
-    private ActionResult handleRemovePermission(String targetPlayer, String permission, FormPlayer player) {
-        String command;
+    private boolean performPermissionOperation(Map<String, Object> permissionData, FormPlayer player) {
+        String operation = getStringValue(permissionData, "operation", "grant");
+        String targetPlayer = getStringValue(permissionData, "player", player.getName());
+        String permission = getStringValue(permissionData, "permission", "");
+        String duration = getStringValue(permissionData, "duration", null);
+        String group = getStringValue(permissionData, "group", null);
         
-        // Try LuckPerms first
-        command = "lp user " + targetPlayer + " permission unset " + permission;
-        boolean success = commandExecutor.executeAsConsole(command);
+        if (permission.isEmpty() && group == null) {
+            return false;
+        }
         
-        if (!success) {
-            // Fallback to PermissionsEx
-            command = "pex user " + targetPlayer + " remove " + permission;
-            success = commandExecutor.executeAsConsole(command);
-            
-            if (!success) {
-                // Fallback to GroupManager
-                command = "manudel " + targetPlayer + " " + permission;
-                success = commandExecutor.executeAsConsole(command);
+        
+        if (targetPlayer.equals("%player_name%") || targetPlayer.equals("@s")) {
+            targetPlayer = player.getName();
+        }
+        
+        
+        if (group != null) {
+            return handleGroupOperation(targetPlayer, group, operation, player);
+        }
+        
+        return executePermissionOperation(operation, targetPlayer, permission, duration, player);
+    }
+    
+    private boolean handleGroupOperation(String targetPlayer, String group, String operation, FormPlayer player) {
+        try {
+            String command;
+            switch (operation.toLowerCase()) {
+                case "grant":
+                case "give":
+                case "add":
+                    command = "lp user " + targetPlayer + " parent add " + group;
+                    break;
+                case "remove":
+                case "revoke":
+                case "take":
+                    command = "lp user " + targetPlayer + " parent remove " + group;
+                    break;
+                case "check":
+                case "test":
+                    command = "lp user " + targetPlayer + " parent info";
+                    break;
+                default:
+                    logger.warn("Unknown group operation: " + operation);
+                    return false;
             }
-        }
-        
-        if (success) {
-            logger.debug("Successfully removed permission " + permission + " from player " + targetPlayer);
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully removed permission " + permission + " from " + targetPlayer), player);
-        } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to remove permission. No compatible permission plugin found."), player);
-        }
-    }
-    
-    private ActionResult handleCheckPermission(String targetPlayer, String permission, FormPlayer player) {
-        // This would typically require platform-specific implementation
-        // For now, we'll use LuckPerms check command
-        String command = "lp user " + targetPlayer + " permission check " + permission;
-        boolean hasPermission = commandExecutor.executeAsConsole(command);
-        
-        String message = hasPermission ? 
-            "Player " + targetPlayer + " has permission " + permission :
-            "Player " + targetPlayer + " does not have permission " + permission;
             
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+            commandExecutor.executeAsConsole(command);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error executing group operation: " + e.getMessage(), e);
+            return false;
+        }
     }
     
-    private ActionResult handleTemporaryPermission(String targetPlayer, String permission, String duration, FormPlayer player) {
-        // Parse duration (e.g., "30s", "5m", "1h", "1d")
-        long durationMillis = parseDuration(duration);
-        if (durationMillis <= 0) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid duration format. Use format like: 30s, 5m, 1h, 1d"), player);
-        }
-        
-        // Grant the permission first
-        ActionResult grantResult = handleGrantPermission(targetPlayer, permission, duration, player);
-        if (grantResult.isFailure()) {
-            return grantResult;
-        }
-        
-        // Schedule removal
-        String taskKey = targetPlayer + ":" + permission;
-        
-        // Cancel existing task if any
-        ScheduledTask existingTask = temporaryPermissions.get(taskKey);
-        if (existingTask != null) {
-            existingTask.cancel();
-        }
-        
-        // Schedule new removal task
-        ScheduledTask task = new ScheduledTask(
-            scheduler.schedule(() -> {
-                handleRemovePermission(targetPlayer, permission, player);
-                temporaryPermissions.remove(taskKey);
-                logger.info("Automatically removed temporary permission " + permission + " from " + targetPlayer);
-            }, durationMillis, TimeUnit.MILLISECONDS)
-        );
-        
-        temporaryPermissions.put(taskKey, task);
-        
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully granted temporary permission " + permission + " to " + targetPlayer + " for " + duration), player);
-    }
-    
-    private ActionResult handleGroupOperation(String targetPlayer, String group, String operation, FormPlayer player) {
-        String command;
-        
-        if (operation == null || operation.equalsIgnoreCase("add") || operation.equalsIgnoreCase("join")) {
-            // Add to group
-            command = "lp user " + targetPlayer + " parent add " + group;
-        } else if (operation.equalsIgnoreCase("remove") || operation.equalsIgnoreCase("leave")) {
-            // Remove from group
-            command = "lp user " + targetPlayer + " parent remove " + group;
-        } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid group operation. Use 'add' or 'remove'"), player);
-        }
-        
-        boolean success = commandExecutor.executeAsConsole(command);
-        
-        if (!success) {
-            // Fallback to other permission plugins
-            if (operation == null || operation.equalsIgnoreCase("add")) {
-                command = "pex user " + targetPlayer + " group add " + group;
-            } else {
-                command = "pex user " + targetPlayer + " group remove " + group;
+    private boolean executePermissionOperation(String operation, String targetPlayer, String permission, String duration, FormPlayer player) {
+        try {
+            String command;
+            switch (operation.toLowerCase()) {
+                case "grant":
+                case "give":
+                case "add":
+                    if (duration != null) {
+                        command = "lp user " + targetPlayer + " permission settemp " + permission + " true " + duration;
+                        schedulePermissionRemoval(targetPlayer, permission, parseDuration(duration));
+                    } else {
+                        command = "lp user " + targetPlayer + " permission set " + permission + " true";
+                    }
+                    break;
+                case "remove":
+                case "revoke":
+                case "take":
+                    command = "lp user " + targetPlayer + " permission unset " + permission;
+                    break;
+                case "check":
+                case "test":
+                    command = "lp user " + targetPlayer + " permission check " + permission;
+                    break;
+                case "temp":
+                case "temporary":
+                    if (duration == null) {
+                        duration = "1h"; 
+                    }
+                    command = "lp user " + targetPlayer + " permission settemp " + permission + " true " + duration;
+                    schedulePermissionRemoval(targetPlayer, permission, parseDuration(duration));
+                    break;
+                default:
+                    logger.warn("Unknown permission operation: " + operation);
+                    return false;
             }
-            success = commandExecutor.executeAsConsole(command);
+            
+            commandExecutor.executeAsConsole(command);
+            return true;
+        } catch (Exception e) {
+            logger.error("Error executing permission operation: " + e.getMessage(), e);
+            return false;
         }
+    }
+    
+    private void schedulePermissionRemoval(String player, String permission, long durationMillis) {
+        String key = player + ":" + permission;
+        temporaryPermissions.put(key, System.currentTimeMillis() + durationMillis);
         
-        if (success) {
-            String action = (operation == null || operation.equalsIgnoreCase("add")) ? "added to" : "removed from";
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully " + action + " group " + group + " for player " + targetPlayer), player);
-        } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to modify group membership. No compatible permission plugin found."), player);
-        }
+        scheduler.schedule(() -> {
+            temporaryPermissions.remove(key);
+            try {
+                String command = "lp user " + player + " permission unset " + permission;
+                commandExecutor.executeAsConsole(command);
+                logger.info("Removed temporary permission " + permission + " from player " + player);
+            } catch (Exception e) {
+                logger.error("Error removing temporary permission: " + e.getMessage(), e);
+            }
+        }, durationMillis, TimeUnit.MILLISECONDS);
     }
     
     private long parseDuration(String duration) {
         if (duration == null || duration.isEmpty()) {
-            return 0;
+            return 3600000; 
         }
         
         try {
-            String timeUnit = duration.substring(duration.length() - 1).toLowerCase();
-            long value = Long.parseLong(duration.substring(0, duration.length() - 1));
+            String unit = duration.substring(duration.length() - 1).toLowerCase();
+            int value = Integer.parseInt(duration.substring(0, duration.length() - 1));
             
-            switch (timeUnit) {
-                case "s": return value * 1000;
-                case "m": return value * 60 * 1000;
-                case "h": return value * 60 * 60 * 1000;
-                case "d": return value * 24 * 60 * 60 * 1000;
-                default: return Long.parseLong(duration) * 1000; // Assume seconds if no unit
+            switch (unit) {
+                case "s": return value * 1000L;
+                case "m": return value * 60000L;
+                case "h": return value * 3600000L;
+                case "d": return value * 86400000L;
+                default: return Long.parseLong(duration) * 1000L; 
             }
-        } catch (NumberFormatException e) {
-            return 0;
+        } catch (Exception e) {
+            logger.warn("Invalid duration format: " + duration + ", using default 1 hour");
+            return 3600000;
         }
     }
     
-
+    private Map<String, Object> parsePermissionData(String operationData) {
+        Map<String, Object> data = new HashMap<>();
+        
+        if (operationData == null || operationData.trim().isEmpty()) {
+            return data;
+        }
+        
+        
+        String[] parts = operationData.split(":", 4);
+        if (parts.length >= 3) {
+            data.put("operation", parts[0]);
+            data.put("player", parts[1]);
+            data.put("permission", parts[2]);
+            if (parts.length > 3) {
+                data.put("duration", parts[3]);
+            }
+        }
+        
+        return data;
+    }
+    
+    private String getStringValue(Map<String, Object> map, String key, String defaultValue) {
+        Object value = map.get(key);
+        return value != null ? value.toString() : defaultValue;
+    }
     
     @Override
     public boolean isValidAction(String actionValue) {
@@ -274,56 +332,75 @@ public class PermissionActionHandler extends BaseActionHandler {
             return false;
         }
         
-        String[] parts = actionValue.split(":", 3);
-        if (parts.length < 3) {
+        
+        List<String> operations = parseActionDataForValidation(actionValue);
+        
+        for (String operation : operations) {
+            if (!isValidPermissionOperation(operation)) {
+                return false;
+            }
+        }
+        
+        return !operations.isEmpty();
+    }
+    
+    private boolean isValidPermissionOperation(String operation) {
+        if (operation == null || operation.trim().isEmpty()) {
             return false;
         }
         
-        String operation = parts[0].toLowerCase();
-        return operation.equals("grant") || operation.equals("give") || operation.equals("add") ||
-               operation.equals("remove") || operation.equals("revoke") || operation.equals("take") ||
-               operation.equals("check") || operation.equals("test") ||
-               operation.equals("temp") || operation.equals("temporary") ||
-               operation.equals("group");
+        try {
+            Map<String, Object> permissionData = parsePermissionData(operation);
+            if (permissionData.isEmpty() || !permissionData.containsKey("operation")) {
+                return false;
+            }
+            
+            String op = permissionData.get("operation").toString().toLowerCase();
+            return op.equals("grant") || op.equals("give") || op.equals("add") ||
+                   op.equals("remove") || op.equals("revoke") || op.equals("take") ||
+                   op.equals("check") || op.equals("test") ||
+                   op.equals("temp") || op.equals("temporary") ||
+                   op.equals("group");
+        } catch (Exception e) {
+            return false;
+        }
     }
     
     @Override
     public String getDescription() {
-        return "Manages player permissions including granting, removing, checking, and temporary permissions. Supports LuckPerms, PermissionsEx, and GroupManager.";
+        return "Handles permission operations including grant, remove, check, temporary permissions, and group management. Supports multiple operations with sequential execution and enhanced error handling.";
     }
     
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-            "permission:grant:%player_name%:bedrockgui.admin - Grant admin permission to current player",
-            "permission:remove:PlayerName:some.permission - Remove permission from specific player",
-            "permission:check:%player_name%:bedrockgui.use - Check if current player has permission",
-            "permission:temp:%player_name%:fly.use:1h - Grant temporary fly permission for 1 hour",
-            "permission:group:%player_name%:vip:add - Add player to VIP group",
-            "permission:group:%player_name%:default:remove - Remove player from default group"
+            
+            "grant:player:permission.node - Grant permission to player",
+            "remove:player:permission.node - Remove permission from player",
+            "check:player:permission.node - Check if player has permission",
+            "temp:player:permission.node:1h - Grant temporary permission for 1 hour",
+            "group:player:vip:grant - Add player to VIP group",
+            "group:player:admin:remove - Remove player from admin group",
+            
+            
+            "[\"grant:player:perm1\", \"grant:player:perm2\"] - Grant multiple permissions",
+            "[\"remove:player:oldperm\", \"grant:player:newperm\"] - Replace permission",
+            "[\"group:player:member:remove\", \"group:player:vip:grant\"] - Change group membership",
+            "[\"temp:player:fly:30m\", \"temp:player:speed:30m\"] - Multiple temporary permissions"
         };
     }
     
-    /**
-     * Cleanup method to cancel all scheduled tasks
-     */
-    public void shutdown() {
-        temporaryPermissions.values().forEach(ScheduledTask::cancel);
-        temporaryPermissions.clear();
-        scheduler.shutdown();
-    }
     
-    private static class ScheduledTask {
-        private final java.util.concurrent.ScheduledFuture<?> future;
-        
-        public ScheduledTask(java.util.concurrent.ScheduledFuture<?> future) {
-            this.future = future;
-        }
-        
-        public void cancel() {
-            if (future != null && !future.isDone()) {
-                future.cancel(false);
+    public void shutdown() {
+        scheduler.shutdown();
+        try {
+            if (!scheduler.awaitTermination(5, TimeUnit.SECONDS)) {
+                scheduler.shutdownNow();
             }
+        } catch (InterruptedException e) {
+            scheduler.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 }
+

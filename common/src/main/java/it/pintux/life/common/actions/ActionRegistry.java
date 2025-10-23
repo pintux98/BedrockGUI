@@ -8,9 +8,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.Collection;
 
-/**
- * Registry for managing action handlers
- */
+
 public class ActionRegistry {
     
     private static final Logger logger = Logger.getLogger(ActionRegistry.class);
@@ -18,7 +16,7 @@ public class ActionRegistry {
     private final Map<String, ActionHandler> handlers = new ConcurrentHashMap<>();
     
     private ActionRegistry() {
-        // Private constructor for singleton
+        
     }
     
     public static ActionRegistry getInstance() {
@@ -32,11 +30,7 @@ public class ActionRegistry {
         return instance;
     }
     
-    /**
-     * Registers an action handler
-     * @param handler the action handler to register
-     * @throws IllegalArgumentException if handler is null or action type is invalid
-     */
+    
     public void registerHandler(ActionHandler handler) {
         if (handler == null) {
             throw new IllegalArgumentException("Action handler cannot be null");
@@ -57,11 +51,7 @@ public class ActionRegistry {
         logger.info("Registered action handler for type: " + actionType);
     }
     
-    /**
-     * Unregisters an action handler
-     * @param actionType the action type to unregister
-     * @return true if handler was removed, false if not found
-     */
+    
     public boolean unregisterHandler(String actionType) {
         if (ValidationUtils.isNullOrEmpty(actionType)) {
             return false;
@@ -78,11 +68,7 @@ public class ActionRegistry {
         return false;
     }
     
-    /**
-     * Gets an action handler by type
-     * @param actionType the action type
-     * @return the action handler or null if not found
-     */
+    
     public ActionHandler getHandler(String actionType) {
         if (ValidationUtils.isNullOrEmpty(actionType)) {
             return null;
@@ -91,11 +77,7 @@ public class ActionRegistry {
         return handlers.get(actionType.toLowerCase().trim());
     }
     
-    /**
-     * Checks if a handler is registered for the given action type
-     * @param actionType the action type to check
-     * @return true if handler exists, false otherwise
-     */
+    
     public boolean hasHandler(String actionType) {
         if (ValidationUtils.isNullOrEmpty(actionType)) {
             return false;
@@ -104,35 +86,24 @@ public class ActionRegistry {
         return handlers.containsKey(actionType.toLowerCase().trim());
     }
     
-    /**
-     * Gets all registered action types
-     * @return set of registered action types
-     */
+    
     public Set<String> getRegisteredActionTypes() {
         return Set.copyOf(handlers.keySet());
     }
     
-    /**
-     * Gets all registered handlers
-     * @return collection of registered handlers
-     */
+    
     public Collection<ActionHandler> getAllHandlers() {
         return handlers.values();
     }
     
-    /**
-     * Clears all registered handlers
-     */
+    
     public void clear() {
         int count = handlers.size();
         handlers.clear();
         logger.info("Cleared " + count + " action handlers");
     }
     
-    /**
-     * Gets the number of registered handlers
-     * @return number of registered handlers
-     */
+    
     public int size() {
         return handlers.size();
     }

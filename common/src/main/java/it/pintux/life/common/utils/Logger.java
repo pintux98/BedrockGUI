@@ -4,10 +4,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 
-/**
- * Enhanced logging utility for BedrockGUI
- * Provides structured logging with different levels and proper formatting
- */
+
 public class Logger {
     
     private static final DateTimeFormatter TIMESTAMP_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -19,65 +16,47 @@ public class Logger {
         this.platformLogger = platformLogger;
     }
     
-    /**
-     * Creates a logger for the specified class
-     */
+    
     public static Logger getLogger(Class<?> clazz) {
         return new Logger(clazz.getSimpleName(), java.util.logging.Logger.getLogger(clazz.getName()));
     }
     
-    /**
-     * Creates a logger with the specified name
-     */
+    
     public static Logger getLogger(String name) {
         return new Logger(name, java.util.logging.Logger.getLogger(name));
     }
     
-    /**
-     * Logs an info message
-     */
+    
     public void info(String message, Object... args) {
         log(Level.INFO, message, args);
     }
     
-    /**
-     * Logs a warning message
-     */
+    
     public void warn(String message, Object... args) {
         log(Level.WARNING, message, args);
     }
     
-    /**
-     * Logs a warning message with exception
-     */
+    
     public void warn(String message, Throwable throwable, Object... args) {
         log(Level.WARNING, message, throwable, args);
     }
     
-    /**
-     * Logs an error message
-     */
+    
     public void error(String message, Object... args) {
         log(Level.SEVERE, message, args);
     }
     
-    /**
-     * Logs an error message with exception
-     */
+    
     public void error(String message, Throwable throwable, Object... args) {
         log(Level.SEVERE, message, throwable, args);
     }
     
-    /**
-     * Logs a debug message
-     */
+    
     public void debug(String message, Object... args) {
         log(Level.FINE, message, args);
     }
     
-    /**
-     * Checks if debug logging is enabled
-     */
+    
     public boolean isDebugEnabled() {
         return platformLogger.isLoggable(Level.FINE);
     }
@@ -101,7 +80,7 @@ public class Logger {
             return message;
         }
         
-        // Simple placeholder replacement for {} style logging
+        
         String result = message;
         for (Object arg : args) {
             int index = result.indexOf("{}");

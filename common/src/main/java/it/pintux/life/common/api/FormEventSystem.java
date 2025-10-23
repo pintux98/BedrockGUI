@@ -9,9 +9,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
-/**
- * Advanced event system for form interactions and lifecycle management
- */
+
 public class FormEventSystem {
     
     private static final Logger logger = Logger.getLogger(FormEventSystem.class);
@@ -24,46 +22,40 @@ public class FormEventSystem {
         registerBuiltInEvents();
     }
     
-    /**
-     * Registers built-in event types
-     */
+    
     private void registerBuiltInEvents() {
-        // Form lifecycle events
+        
         registerEventType(FormEvent.FORM_CREATED);
         registerEventType(FormEvent.FORM_OPENED);
         registerEventType(FormEvent.FORM_CLOSED);
         registerEventType(FormEvent.FORM_SUBMITTED);
         registerEventType(FormEvent.FORM_CANCELLED);
         
-        // Interaction events
+        
         registerEventType(FormEvent.BUTTON_CLICKED);
         registerEventType(FormEvent.INPUT_CHANGED);
         registerEventType(FormEvent.DROPDOWN_SELECTED);
         registerEventType(FormEvent.SLIDER_MOVED);
         registerEventType(FormEvent.TOGGLE_SWITCHED);
         
-        // Validation events
+        
         registerEventType(FormEvent.VALIDATION_STARTED);
         registerEventType(FormEvent.VALIDATION_PASSED);
         registerEventType(FormEvent.VALIDATION_FAILED);
         
-        // Error events
+        
         registerEventType(FormEvent.FORM_ERROR);
         registerEventType(FormEvent.SEND_FAILED);
         
         logger.info("Registered " + eventListeners.size() + " built-in event types");
     }
     
-    /**
-     * Registers a new event type
-     */
+    
     public void registerEventType(String eventType) {
         eventListeners.putIfAbsent(eventType, new CopyOnWriteArrayList<>());
     }
     
-    /**
-     * Adds an event listener for a specific event type
-     */
+    
     public void addEventListener(String eventType, FormEventListener listener) {
         List<FormEventListener> listeners = eventListeners.get(eventType);
         if (listeners != null) {
@@ -73,9 +65,7 @@ public class FormEventSystem {
         }
     }
     
-    /**
-     * Removes an event listener
-     */
+    
     public void removeEventListener(String eventType, FormEventListener listener) {
         List<FormEventListener> listeners = eventListeners.get(eventType);
         if (listeners != null) {
@@ -83,46 +73,38 @@ public class FormEventSystem {
         }
     }
     
-    /**
-     * Registers an event handler for a specific event type
-     */
+    
     public void registerEventHandler(String eventType, FormEventHandler handler) {
         eventHandlers.put(eventType, handler);
     }
     
-    /**
-     * Adds a form interceptor
-     */
+    
     public void addInterceptor(FormInterceptor interceptor) {
         interceptors.add(interceptor);
     }
     
-    /**
-     * Removes a form interceptor
-     */
+    
     public void removeInterceptor(FormInterceptor interceptor) {
         interceptors.remove(interceptor);
     }
     
-    /**
-     * Fires an event to all registered listeners
-     */
+    
     public void fireEvent(FormEventData eventData) {
         String eventType = eventData.getEventType();
         
-        // Check interceptors first
+        
         for (FormInterceptor interceptor : interceptors) {
             if (interceptor.shouldIntercept(eventData)) {
                 FormEventData modifiedData = interceptor.intercept(eventData);
                 if (modifiedData == null) {
-                    // Event was cancelled by interceptor
+                    
                     return;
                 }
                 eventData = modifiedData;
             }
         }
         
-        // Fire to event handler if exists
+        
         FormEventHandler handler = eventHandlers.get(eventType);
         if (handler != null) {
             try {
@@ -132,7 +114,7 @@ public class FormEventSystem {
             }
         }
         
-        // Fire to all listeners
+        
         List<FormEventListener> listeners = eventListeners.get(eventType);
         if (listeners != null) {
             for (FormEventListener listener : listeners) {
@@ -145,16 +127,12 @@ public class FormEventSystem {
         }
     }
     
-    /**
-     * Creates event data for form lifecycle events
-     */
+    
     public FormEventData createFormEvent(String eventType, FormPlayer player, FormBuilder form) {
         return new FormEventData(eventType, player, form);
     }
     
-    /**
-     * Creates event data for interaction events
-     */
+    
     public FormEventData createInteractionEvent(String eventType, FormPlayer player, FormBuilder form, 
                                                String componentId, Object value) {
         FormEventData eventData = new FormEventData(eventType, player, form);
@@ -163,9 +141,7 @@ public class FormEventSystem {
         return eventData;
     }
     
-    /**
-     * Creates event data for validation events
-     */
+    
     public FormEventData createValidationEvent(String eventType, FormPlayer player, FormBuilder form, 
                                              ValidationResult result) {
         FormEventData eventData = new FormEventData(eventType, player, form);
@@ -173,9 +149,7 @@ public class FormEventSystem {
         return eventData;
     }
     
-    /**
-     * Creates event data for error events
-     */
+    
     public FormEventData createErrorEvent(String eventType, FormPlayer player, FormBuilder form, 
                                         String errorMessage, Throwable cause) {
         FormEventData eventData = new FormEventData(eventType, player, form);
@@ -184,37 +158,29 @@ public class FormEventSystem {
         return eventData;
     }
     
-    // ==================== EVENT INTERFACES ====================
     
-    /**
-     * Interface for form event listeners
-     */
+    
+    
     @FunctionalInterface
     public interface FormEventListener {
         void onEvent(FormEventData eventData);
     }
     
-    /**
-     * Interface for form event handlers
-     */
+    
     @FunctionalInterface
     public interface FormEventHandler {
         void handle(FormEventData eventData);
     }
     
-    /**
-     * Interface for form interceptors
-     */
+    
     public interface FormInterceptor {
         boolean shouldIntercept(FormEventData eventData);
-        FormEventData intercept(FormEventData eventData); // Return null to cancel event
+        FormEventData intercept(FormEventData eventData); 
     }
     
-    // ==================== EVENT DATA ====================
     
-    /**
-     * Container for form event data
-     */
+    
+    
     public static class FormEventData {
         private final String eventType;
         private final FormPlayer player;
@@ -222,7 +188,7 @@ public class FormEventSystem {
         private final long timestamp;
         private final Map<String, Object> metadata;
         
-        // Optional fields
+        
         private String componentId;
         private Object value;
         private ValidationResult validationResult;
@@ -237,7 +203,7 @@ public class FormEventSystem {
             this.metadata = new HashMap<>();
         }
         
-        // Getters
+        
         public String getEventType() { return eventType; }
         public FormPlayer getPlayer() { return player; }
         public FormBuilder getForm() { return form; }
@@ -249,14 +215,14 @@ public class FormEventSystem {
         public String getErrorMessage() { return errorMessage; }
         public Throwable getCause() { return cause; }
         
-        // Setters
+        
         public void setComponentId(String componentId) { this.componentId = componentId; }
         public void setValue(Object value) { this.value = value; }
         public void setValidationResult(ValidationResult validationResult) { this.validationResult = validationResult; }
         public void setErrorMessage(String errorMessage) { this.errorMessage = errorMessage; }
         public void setCause(Throwable cause) { this.cause = cause; }
         
-        // Metadata helpers
+        
         public void setMetadata(String key, Object value) {
             metadata.put(key, value);
         }
@@ -272,41 +238,37 @@ public class FormEventSystem {
         }
     }
     
-    // ==================== EVENT CONSTANTS ====================
     
-    /**
-     * Constants for built-in event types
-     */
+    
+    
     public static class FormEvent {
-        // Lifecycle events
+        
         public static final String FORM_CREATED = "form.created";
         public static final String FORM_OPENED = "form.opened";
         public static final String FORM_CLOSED = "form.closed";
         public static final String FORM_SUBMITTED = "form.submitted";
         public static final String FORM_CANCELLED = "form.cancelled";
         
-        // Interaction events
+        
         public static final String BUTTON_CLICKED = "button.clicked";
         public static final String INPUT_CHANGED = "input.changed";
         public static final String DROPDOWN_SELECTED = "dropdown.selected";
         public static final String SLIDER_MOVED = "slider.moved";
         public static final String TOGGLE_SWITCHED = "toggle.switched";
         
-        // Validation events
+        
         public static final String VALIDATION_STARTED = "validation.started";
         public static final String VALIDATION_PASSED = "validation.passed";
         public static final String VALIDATION_FAILED = "validation.failed";
         
-        // Error events
+        
         public static final String FORM_ERROR = "form.error";
         public static final String SEND_FAILED = "send.failed";
     }
     
-    // ==================== BUILT-IN INTERCEPTORS ====================
     
-    /**
-     * Logging interceptor for debugging
-     */
+    
+    
     public static class LoggingInterceptor implements FormInterceptor {
         private final Logger logger;
         private final Set<String> loggedEvents;
@@ -314,7 +276,7 @@ public class FormEventSystem {
         public LoggingInterceptor() {
             this.logger = Logger.getLogger(LoggingInterceptor.class);
             this.loggedEvents = new HashSet<>();
-            // Log all events by default
+            
             loggedEvents.addAll(Arrays.asList(
                 FormEvent.FORM_CREATED, FormEvent.FORM_OPENED, FormEvent.FORM_CLOSED,
                 FormEvent.FORM_SUBMITTED, FormEvent.FORM_CANCELLED, FormEvent.BUTTON_CLICKED,
@@ -344,13 +306,11 @@ public class FormEventSystem {
                 logger.error("Error: " + eventData.getErrorMessage(), eventData.getCause());
             }
             
-            return eventData; // Don't modify the event
+            return eventData; 
         }
     }
     
-    /**
-     * Permission interceptor for access control
-     */
+    
     public static class PermissionInterceptor implements FormInterceptor {
         private final Map<String, String> eventPermissions;
         
@@ -374,7 +334,7 @@ public class FormEventSystem {
             
             if (requiredPermission != null && eventData.getPlayer() != null) {
                 if (!eventData.getPlayer().hasPermission(requiredPermission)) {
-                    // Cancel the event by returning null
+                    
                     return null;
                 }
             }
@@ -383,9 +343,7 @@ public class FormEventSystem {
         }
     }
     
-    /**
-     * Rate limiting interceptor
-     */
+    
     public static class RateLimitInterceptor implements FormInterceptor {
         private final Map<String, Long> lastEventTimes = new ConcurrentHashMap<>();
         private final long cooldownMs;
@@ -419,7 +377,7 @@ public class FormEventSystem {
             Long lastTime = lastEventTimes.get(key);
             
             if (lastTime != null && (currentTime - lastTime) < cooldownMs) {
-                // Rate limited - cancel the event
+                
                 return null;
             }
             
@@ -428,18 +386,14 @@ public class FormEventSystem {
         }
     }
     
-    // ==================== UTILITY METHODS ====================
     
-    /**
-     * Creates a simple event listener from a consumer
-     */
+    
+    
     public static FormEventListener createListener(Consumer<FormEventData> consumer) {
         return consumer::accept;
     }
     
-    /**
-     * Creates a filtered event listener
-     */
+    
     public static FormEventListener createFilteredListener(java.util.function.Predicate<FormEventData> filter, 
                                                           Consumer<FormEventData> consumer) {
         return eventData -> {
@@ -449,9 +403,7 @@ public class FormEventSystem {
         };
     }
     
-    /**
-     * Creates a player-specific event listener
-     */
+    
     public static FormEventListener createPlayerListener(String playerName, Consumer<FormEventData> consumer) {
         return createFilteredListener(
             eventData -> eventData.getPlayer() != null && 
@@ -460,9 +412,7 @@ public class FormEventSystem {
         );
     }
     
-    /**
-     * Creates a form-specific event listener
-     */
+    
     public static FormEventListener createFormListener(String formTitle, Consumer<FormEventData> consumer) {
         return createFilteredListener(
             eventData -> eventData.getForm() != null && 

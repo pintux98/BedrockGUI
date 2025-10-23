@@ -10,9 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-/**
- * Advanced template management system for creating reusable form structures
- */
+
 public class FormTemplateManager {
     
     private static final Logger logger = Logger.getLogger(FormTemplateManager.class);
@@ -26,31 +24,27 @@ public class FormTemplateManager {
         registerBuiltInTemplates();
     }
     
-    /**
-     * Registers built-in templates
-     */
+    
     private void registerBuiltInTemplates() {
-        // Player selection template
+        
         registerTemplate("player_selector", new PlayerSelectorTemplate());
         
-        // Item selection template
+        
         registerTemplate("item_selector", new ItemSelectorTemplate());
         
-        // Permission management template
+        
         registerTemplate("permission_manager", new PermissionManagerTemplate());
         
-        // Economy transaction template
+        
         registerTemplate("economy_transaction", new EconomyTransactionTemplate());
         
-        // Configuration editor template
+        
         registerTemplate("config_editor", new ConfigEditorTemplate());
         
         logger.info("Registered " + templates.size() + " built-in form templates");
     }
     
-    /**
-     * Registers a custom template
-     */
+    
     public void registerTemplate(String name, FormTemplate template) {
         if (ValidationUtils.isNullOrEmpty(name)) {
             throw new IllegalArgumentException("Template name cannot be null or empty");
@@ -64,9 +58,7 @@ public class FormTemplateManager {
         logger.info("Registered form template: " + name);
     }
     
-    /**
-     * Gets a template by name
-     */
+    
     public FormTemplate getTemplate(String name) {
         if (ValidationUtils.isNullOrEmpty(name)) {
             return null;
@@ -74,16 +66,14 @@ public class FormTemplateManager {
         return templates.get(name.toLowerCase());
     }
     
-    /**
-     * Creates a form from a template
-     */
+    
     public FormBuilder createFromTemplate(String templateName, Map<String, Object> parameters) {
         FormTemplate template = getTemplate(templateName);
         if (template == null) {
             throw new IllegalArgumentException("Template not found: " + templateName);
         }
         
-        // Validate required parameters
+        
         List<String> requiredParams = template.getRequiredParameters();
         for (String param : requiredParams) {
             if (!parameters.containsKey(param)) {
@@ -91,7 +81,7 @@ public class FormTemplateManager {
             }
         }
         
-        // Validate parameters if validator exists
+        
         TemplateValidator validator = validators.get(templateName.toLowerCase());
         if (validator != null) {
             ValidationResult result = validator.validateParameters(parameters);
@@ -103,25 +93,19 @@ public class FormTemplateManager {
         return template.createForm(parameters);
     }
     
-    /**
-     * Registers a template validator
-     */
+    
     public void registerValidator(String templateName, TemplateValidator validator) {
         validators.put(templateName.toLowerCase(), validator);
     }
     
-    /**
-     * Gets all available template names
-     */
+    
     public Set<String> getAvailableTemplates() {
         return new HashSet<>(templates.keySet());
     }
     
-    // ==================== BUILT-IN TEMPLATES ====================
     
-    /**
-     * Player selector template
-     */
+    
+    
     public class PlayerSelectorTemplate implements FormTemplate {
         @Override
         public FormBuilder createForm(Map<String, Object> parameters) {
@@ -158,15 +142,13 @@ public class FormTemplateManager {
         }
     }
     
-    /**
-     * Item selector template
-     */
+    
     public class ItemSelectorTemplate implements FormTemplate {
         @Override
         public FormBuilder createForm(Map<String, Object> parameters) {
             String title = (String) parameters.getOrDefault("title", "Select Item");
             @SuppressWarnings("unchecked")
-            Map<String, String> items = (Map<String, String>) parameters.get("items"); // name -> image
+            Map<String, String> items = (Map<String, String>) parameters.get("items"); 
             @SuppressWarnings("unchecked")
             Function<String, Runnable> onSelect = (Function<String, Runnable>) parameters.get("onSelect");
             
@@ -200,9 +182,7 @@ public class FormTemplateManager {
         }
     }
     
-    /**
-     * Permission manager template
-     */
+    
     public class PermissionManagerTemplate implements FormTemplate {
         @Override
         public FormBuilder createForm(Map<String, Object> parameters) {
@@ -237,9 +217,7 @@ public class FormTemplateManager {
         }
     }
     
-    /**
-     * Economy transaction template
-     */
+    
     public class EconomyTransactionTemplate implements FormTemplate {
         @Override
         public FormBuilder createForm(Map<String, Object> parameters) {
@@ -250,25 +228,25 @@ public class FormTemplateManager {
             
             BedrockGUIApi.CustomFormBuilder builder = api.createCustomForm(title);
             
-            // Transaction type dropdown
+            
             List<String> types = Arrays.asList("Give Money", "Take Money", "Transfer Money", "Set Balance");
             int defaultType = Math.max(0, types.indexOf(transactionType));
             builder.dropdown("Transaction Type", types, defaultType);
             
-            // Amount input
+            
             builder.input("Amount", "Enter amount", "0");
             
-            // Target player (for transfers)
+            
             if ("transfer".equals(transactionType)) {
                 builder.input("Target Player", "Enter player name", "");
             }
             
-            // Current balance display
+            
             if (currentBalance != null) {
                 builder.input("Current Balance", "Read-only", String.format("%.2f", currentBalance));
             }
             
-            // Confirmation toggle
+            
             builder.toggle("Confirm Transaction", false);
             
             return builder;
@@ -281,13 +259,11 @@ public class FormTemplateManager {
         
         @Override
         public List<String> getRequiredParameters() {
-            return Arrays.asList(); // No required parameters
+            return Arrays.asList(); 
         }
     }
     
-    /**
-     * Configuration editor template
-     */
+    
     public class ConfigEditorTemplate implements FormTemplate {
         @Override
         public FormBuilder createForm(Map<String, Object> parameters) {
@@ -335,18 +311,14 @@ public class FormTemplateManager {
         }
     }
     
-    // ==================== TEMPLATE VALIDATION ====================
     
-    /**
-     * Interface for template parameter validation
-     */
+    
+    
     public interface TemplateValidator {
         ValidationResult validateParameters(Map<String, Object> parameters);
     }
     
-    /**
-     * Built-in validators for common templates
-     */
+    
     public static class CommonValidators {
         
         public static TemplateValidator playerListValidator() {
@@ -400,11 +372,9 @@ public class FormTemplateManager {
         }
     }
     
-    // ==================== ADVANCED TEMPLATE FEATURES ====================
     
-    /**
-     * Template with conditional logic
-     */
+    
+    
     public abstract class ConditionalTemplate implements FormTemplate {
         protected final Map<String, Predicate<Map<String, Object>>> conditions = new HashMap<>();
         
@@ -419,9 +389,7 @@ public class FormTemplateManager {
         }
     }
     
-    /**
-     * Template with dynamic component generation
-     */
+    
     public abstract class DynamicTemplate implements FormTemplate {
         protected final Map<String, Function<Map<String, Object>, List<ComponentDefinition>>> componentGenerators = new HashMap<>();
         
@@ -448,9 +416,7 @@ public class FormTemplateManager {
         }
     }
     
-    /**
-     * Template with localization support
-     */
+    
     public abstract class LocalizedTemplate implements FormTemplate {
         protected final Map<String, Map<String, String>> localizations = new HashMap<>();
         

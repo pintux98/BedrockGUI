@@ -6,9 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
-/**
- * Paper implementation of PlatformSoundManager using Bukkit API.
- */
+
 public class PaperSoundManager implements PlatformSoundManager {
     
     @Override
@@ -51,44 +49,39 @@ public class PaperSoundManager implements PlatformSoundManager {
         return parseSound(soundName) != null;
     }
     
-    /**
-     * Parse a sound name to a Bukkit Sound enum.
-     * 
-     * @param soundName The sound name to parse
-     * @return The Sound enum, or null if not found
-     */
+    
     private Sound parseSound(String soundName) {
         if (soundName == null || soundName.isEmpty()) {
             return null;
         }
         
-        // Handle legacy sound names first
+        
         Sound legacySound = parseLegacySound(soundName);
         if (legacySound != null) {
             return legacySound;
         }
         
         try {
-            // Try to parse as enum name first
+            
             return Sound.valueOf(soundName.toUpperCase());
         } catch (IllegalArgumentException e) {
-            // Try common sound name mappings
+            
             String normalizedName = soundName.toUpperCase().replace(".", "_");
             
             try {
                 return Sound.valueOf(normalizedName);
             } catch (IllegalArgumentException e2) {
-                // Try with ENTITY_ prefix for entity sounds
+                
                 if (!normalizedName.startsWith("ENTITY_")) {
                     try {
                         return Sound.valueOf("ENTITY_" + normalizedName);
                     } catch (IllegalArgumentException e3) {
-                        // Try with BLOCK_ prefix for block sounds
+                        
                         if (!normalizedName.startsWith("BLOCK_")) {
                             try {
                                 return Sound.valueOf("BLOCK_" + normalizedName);
                             } catch (IllegalArgumentException e4) {
-                                // Try with UI_ prefix for UI sounds
+                                
                                 if (!normalizedName.startsWith("UI_")) {
                                     try {
                                         return Sound.valueOf("UI_" + normalizedName);
@@ -105,16 +98,11 @@ public class PaperSoundManager implements PlatformSoundManager {
         }
     }
     
-    /**
-     * Parse legacy sound names to modern Bukkit Sound enums.
-     * 
-     * @param soundName The legacy sound name
-     * @return The Sound enum, or null if not a known legacy sound
-     */
+    
     private Sound parseLegacySound(String soundName) {
         String lowerName = soundName.toLowerCase();
         
-        // Common legacy sound mappings
+        
         switch (lowerName) {
             case "random.levelup":
             case "entity.player.levelup":

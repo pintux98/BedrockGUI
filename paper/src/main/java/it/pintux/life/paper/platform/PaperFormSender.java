@@ -5,9 +5,7 @@ import it.pintux.life.common.utils.FormPlayer;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.floodgate.api.FloodgateApi;
 
-/**
- * Paper implementation of PlatformFormSender using Floodgate API.
- */
+
 public class PaperFormSender implements PlatformFormSender {
     
     @Override

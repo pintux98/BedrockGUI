@@ -5,10 +5,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
-/**
- * Paper/Bukkit implementation of PlatformPluginManager.
- * Provides plugin management operations using Bukkit API.
- */
+
 public class PaperPluginManager implements PlatformPluginManager {
     
     @Override

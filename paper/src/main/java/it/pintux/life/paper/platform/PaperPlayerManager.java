@@ -9,9 +9,7 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
-/**
- * Paper implementation of PlatformPlayerManager using Bukkit API.
- */
+
 public class PaperPlayerManager implements PlatformPlayerManager {
 
     public Object getPlayerByName(String name) {
@@ -58,8 +56,8 @@ public class PaperPlayerManager implements PlatformPlayerManager {
 
     @Override
     public void sendMessage(Object player, String message) {
-        if (player instanceof Player) {
-            ((Player) player).sendMessage(message);
+        if (player instanceof FormPlayer formPlayer) {
+            formPlayer.sendMessage(message);
         }
     }
 

@@ -10,12 +10,11 @@ softdepend:
   - Vault
   - LuckPerms
   - WorldGuard
-  - CoreProtect
-  - MythicMobs
-  - Citizens
 commands:
   bedrockgui:
     usage: "/bedrockgui <reload | open>"
     permission: "bedrockgui.admin"
     aliases:
       - "bgui"
+
+

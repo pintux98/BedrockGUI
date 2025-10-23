@@ -10,10 +10,7 @@ import it.pintux.life.common.utils.MessageData;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * Action handler for managing player inventory operations
- * Supports giving items, removing items, clearing inventory, and checking inventory space
- */
+
 public class InventoryActionHandler extends BaseActionHandler {
     
     private final PlatformCommandExecutor commandExecutor;
@@ -28,221 +25,252 @@ public class InventoryActionHandler extends BaseActionHandler {
     }
     
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
+        ActionResult validationResult = validateBasicParameters(player, actionValue);
         if (validationResult != null) {
             return validationResult;
         }
         
         try {
-            // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context, player);
-            String[] parts = processedData.split(":", 3);
             
-            if (parts.length < 2) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
+            if (actionValue.trim().startsWith("[") && actionValue.trim().endsWith("]")) {
+                return executeMultipleInventoryOperations(player, actionValue, context);
+            } else {
+                return executeSingleInventoryOperation(player, actionValue, context);
             }
-            
-            String operation = parts[0].toLowerCase();
-            String itemData = parts[1];
-            
-            switch (operation) {
-                case "give":
-                    return handleGiveItem(player, itemData, parts.length > 2 ? parts[2] : "1");
-                    
-                case "remove":
-                    return handleRemoveItem(player, itemData, parts.length > 2 ? parts[2] : "1");
-                    
-                case "clear":
-                    return handleClearInventory(player, itemData);
-                    
-                case "check":
-                    return handleCheckInventory(player, itemData);
-                    
-                case "slot":
-                    return handleSlotOperation(player, itemData, parts.length > 2 ? parts[2] : "");
-                    
-                default:
-                    logger.warn("Unknown inventory operation: " + operation + " for player: " + player.getName());
-                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    Map<String, Object> replacements = new HashMap<>();
-                    replacements.put("operation", operation);
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player)), player);
-            }
-            
         } catch (Exception e) {
-            logger.error("Error executing inventory action for player " + player.getName(), e);
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            Map<String, Object> replacements = new HashMap<>();
-            replacements.put("error", e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player)), player, e);
+            logger.error("Error executing inventory action for player " + player.getName() + ": " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", 
+                createReplacements("error", "Error executing inventory action: " + e.getMessage()), player);
         }
+    }
+    
+    
+    private ActionResult executeSingleInventoryOperation(FormPlayer player, String inventoryData, ActionContext context) {
+        
+        String processedData = processPlaceholders(inventoryData.trim(), context, player);
+        String[] parts = processedData.split(":", 3);
+        
+        if (parts.length < 2) {
+            return createFailureResult("ACTION_EXECUTION_ERROR", 
+                createReplacements("error", "Invalid inventory format. Expected: operation:item[:amount]"), player);
+        }
+        
+        String operation = parts[0].toLowerCase();
+        String itemData = parts[1];
+        String amount = parts.length > 2 ? parts[2] : "1";
+        
+        switch (operation) {
+            case "give":
+                return handleGiveItem(player, itemData, amount);
+            case "remove":
+                return handleRemoveItem(player, itemData, amount);
+            case "clear":
+                return handleClearInventory(player, itemData);
+            case "check":
+                return handleCheckInventory(player, itemData);
+            default:
+                return createFailureResult("ACTION_EXECUTION_ERROR", 
+                    createReplacements("error", "Unknown inventory operation: " + operation), player);
+        }
+    }
+    
+    
+    private ActionResult executeMultipleInventoryOperations(FormPlayer player, String multiValue, ActionContext context) {
+        
+        String listContent = multiValue.trim().substring(1, multiValue.trim().length() - 1);
+        String[] operations = listContent.split(",\\s*");
+        
+        for (String operation : operations) {
+            ActionResult result = executeSingleInventoryOperation(player, operation.trim(), context);
+            if (result.isFailure()) {
+                return result; 
+            }
+            
+            
+            try {
+                Thread.sleep(100); 
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+        
+        logSuccess("inventory", "Executed " + operations.length + " inventory operations", player);
+        return createSuccessResult("ACTION_INVENTORY_SUCCESS", 
+            createReplacements("message", "Executed " + operations.length + " inventory operations"), player);
     }
     
     private ActionResult handleGiveItem(FormPlayer player, String itemData, String amountStr) {
         try {
             int amount = Integer.parseInt(amountStr);
-            if (amount <= 0) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Amount must be greater than 0"), player);
-            }
-            
-            // Use Minecraft give command
             String command = "give " + player.getName() + " " + itemData + " " + amount;
-            boolean success = commandExecutor.executeAsConsole(command);
+            
+            boolean success = executeWithErrorHandling(
+                () -> {
+                    commandExecutor.executeAsConsole(command);
+                    return true;
+                },
+                "Inventory give command: " + command,
+                player
+            );
             
             if (success) {
-                logger.debug("Successfully gave " + amount + " " + itemData + " to player " + player.getName());
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully gave " + amount + " " + itemData + " to " + player.getName()), player);
+                logSuccess("inventory", "Gave " + amount + " " + itemData + " to " + player.getName(), player);
+                Map<String, Object> replacements = createReplacements("item", itemData);
+                replacements.put("amount", String.valueOf(amount));
+                return createSuccessResult("ACTION_INVENTORY_SUCCESS", replacements, player);
             } else {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to give item to player"), player);
+                return createFailureResult("ACTION_INVENTORY_FAILED", 
+                    createReplacements("operation", "give " + itemData), player);
             }
-            
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid amount: " + amountStr), player);
+            return createFailureResult("ACTION_EXECUTION_ERROR", 
+                createReplacements("error", "Invalid amount: " + amountStr), player);
         }
     }
     
     private ActionResult handleRemoveItem(FormPlayer player, String itemData, String amountStr) {
         try {
             int amount = Integer.parseInt(amountStr);
-            if (amount <= 0) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Amount must be greater than 0"), player);
-            }
-            
-            // Use Minecraft clear command to remove specific items
             String command = "clear " + player.getName() + " " + itemData + " " + amount;
-            boolean success = commandExecutor.executeAsConsole(command);
+            
+            boolean success = executeWithErrorHandling(
+                () -> {
+                    commandExecutor.executeAsConsole(command);
+                    return true;
+                },
+                "Inventory remove command: " + command,
+                player
+            );
             
             if (success) {
-                logger.debug("Successfully removed " + amount + " " + itemData + " from player " + player.getName());
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully removed " + amount + " " + itemData + " from " + player.getName()), player);
+                logSuccess("inventory", "Removed " + amount + " " + itemData + " from " + player.getName(), player);
+                Map<String, Object> replacements = createReplacements("item", itemData);
+                replacements.put("amount", String.valueOf(amount));
+                return createSuccessResult("ACTION_INVENTORY_SUCCESS", replacements, player);
             } else {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to remove item from player"), player);
+                return createFailureResult("ACTION_INVENTORY_FAILED", 
+                    createReplacements("operation", "remove " + itemData), player);
             }
-            
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid amount: " + amountStr), player);
+            return createFailureResult("ACTION_EXECUTION_ERROR", 
+                createReplacements("error", "Invalid amount: " + amountStr), player);
         }
     }
     
     private ActionResult handleClearInventory(FormPlayer player, String target) {
         String command;
-        
-        switch (target.toLowerCase()) {
-            case "all":
-                command = "clear " + player.getName();
-                break;
-            case "hotbar":
-                // Clear hotbar slots (0-8)
-                command = "clear " + player.getName() + " * * 9";
-                break;
-            case "armor":
-                // Clear armor slots
-                command = "replaceitem entity " + player.getName() + " slot.armor.head air";
-                commandExecutor.executeAsConsole(command);
-                command = "replaceitem entity " + player.getName() + " slot.armor.chest air";
-                commandExecutor.executeAsConsole(command);
-                command = "replaceitem entity " + player.getName() + " slot.armor.legs air";
-                commandExecutor.executeAsConsole(command);
-                command = "replaceitem entity " + player.getName() + " slot.armor.feet air";
-                break;
-            case "offhand":
-                command = "replaceitem entity " + player.getName() + " slot.weapon.offhand air";
-                break;
-            default:
-                // Clear specific item type
-                command = "clear " + player.getName() + " " + target;
-                break;
+        if ("all".equals(target) || target.isEmpty()) {
+            command = "clear " + player.getName();
+        } else {
+            command = "clear " + player.getName() + " " + target;
         }
         
-        boolean success = commandExecutor.executeAsConsole(command);
+        boolean success = executeWithErrorHandling(
+            () -> {
+                commandExecutor.executeAsConsole(command);
+                return true;
+            },
+            "Inventory clear command: " + command,
+            player
+        );
         
         if (success) {
-            logger.debug("Successfully cleared " + target + " for player " + player.getName());
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully cleared " + target + " for " + player.getName()), player);
+            logSuccess("inventory", "Cleared inventory for " + player.getName(), player);
+            return createSuccessResult("ACTION_INVENTORY_SUCCESS", 
+                createReplacements("operation", "clear"), player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to clear " + target + " for player"), player);
+            return createFailureResult("ACTION_INVENTORY_FAILED", 
+                createReplacements("operation", "clear"), player);
         }
     }
     
     private ActionResult handleCheckInventory(FormPlayer player, String itemData) {
-        // This would typically require platform-specific implementation
-        // For now, we'll use a testfor command approach
-        String command = "testfor " + player.getName() + " {Inventory:[{id:" + itemData + "\"}]}";
-        boolean hasItem = commandExecutor.executeAsConsole(command);
         
-        String message = hasItem ? 
-            "Player " + player.getName() + " has " + itemData + " in inventory" :
-            "Player " + player.getName() + " does not have " + itemData + " in inventory";
-            
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
-    }
-    
-    private ActionResult handleSlotOperation(FormPlayer player, String slotData, String itemData) {
-        try {
-            int slot = Integer.parseInt(slotData);
-            if (slot < 0 || slot > 35) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid slot number. Must be between 0-35"), player);
-            }
-            
-            String command;
-            if (itemData.isEmpty() || itemData.equalsIgnoreCase("air")) {
-                // Clear the slot
-                command = "replaceitem entity " + player.getName() + " slot.inventory " + slot + " air";
-            } else {
-                // Set item in slot
-                command = "replaceitem entity " + player.getName() + " slot.inventory " + slot + " " + itemData;
-            }
-            
-            boolean success = commandExecutor.executeAsConsole(command);
-            
-            if (success) {
-                logger.debug("Successfully modified slot " + slot + " for player " + player.getName());
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Successfully modified slot " + slot + " for " + player.getName()), player);
-            } else {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to modify slot for player"), player);
-            }
-            
-        } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid slot number: " + slotData), player);
+        String command = "testfor " + player.getName() + " {Inventory:[{id:\"" + itemData + "\"}]}";
+        
+        boolean success = executeWithErrorHandling(
+            () -> {
+                commandExecutor.executeAsConsole(command);
+                return true;
+            },
+            "Inventory check command: " + command,
+            player
+        );
+        
+        if (success) {
+            logSuccess("inventory", "Checked inventory for " + itemData, player);
+            return createSuccessResult("ACTION_INVENTORY_SUCCESS", 
+                createReplacements("item", itemData), player);
+        } else {
+            return createFailureResult("ACTION_INVENTORY_FAILED", 
+                createReplacements("operation", "check " + itemData), player);
         }
     }
-    
 
-    
     @Override
     public boolean isValidAction(String actionValue) {
         if (actionValue == null || actionValue.trim().isEmpty()) {
             return false;
         }
         
-        String[] parts = actionValue.split(":", 2);
-        if (parts.length < 2) {
+        String trimmed = actionValue.trim();
+        
+        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+            
+            String listContent = trimmed.substring(1, trimmed.length() - 1);
+            String[] operations = listContent.split(",\\s*");
+            for (String operation : operations) {
+                if (!isValidSingleInventoryOperation(operation.trim())) {
+                    return false;
+                }
+            }
+            return true;
+        } else {
+            return isValidSingleInventoryOperation(trimmed);
+        }
+    }
+    
+    private boolean isValidSingleInventoryOperation(String inventoryData) {
+        if (inventoryData.isEmpty()) return false;
+        
+        String[] parts = inventoryData.split(":");
+        if (parts.length < 2) return false;
+        
+        String operation = parts[0].toLowerCase();
+        
+        
+        if (!operation.matches("give|remove|clear|check")) {
             return false;
         }
         
-        String operation = parts[0].toLowerCase();
-        return operation.equals("give") || operation.equals("remove") || 
-               operation.equals("clear") || operation.equals("check") || 
-               operation.equals("slot");
+        
+        if (parts.length > 2) {
+            try {
+                Integer.parseInt(parts[2]);
+            } catch (NumberFormatException e) {
+                return false;
+            }
+        }
+        
+        return true;
     }
-    
+
     @Override
     public String getDescription() {
-        return "Manages player inventory operations including giving items, removing items, clearing inventory, and checking inventory contents";
+        return "Manages player inventory operations with support for multiple operations";
     }
-    
+
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-            "inventory:give:diamond:5 - Give 5 diamonds to the player",
-            "inventory:remove:stone:10 - Remove 10 stone from the player",
-            "inventory:clear:all - Clear the entire inventory",
-            "inventory:clear:armor - Clear only armor slots",
-            "inventory:check:diamond_sword - Check if player has a diamond sword",
-            "inventory:slot:0:diamond - Put a diamond in hotbar slot 0",
-            "inventory:slot:9:air - Clear inventory slot 9"
+            "New Format Examples:",
+            "inventory { - \"give:diamond:64\" }",
+            "inventory { - \"remove:stone:32\" }",
+            "inventory { - \"clear:all\" }",
+            "inventory { - \"give:diamond:1\" - \"give:emerald:5\" - \"give:gold_ingot:10\" }",
+            "inventory { - \"check:diamond\" - \"give:diamond:1\" }"
         };
     }
 }

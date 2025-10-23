@@ -10,9 +10,7 @@ import org.jetbrains.annotations.Nullable;
 
 import java.util.stream.Collectors;
 
-/**
- * PlaceholderAPI expansion for BedrockGUI custom placeholders
- */
+
 public class BedrockGUIExpansion extends PlaceholderExpansion {
     
     private final BedrockGUI plugin;
@@ -53,10 +51,7 @@ public class BedrockGUIExpansion extends PlaceholderExpansion {
         }
     }
     
-    /**
-     * Returns a formatted list of online players with their names and UUIDs
-     * Format: "name1:uuid1,name2:uuid2,name3:uuid3"
-     */
+    
     private String getOnlinePlayersList() {
         return Bukkit.getOnlinePlayers().stream()
                 .map(p -> p.getName() + ":" + p.getUniqueId().toString())

@@ -5,9 +5,7 @@ import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.utils.FormPlayer;
 import org.geysermc.floodgate.api.FloodgateApi;
 
-/**
- * Handles closing the current form
- */
+
 public class CloseActionHandler extends BaseActionHandler {
     
     @Override
@@ -34,7 +32,7 @@ public class CloseActionHandler extends BaseActionHandler {
     
     @Override
     public boolean isValidAction(String actionValue) {
-        // Close action doesn't require any specific value
+        
         return true;
     }
     
@@ -47,7 +45,7 @@ public class CloseActionHandler extends BaseActionHandler {
     public String[] getUsageExamples() {
         return new String[]{
             "close",
-            "" // Empty value is also valid
+            "" 
         };
     }
 }

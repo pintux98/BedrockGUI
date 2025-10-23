@@ -11,9 +11,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
-/**
- * Comprehensive validation framework for form inputs and configurations
- */
+
 public class FormValidationFramework {
     
     private static final Logger logger = Logger.getLogger(FormValidationFramework.class);
@@ -26,11 +24,9 @@ public class FormValidationFramework {
         registerBuiltInRules();
     }
     
-    /**
-     * Registers built-in validators
-     */
+    
     private void registerBuiltInValidators() {
-        // Input validators
+        
         registerValidator("required", new RequiredValidator());
         registerValidator("minLength", new MinLengthValidator());
         registerValidator("maxLength", new MaxLengthValidator());
@@ -42,7 +38,7 @@ public class FormValidationFramework {
         registerValidator("permission", new PermissionValidator());
         registerValidator("economy", new EconomyValidator());
         
-        // Form structure validators
+        
         registerValidator("formStructure", new FormStructureValidator());
         registerValidator("buttonCount", new ButtonCountValidator());
         registerValidator("componentCount", new ComponentCountValidator());
@@ -50,11 +46,9 @@ public class FormValidationFramework {
         logger.info("Registered " + validators.size() + " built-in validators");
     }
     
-    /**
-     * Registers built-in validation rules
-     */
+    
     private void registerBuiltInRules() {
-        // Common validation rules
+        
         registerRule("notEmpty", value -> !ValidationUtils.isNullOrEmpty(value.toString()));
         registerRule("positive", value -> {
             try {
@@ -76,30 +70,24 @@ public class FormValidationFramework {
         logger.info("Registered " + globalRules.size() + " built-in validation rules");
     }
     
-    /**
-     * Registers a custom validator
-     */
+    
     public void registerValidator(String name, FormValidator validator) {
         validators.put(name.toLowerCase(), validator);
     }
     
-    /**
-     * Registers a custom validation rule
-     */
+    
     public void registerRule(String name, Predicate<Object> rule) {
         globalRules.put(name.toLowerCase(), new ValidationRule(name, rule));
     }
     
-    /**
-     * Validates form input using specified validator
-     */
+    
     public ValidationResult validate(String validatorName, Object value, Map<String, Object> parameters) {
         FormValidator validator = validators.get(validatorName.toLowerCase());
         if (validator == null) {
             return ValidationResult.failure("Unknown validator: " + validatorName);
         }
         
-        // Use reflection or direct method call for legacy validation
+        
         if (validator instanceof RequiredValidator) {
             return ((RequiredValidator) validator).validate(value, parameters != null ? parameters : new HashMap<>());
         } else if (validator instanceof MinLengthValidator) {
@@ -122,13 +110,11 @@ public class FormValidationFramework {
             return ((EconomyValidator) validator).validate(value, parameters != null ? parameters : new HashMap<>());
         }
         
-        // Fallback to interface method (for form data validation)
+        
         return validator.validate(new HashMap<>(), null);
     }
     
-    /**
-     * Validates form input using multiple validators
-     */
+    
     public ValidationResult validateMultiple(Object value, List<ValidatorConfig> validatorConfigs) {
         for (ValidatorConfig config : validatorConfigs) {
             ValidationResult result = validate(config.validatorName, value, config.parameters);
@@ -139,9 +125,7 @@ public class FormValidationFramework {
         return ValidationResult.success();
     }
     
-    /**
-     * Validates entire form structure
-     */
+    
     public ValidationResult validateForm(FormBuilder formBuilder) {
         if (formBuilder == null) {
             return ValidationResult.failure("Form builder cannot be null");
@@ -155,22 +139,18 @@ public class FormValidationFramework {
         return ValidationResult.success();
     }
     
-    /**
-     * Creates a validation chain for complex validation scenarios
-     */
+    
     public ValidationChain createValidationChain() {
         return new ValidationChain(this);
     }
     
-    // ==================== BUILT-IN VALIDATORS ====================
     
-    /**
-     * Required field validator
-     */
+    
+    
     public static class RequiredValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -188,13 +168,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Minimum length validator
-     */
+    
     public static class MinLengthValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -219,13 +197,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Maximum length validator
-     */
+    
     public static class MaxLengthValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -236,7 +212,7 @@ public class FormValidationFramework {
         
         public ValidationResult validate(Object value, Map<String, Object> parameters) {
             if (value == null) {
-                return ValidationResult.success(); // null is valid for max length
+                return ValidationResult.success(); 
             }
             
             int maxLength = (Integer) parameters.getOrDefault("maxLength", 255);
@@ -250,13 +226,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Pattern validator using regex
-     */
+    
     public static class PatternValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -267,7 +241,7 @@ public class FormValidationFramework {
         
         public ValidationResult validate(Object value, Map<String, Object> parameters) {
             if (value == null) {
-                return ValidationResult.success(); // null is valid for pattern
+                return ValidationResult.success(); 
             }
             
             String pattern = (String) parameters.get("pattern");
@@ -288,16 +262,14 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Email validator
-     */
+    
     public static class EmailValidator implements FormValidator {
         private static final String EMAIL_PATTERN = 
             "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
         
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -308,7 +280,7 @@ public class FormValidationFramework {
         
         public ValidationResult validate(Object value, Map<String, Object> parameters) {
             if (value == null || ValidationUtils.isNullOrEmpty(value.toString())) {
-                return ValidationResult.success(); // null/empty is valid for email unless required
+                return ValidationResult.success(); 
             }
             
             if (!Pattern.matches(EMAIL_PATTERN, value.toString())) {
@@ -319,13 +291,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Numeric validator
-     */
+    
     public static class NumericValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -348,13 +318,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Range validator for numeric values
-     */
+    
     public static class RangeValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -388,15 +356,13 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Player name validator
-     */
+    
     public static class PlayerNameValidator implements FormValidator {
         private static final String PLAYER_NAME_PATTERN = "^[a-zA-Z0-9_]{3,16}$";
         
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -420,15 +386,13 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Permission validator
-     */
+    
     public static class PermissionValidator implements FormValidator {
         private static final String PERMISSION_PATTERN = "^[a-zA-Z0-9._-]+$";
         
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -452,13 +416,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Economy validator for monetary values
-     */
+    
     public static class EconomyValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -485,7 +447,7 @@ public class FormValidationFramework {
                     return ValidationResult.failure("Amount cannot exceed " + maxAmount);
                 }
                 
-                // Check decimal places
+                
                 Integer maxDecimals = (Integer) parameters.getOrDefault("maxDecimals", 2);
                 String[] parts = value.toString().split("\\.");
                 if (parts.length > 1 && parts[1].length() > maxDecimals) {
@@ -499,13 +461,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Form structure validator
-     */
+    
     public static class FormStructureValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -521,24 +481,22 @@ public class FormValidationFramework {
             
             FormBuilder builder = (FormBuilder) value;
             
-            // Validate title
+            
             if (ValidationUtils.isNullOrEmpty(builder.getTitle())) {
                 return ValidationResult.failure("Form title cannot be empty");
             }
             
-            // Additional structure validations can be added here
+            
             
             return ValidationResult.success();
         }
     }
     
-    /**
-     * Button count validator
-     */
+    
     public static class ButtonCountValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -549,19 +507,19 @@ public class FormValidationFramework {
         
         public ValidationResult validate(Object value, Map<String, Object> parameters) {
             if (!(value instanceof SimpleFormBuilder)) {
-                return ValidationResult.success(); // Only applies to simple forms
+                return ValidationResult.success(); 
             }
             
             SimpleFormBuilder builder = (SimpleFormBuilder) value;
             int buttonCount;
             try {
-                // Prefer dedicated getter if available
+                
                 try {
                     java.lang.reflect.Method m = builder.getClass().getMethod("getButtonCount");
                     Object result = m.invoke(builder);
                     buttonCount = (result instanceof Number) ? ((Number) result).intValue() : 0;
                 } catch (NoSuchMethodException nsme) {
-                    // Fallback to private field via reflection
+                    
                     java.lang.reflect.Field field = builder.getClass().getDeclaredField("buttons");
                     field.setAccessible(true);
                     Object val = field.get(builder);
@@ -590,13 +548,11 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Component count validator
-     */
+    
     public static class ComponentCountValidator implements FormValidator {
         @Override
         public ValidationResult validate(Map<String, Object> formData, FormPlayer player) {
-            // This validator is designed for form structure validation, not form data
+            
             return ValidationResult.success();
         }
         
@@ -607,19 +563,19 @@ public class FormValidationFramework {
         
         public ValidationResult validate(Object value, Map<String, Object> parameters) {
             if (!(value instanceof CustomFormBuilder)) {
-                return ValidationResult.success(); // Only applies to custom forms
+                return ValidationResult.success(); 
             }
             
             CustomFormBuilder builder = (CustomFormBuilder) value;
             int componentCount;
             try {
-                // Prefer dedicated getter if available
+                
                 try {
                     java.lang.reflect.Method m = builder.getClass().getMethod("getComponentCount");
                     Object result = m.invoke(builder);
                     componentCount = (result instanceof Number) ? ((Number) result).intValue() : 0;
                 } catch (NoSuchMethodException nsme) {
-                    // Fallback to private field via reflection
+                    
                     java.lang.reflect.Field field = builder.getClass().getDeclaredField("components");
                     field.setAccessible(true);
                     Object val = field.get(builder);
@@ -648,11 +604,9 @@ public class FormValidationFramework {
         }
     }
     
-    // ==================== VALIDATION CHAIN ====================
     
-    /**
-     * Validation chain for complex validation scenarios
-     */
+    
+    
     public static class ValidationChain {
         private final FormValidationFramework framework;
         private final List<ValidationStep> steps = new ArrayList<>();
@@ -733,11 +687,9 @@ public class FormValidationFramework {
         }
     }
     
-    // ==================== SUPPORTING CLASSES ====================
     
-    /**
-     * Validator configuration
-     */
+    
+    
     public static class ValidatorConfig {
         public final String validatorName;
         public final Map<String, Object> parameters;
@@ -752,9 +704,7 @@ public class FormValidationFramework {
         }
     }
     
-    /**
-     * Validation rule wrapper
-     */
+    
     public static class ValidationRule {
         private final String name;
         private final Predicate<Object> rule;
@@ -773,11 +723,9 @@ public class FormValidationFramework {
         }
     }
     
-    // ==================== UTILITY METHODS ====================
     
-    /**
-     * Creates a quick validator for common scenarios
-     */
+    
+    
     public static ValidatorConfig required() {
         return new ValidatorConfig("required");
     }

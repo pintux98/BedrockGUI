@@ -1,8 +1,6 @@
 package it.pintux.life.common.actions;
 
-/**
- * Represents the result of an action execution
- */
+
 public class ActionResult {
     
     public enum Status {

@@ -6,14 +6,13 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
+import it.pintux.life.common.utils.PlaceholderUtil;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/**
- * Action handler for managing potion effects
- * Supports giving, removing, and clearing potion effects from players
- */
+
 public class PotionActionHandler extends BaseActionHandler {
     
     private final PlatformCommandExecutor commandExecutor;
@@ -35,52 +34,20 @@ public class PotionActionHandler extends BaseActionHandler {
         }
         
         try {
-            // Process placeholders in the action data
-            String processedData = processPlaceholders(actionData.trim(), context, player);
-            String[] parts = processedData.split(":", 6);
+            List<String> operations = parseActionData(actionData, context, player);
             
-            if (parts.length < 3) {
+            if (operations.isEmpty()) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
             
-            String operation = parts[0].toLowerCase();
-            String targetPlayer = parts[1];
-            String effectName = parts[2];
-            String duration = parts.length > 3 ? parts[3] : "30";
-            String amplifier = parts.length > 4 ? parts[4] : "0";
-            String hideParticles = parts.length > 5 ? parts[5] : "false";
             
-            // Replace %player_name% placeholder if used
-            if (targetPlayer.equals("%player_name%") || targetPlayer.equals("@s")) {
-                targetPlayer = player.getName();
+            if (operations.size() == 1) {
+                return executeSinglePotionOperation(operations.get(0), player);
             }
             
-            switch (operation) {
-                case "give":
-                case "add":
-                case "apply":
-                    return handleGiveEffect(targetPlayer, effectName, duration, amplifier, hideParticles, player);
-                    
-                case "remove":
-                case "clear":
-                    return handleRemoveEffect(targetPlayer, effectName, player);
-                    
-                case "clearall":
-                case "removeall":
-                    return handleClearAllEffects(targetPlayer, player);
-                    
-                case "check":
-                case "list":
-                    return handleListEffects(targetPlayer, player);
-                    
-                default:
-                    logger.warn("Unknown potion operation: " + operation + " for player: " + player.getName());
-                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    Map<String, Object> replacements = new HashMap<>();
-                    replacements.put("operation", operation);
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player)), player);
-            }
+            
+            return executeMultiplePotionOperations(operations, player);
             
         } catch (Exception e) {
             logger.error("Error executing potion action for player " + player.getName(), e);
@@ -91,39 +58,150 @@ public class PotionActionHandler extends BaseActionHandler {
         }
     }
     
-    private ActionResult handleGiveEffect(String targetPlayer, String effectName, String duration, String amplifier, String hideParticles, FormPlayer player) {
-        // Normalize effect name
-        String normalizedEffect = normalizeEffectName(effectName);
-        if (normalizedEffect == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid potion effect: " + effectName), player);
+    private ActionResult executeSinglePotionOperation(String operation, FormPlayer player) {
+        String[] parts = operation.split(":", 6);
+        
+        if (parts.length < 3) {
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
         }
         
-        // Validate and parse duration (in seconds)
+        String operationType = parts[0].toLowerCase();
+        String targetPlayer = parts[1];
+        String effectName = parts[2];
+        String duration = parts.length > 3 ? parts[3] : "30";
+        String amplifier = parts.length > 4 ? parts[4] : "0";
+        String hideParticles = parts.length > 5 ? parts[5] : "false";
+        
+        
+        if (targetPlayer.equals("%player_name%") || targetPlayer.equals("@s")) {
+            targetPlayer = player.getName();
+        }
+        
+        switch (operationType) {
+            case "give":
+            case "add":
+            case "apply":
+                return handleGiveEffect(targetPlayer, effectName, duration, amplifier, hideParticles, player);
+                
+            case "remove":
+            case "clear":
+                return handleRemoveEffect(targetPlayer, effectName, player);
+                
+            case "clearall":
+            case "removeall":
+                return handleClearAllEffects(targetPlayer, player);
+                
+            case "check":
+            case "list":
+                return handleListEffects(targetPlayer, player);
+                
+            default:
+                logger.warn("Unknown potion operation: " + operationType + " for player: " + player.getName());
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("operation", operationType);
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, replacements, player)), player);
+        }
+    }
+    
+    private ActionResult executeMultiplePotionOperations(List<String> operations, FormPlayer player) {
+        int successCount = 0;
+        int totalCount = operations.size();
+        StringBuilder results = new StringBuilder();
+        
+        for (int i = 0; i < operations.size(); i++) {
+            String operation = operations.get(i);
+            
+            try {
+                ActionResult result = executeSinglePotionOperation(operation, player);
+                
+                if (result.isSuccess()) {
+                    successCount++;
+                    results.append("âś“ Operation ").append(i + 1).append(": ").append(operation).append(" - Success");
+                } else {
+                    results.append("âś— Operation ").append(i + 1).append(": ").append(operation).append(" - Failed: ").append(result.getMessage());
+                }
+                
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                    
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                results.append("âś— Operation ").append(i + 1).append(": ").append(operation).append(" - Error: ").append(e.getMessage());
+                if (i < operations.size() - 1) {
+                    results.append("\n");
+                }
+            }
+        }
+        
+        String finalMessage = String.format("Executed %d/%d potion operations successfully:\n%s", 
+            successCount, totalCount, results.toString());
+        
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", finalMessage);
+        replacements.put("success_count", successCount);
+        replacements.put("total_count", totalCount);
+        
+        if (successCount == totalCount) {
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } else if (successCount > 0) {
+            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+        } else {
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+        }
+    }
+    
+    private ActionResult handleGiveEffect(String targetPlayer, String effectName, String duration, String amplifier, String hideParticles, FormPlayer player) {
+        
+        String normalizedEffect = normalizeEffectName(effectName);
+        if (normalizedEffect == null) {
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Invalid potion effect: " + effectName);
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+        }
+        
+        
         int durationSeconds;
         try {
             durationSeconds = parseDuration(duration);
             if (durationSeconds <= 0) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Duration must be a positive number"), player);
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("error", "Duration must be a positive number");
+                return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid duration format: " + duration + ". Use format like: 30s, 5m, 1h, or just seconds"), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Invalid duration format: " + duration + ". Use format like: 30s, 5m, 1h, or just seconds");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
         
-        // Validate and parse amplifier (0-255)
+        
         int amplifierLevel;
         try {
             amplifierLevel = Integer.parseInt(amplifier);
             if (amplifierLevel < 0 || amplifierLevel > 255) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Amplifier must be between 0 and 255"), player);
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("error", "Amplifier must be between 0 and 255");
+                return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid amplifier: " + amplifier + ". Must be a number between 0 and 255"), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Invalid amplifier: " + amplifier + ". Must be a number between 0 and 255");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
         
-        // Parse hide particles flag
+        
         boolean hideParticlesBool = Boolean.parseBoolean(hideParticles);
         
-        // Build the effect command
+        
         String command = String.format("effect give %s %s %d %d %s", 
             targetPlayer, normalizedEffect, durationSeconds, amplifierLevel, hideParticlesBool);
         
@@ -134,17 +212,24 @@ public class PotionActionHandler extends BaseActionHandler {
             String message = String.format("Successfully gave %s effect %s (Level %d) for %s seconds to %s", 
                 effectDisplayName, normalizedEffect, amplifierLevel + 1, durationSeconds, targetPlayer);
             logger.debug(message);
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", message);
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to give potion effect. Command execution failed."), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Failed to give potion effect. Command execution failed.");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
     private ActionResult handleRemoveEffect(String targetPlayer, String effectName, FormPlayer player) {
-        // Normalize effect name
+        
         String normalizedEffect = normalizeEffectName(effectName);
         if (normalizedEffect == null) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid potion effect: " + effectName), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Invalid potion effect: " + effectName);
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
         
         String command = String.format("effect clear %s %s", targetPlayer, normalizedEffect);
@@ -154,9 +239,14 @@ public class PotionActionHandler extends BaseActionHandler {
             String effectDisplayName = getEffectDisplayName(normalizedEffect);
             String message = String.format("Successfully removed %s effect from %s", effectDisplayName, targetPlayer);
             logger.debug(message);
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", message);
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to remove potion effect. Command execution failed."), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Failed to remove potion effect. Command execution failed.");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
@@ -167,22 +257,31 @@ public class PotionActionHandler extends BaseActionHandler {
         if (success) {
             String message = String.format("Successfully cleared all potion effects from %s", targetPlayer);
             logger.debug(message);
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+            
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", message);
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to clear all potion effects. Command execution failed."), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Failed to clear all potion effects. Command execution failed.");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
     private ActionResult handleListEffects(String targetPlayer, FormPlayer player) {
-        // This would typically require platform-specific implementation to get active effects
-        // For now, we'll use a command that shows the player's status
+        
+        
         String command = String.format("data get entity %s ActiveEffects", targetPlayer);
         boolean success = commandExecutor.executeAsConsole(command);
         
         if (success) {
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Listed active potion effects for " + targetPlayer), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("message", "Listed active potion effects for " + targetPlayer);
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to list potion effects. Command execution failed."), player);
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("error", "Failed to list potion effects. Command execution failed.");
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
@@ -193,7 +292,7 @@ public class PotionActionHandler extends BaseActionHandler {
         
         String normalized = effectName.toLowerCase().trim();
         
-        // Handle common aliases and variations
+        
         Map<String, String> effectAliases = new HashMap<>();
         effectAliases.put("speed", "minecraft:speed");
         effectAliases.put("slowness", "minecraft:slowness");
@@ -229,7 +328,7 @@ public class PotionActionHandler extends BaseActionHandler {
         effectAliases.put("bad_omen", "minecraft:bad_omen");
         effectAliases.put("hero_of_the_village", "minecraft:hero_of_the_village");
         
-        // Common short names
+        
         effectAliases.put("regen", "minecraft:regeneration");
         effectAliases.put("invis", "minecraft:invisibility");
         effectAliases.put("nv", "minecraft:night_vision");
@@ -239,17 +338,17 @@ public class PotionActionHandler extends BaseActionHandler {
         effectAliases.put("damage", "minecraft:instant_damage");
         effectAliases.put("harm", "minecraft:instant_damage");
         
-        // Check if it's an alias
+        
         if (effectAliases.containsKey(normalized)) {
             return effectAliases.get(normalized);
         }
         
-        // If it already has minecraft: prefix, return as is
+        
         if (normalized.startsWith("minecraft:")) {
             return normalized;
         }
         
-        // Add minecraft: prefix if it's a valid effect name
+        
         String withPrefix = "minecraft:" + normalized;
         if (isValidMinecraftEffect(normalized)) {
             return withPrefix;
@@ -259,7 +358,7 @@ public class PotionActionHandler extends BaseActionHandler {
     }
     
     private boolean isValidMinecraftEffect(String effectName) {
-        // List of valid Minecraft effect names (without minecraft: prefix)
+        
         String[] validEffects = {
             "speed", "slowness", "haste", "mining_fatigue", "strength", "instant_health",
             "instant_damage", "jump_boost", "nausea", "regeneration", "resistance",
@@ -279,7 +378,7 @@ public class PotionActionHandler extends BaseActionHandler {
     
     private String getEffectDisplayName(String effectName) {
         if (effectName.startsWith("minecraft:")) {
-            String name = effectName.substring(10); // Remove "minecraft:" prefix
+            String name = effectName.substring(10); 
             return name.substring(0, 1).toUpperCase() + name.substring(1).replace("_", " ");
         }
         return effectName;
@@ -287,10 +386,10 @@ public class PotionActionHandler extends BaseActionHandler {
     
     private int parseDuration(String duration) throws NumberFormatException {
         if (duration == null || duration.isEmpty()) {
-            return 30; // Default 30 seconds
+            return 30; 
         }
         
-        // Check if it has a time unit suffix
+        
         if (duration.matches(".*[smhd]$")) {
             String timeUnit = duration.substring(duration.length() - 1).toLowerCase();
             int value = Integer.parseInt(duration.substring(0, duration.length() - 1));
@@ -303,12 +402,10 @@ public class PotionActionHandler extends BaseActionHandler {
                 default: return Integer.parseInt(duration);
             }
         } else {
-            // Assume seconds if no unit
+            
             return Integer.parseInt(duration);
         }
     }
-    
-
     
     @Override
     public boolean isValidAction(String actionValue) {
@@ -316,12 +413,25 @@ public class PotionActionHandler extends BaseActionHandler {
             return false;
         }
         
-        String[] parts = actionValue.split(":", 3);
-        if (parts.length < 3) {
-            return false;
+        
+        List<String> operations = parseActionDataForValidation(actionValue);
+        
+        for (String operation : operations) {
+            String[] parts = operation.split(":", 3);
+            if (parts.length < 3) {
+                return false;
+            }
+            
+            String operationType = parts[0].toLowerCase();
+            if (!isValidOperation(operationType)) {
+                return false;
+            }
         }
         
-        String operation = parts[0].toLowerCase();
+        return true;
+    }
+    
+    private boolean isValidOperation(String operation) {
         return operation.equals("give") || operation.equals("add") || operation.equals("apply") ||
                operation.equals("remove") || operation.equals("clear") ||
                operation.equals("clearall") || operation.equals("removeall") ||
@@ -330,19 +440,25 @@ public class PotionActionHandler extends BaseActionHandler {
     
     @Override
     public String getDescription() {
-        return "Manages potion effects for players including giving, removing, and clearing effects. Supports all Minecraft potion effects with customizable duration and amplifier.";
+        return "Manages potion effects for players including giving, removing, and clearing effects. Supports all Minecraft potion effects with customizable duration and amplifier. Can execute single or multiple potion operations with sequential processing.";
     }
     
     @Override
     public String[] getUsageExamples() {
         return new String[]{
+            
             "potion:give:%player_name%:speed:60:1 - Give Speed II for 60 seconds",
             "potion:give:PlayerName:regeneration:5m:0:true - Give Regeneration I for 5 minutes with hidden particles",
             "potion:remove:%player_name%:poison - Remove poison effect from current player",
             "potion:clearall:%player_name% - Clear all potion effects from current player",
             "potion:give:@a:night_vision:10m - Give night vision to all players for 10 minutes",
             "potion:give:%player_name%:strength:2h:2 - Give Strength III for 2 hours",
-            "potion:check:%player_name%:any - List all active effects on current player"
+            "potion:check:%player_name%:any - List all active effects on current player",
+            
+            
+            "[\"potion:give:%player_name%:speed:60:1\", \"potion:give:%player_name%:strength:60:0\"] - Give speed and strength",
+            "[\"potion:clearall:%player_name%\", \"potion:give:%player_name%:regeneration:30:1\"] - Clear all effects then give regeneration",
+            "[\"potion:give:Player1:speed:30\", \"potion:give:Player2:jump_boost:30\", \"potion:give:Player3:strength:30\"] - Give different effects to multiple players"
         };
     }
 }

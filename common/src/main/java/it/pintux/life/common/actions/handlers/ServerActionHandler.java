@@ -4,20 +4,15 @@ import it.pintux.life.common.actions.ActionContext;
 import it.pintux.life.common.actions.ActionResult;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.PlaceholderUtil;
-import it.pintux.life.common.utils.ErrorHandlingUtil;
+import it.pintux.life.common.utils.ErrorHandlingManager;
+import it.pintux.life.common.utils.ValidationUtils;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
-/**
- * Handles server command execution where commands are run by the server console
- * rather than by the player. This allows for administrative commands that
- * players cannot normally execute.
- * 
- * Usage: server:give {player} diamond 64
- * Usage: server:gamemode creative {player}
- * Usage: server:tp {player} spawn
- */
+
 public class ServerActionHandler extends BaseActionHandler {
     private final PlatformCommandExecutor commandExecutor;
     
@@ -29,95 +24,205 @@ public class ServerActionHandler extends BaseActionHandler {
     public String getActionType() {
         return "server";
     }
-    
-    private boolean validateParameters(String actionData) {
-        return actionData != null && !actionData.trim().isEmpty();
-    }
 
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        if (!validateParameters(actionData)) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid action parameters"), player);
-        }
         
-        if (actionData == null || actionData.trim().isEmpty()) {
-            logger.warn("Server action called with empty command for player: " + player.getName());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No server command specified"), player);
+        ActionResult validationResult = validateBasicParameters(player, actionData);
+        if (validationResult != null) {
+            return validationResult;
         }
         
         try {
-            // Process placeholders in the command
-            String processedCommand = processPlaceholders(actionData.trim(), context, player);
             
-            logger.info("Executing server command for player " + player.getName() + ": " + processedCommand);
+            if (isNewCurlyBraceFormat(actionData, "server")) {
+                return executeNewFormat(player, actionData, context);
+            }
             
-            // Execute command with enhanced error handling and retry logic
-            boolean success = ErrorHandlingUtil.executeCommandWithFallback(
-                () -> commandExecutor.executeAsConsole(processedCommand),
-                "Server command: " + processedCommand,
+            
+            List<String> commands = parseActionData(actionData, context, player);
+            
+            if (commands.isEmpty()) {
+                Map<String, Object> errorReplacements = createReplacements("error", "No valid commands found");
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+            }
+            
+            
+            if (commands.size() == 1) {
+                return executeSingleServerCommand(commands.get(0), player);
+            }
+            
+            
+            return executeMultipleServerCommands(commands, player);
+            
+        } catch (Exception e) {
+            logError("server command execution", actionData, player, e);
+            Map<String, Object> errorReplacements = createReplacements("error", "Error executing server command: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+    
+    
+    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+        try {
+            List<String> commands = parseNewFormatValues(actionData);
+            
+            if (commands.isEmpty()) {
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No server commands found in new format"), player);
+            }
+            
+            
+            List<String> processedCommands = new ArrayList<>();
+            for (String command : commands) {
+                String processedCommand = processPlaceholders(command, context, player);
+                processedCommands.add(processedCommand);
+            }
+            
+            
+            if (processedCommands.size() == 1) {
+                return executeSingleServerCommand(processedCommands.get(0), player);
+            }
+            
+            
+            return executeMultipleServerCommands(processedCommands, player);
+            
+        } catch (Exception e) {
+            logger.error("Error executing new format server action for player " + player.getName() + ": " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new server format: " + e.getMessage()), player);
+        }
+    }
+    
+    private ActionResult executeSingleServerCommand(String command, FormPlayer player) {
+        try {
+            logger.info("Executing server command: " + command + " for player " + player.getName());
+            
+            
+            boolean success = executeWithErrorHandling(
+                () -> commandExecutor.executeAsConsole(command),
+                "Server command: " + command,
                 player
             );
             
             if (success) {
-                logger.info("Server command executed successfully");
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Server command executed successfully"), player);
+                logSuccess("server command", command, player);
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("message", "Server command executed successfully: " + command);
+                return createSuccessResult("ACTION_SUCCESS", replacements, player);
             } else {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to execute server command after retries"), player);
+                Map<String, Object> errorReplacements = new HashMap<>();
+                errorReplacements.put("error", "Failed to execute server command: " + command);
+                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
             
         } catch (Exception e) {
-            logger.error("Error executing server command for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing server command: " + e.getMessage()), player);
+            logError("server command execution", command, player, e);
+            Map<String, Object> errorReplacements = new HashMap<>();
+            errorReplacements.put("error", "Error executing server command: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+    
+    private ActionResult executeMultipleServerCommands(List<String> commands, FormPlayer player) {
+        int successCount = 0;
+        int totalCount = commands.size();
+        StringBuilder results = new StringBuilder();
+        
+        for (int i = 0; i < commands.size(); i++) {
+            String command = commands.get(i);
+            
+            try {
+                logger.info("Executing server command " + (i + 1) + "/" + totalCount + ": " + command + " for player " + player.getName());
+                
+                boolean success = executeWithErrorHandling(
+                    () -> commandExecutor.executeAsConsole(command),
+                    "Server command: " + command,
+                    player
+                );
+                
+                if (success) {
+                    successCount++;
+                    results.append("âś“ Command ").append(i + 1).append(": ").append(command).append(" - Success");
+                    logSuccess("server command", command, player);
+                } else {
+                    results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Failed");
+                }
+                
+                if (i < commands.size() - 1) {
+                    results.append("\n");
+                    
+                    try {
+                        Thread.sleep(200);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+                
+            } catch (Exception e) {
+                results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
+                logError("server command execution", command, player, e);
+                if (i < commands.size() - 1) {
+                    results.append("\n");
+                }
+            }
+        }
+        
+        String finalMessage = String.format("Executed %d/%d server commands successfully:\n%s", 
+            successCount, totalCount, results.toString());
+        
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("message", finalMessage);
+        replacements.put("success_count", successCount);
+        replacements.put("total_count", totalCount);
+        
+        if (successCount == totalCount) {
+            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+        } else if (successCount > 0) {
+            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+        } else {
+            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
     
     @Override
     public boolean isValidAction(String actionValue) {
-        return actionValue != null && !actionValue.trim().isEmpty();
+        if (actionValue == null || actionValue.trim().isEmpty()) {
+            return false;
+        }
+        
+        
+        List<String> commands = parseActionDataForValidation(actionValue);
+        
+        for (String command : commands) {
+            if (!ValidationUtils.isValidCommand(command)) {
+                return false;
+            }
+        }
+        
+        return true;
     }
     
     @Override
     public String getDescription() {
-        return "Executes commands as the server console with full administrative privileges";
+        return "Executes commands as the server console with full administrative privileges. Can execute single or multiple commands with sequential processing and delay between commands.";
     }
     
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-            "server:give {player} diamond 64",
-            "server:gamemode creative {player}",
-            "server:tp {player} spawn",
-            "server:lp user {player} parent add vip"
+            
+            "server:give {player} diamond 64 - Give 64 diamonds to player",
+            "server:gamemode creative {player} - Set player to creative mode",
+            "server:tp {player} spawn - Teleport player to spawn",
+            "server:lp user {player} parent add vip - Add VIP rank to player",
+            "server:weather clear - Set weather to clear",
+            "server:time set day - Set time to day",
+            
+            
+            "[\"server:give {player} diamond 64\", \"server:give {player} emerald 32\"] - Give diamonds and emeralds",
+            "[\"server:gamemode creative {player}\", \"server:give {player} elytra 1\", \"server:give {player} firework_rocket 64\"] - Creative mode with flight items",
+            "[\"server:weather clear\", \"server:time set day\", \"server:gamerule doDaylightCycle false\"] - Set perfect conditions",
+            "[\"server:tp {player} spawn\", \"server:give {player} bread 16\", \"server:gamemode survival {player}\"] - Spawn setup sequence"
         };
-    }
-    
-    protected String processPlaceholders(String command, ActionContext context, FormPlayer player) {
-        if (context == null) {
-            return command;
-        }
-        
-        String result = command;
-        
-        // Replace placeholders from context
-        if (context.getPlaceholders() != null) {
-            for (Map.Entry<String, String> entry : context.getPlaceholders().entrySet()) {
-                String placeholder = "{" + entry.getKey() + "}";
-                result = result.replace(placeholder, entry.getValue());
-            }
-        }
-        
-        // Process dynamic placeholders (prefixed with $)
-        result = PlaceholderUtil.processDynamicPlaceholders(result, context.getPlaceholders());
-        
-        // Process form results
-        result = PlaceholderUtil.processFormResults(result, context.getFormResults());
-        
-        // Process PlaceholderAPI placeholders if MessageData is available
-        if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
-            Object messageData = context.getMetadata().get("messageData");
-            result = PlaceholderUtil.processPlaceholders(result, player, messageData);
-        }
-        
-        return result;
     }
 }

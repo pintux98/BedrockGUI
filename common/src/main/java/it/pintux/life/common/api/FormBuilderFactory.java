@@ -9,9 +9,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
-/**
- * Factory class for creating specialized form builders and templates
- */
+
 public class FormBuilderFactory {
     
     private final BedrockGUIApi api;
@@ -20,9 +18,7 @@ public class FormBuilderFactory {
         this.api = api;
     }
     
-    /**
-     * Creates a confirmation dialog form
-     */
+    
     public BedrockGUIApi.ModalFormBuilder createConfirmationDialog(String title, String message, 
                                                                    Runnable onConfirm, Runnable onCancel) {
         BedrockGUIApi.ModalFormBuilder builder = api.createModalForm(title);
@@ -36,16 +32,12 @@ public class FormBuilderFactory {
         return builder;
     }
     
-    /**
-     * Creates a paginated list form
-     */
+    
     public PaginatedFormBuilder createPaginatedList(String title, List<String> items, int itemsPerPage) {
         return new PaginatedFormBuilder(api, title, items, itemsPerPage);
     }
     
-    /**
-     * Creates a paginated list form with item handler
-     */
+    
     public PaginatedFormBuilder createPaginatedList(String title, List<String> items, int itemsPerPage, 
                                                    BiConsumer<String, BedrockGUIApi.SimpleFormBuilder> itemHandler) {
         PaginatedFormBuilder builder = new PaginatedFormBuilder(api, title, items, itemsPerPage);
@@ -53,23 +45,17 @@ public class FormBuilderFactory {
         return builder;
     }
     
-    /**
-     * Creates a settings form with multiple categories
-     */
+    
     public SettingsFormBuilder createSettingsForm(String title) {
         return new SettingsFormBuilder(api, title);
     }
     
-    /**
-     * Creates a wizard-style multi-step form
-     */
+    
     public WizardFormBuilder createWizard(String title) {
         return new WizardFormBuilder(api, title);
     }
     
-    /**
-     * Creates a wizard-style multi-step form with predefined steps
-     */
+    
     public WizardFormBuilder createWizard(String title, List<BedrockGUIApi.FormBuilder> steps) {
         WizardFormBuilder wizard = new WizardFormBuilder(api, title);
         for (int i = 0; i < steps.size(); i++) {
@@ -79,18 +65,14 @@ public class FormBuilderFactory {
         return wizard;
     }
     
-    /**
-     * Creates a dynamic inventory-style form
-     */
+    
     public InventoryFormBuilder createInventoryForm(String title, int rows, int columns) {
         return new InventoryFormBuilder(api, title, rows, columns);
     }
     
-    // ==================== SPECIALIZED BUILDERS ====================
     
-    /**
-     * Paginated form builder for handling large lists
-     */
+    
+    
     public static class PaginatedFormBuilder {
         private final BedrockGUIApi api;
         private final String title;
@@ -128,14 +110,14 @@ public class FormBuilderFactory {
             int startIndex = page * itemsPerPage;
             int endIndex = Math.min(startIndex + itemsPerPage, items.size());
             
-            // Add items for current page
+            
             for (int i = startIndex; i < endIndex; i++) {
                 String item = items.get(i);
                 if (itemHandler != null) {
-                    // Use the item handler to customize the button
+                    
                     itemHandler.accept(item, builder);
                 } else {
-                    // Use the default click handler
+                    
                     builder.button(item, player -> {
                         if (itemClickHandler != null) {
                             Runnable action = itemClickHandler.apply(item);
@@ -145,17 +127,17 @@ public class FormBuilderFactory {
                 }
             }
             
-            // Add navigation buttons
+            
             if (page > 0) {
-                builder.button("◀ Previous Page", player -> {
-                    // Open previous page
+                builder.button("â—€ Previous Page", player -> {
+                    
                     buildPage(page - 1).send(player);
                 });
             }
             
             if (page < totalPages - 1) {
-                builder.button("Next Page ▶", player -> {
-                    // Open next page
+                builder.button("Next Page â–¶", player -> {
+                    
                     buildPage(page + 1).send(player);
                 });
             }
@@ -168,9 +150,7 @@ public class FormBuilderFactory {
         }
     }
     
-    /**
-     * Settings form builder with categories and validation
-     */
+    
     public static class SettingsFormBuilder {
         private final BedrockGUIApi api;
         private final String title;
@@ -213,10 +193,10 @@ public class FormBuilderFactory {
                 String categoryName = entry.getKey();
                 List<SettingComponent> components = entry.getValue();
                 
-                // Add category header (as a disabled input)
+                
                 builder.input("=== " + categoryName + " ===", "", "");
                 
-                // Add category components
+                
                 for (SettingComponent component : components) {
                     component.addToForm(builder);
                 }
@@ -225,7 +205,7 @@ public class FormBuilderFactory {
             return builder.build();
         }
         
-        // Setting component interfaces
+        
         private interface SettingComponent {
             void addToForm(BedrockGUIApi.CustomFormBuilder builder);
         }
@@ -284,9 +264,7 @@ public class FormBuilderFactory {
         }
     }
     
-    /**
-     * Wizard form builder for multi-step forms
-     */
+    
     public static class WizardFormBuilder {
         private final BedrockGUIApi api;
         private final String title;
@@ -325,20 +303,20 @@ public class FormBuilderFactory {
             
             BedrockGUIApi.FormBuilder stepForm = step.builder.apply(wizardData);
             
-            // Add navigation if it's a custom form
+            
             if (stepForm instanceof BedrockGUIApi.CustomFormBuilder) {
                 BedrockGUIApi.CustomFormBuilder customForm = (BedrockGUIApi.CustomFormBuilder) stepForm;
                 
                 customForm.onSubmit((p, results) -> {
-                    // Store step results
+                    
                     wizardData.putAll(results);
                     
-                    // Move to next step or finish
+                    
                     if (stepIndex < steps.size() - 1) {
-                        // Continue to next step
+                        
                         buildStep(stepIndex + 1, p).send(p);
                     } else {
-                        // Wizard complete
+                        
                         if (onCompleteHandler != null) {
                             onCompleteHandler.accept(p, wizardData);
                         }
@@ -374,9 +352,7 @@ public class FormBuilderFactory {
         }
     }
     
-    /**
-     * Inventory-style form builder with grid layout
-     */
+    
     public static class InventoryFormBuilder {
         private final BedrockGUIApi api;
         private final String title;
@@ -414,9 +390,9 @@ public class FormBuilderFactory {
                         if (slot.onClick != null) slot.onClick.run();
                     });
                 } else {
-                    // Empty slot
+                    
                     builder.button("[Empty]", player -> {
-                        // Do nothing for empty slots
+                        
                     });
                 }
             }

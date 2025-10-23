@@ -13,10 +13,7 @@ import java.lang.management.ManagementFactory;
 import java.util.*;
 import java.util.logging.Logger;
 
-/**
- * Paper/Bukkit implementation of DataProvider
- * Provides real server data for the List action handler
- */
+
 public class PaperDataProvider implements DataProvider {
     
     private static final Logger logger = Logger.getLogger(PaperDataProvider.class.getName());
@@ -54,42 +51,42 @@ public class PaperDataProvider implements DataProvider {
         List<Map<String, String>> serverInfo = new ArrayList<>();
         
         try {
-            // Server basic info
+            
             Map<String, String> basicInfo = new HashMap<>();
             basicInfo.put("name", "Server Version");
             basicInfo.put("value", Bukkit.getVersion());
             basicInfo.put("description", "Server Software Version");
             serverInfo.add(basicInfo);
             
-            // Bukkit version
+            
             Map<String, String> bukkitInfo = new HashMap<>();
             bukkitInfo.put("name", "Bukkit Version");
             bukkitInfo.put("value", Bukkit.getBukkitVersion());
             bukkitInfo.put("description", "Bukkit API Version");
             serverInfo.add(bukkitInfo);
             
-            // Online players
+            
             Map<String, String> playersInfo = new HashMap<>();
             playersInfo.put("name", "Players Online");
             playersInfo.put("value", Bukkit.getOnlinePlayers().size() + "/" + Bukkit.getMaxPlayers());
             playersInfo.put("description", "Current/Maximum Players");
             serverInfo.add(playersInfo);
             
-            // Worlds count
+            
             Map<String, String> worldsInfo = new HashMap<>();
             worldsInfo.put("name", "Worlds Loaded");
             worldsInfo.put("value", String.valueOf(Bukkit.getWorlds().size()));
             worldsInfo.put("description", "Number of Loaded Worlds");
             serverInfo.add(worldsInfo);
             
-            // Plugins count
+            
             Map<String, String> pluginsInfo = new HashMap<>();
             pluginsInfo.put("name", "Plugins Loaded");
             pluginsInfo.put("value", String.valueOf(Bukkit.getPluginManager().getPlugins().length));
             pluginsInfo.put("description", "Number of Loaded Plugins");
             serverInfo.add(pluginsInfo);
             
-            // Memory usage
+            
             Runtime runtime = Runtime.getRuntime();
             long maxMemory = runtime.maxMemory();
             long totalMemory = runtime.totalMemory();
@@ -102,7 +99,7 @@ public class PaperDataProvider implements DataProvider {
             memoryInfo.put("description", "Used/Maximum Memory");
             serverInfo.add(memoryInfo);
             
-            // Server uptime
+            
             long uptimeMillis = ManagementFactory.getRuntimeMXBean().getUptime();
             Map<String, String> uptimeInfo = new HashMap<>();
             uptimeInfo.put("name", "Server Uptime");
@@ -110,7 +107,7 @@ public class PaperDataProvider implements DataProvider {
             uptimeInfo.put("description", "Time Since Server Start");
             serverInfo.add(uptimeInfo);
             
-            // TPS (if available)
+            
             try {
                 double[] tps = Bukkit.getTPS();
                 if (tps.length > 0) {
@@ -124,7 +121,7 @@ public class PaperDataProvider implements DataProvider {
                     serverInfo.add(tpsInfo);
                 }
             } catch (Exception e) {
-                // TPS not available on this server version
+                
             }
             
         } catch (Exception e) {
@@ -142,7 +139,7 @@ public class PaperDataProvider implements DataProvider {
             if (formPlayer instanceof PaperPlayer) {
                 Player player = ((PaperPlayer) formPlayer).getBukkitPlayer();
                 
-                // Get effective permissions
+                
                 Set<PermissionAttachmentInfo> effectivePermissions = player.getEffectivePermissions();
                 
                 for (PermissionAttachmentInfo permInfo : effectivePermissions) {
@@ -153,7 +150,7 @@ public class PaperDataProvider implements DataProvider {
                     permissions.add(permData);
                 }
                 
-                // Sort by permission name
+                
                 permissions.sort((a, b) -> a.get("name").compareToIgnoreCase(b.get("name")));
             }
         } catch (Exception e) {
@@ -208,7 +205,7 @@ public class PaperDataProvider implements DataProvider {
                 plugins.add(pluginData);
             }
             
-            // Sort by plugin name
+            
             plugins.sort((a, b) -> a.get("name").compareToIgnoreCase(b.get("name")));
         } catch (Exception e) {
             logger.warning("Error getting plugins data: " + e.getMessage());
@@ -217,9 +214,7 @@ public class PaperDataProvider implements DataProvider {
         return plugins;
     }
     
-    /**
-     * Formats bytes into human readable format
-     */
+    
     private String formatBytes(long bytes) {
         if (bytes < 1024) return bytes + " B";
         int exp = (int) (Math.log(bytes) / Math.log(1024));
@@ -227,9 +222,7 @@ public class PaperDataProvider implements DataProvider {
         return String.format("%.1f %sB", bytes / Math.pow(1024, exp), pre);
     }
     
-    /**
-     * Formats uptime milliseconds into human readable format
-     */
+    
     private String formatUptime(long uptimeMillis) {
         long seconds = uptimeMillis / 1000;
         long minutes = seconds / 60;
