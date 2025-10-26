@@ -34,6 +34,49 @@ public class RandomActionHandler extends BaseActionHandler {
         this.random = new Random();
     }
 
+    private List<WeightedAction> parseNewFormatRandomActions(String actionData, ActionSystem.ActionContext context, FormPlayer player) {
+        List<WeightedAction> weightedActions = new ArrayList<>();
+        
+        try {
+            List<String> actions = parseNewFormatValues(actionData);
+            
+            for (String action : actions) {
+                // Process placeholders for each action
+                String processedAction = processPlaceholders(action, context, player);
+                WeightedAction weightedAction = parseWeightedAction(processedAction);
+                if (weightedAction != null) {
+                    weightedActions.add(weightedAction);
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error parsing new format random actions: " + e.getMessage(), e);
+        }
+        
+        return weightedActions;
+    }
+    
+    private List<WeightedAction> parseLegacyFormatRandomActions(String actionData, ActionSystem.ActionContext context, FormPlayer player) {
+        List<WeightedAction> weightedActions = new ArrayList<>();
+        
+        try {
+            String processedData = processPlaceholders(actionData.trim(), context, player);
+            String[] actionOptions = processedData.split("\\|");
+            
+            for (String action : actionOptions) {
+                String trimmedAction = action.trim();
+                if (!trimmedAction.isEmpty()) {
+                    WeightedAction weightedAction = parseWeightedAction(trimmedAction);
+                    if (weightedAction != null) {
+                        weightedActions.add(weightedAction);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            logger.error("Error parsing legacy format random actions: " + e.getMessage(), e);
+        }
+        
+        return weightedActions;
+    }
 
     public void shutdown() {
         if (executorService != null && !executorService.isShutdown()) {
@@ -80,27 +123,14 @@ public class RandomActionHandler extends BaseActionHandler {
         }
 
         try {
-
-            String processedData = processPlaceholders(actionData.trim(), context, player);
-
-
-            String[] actionOptions = processedData.split("\\|");
-
-            if (actionOptions.length == 0) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
-            }
-
-
-            List<WeightedAction> weightedActions = new ArrayList<>();
-            for (String action : actionOptions) {
-                String trimmedAction = action.trim();
-                if (!trimmedAction.isEmpty()) {
-                    WeightedAction weightedAction = parseWeightedAction(trimmedAction);
-                    if (weightedAction != null) {
-                        weightedActions.add(weightedAction);
-                    }
-                }
+            List<WeightedAction> weightedActions;
+            
+            // Check if it's the new YAML format with curly braces
+            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
+                weightedActions = parseNewFormatRandomActions(actionData, context, player);
+            } else {
+                // Legacy format support - pipe-separated
+                weightedActions = parseLegacyFormatRandomActions(actionData, context, player);
             }
 
             if (weightedActions.isEmpty()) {
@@ -108,14 +138,13 @@ public class RandomActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
 
-
+            // Select and execute random action
             String selectedAction = selectWeightedRandom(weightedActions);
 
             logger.info("Selected random action for player " + player.getName() + ": " + selectedAction + " (1/" + weightedActions.size() + ")");
 
-
+            // Execute the selected action asynchronously
             CompletableFuture<ActionSystem.ActionResult> future = CompletableFuture.supplyAsync(() -> {
-
                 ActionSystem.Action parsedAction = actionExecutor.parseAction(selectedAction);
                 if (parsedAction == null) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
@@ -154,14 +183,31 @@ public class RandomActionHandler extends BaseActionHandler {
             return false;
         }
 
-
-        String[] actionOptions = actionValue.trim().split("\\|");
+        String trimmed = actionValue.trim();
+        
+        // Support new YAML format
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                List<String> actions = parseNewFormatValues(trimmed);
+                for (String action : actions) {
+                    if (!isValidRandomAction(action)) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        
+        // Legacy format support - pipe-separated
+        String[] actionOptions = trimmed.split("\\|");
 
         if (actionOptions.length == 0) {
             return false;
         }
 
-
+        // Check if at least one action is valid
         for (String action : actionOptions) {
             String trimmedAction = action.trim();
             if (!trimmedAction.isEmpty() && trimmedAction.contains(":")) {
@@ -170,6 +216,14 @@ public class RandomActionHandler extends BaseActionHandler {
         }
 
         return false;
+    }
+    
+    private boolean isValidRandomAction(String action) {
+        if (action == null || action.trim().isEmpty()) {
+            return false;
+        }
+        String trimmed = action.trim();
+        return trimmed.contains(":");
     }
 
     @Override
@@ -180,6 +234,13 @@ public class RandomActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
+                "New Format Examples:",
+                "random { - \"command:give {player} diamond\" - \"command:give {player} emerald\" - \"message:You got lucky!\" }",
+                "random { - \"sound:ui.button.click\" - \"sound:entity.experience_orb.pickup\" }",
+                "random { - \"economy:add:100\" - \"economy:add:200\" - \"economy:add:500\" }",
+                "random { - \"message:Option 1\" - \"message:Option 2\" - \"message:Option 3\" }",
+                "random { - \"command:give {player} diamond:2.0\" - \"command:give {player} emerald:1.0\" }",
+                "Legacy Format Examples:",
                 "random:command:give {player} diamond|command:give {player} emerald|message:You got lucky!",
                 "random:sound:ui.button.click|sound:entity.experience_orb.pickup",
                 "random:economy:add:100|economy:add:200|economy:add:500",

@@ -34,8 +34,12 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
 
         try {
-
-            if (actionValue.trim().startsWith("[") && actionValue.trim().endsWith("]")) {
+            // Check if it's the new YAML format with curly braces
+            if (actionValue.trim().startsWith("{") && actionValue.trim().endsWith("}")) {
+                return executeNewFormatInventoryOperations(player, actionValue, context);
+            }
+            // Legacy format support
+            else if (actionValue.trim().startsWith("[") && actionValue.trim().endsWith("]")) {
                 return executeMultipleInventoryOperations(player, actionValue, context);
             } else {
                 return executeSingleInventoryOperation(player, actionValue, context);
@@ -48,8 +52,45 @@ public class InventoryActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionSystem.ActionResult executeSingleInventoryOperation(FormPlayer player, String inventoryData, ActionSystem.ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormatInventoryOperations(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
+        try {
+            // Parse the new YAML format using parseNewFormatValues
+            java.util.List<String> operations = parseNewFormatValues(actionValue);
+            
+            if (operations.isEmpty()) {
+                return createFailureResult("ACTION_EXECUTION_ERROR",
+                        createReplacements("error", "No inventory operations found in new format"), player);
+            }
 
+            // Execute each operation
+            for (String operation : operations) {
+                String processedOperation = processPlaceholders(operation, context, player);
+                ActionSystem.ActionResult result = executeSingleInventoryOperation(player, processedOperation.trim(), context);
+                if (result.isFailure()) {
+                    return result;
+                }
+
+                // Small delay between operations
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+            }
+
+            logSuccess("inventory", "Executed " + operations.size() + " inventory operations (new format)", player);
+            return createSuccessResult("ACTION_INVENTORY_SUCCESS",
+                    createReplacements("message", "Executed " + operations.size() + " inventory operations"), player);
+        } catch (Exception e) {
+            logger.error("Error parsing new format inventory action: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR",
+                    createReplacements("error", "Error parsing new format: " + e.getMessage()), player);
+        }
+    }
+
+
+    private ActionSystem.ActionResult executeSingleInventoryOperation(FormPlayer player, String inventoryData, ActionSystem.ActionContext context) {
         String processedData = processPlaceholders(inventoryData.trim(), context, player);
         String[] parts = processedData.split(":", 3);
 
@@ -219,8 +260,22 @@ public class InventoryActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
 
-        if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-
+        // Support new YAML format
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                java.util.List<String> operations = parseNewFormatValues(trimmed);
+                for (String operation : operations) {
+                    if (!isValidSingleInventoryOperation(operation.trim())) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        // Legacy format support
+        else if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
             String listContent = trimmed.substring(1, trimmed.length() - 1);
             String[] operations = listContent.split(",\\s*");
             for (String operation : operations) {

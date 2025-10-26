@@ -1,5 +1,7 @@
 package it.pintux.life.common.actions.handlers;
 
+import java.util.List;
+
 import it.pintux.life.common.actions.ActionSystem;
 
 
@@ -36,8 +38,21 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         }
 
         try {
-            String processed = processPlaceholders(actionValue.trim(), context, player);
-
+            String processed;
+            
+            // Check if it's the new YAML format with curly braces
+            if (actionValue.trim().startsWith("{") && actionValue.trim().endsWith("}")) {
+                List<String> urls = parseNewFormatValues(actionValue);
+                if (urls.isEmpty()) {
+                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No valid URLs found"), player);
+                }
+                // For URL action, we only use the first URL if multiple are provided
+                processed = processPlaceholders(urls.get(0), context, player);
+            } else {
+                // Legacy format support
+                processed = processPlaceholders(actionValue.trim(), context, player);
+            }
 
             processed = ValidationUtils.sanitizeString(processed);
 
@@ -46,12 +61,12 @@ public class OpenUrlActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
             }
 
-
+            // Validate URL format
             if (!(processed.startsWith("http://") || processed.startsWith("https://"))) {
                 logger.warn("URL action value does not start with http/https after placeholder processing: " + processed);
             }
 
-
+            // Send URL to player
             playerManager.sendMessage(player, processed);
 
             logger.debug("Sent URL to player " + player.getName() + ": " + processed);
@@ -71,11 +86,40 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         if (actionValue == null || actionValue.trim().isEmpty()) {
             return false;
         }
+        
         String trimmed = actionValue.trim();
+        
+        // Support new YAML format
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                List<String> urls = parseNewFormatValues(trimmed);
+                for (String url : urls) {
+                    if (!isValidUrl(url)) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        
+        // Legacy format support
         if (trimmed.length() > 2048) {
             return false;
         }
 
+        return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.contains("{") || trimmed.contains("}");
+    }
+    
+    private boolean isValidUrl(String url) {
+        if (url == null || url.trim().isEmpty()) {
+            return false;
+        }
+        String trimmed = url.trim();
+        if (trimmed.length() > 2048) {
+            return false;
+        }
         return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.contains("{") || trimmed.contains("}");
     }
 
@@ -87,6 +131,12 @@ public class OpenUrlActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
+                "New Format Examples:",
+                "url { - \"https://example.com\" }",
+                "url { - \"https://docs.server.com/help\" }",
+                "url { - \"https://store.server.com/{player}\" }",
+                "url { - \"https://api.server.com/stats?player={player_name}\" }",
+                "Legacy Format Examples:",
                 "url:https://example.com",
                 "url:https://docs.server.com/help",
                 "url:https://store.server.com/{player}"

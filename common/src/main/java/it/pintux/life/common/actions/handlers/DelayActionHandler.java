@@ -56,55 +56,19 @@ public class DelayActionHandler extends BaseActionHandler {
         }
 
         try {
-
+            // Check if it's the new YAML format with curly braces
+            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
+                return executeNewFormatDelay(player, actionData, context);
+            }
+            
+            // Legacy format support
             String processedData = processPlaceholders(actionData.trim(), context, player);
-
 
             String[] parts = processedData.split(":", 2);
             long delayMs = Long.parseLong(parts[0]);
             String chainedAction = parts.length > 1 ? parts[1] : null;
 
-            if (delayMs < 0) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot be negative"), player);
-            }
-
-            if (delayMs > MAX_DELAY_MS) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)"), player);
-            }
-
-            if (delayMs == 0) {
-
-                if (chainedAction != null && !chainedAction.trim().isEmpty()) {
-                    return executeChainedAction(player, chainedAction, context);
-                }
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "No delay applied"), player);
-            }
-
-            logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
-
-
-            CompletableFuture.runAsync(() -> {
-                try {
-                    Thread.sleep(delayMs);
-
-
-                    if (chainedAction != null && !chainedAction.trim().isEmpty()) {
-                        executeChainedAction(player, chainedAction, context);
-                    }
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    logger.warn("Delay was interrupted for player " + player.getName());
-                } catch (Exception e) {
-                    logger.error("Error executing chained action after delay for player " + player.getName() + ": " + e.getMessage());
-                }
-            }, executorService);
-
-
-            String message = "Delay of " + delayMs + "ms scheduled";
-            if (chainedAction != null && !chainedAction.trim().isEmpty()) {
-                message += " with chained action";
-            }
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+            return executeDelayWithChain(player, delayMs, chainedAction, context);
 
         } catch (NumberFormatException e) {
             logger.warn("Invalid delay time format for player " + player.getName() + ": " + actionData);
@@ -115,14 +79,109 @@ public class DelayActionHandler extends BaseActionHandler {
         }
     }
 
+    private ActionSystem.ActionResult executeNewFormatDelay(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
+        try {
+            // Parse the new YAML format using parseNewFormatValues
+            java.util.List<String> values = parseNewFormatValues(actionData);
+            
+            // Process placeholders for each value
+            java.util.List<String> processedValues = new java.util.ArrayList<>();
+            for (String value : values) {
+                String processedValue = processPlaceholders(value, context, player);
+                processedValues.add(processedValue);
+            }
+            values = processedValues;
+            
+            if (values.isEmpty()) {
+                return createFailureResult("ACTION_EXECUTION_ERROR",
+                        createReplacements("error", "No delay values found in new format"), player);
+            }
+
+            // First value should be the delay time
+            String delayValue = values.get(0);
+            long delayMs = Long.parseLong(delayValue);
+            
+            // Optional chained action (if more values exist)
+            String chainedAction = values.size() > 1 ? values.get(1) : null;
+            
+            return executeDelayWithChain(player, delayMs, chainedAction, context);
+            
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid delay time format in new format for player " + player.getName() + ": " + actionData);
+            return createFailureResult("ACTION_INVALID_PARAMETERS", 
+                    createReplacements("error", "Invalid delay time format in new format: " + actionData), player);
+        } catch (Exception e) {
+            logger.error("Error parsing new format delay action: " + e.getMessage());
+            return createFailureResult("ACTION_EXECUTION_ERROR",
+                    createReplacements("error", "Error parsing new format: " + e.getMessage()), player);
+        }
+    }
+
+    private ActionSystem.ActionResult executeDelayWithChain(FormPlayer player, long delayMs, String chainedAction, ActionSystem.ActionContext context) {
+        if (delayMs < 0) {
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot be negative"), player);
+        }
+
+        if (delayMs > MAX_DELAY_MS) {
+            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)"), player);
+        }
+
+        if (delayMs == 0) {
+            if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                return executeChainedAction(player, chainedAction, context);
+            }
+            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "No delay applied"), player);
+        }
+
+        logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                Thread.sleep(delayMs);
+
+                if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                    executeChainedAction(player, chainedAction, context);
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                logger.warn("Delay was interrupted for player " + player.getName());
+            } catch (Exception e) {
+                logger.error("Error executing chained action after delay for player " + player.getName() + ": " + e.getMessage());
+            }
+        }, executorService);
+
+        String message = "Delay of " + delayMs + "ms scheduled";
+        if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+            message += " with chained action";
+        }
+        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+    }
+
     @Override
     public boolean isValidAction(String actionValue) {
         if (actionValue == null || actionValue.trim().isEmpty()) {
             return false;
         }
 
+        String trimmed = actionValue.trim();
+        
+        // Support new YAML format
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                java.util.List<String> values = parseNewFormatValues(trimmed);
+                if (values.isEmpty()) return false;
+                
+                // First value should be a valid delay time
+                long delayMs = Long.parseLong(values.get(0));
+                return delayMs >= 0 && delayMs <= MAX_DELAY_MS;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        
+        // Legacy format support
         try {
-            long delayMs = Long.parseLong(actionValue.trim());
+            long delayMs = Long.parseLong(trimmed);
             return delayMs >= 0 && delayMs <= MAX_DELAY_MS;
         } catch (NumberFormatException e) {
             return false;
@@ -137,6 +196,11 @@ public class DelayActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
+                "New Format Examples:",
+                "delay { - \"1000\" }",
+                "delay { - \"5000\" }",
+                "delay { - \"500\" - \"message:Hello after delay!\" }",
+                "Legacy Format Examples:",
                 "delay:1000",
                 "delay:5000",
                 "delay:500",

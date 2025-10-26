@@ -11,6 +11,7 @@ import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.PlaceholderUtil;
 import it.pintux.life.common.utils.ValidationUtils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,6 @@ public class OpenFormActionHandler extends BaseActionHandler {
 
     @Override
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
-
         ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
@@ -44,19 +44,32 @@ public class OpenFormActionHandler extends BaseActionHandler {
         }
 
         try {
-            List<String> menuNames = parseActionData(actionData, context, player);
+            List<String> menuNames;
+            
+            // Check if it's the new YAML format with curly braces
+            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
+                List<String> rawMenuNames = parseNewFormatValues(actionData);
+                menuNames = new ArrayList<>();
+                for (String menuName : rawMenuNames) {
+                    String processedMenuName = processPlaceholders(menuName, context, player);
+                    menuNames.add(processedMenuName);
+                }
+            } else {
+                // Legacy format support
+                menuNames = parseActionData(actionData, context, player);
+            }
 
             if (menuNames.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid menu names found");
                 return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
 
-
+            // Single form opening
             if (menuNames.size() == 1) {
                 return executeSingleFormOpen(menuNames.get(0), player);
             }
 
-
+            // Multiple form opening
             return executeMultipleFormOpens(menuNames, player);
 
         } catch (Exception e) {
@@ -203,7 +216,24 @@ public class OpenFormActionHandler extends BaseActionHandler {
             return false;
         }
 
-
+        String trimmed = actionValue.trim();
+        
+        // Support new YAML format
+        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+            try {
+                List<String> menuNames = parseNewFormatValues(trimmed);
+                for (String menuName : menuNames) {
+                    if (!isValidMenuName(menuName)) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+        
+        // Legacy format support
         List<String> menuNames = parseActionDataForValidation(actionValue);
 
         for (String menuName : menuNames) {
@@ -239,14 +269,20 @@ public class OpenFormActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-
+                "New Format Examples:",
+                "open { - \"main_menu\" }",
+                "open { - \"shop_menu\" }",
+                "open { - \"player_settings\" }",
+                "open { - \"{dynamic_menu_name}\" }",
+                "open { - \"category_{selected_category}\" }",
+                "open { - \"main_menu\" - \"shop_menu\" }",
+                "open { - \"player_settings\" - \"inventory_menu\" - \"stats_menu\" }",
+                "Legacy Format Examples:",
                 "main_menu - Open main menu",
                 "shop_menu - Open shop menu",
                 "player_settings - Open player settings",
                 "{dynamic_menu_name} - Dynamic menu name",
                 "category_{selected_category} - Category-based menu",
-
-
                 "[\"main_menu\", \"shop_menu\"] - Open main then shop menu",
                 "[\"player_settings\", \"inventory_menu\", \"stats_menu\"] - Settings sequence",
                 "[\"category_{type}\", \"item_list_{category}\"] - Dynamic category flow",

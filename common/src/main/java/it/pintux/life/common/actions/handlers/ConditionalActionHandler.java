@@ -15,8 +15,6 @@ import java.util.regex.Pattern;
 public class ConditionalActionHandler extends BaseActionHandler {
 
     private final ActionExecutor actionExecutor;
-    private final ActionRegistry actionRegistry;
-
 
     private static final Pattern NEW_FORMAT_PATTERN = Pattern.compile(
             "^conditional\\s*\\{[\\s\\S]*\\}$", Pattern.MULTILINE
@@ -41,7 +39,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
     public ConditionalActionHandler(ActionExecutor actionExecutor) {
         this.actionExecutor = actionExecutor;
-        this.actionRegistry = ActionRegistry.getInstance();
     }
 
     @Override
@@ -58,14 +55,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
         try {
             String processedData = processPlaceholders(actionData.trim(), context, player);
-
-
-            if (NEW_FORMAT_PATTERN.matcher(processedData).matches()) {
-                return executeNewFormat(player, processedData, context);
-            } else {
-
-                return executeLegacyFormat(player, processedData, context);
-            }
+            return executeNewFormat(player, processedData, context);
 
         } catch (Exception e) {
             logger.error("Error executing conditional action for player " + player.getName() + ": " + e.getMessage());
@@ -121,129 +111,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logger.error("Error executing new format conditional for player " + player.getName() + ": " + e.getMessage());
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new conditional format: " + e.getMessage()), player);
-        }
-    }
-
-
-    private ActionSystem.ActionResult executeLegacyFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
-        String[] parts = actionData.split(":");
-
-        if (parts.length < 4) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid conditional format. Minimum: condition_type:condition_value:action_type:action_data"), player);
-        }
-
-        boolean negate = false;
-        int offset = 0;
-
-        if ("not".equals(parts[0])) {
-            negate = true;
-            offset = 1;
-            if (parts.length < 5) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid conditional format with 'not'. Minimum: not:condition_type:condition_value:action_type:action_data"), player);
-            }
-        }
-
-        StringBuilder conditionBuilder = new StringBuilder();
-        String conditionType = parts[offset];
-        String conditionValue = parts[offset + 1];
-
-        switch (conditionType.toLowerCase()) {
-            case "permission":
-                conditionBuilder.append("permission:").append(conditionValue);
-                break;
-            case "placeholder":
-                if (parts.length < offset + 5) {
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Placeholder condition requires operator and expected value"), player);
-                }
-                String operator = parts[offset + 2];
-                String expectedValue = parts[offset + 3];
-                conditionBuilder.append("placeholder:").append(conditionValue)
-                        .append(":").append(operator).append(":").append(expectedValue);
-                offset += 2;
-                break;
-            default:
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Unknown condition type: " + conditionType), player);
-        }
-
-        String condition = conditionBuilder.toString();
-        boolean conditionMet = ConditionEvaluator.evaluateCondition(player, condition, context, null);
-
-        if (negate) {
-            conditionMet = !conditionMet;
-        }
-
-        if (parts.length < offset + 4) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Missing action type or action data"), player);
-        }
-
-        String actionType;
-        String actionDataToExecute;
-
-        if (conditionMet) {
-
-            actionType = parts[offset + 2];
-
-
-            StringBuilder successActionBuilder = new StringBuilder();
-            int successActionStart = offset + 3;
-
-
-            int failureActionStart = findNextActionStart(parts, successActionStart + 1);
-
-            if (failureActionStart != -1) {
-
-                for (int i = successActionStart; i < failureActionStart - 1; i++) {
-                    if (successActionBuilder.length() > 0) {
-                        successActionBuilder.append(":");
-                    }
-                    successActionBuilder.append(parts[i]);
-                }
-            } else {
-
-                for (int i = successActionStart; i < parts.length; i++) {
-                    if (successActionBuilder.length() > 0) {
-                        successActionBuilder.append(":");
-                    }
-                    successActionBuilder.append(parts[i]);
-                }
-            }
-            actionDataToExecute = successActionBuilder.toString();
-
-            logger.info("Condition met for player " + player.getName() + ", executing success action: " + actionType + ":" + actionDataToExecute);
-        } else {
-
-            int successActionStart = offset + 3;
-            int failureActionStart = findNextActionStart(parts, successActionStart + 1);
-
-            if (failureActionStart == -1) {
-                logger.info("Condition not met for player " + player.getName() + ": " + condition + " (no failure action specified)");
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Condition not met, action skipped"), player);
-            }
-
-            actionType = parts[failureActionStart - 1];
-
-
-            StringBuilder failureActionBuilder = new StringBuilder();
-            for (int i = failureActionStart; i < parts.length; i++) {
-                if (failureActionBuilder.length() > 0) {
-                    failureActionBuilder.append(":");
-                }
-                failureActionBuilder.append(parts[i]);
-            }
-            actionDataToExecute = failureActionBuilder.toString();
-
-            logger.info("Condition not met for player " + player.getName() + ", executing failure action: " + actionType + ":" + actionDataToExecute);
-        }
-
-
-        ActionSystem.ActionDefinition actionToExecute = new ActionSystem.ActionDefinition();
-        actionToExecute.addAction(actionType, actionDataToExecute);
-        ActionSystem.ActionResult result = actionExecutor.executeAction(player, actionToExecute, context);
-
-        if (result.isSuccess()) {
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Conditional action executed: " + result.message()), player);
-        } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Conditional action failed: " + result.message()), player);
         }
     }
 
@@ -367,18 +234,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
         return actionDef;
     }
 
-
-    private int findNextActionStart(String[] parts, int startIndex) {
-        Set<String> knownActionTypes = actionRegistry.getRegisteredActionTypes();
-
-        for (int i = startIndex; i < parts.length; i++) {
-            if (knownActionTypes.contains(parts[i].toLowerCase())) {
-                return i + 1;
-            }
-        }
-        return -1;
-    }
-
     @Override
     public boolean isValidAction(String actionValue) {
         if (actionValue == null || actionValue.trim().isEmpty()) {
@@ -419,14 +274,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
     @Override
     public String[] getUsageExamples() {
-        return new String[]{
-                "conditional:permission:some.permission:message:You have permission!",
-                "conditional:placeholder:{balance}:>=:1000:message:You have enough money!",
-                "conditional:not:permission:vip.access:message:You need VIP access!",
-                "conditional:placeholder:{player}:equals:Admin:server:gamemode creative {player}",
-                "conditional:placeholder:{world}:equals:world:message:You're in overworld:message:You're not in overworld",
-                "conditional:permission:vip.access:message:VIP welcome!:message:You need VIP access!"
-        };
+        return new String[]{};
     }
 }
 

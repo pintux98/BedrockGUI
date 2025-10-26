@@ -37,22 +37,15 @@ public class FormMenuUtil {
     private final PlatformTitleManager titleManager;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
-    
-    
-    private DelayActionHandler delayActionHandler;
-    private RandomActionHandler randomActionHandler;
-    private PermissionActionHandler permissionActionHandler;
 
-    public FormMenuUtil(FormConfig config, MessageData messageData) {
-        this(config, messageData, null, null, null, null, null, null, null);
-    }
-    
-    
+
+    private DelayActionHandler delayActionHandler;
+
     public FormConfig getConfig() {
         return config;
     }
-    
-    public FormMenuUtil(FormConfig config, MessageData messageData, 
+
+    public FormMenuUtil(FormConfig config, MessageData messageData,
                        PlatformCommandExecutor commandExecutor,
                        PlatformSoundManager soundManager,
                        PlatformEconomyManager economyManager,
@@ -70,68 +63,60 @@ public class FormMenuUtil {
         this.titleManager = titleManager;
         this.pluginManager = pluginManager;
         this.playerManager = playerManager;
-        
-        
+
+
         this.actionRegistry = ActionRegistry.getInstance();
         this.actionExecutor = new ActionExecutor(actionRegistry);
-        
-        
+
+
         if (pluginManager != null) {
             ConditionEvaluator.setPluginManager(pluginManager);
         }
-        
-        
+
+
         registerDefaultActionHandlers();
-        
+
         loadFormMenus();
-        
-        
+
+
         validateConfiguration();
     }
 
-    
+
     private void registerDefaultActionHandlers() {
-        
+
         actionRegistry.registerHandler(new CommandActionHandler());
         actionRegistry.registerHandler(new OpenFormActionHandler(this));
         actionRegistry.registerHandler(new MessageActionHandler(playerManager));
-        actionRegistry.registerHandler(new CloseActionHandler());
         this.delayActionHandler = new DelayActionHandler(actionExecutor);
         actionRegistry.registerHandler(delayActionHandler);
-        
-        
+
+
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
             actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
             actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new PermissionActionHandler(commandExecutor));
         }
-        
+
         if (soundManager != null) {
             actionRegistry.registerHandler(new SoundActionHandler(soundManager));
         }
-        
+
         if (economyManager != null) {
             actionRegistry.registerHandler(new EconomyActionHandler(economyManager));
         }
-        
+
         if (titleManager != null && titleManager.isSupported()) {
             actionRegistry.registerHandler(new TitleActionHandler(titleManager));
             actionRegistry.registerHandler(new ActionBarActionHandler(titleManager));
         }
-        
-        
+
+
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
         actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
-        
+
         actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
-        
-        
-        if (commandExecutor != null && pluginManager != null && playerManager != null) {
-            
-            actionRegistry.registerHandler(new PlaceholderAPIActionHandler(commandExecutor, pluginManager, playerManager));
-          }
-        
+
         logger.info("Registered " + actionRegistry.size() + " action handlers");
     }
 
@@ -147,79 +132,79 @@ public class FormMenuUtil {
                 for (String button : config.getKeys("forms." + key + ".buttons")) {
                     String text = config.getString("forms." + key + ".buttons." + button + ".text");
                     String image = config.getString("forms." + key + ".buttons." + button + ".image");
-                    
-                    
+
+
                     String onClick = null;
                     try {
                         List<String> onClickList = config.getStringList("forms." + key + ".buttons." + button + ".onClick");
                         if (onClickList != null && !onClickList.isEmpty()) {
-                            
+
                             onClick = "[" + String.join(", ", onClickList) + "]";
                         }
                     } catch (Exception e) {
-                        
+
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
-                    
-                    
+
+
                     if (onClick == null) {
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
-                    
-                    
+
+
                     String priorityStr = config.getString("forms." + key + ".buttons." + button + ".priority");
                     Integer priority = null;
                     if (priorityStr != null) {
                         try {
                             priority = Integer.parseInt(priorityStr);
                         } catch (NumberFormatException e) {
-                            
+
                         }
                     }
                     String viewRequirement = config.getString("forms." + key + ".buttons." + button + ".view_requirement");
-                    
-                    
+
+
                     String showCondition = config.getString("forms." + key + ".buttons." + button + ".show_condition");
                     String alternativeText = config.getString("forms." + key + ".buttons." + button + ".alternative_text");
                     String alternativeImage = config.getString("forms." + key + ".buttons." + button + ".alternative_image");
                     String alternativeOnClick = config.getString("forms." + key + ".buttons." + button + ".alternative_onClick");
-                    
-                    
+
+
                     if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
-                        
+
                         ConditionalButton conditionalButton = new ConditionalButton(text, image, onClick, showCondition);
                         conditionalButton.setAlternativeText(alternativeText);
                         conditionalButton.setAlternativeImage(alternativeImage);
                         conditionalButton.setAlternativeOnClick(alternativeOnClick);
-                        
-                        
+
+
                         if (onClick != null && !onClick.trim().isEmpty()) {
                             ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                             conditionalButton.setAction(actionDef);
                         }
-                        
-                        
+
+
                         for (String condKey : config.getKeys("forms." + key + ".buttons." + button + ".conditions")) {
                             String condition = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".condition");
                             String property = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".property");
                             String value = config.getString("forms." + key + ".buttons." + button + ".conditions." + condKey + ".value");
-                            
+
                             if (condition != null && property != null && value != null) {
                                 conditionalButton.addConditionalProperty(condition, property, value);
                             }
                         }
-                        
+
                         buttons.add(conditionalButton);
                     } else {
-                        
+
                         FormButton formButton = new FormButton(text, image, onClick);
-                        
-                        
+
+
                         if (onClick != null && !onClick.trim().isEmpty()) {
                             ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                             formButton.setAction(actionDef);
                         }
-                        
+
                         buttons.add(formButton);
                     }
                 }
@@ -247,19 +232,19 @@ public class FormMenuUtil {
         }
     }
 
-    
+
     public void reloadFormMenus() {
         logger.info("Reloading form menus from configuration...");
-        
-        
+
+
         formMenus.clear();
-        
-        
+
+
         loadFormMenus();
-        
-        
+
+
         validateConfiguration();
-        
+
         logger.info("Successfully reloaded " + formMenus.size() + " form menus");
     }
 
@@ -313,22 +298,22 @@ public class FormMenuUtil {
         if (content != null) {
             formBuilder.content(replacePlaceholders(content, placeholders, player, messageData));
         }
-        
-        
+
+
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
-        
-        
+
+
         String button1Text, button2Text;
         String button1OnClick, button2OnClick;
-        
-        
+
+
         if (b1 instanceof ConditionalButton) {
             ConditionalButton cb1 = (ConditionalButton) b1;
-            
-            if (cb1.hasShowCondition() && 
+
+            if (cb1.hasShowCondition() &&
                 !ConditionEvaluator.evaluateCondition(player, cb1.getShowCondition(), context, messageData)) {
                 logger.warn("Modal form button 1 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-                
+
             }
             button1Text = getEffectiveButtonText(cb1, player, context, placeholders, messageData);
             button1OnClick = getEffectiveButtonOnClick(cb1, player, context);
@@ -336,14 +321,14 @@ public class FormMenuUtil {
             button1Text = replacePlaceholders(b1.getText(), placeholders, player, messageData);
             button1OnClick = b1.getOnClick();
         }
-        
+
         if (b2 instanceof ConditionalButton) {
             ConditionalButton cb2 = (ConditionalButton) b2;
-            
-            if (cb2.hasShowCondition() && 
+
+            if (cb2.hasShowCondition() &&
                 !ConditionEvaluator.evaluateCondition(player, cb2.getShowCondition(), context, messageData)) {
                 logger.warn("Modal form button 2 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-                
+
             }
             button2Text = getEffectiveButtonText(cb2, player, context, placeholders, messageData);
             button2OnClick = getEffectiveButtonOnClick(cb2, player, context);
@@ -392,42 +377,42 @@ public class FormMenuUtil {
         }
 
         List<String> onClickActions = new ArrayList<>();
-        
-        
+
+
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
-        
-        
+
+
         List<FormButton> processedButtons = buttons;
-        
+
         for (FormButton button : processedButtons) {
-            
+
             if (button instanceof ConditionalButton) {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
-                
-                
-                if (conditionalButton.hasShowCondition() && 
+
+
+                if (conditionalButton.hasShowCondition() &&
                     !ConditionEvaluator.evaluateCondition(player, conditionalButton.getShowCondition(), context, messageData)) {
-                    
+
                     continue;
                 }
-                
-                
+
+
                 String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
                 String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
                 String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
-                
-                
+
+
                 if (effectiveImage != null) {
                     formBuilder.button(effectiveText, FormImage.Type.URL, effectiveImage);
                 } else {
                     formBuilder.button(effectiveText);
                 }
-                
+
                 if (effectiveOnClick != null) {
                     onClickActions.add(effectiveOnClick);
                 }
             } else {
-                
+
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
                 if (button.getImage() != null) {
                     formBuilder.button(buttonText, FormImage.Type.URL, button.getImage());
@@ -464,7 +449,7 @@ public class FormMenuUtil {
         String title = replacePlaceholders(formMenu.getFormTitle(), placeholders, player, messageData);
         CustomForm.Builder formBuilder = CustomForm.builder().title(title);
 
-        
+
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         Map<Integer, String> componentActions = new HashMap<>();
@@ -590,24 +575,24 @@ public class FormMenuUtil {
             logger.warn("Empty onClick action for player: " + player.getName());
             return;
         }
-        
+
         onClickAction = replacePlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders, player, messageData);
 
-        
+
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
-        
+
         if (onClickAction.startsWith("[") && onClickAction.endsWith("]")) {
             handleMultipleActions(player, onClickAction, context);
         } else {
-            
+
             handleSingleAction(player, onClickAction, context);
         }
     }
-    
-    
+
+
     private void handleSingleAction(FormPlayer player, String onClickAction, ActionSystem.ActionContext context) {
-        
+
         ActionSystem.Action action = actionExecutor.parseAction(onClickAction);
         if (action == null) {
             logger.warn("Failed to parse onClick action: " + onClickAction);
@@ -626,17 +611,17 @@ public class FormMenuUtil {
             logger.debug("Successfully executed action for player " + player.getName() + ": " + onClickAction);
         }
     }
-    
-    
+
+
     private void handleMultipleActions(FormPlayer player, String onClickAction, ActionSystem.ActionContext context) {
         try {
-            
+
             String actionsString = onClickAction.substring(1, onClickAction.length() - 1);
             String[] actionStrings = actionsString.split(",");
-            
+
             List<ActionSystem.Action> actions = new ArrayList<>();
-            
-            
+
+
             for (String actionString : actionStrings) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
@@ -650,17 +635,17 @@ public class FormMenuUtil {
                     }
                 }
             }
-            
+
             if (actions.isEmpty()) {
                 logger.warn("No valid actions found in multi-action sequence for player: " + player.getName());
                 player.sendMessage("No valid actions found in sequence");
                 return;
             }
-            
-            
+
+
             List<ActionSystem.ActionResult> results = actionExecutor.executeActions(player, actions, context);
-            
-            
+
+
             boolean hasFailures = false;
             for (int i = 0; i < results.size(); i++) {
                 ActionSystem.ActionResult result = results.get(i);
@@ -669,13 +654,13 @@ public class FormMenuUtil {
                     logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.message());
                 }
             }
-            
+
             if (hasFailures) {
                 player.sendMessage("Some actions in the sequence failed. Check logs for details.");
             } else {
                 logger.debug("Successfully executed all actions in sequence for player " + player.getName());
             }
-            
+
         } catch (Exception e) {
             logger.error("Error executing multi-action sequence for player " + player.getName(), e);
             player.sendMessage("Error executing action sequence: " + e.getMessage());
@@ -700,31 +685,31 @@ public class FormMenuUtil {
             logger.warn("Empty custom action for player: " + player.getName());
             return;
         }
-        
-        
+
+
         if (value != null) {
             action = action.replace("$1", value);
         }
-        
-        
+
+
         Map<String, String> customPlaceholders = new HashMap<>();
         if (value != null) {
             customPlaceholders.put("value", value);
-            customPlaceholders.put("1", value); 
+            customPlaceholders.put("1", value);
         }
-        
+
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
-        
-        
+
+
         ActionSystem.Action parsedAction = actionExecutor.parseAction(action);
         if (parsedAction == null) {
             logger.warn("Failed to parse custom action: " + action);
             player.sendMessage("Invalid action format");
             return;
         }
-        
+
         ActionSystem.ActionResult result = actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
-        
+
         if (result.isFailure()) {
             logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.message());
             if (result.message() != null) {
@@ -743,42 +728,42 @@ public class FormMenuUtil {
         if (text == null) {
             return null;
         }
-        
+
         String result = text;
-        
-        
+
+
         if (placeholders != null && !placeholders.isEmpty()) {
             result = PlaceholderUtil.processDynamicPlaceholders(result, placeholders);
         }
-        
-        
+
+
         if (messageData != null && result.contains("%")) {
             result = messageData.replaceVariables(result, null, player);
         }
-        
+
         return result;
     }
 
-    
+
     public boolean hasMenu(String menuName) {
         if (menuName == null) {
             return false;
         }
         return formMenus.containsKey(menuName.toLowerCase());
     }
-    
-    
+
+
     public void openMenu(FormPlayer player, String menuName) {
         openForm(player, menuName, new String[0]);
     }
-    
-    
+
+
     public void registerActionHandler(ActionSystem.ActionHandler handler) {
         actionRegistry.registerHandler(handler);
         logger.info("Registered custom action handler: " + handler.getActionType());
     }
-    
-    
+
+
     public boolean unregisterActionHandler(String actionType) {
         boolean removed = actionRegistry.unregisterHandler(actionType);
         if (removed) {
@@ -786,58 +771,51 @@ public class FormMenuUtil {
         }
         return removed;
     }
-    
-    
+
+
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
     }
-    
-    
+
+
     public ActionExecutor getActionExecutor() {
         return actionExecutor;
     }
-    
-    
+
+
     public void shutdown() {
         if (actionExecutor != null) {
             actionExecutor.shutdown();
         }
-        
-        
+
+
         if (delayActionHandler != null) {
             delayActionHandler.shutdown();
         }
-        if (randomActionHandler != null) {
-            randomActionHandler.shutdown();
-        }
-        if (permissionActionHandler != null) {
-            permissionActionHandler.shutdown();
-        }
-        
         logger.info("FormMenuUtil shutdown completed");
     }
-    
-    
+
+
     private void validateConfiguration() {
         ConfigValidator validator = new ConfigValidator(messageData, actionRegistry);
         ConfigValidator.ValidationResult result = validator.validateConfiguration(formMenus);
-        
-        
+
+
         if (result.hasErrors()) {
             logger.warn("Configuration validation found " + result.getErrors().size() + " errors:");
             for (String error : result.getErrors()) {
                 logger.warn("  - " + error);
             }
         }
-        
-        
+
+
         if (result.hasWarnings()) {
             logger.info("Configuration validation found " + result.getWarnings().size() + " warnings:");
             for (String warning : result.getWarnings()) {
                 logger.info("  - " + warning);
             }
         }
-        
+
         if (result.isValid()) {
             logger.info("Configuration validation completed successfully");
         } else {
@@ -848,72 +826,72 @@ public class FormMenuUtil {
     public Map<String, FormMenu> getFormMenus() {
         return formMenus;
     }
-    
-    
+
+
     private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionSystem.ActionContext context, Map<String, String> placeholders, MessageData messageData) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
-            
-            
+
+
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
-                
+
                 if ("text".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;
                     break;
                 }
             }
-            
-            
+
+
             String effectiveText = conditionalButton.getEffectiveText(matchedCondition);
             return replacePlaceholders(effectiveText, placeholders, player, messageData);
         }
-        
-        
+
+
         return replacePlaceholders(button.getText(), placeholders, player, messageData);
     }
-    
-    
+
+
     private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
-            
-            
+
+
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
-                
+
                 if ("image".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;
                     break;
                 }
             }
-            
-            
+
+
             return conditionalButton.getEffectiveImage(matchedCondition);
         }
-        
-        
+
+
         return button.getImage();
     }
-    
-    
+
+
     private ActionSystem.ActionDefinition convertOnClickToActionDefinition(String onClick) {
         if (onClick == null || onClick.trim().isEmpty()) {
             return null;
         }
-        
+
         ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
-        
-        
+
+
         if (onClick.startsWith("[") && onClick.endsWith("]")) {
-            
+
             String actionsString = onClick.substring(1, onClick.length() - 1);
             String[] actionStrings = actionsString.split(",");
-            
+
             for (String actionString : actionStrings) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
@@ -921,60 +899,60 @@ public class FormMenuUtil {
                 }
             }
         } else {
-            
+
             parseAndAddAction(actionDef, onClick);
         }
-        
+
         return actionDef;
     }
-    
-    
+
+
     private void parseAndAddAction(ActionSystem.ActionDefinition actionDef, String actionString) {
         String trimmed = actionString.trim();
-        
-        
+
+
         if (trimmed.contains("{") && trimmed.contains("}")) {
-            
+
             int braceIndex = trimmed.indexOf('{');
             if (braceIndex > 0) {
                 String actionType = trimmed.substring(0, braceIndex).trim();
-                
+
                 actionDef.addAction(actionType, trimmed);
                 return;
             }
         }
-        
-        
+
+
         if (trimmed.contains(":")) {
-            
+
             throw new IllegalArgumentException("Legacy colon-separated format is no longer supported. Use curly-brace format instead: action { ... }");
         }
-        
-        
+
+
         throw new IllegalArgumentException("Invalid action format. Actions must use curly-brace format: action { ... }");
     }
-    
+
      private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
          if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
-            
-            
+
+
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
                 String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
-                
+
                 if ("onClick".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;
                     break;
                 }
             }
-            
-            
+
+
             return conditionalButton.getEffectiveOnClick(matchedCondition);
         }
-        
-        
+
+
         return button.getOnClick();
     }
 }
