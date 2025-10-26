@@ -22,7 +22,7 @@ public class FormMenu {
         this.formType = formType;
         this.formButtons = formButtons;
         this.components = components;
-        this.globalActions = globalActions;  
+        this.globalActions = globalActions;
     }
 
     public String getFormCommand() {

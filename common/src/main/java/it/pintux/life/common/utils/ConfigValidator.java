@@ -13,93 +13,93 @@ import java.util.regex.Pattern;
 
 
 public class ConfigValidator {
-    
+
     private static final Logger logger = Logger.getLogger(ConfigValidator.class);
     private final MessageData messageData;
     private final ActionRegistry actionRegistry;
-    
-    
+
+
     private static final Set<String> VALID_FORM_TYPES = Set.of("simple", "modal", "custom");
-    
-    
+
+
     private static final Pattern IDENTIFIER_PATTERN = Pattern.compile("^[a-zA-Z0-9_.-]+$");
-    
+
     private final List<String> validationErrors = new ArrayList<>();
     private final List<String> validationWarnings = new ArrayList<>();
-    
+
     public ConfigValidator(MessageData messageData, ActionRegistry actionRegistry) {
         this.messageData = messageData;
         this.actionRegistry = actionRegistry;
     }
-    
-    
+
+
     public ValidationResult validateConfiguration(Map<String, FormMenu> formMenus) {
         validationErrors.clear();
         validationWarnings.clear();
-        
+
         if (formMenus == null || formMenus.isEmpty()) {
             validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_FORMS, null, null));
             return new ValidationResult(validationErrors, validationWarnings);
         }
-        
-        
+
+
         for (Map.Entry<String, FormMenu> entry : formMenus.entrySet()) {
             validateFormMenu(entry.getKey(), entry.getValue());
         }
-        
-        
+
+
         checkCircularReferences(formMenus);
-        
+
         return new ValidationResult(validationErrors, validationWarnings);
     }
-    
-    
+
+
     private void validateFormMenu(String menuName, FormMenu formMenu) {
         if (formMenu == null) {
             Map<String, Object> replacements = Map.of("menu", menuName);
             validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_MENU_NULL, replacements, null));
             return;
         }
-        
-        
+
+
         if (!ValidationUtils.isValidMenuName(menuName)) {
             Map<String, Object> replacements = Map.of("name", menuName);
             validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_MENU_NAME, replacements, null));
         }
-        
-        
+
+
         String formType = formMenu.getFormType();
         if (formType == null || !VALID_FORM_TYPES.contains(formType.toLowerCase())) {
             Map<String, Object> replacements = Map.of("type", formType, "menu", menuName);
             validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_FORM_TYPE, replacements, null));
         }
-        
-        
+
+
         if (ValidationUtils.isNullOrEmpty(formMenu.getFormTitle())) {
             Map<String, Object> replacements = Map.of("menu", menuName);
             validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_TITLE, replacements, null));
         }
-        
-        
+
+
         validateButtons(menuName, formMenu.getFormButtons());
-        
-        
+
+
         validateFormTypeSpecific(menuName, formMenu);
-        
-        
+
+
         if (formMenu.getFormCommand() != null) {
             validateCommand(menuName, formMenu.getFormCommand());
         }
     }
-    
-    
+
+
     private void validateButtons(String menuName, List<FormButton> buttons) {
         if (buttons == null || buttons.isEmpty()) {
             Map<String, Object> replacements = Map.of("menu", menuName);
             validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_BUTTONS, replacements, null));
             return;
         }
-        
+
         for (int i = 0; i < buttons.size(); i++) {
             FormButton button = buttons.get(i);
             if (button == null) {
@@ -107,113 +107,108 @@ public class ConfigValidator {
                 validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NULL, replacements, null));
                 continue;
             }
-            
-            
+
+
             if (ValidationUtils.isNullOrEmpty(button.getText())) {
                 Map<String, Object> replacements = Map.of("button", i, "menu", menuName);
                 validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NO_TEXT, replacements, null));
             }
-            
-            
+
+
             validateButtonActions(menuName, i, button);
-            
-            
+
+
             if (button instanceof ConditionalButton) {
                 validateConditionalButton(menuName, i, (ConditionalButton) button);
             }
-            
-            
+
+
             if (button.getImage() != null && !ValidationUtils.isValidImageSource(button.getImage())) {
                 Map<String, Object> replacements = Map.of("button", i, "menu", menuName);
                 validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_INVALID_IMAGE, replacements, null));
             }
         }
     }
-    
-    
+
+
     private void validateButtonActions(String menuName, int buttonIndex, FormButton button) {
-        
+
         ActionDefinition actionDef = null;
-        
+
         if (button.hasActions()) {
-            
+
             actionDef = button.getPrimaryAction();
         } else if (button instanceof ConditionalButton) {
-            
+
             ConditionalButton conditionalButton = (ConditionalButton) button;
             actionDef = conditionalButton.getActionDefinition();
         }
-        
+
         if (actionDef == null) {
             Map<String, Object> replacements = Map.of("button", buttonIndex, "menu", menuName);
             validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NO_ACTION, replacements, null));
             return;
         }
-        
-        
+
+
         validateActionDefinition(menuName, buttonIndex, actionDef);
-        
-        
+
+
         if (button.hasActions()) {
             for (ActionDefinition action : button.getAllActions()) {
                 validateActionDefinition(menuName, buttonIndex, action);
             }
         }
     }
-    
 
-    
-    
+
     private void validateActionDefinition(String menuName, int buttonIndex, ActionDefinition actionDef) {
         if (actionDef == null) {
             return;
         }
-        
-        
+
+
         if (!ActionParser.isValid(actionDef)) {
             Map<String, Object> replacements = Map.of("menu", menuName, "button", buttonIndex);
             validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_ACTION_FORMAT, replacements, null));
             return;
         }
-        
-        
-        
-        
-        
+
+
         if (actionDef.isConditional()) {
             return;
         }
-        
-        
+
+
         if (!actionDef.isEmpty()) {
             for (String actionType : actionDef.getActionTypes()) {
                 Object actionValue = actionDef.getAction(actionType);
                 String actionValueStr = actionValue != null ? actionValue.toString() : "";
-                
-                
+
+
                 if (actionValueStr.contains(":") && !actionValueStr.contains("{") && !actionValueStr.contains("}")) {
                     Map<String, Object> replacements = Map.of("menu", menuName, "index", buttonIndex, "action", actionType);
                     validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_LEGACY_FORMAT_DETECTED, replacements, null));
-                    continue; 
+                    continue;
                 }
-                
-                
+
+
                 if (!actionRegistry.getRegisteredActionTypes().contains(actionType.toLowerCase())) {
                     Map<String, Object> replacements = Map.of("type", actionType, "menu", menuName, "index", buttonIndex);
                     validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_UNKNOWN_ACTION_TYPE, replacements, null));
                 }
-                
-                
+
+
                 validateActionTypeSpecific(menuName, buttonIndex, actionType, actionValue);
             }
         }
-        
-        
+
+
         if (actionDef.hasAction("delay")) {
             Object delayValue = actionDef.getAction("delay");
             try {
                 long delay = Long.parseLong(delayValue.toString());
-                if (delay < 0 || delay > 300000) { 
+                if (delay < 0 || delay > 300000) {
                     validationWarnings.add("Delay value " + delay + "ms may be too large in menu '" + menuName + "' button " + buttonIndex);
                 }
             } catch (NumberFormatException e) {
@@ -221,50 +216,50 @@ public class ConfigValidator {
             }
         }
     }
-    
-    
+
+
     private void validateConditionalButton(String menuName, int buttonIndex, ConditionalButton button) {
-        
+
         if (button.hasShowCondition()) {
             validateActionCondition(menuName, buttonIndex, button.getShowCondition());
         }
-        
-        
+
+
         if (button.getPriorityCondition() != null && !button.getPriorityCondition().trim().isEmpty()) {
             validateActionCondition(menuName, buttonIndex, button.getPriorityCondition());
         }
-        
-        
+
+
         if (button.getAlternativeActionDefinition() != null) {
             validateActionDefinition(menuName, buttonIndex, button.getAlternativeActionDefinition());
         }
-        
-        
+
+
         for (Map.Entry<String, ActionDefinition> entry : button.getConditionalActions().entrySet()) {
             validateActionCondition(menuName, buttonIndex, entry.getKey());
             validateActionDefinition(menuName, buttonIndex, entry.getValue());
         }
-        
-        
+
+
         int priority = button.getPriority();
         if (priority < -1000 || priority > 1000) {
             validationWarnings.add("Priority value " + priority + " may be out of reasonable range in menu '" + menuName + "' button " + buttonIndex);
         }
     }
-    
-    
+
+
     private void validateActionCondition(String menuName, int buttonIndex, String condition) {
         if (ValidationUtils.isNullOrEmpty(condition)) {
             return;
         }
-        
-        
+
+
         if (condition.contains(":")) {
             String[] parts = condition.split(":", 2);
             String conditionType = parts[0].trim();
             String conditionValue = parts[1].trim();
-            
-            
+
+
             switch (conditionType.toLowerCase()) {
                 case "permission":
                     if (ValidationUtils.isNullOrEmpty(conditionValue)) {
@@ -277,7 +272,7 @@ public class ConfigValidator {
                     }
                     break;
                 case "economy":
-                    
+
                     break;
                 default:
                     validationWarnings.add("Unknown condition type '" + conditionType + "' in menu '" + menuName + "' button " + buttonIndex);
@@ -285,67 +280,65 @@ public class ConfigValidator {
             }
         }
     }
-    
-    
+
+
     private void validateActionTypeSpecific(String menuName, int buttonIndex, String actionType, Object actionValue) {
-        
+
         String actualActionType = actionType;
         String actualActionValue = actionValue != null ? actionValue.toString() : null;
-        
-        
-        if (actualActionValue != null && actualActionValue.contains("{") && actualActionValue.contains("}")) {
-            
-            return; 
-        }
-        
-        
-        if (actualActionValue != null && !actualActionValue.contains("{")) {
-            
-            return; 
-        }
-        
-        
-    }
-    
 
-    
-    
+
+        if (actualActionValue != null && actualActionValue.contains("{") && actualActionValue.contains("}")) {
+
+            return;
+        }
+
+
+        if (actualActionValue != null && !actualActionValue.contains("{")) {
+
+            return;
+        }
+
+
+    }
+
+
     private void validateFormTypeSpecific(String menuName, FormMenu formMenu) {
         String formType = formMenu.getFormType();
         if (formType == null) return;
-        
+
         switch (formType.toLowerCase()) {
             case "modal":
                 if (formMenu.getFormButtons().size() != 2) {
                     validationErrors.add("Modal form '" + menuName + "' must have exactly 2 buttons");
                 }
                 break;
-                
+
             case "custom":
-                
+
                 if (formMenu.getFormButtons().isEmpty()) {
                     validationWarnings.add("Custom form '" + menuName + "' has no input elements");
                 }
                 break;
         }
     }
-    
-    
+
+
     private void validateCommand(String menuName, String command) {
         if (ValidationUtils.isNullOrEmpty(command)) {
             return;
         }
-        
+
         if (command.startsWith("/")) {
             validationWarnings.add("Command in menu '" + menuName + "' should not start with '/'");
         }
-        
+
         if (!IDENTIFIER_PATTERN.matcher(command.split(" ")[0]).matches()) {
             validationErrors.add("Invalid command format in menu '" + menuName + "': '" + command + "'");
         }
     }
-    
-    
+
+
     private void checkCircularReferences(Map<String, FormMenu> formMenus) {
         for (String menuName : formMenus.keySet()) {
             Set<String> visited = new HashSet<>();
@@ -354,37 +347,36 @@ public class ConfigValidator {
             }
         }
     }
-    
-    
+
+
     private boolean hasCircularReference(String menuName, Map<String, FormMenu> formMenus, Set<String> visited) {
         if (visited.contains(menuName)) {
             return true;
         }
-        
+
         visited.add(menuName);
         FormMenu menu = formMenus.get(menuName);
         if (menu == null) {
             return false;
         }
-        
+
         for (FormButton button : menu.getFormButtons()) {
-            
-            
-            
+
+
             if (button instanceof ConditionalButton) {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
-                
-                
+
+
                 if (checkActionForCircularReference(conditionalButton.getActionDefinition(), formMenus, visited)) {
                     return true;
                 }
-                
-                
+
+
                 if (checkActionForCircularReference(conditionalButton.getAlternativeActionDefinition(), formMenus, visited)) {
                     return true;
                 }
-                
-                
+
+
                 for (ActionDefinition conditionalAction : conditionalButton.getConditionalActions().values()) {
                     if (checkActionForCircularReference(conditionalAction, formMenus, visited)) {
                         return true;
@@ -392,20 +384,17 @@ public class ConfigValidator {
                 }
             }
         }
-        
+
         return false;
     }
-    
-    
+
+
     private boolean checkActionForCircularReference(ActionDefinition actionDef, Map<String, FormMenu> formMenus, Set<String> visited) {
         if (actionDef == null) {
             return false;
         }
-        
-        
-        
-        
-        
+
+
         for (String actionType : actionDef.getActionTypes()) {
             if (actionType.equalsIgnoreCase("openform") || actionType.equalsIgnoreCase("open_form")) {
                 Object targetMenuObj = actionDef.getAction(actionType);
@@ -417,36 +406,36 @@ public class ConfigValidator {
                 }
             }
         }
-        
+
         return false;
     }
-    
-    
+
+
     public static class ValidationResult {
         private final List<String> errors;
         private final List<String> warnings;
-        
+
         public ValidationResult(List<String> errors, List<String> warnings) {
             this.errors = new ArrayList<>(errors);
             this.warnings = new ArrayList<>(warnings);
         }
-        
+
         public List<String> getErrors() {
             return errors;
         }
-        
+
         public List<String> getWarnings() {
             return warnings;
         }
-        
+
         public boolean hasErrors() {
             return !errors.isEmpty();
         }
-        
+
         public boolean hasWarnings() {
             return !warnings.isEmpty();
         }
-        
+
         public boolean isValid() {
             return !hasErrors();
         }

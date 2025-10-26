@@ -9,7 +9,6 @@ softdepend:
   - PlaceholderAPI
   - Vault
   - LuckPerms
-  - WorldGuard
 commands:
   bedrockgui:
     usage: "/bedrockgui <reload | open>"

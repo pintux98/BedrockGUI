@@ -1,8 +1,6 @@
 package it.pintux.life.paper;
 
-import it.pintux.life.common.actions.handlers.ListActionHandler;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.paper.data.PaperDataProvider;
 import it.pintux.life.paper.placeholders.BedrockGUIExpansion;
 import it.pintux.life.paper.platform.PaperFormSender;
 import it.pintux.life.paper.platform.PaperPlayerChecker;
@@ -65,7 +63,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     }
 
     public void reloadData() {
-        
+
         if (!DependencyValidator.validateDependencies()) {
             getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
         }
@@ -76,7 +74,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         MessageConfig configHandler = new PaperMessageConfig(dataFolder, "messages.yml");
         messageData = new MessageData(configHandler);
 
-        
+
         if (api != null) {
             getLogger().info("Reloading existing BedrockGUI configuration...");
             api.reloadConfiguration();
@@ -84,7 +82,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             return;
         }
 
-        
+
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = null;
@@ -95,12 +93,11 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             getLogger().warning("Vault found but version is incompatible. Economy features disabled.");
         }
         PaperFormSender formSender = new PaperFormSender();
-        PaperDataProvider dataProvider = new PaperDataProvider();
         PaperTitleManager titleManager = new PaperTitleManager();
         PaperPluginManager pluginManager = new PaperPluginManager();
         PaperPlayerManager playerManager = new PaperPlayerManager();
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, dataProvider, pluginManager, playerManager);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager);
 
         formMenuUtil = api.getFormMenuUtil();
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
@@ -112,20 +109,20 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             getLogger().warning("PlaceholderAPI found but version is incompatible. Placeholder features disabled.");
         }
 
-        
+
         getLogger().info("BedrockGUI loaded and enabled");
     }
 
     @EventHandler
     public void onCmd(ServerCommandEvent event) {
         if (!(event.getSender() instanceof Player)) return;
-        
+
         PaperPlayerChecker playerChecker = new PaperPlayerChecker();
         Player player = (Player) event.getSender();
         if (!playerChecker.isBedrockPlayer(player.getUniqueId())) {
             return;
         }
-        
+
         PaperPlayer paperPlayer = new PaperPlayer(player);
         String command = event.getCommand();
 
@@ -187,7 +184,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         return messageData;
     }
 
-    
+
     public BedrockGUIApi getApi() {
         return api;
     }

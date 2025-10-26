@@ -21,129 +21,129 @@ public class CommandActionHandler extends BaseActionHandler {
 
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        
+
         ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
-        
+
         try {
-            
+
             if (isNewCurlyBraceFormat(actionData, "command")) {
                 return executeNewFormat(player, actionData, context);
             }
-            
-            
+
+
             List<String> commands = parseActionData(actionData, context, player);
-            
+
             if (commands.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid commands found");
                 return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
-            
-            
+
+
             if (commands.size() == 1) {
                 return executeSingleCommand(commands.get(0), player);
             }
-            
-            
+
+
             return executeMultipleCommands(commands, player);
-            
+
         } catch (Exception e) {
             logError("command execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing command: " + e.getMessage());
             return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
     }
-    
-    
+
+
     private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
         try {
             List<String> commands = parseNewFormatValues(actionData);
-            
+
             if (commands.isEmpty()) {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No commands found in new format"), player);
             }
-            
-            
+
+
             List<String> processedCommands = new ArrayList<>();
             for (String command : commands) {
                 String processedCommand = processPlaceholders(command, context, player);
                 processedCommands.add(processedCommand);
             }
-            
-            
+
+
             if (processedCommands.size() == 1) {
                 return executeSingleCommand(processedCommands.get(0), player);
             }
-            
-            
+
+
             return executeMultipleCommands(processedCommands, player);
-            
+
         } catch (Exception e) {
             logger.error("Error executing new format command action for player " + player.getName() + ": " + e.getMessage());
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new command format: " + e.getMessage()), player);
         }
     }
-    
-    
+
+
     private ActionResult executeSingleCommand(String command, FormPlayer player) {
         String normalizedCommand = normalizeCommand(command);
 
         if (normalizedCommand.isEmpty()) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", 
-                createReplacements("error", "Empty command after processing"), player);
+            return createFailureResult("ACTION_EXECUTION_ERROR",
+                    createReplacements("error", "Empty command after processing"), player);
         }
 
         boolean success = executeWithErrorHandling(
-            () -> player.executeAction("/" + normalizedCommand),
-            "Player command: " + normalizedCommand,
-            player
+                () -> player.executeAction("/" + normalizedCommand),
+                "Player command: " + normalizedCommand,
+                player
         );
 
         if (success) {
             logSuccess("command", normalizedCommand, player);
-            return createSuccessResult(MessageData.ACTION_COMMAND_SUCCESS, 
-                createReplacements("command", normalizedCommand), player);
+            return createSuccessResult(MessageData.ACTION_COMMAND_SUCCESS,
+                    createReplacements("command", normalizedCommand), player);
         } else {
             logFailure("command", normalizedCommand, player);
-            return createFailureResult(MessageData.ACTION_COMMAND_FAILED, 
-                createReplacements("command", normalizedCommand), player);
+            return createFailureResult(MessageData.ACTION_COMMAND_FAILED,
+                    createReplacements("command", normalizedCommand), player);
         }
     }
-    
-    
+
+
     private ActionResult executeMultipleCommands(List<String> commands, FormPlayer player) {
         int successCount = 0;
         int totalCount = commands.size();
         StringBuilder results = new StringBuilder();
-        
+
         for (int i = 0; i < commands.size(); i++) {
             String command = commands.get(i);
-            
+
             try {
                 logger.info("Executing command " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + command);
-                
+
                 ActionResult result = executeSingleCommand(command, player);
-                
+
                 if (result.isSuccess()) {
                     successCount++;
                     results.append("âś“ Command ").append(i + 1).append(": ").append(command).append(" - Success");
                 } else {
                     results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Failed");
                 }
-                
+
                 if (i < commands.size() - 1) {
                     results.append("\n");
-                    
+
                     try {
-                        Thread.sleep(200); 
+                        Thread.sleep(200);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         break;
                     }
                 }
-                
+
             } catch (Exception e) {
                 results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
                 logger.error("Error executing command " + (i + 1) + " for player " + player.getName(), e);
@@ -152,15 +152,15 @@ public class CommandActionHandler extends BaseActionHandler {
                 }
             }
         }
-        
-        String finalMessage = String.format("Executed %d/%d commands successfully:\n%s", 
-            successCount, totalCount, results.toString());
-        
+
+        String finalMessage = String.format("Executed %d/%d commands successfully:\n%s",
+                successCount, totalCount, results.toString());
+
         Map<String, Object> replacements = new HashMap<>();
         replacements.put("message", finalMessage);
         replacements.put("success_count", successCount);
         replacements.put("total_count", totalCount);
-        
+
         if (successCount == totalCount) {
             return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else if (successCount > 0) {
@@ -183,26 +183,26 @@ public class CommandActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-            "New Format Examples:",
-            "command { - \"gamemode creative\" }",
-            "command { - \"gamemode creative\" - \"give diamond 64\" - \"tp spawn\" }",
-            "command { - \"eco give {player} 1000\" - \"title {player} title Welcome!\" }",
-            "",
-            "Legacy Format Examples (deprecated):",
-            "command:gamemode creative",
-            "command:give {player} diamond 64",
-            "command:tp {player} spawn"
+                "New Format Examples:",
+                "command { - \"gamemode creative\" }",
+                "command { - \"gamemode creative\" - \"give diamond 64\" - \"tp spawn\" }",
+                "command { - \"eco give {player} 1000\" - \"title {player} title Welcome!\" }",
+                "",
+                "Legacy Format Examples (deprecated):",
+                "command:gamemode creative",
+                "command:give {player} diamond 64",
+                "command:tp {player} spawn"
         };
     }
 
-    
+
     protected String normalizeCommand(String command) {
         if (command == null) return "";
         String trimmed = command.trim();
         return trimmed.startsWith("/") ? trimmed.substring(1) : trimmed;
     }
 
-    
+
     @Deprecated
     protected String processPlaceholders(String command, ActionContext context, FormPlayer player) {
         return super.processPlaceholders(command, context, player);

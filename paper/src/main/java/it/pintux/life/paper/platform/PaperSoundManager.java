@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 
 public class PaperSoundManager implements PlatformSoundManager {
-    
+
     @Override
     public boolean playSound(FormPlayer player, String soundName, float volume, float pitch) {
         try {
@@ -16,19 +16,19 @@ public class PaperSoundManager implements PlatformSoundManager {
             if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
                 return false;
             }
-            
+
             Sound sound = parseSound(soundName);
             if (sound == null) {
                 return false;
             }
-            
+
             bukkitPlayer.playSound(bukkitPlayer.getLocation(), sound, volume, pitch);
             return true;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public boolean stopAllSounds(FormPlayer player) {
         try {
@@ -36,52 +36,52 @@ public class PaperSoundManager implements PlatformSoundManager {
             if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
                 return false;
             }
-            
+
             bukkitPlayer.stopAllSounds();
             return true;
         } catch (Exception e) {
             return false;
         }
     }
-    
+
     @Override
     public boolean soundExists(String soundName) {
         return parseSound(soundName) != null;
     }
-    
-    
+
+
     private Sound parseSound(String soundName) {
         if (soundName == null || soundName.isEmpty()) {
             return null;
         }
-        
-        
+
+
         Sound legacySound = parseLegacySound(soundName);
         if (legacySound != null) {
             return legacySound;
         }
-        
+
         try {
-            
+
             return Sound.valueOf(soundName.toUpperCase());
         } catch (IllegalArgumentException e) {
-            
+
             String normalizedName = soundName.toUpperCase().replace(".", "_");
-            
+
             try {
                 return Sound.valueOf(normalizedName);
             } catch (IllegalArgumentException e2) {
-                
+
                 if (!normalizedName.startsWith("ENTITY_")) {
                     try {
                         return Sound.valueOf("ENTITY_" + normalizedName);
                     } catch (IllegalArgumentException e3) {
-                        
+
                         if (!normalizedName.startsWith("BLOCK_")) {
                             try {
                                 return Sound.valueOf("BLOCK_" + normalizedName);
                             } catch (IllegalArgumentException e4) {
-                                
+
                                 if (!normalizedName.startsWith("UI_")) {
                                     try {
                                         return Sound.valueOf("UI_" + normalizedName);
@@ -97,12 +97,12 @@ public class PaperSoundManager implements PlatformSoundManager {
             }
         }
     }
-    
-    
+
+
     private Sound parseLegacySound(String soundName) {
         String lowerName = soundName.toLowerCase();
-        
-        
+
+
         switch (lowerName) {
             case "random.levelup":
             case "entity.player.levelup":

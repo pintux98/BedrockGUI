@@ -7,7 +7,7 @@ import org.geysermc.floodgate.api.FloodgateApi;
 
 
 public class PaperFormSender implements PlatformFormSender {
-    
+
     @Override
     public boolean sendForm(FormPlayer player, Form form) {
         try {
@@ -20,7 +20,7 @@ public class PaperFormSender implements PlatformFormSender {
             return false;
         }
     }
-    
+
     @Override
     public boolean isBedrockPlayer(java.util.UUID playerUuid) {
         try {
@@ -29,7 +29,7 @@ public class PaperFormSender implements PlatformFormSender {
             return false;
         }
     }
-    
+
     @Override
     public boolean isFormSystemAvailable() {
         try {

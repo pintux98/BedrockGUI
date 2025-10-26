@@ -14,11 +14,11 @@ import java.util.Map;
 
 public class SoundActionHandler extends BaseActionHandler {
     private final PlatformSoundManager soundManager;
-    
+
     public SoundActionHandler(PlatformSoundManager soundManager) {
         this.soundManager = soundManager;
     }
-    
+
     @Override
     public String getActionType() {
         return "sound";
@@ -26,103 +26,103 @@ public class SoundActionHandler extends BaseActionHandler {
 
     @Override
     public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        
+
         ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
-        
+
         try {
-            
+
             if (isNewCurlyBraceFormat(actionData, "sound")) {
                 return executeNewFormat(player, actionData, context);
             }
-            
-            
+
+
             List<String> sounds = parseActionData(actionData, context, player);
-            
+
             if (sounds.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid sounds found");
                 return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
             }
-            
-            
+
+
             if (sounds.size() == 1) {
                 return executeSingleSound(player, sounds.get(0), null);
             }
-            
-            
+
+
             return executeMultipleSoundsFromList(sounds, player);
-            
+
         } catch (Exception e) {
             logError("sound execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing sound: " + e.getMessage());
             return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
         }
     }
-    
-    
+
+
     private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
         try {
             List<String> sounds = parseNewFormatValues(actionData);
-            
+
             if (sounds.isEmpty()) {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No sounds found in new format"), player);
             }
-            
-            
+
+
             List<String> processedSounds = new ArrayList<>();
             for (String sound : sounds) {
                 String processedSound = processPlaceholders(sound, context, player);
                 processedSounds.add(processedSound);
             }
-            
-            
+
+
             if (processedSounds.size() == 1) {
                 return executeSingleSound(player, processedSounds.get(0), null);
             }
-            
-            
+
+
             return executeMultipleSoundsFromList(processedSounds, player);
-            
+
         } catch (Exception e) {
             logger.error("Error executing new format sound action for player " + player.getName() + ": " + e.getMessage());
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
         }
     }
-    
-    
+
+
     private ActionResult executeMultipleSoundsFromList(List<String> sounds, FormPlayer player) {
         int successCount = 0;
         int totalCount = sounds.size();
         StringBuilder results = new StringBuilder();
-        
+
         for (int i = 0; i < sounds.size(); i++) {
             String sound = sounds.get(i);
-            
+
             try {
                 logger.info("Playing sound " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + sound);
-                
+
                 ActionResult result = executeSingleSound(player, sound, null);
-                
+
                 if (result.isSuccess()) {
                     successCount++;
                     results.append("âś“ Sound ").append(i + 1).append(": ").append(sound).append(" - Success");
                 } else {
                     results.append("âś— Sound ").append(i + 1).append(": ").append(sound).append(" - Failed");
                 }
-                
+
                 if (i < sounds.size() - 1) {
                     results.append("\n");
-                    
+
                     try {
-                        Thread.sleep(300); 
+                        Thread.sleep(300);
                     } catch (InterruptedException e) {
                         Thread.currentThread().interrupt();
                         break;
                     }
                 }
-                
+
             } catch (Exception e) {
                 results.append("âś— Sound ").append(i + 1).append(": ").append(sound).append(" - Error: ").append(e.getMessage());
                 logger.error("Error playing sound " + (i + 1) + " for player " + player.getName(), e);
@@ -131,15 +131,15 @@ public class SoundActionHandler extends BaseActionHandler {
                 }
             }
         }
-        
-        String finalMessage = String.format("Played %d/%d sounds successfully:\n%s", 
-            successCount, totalCount, results.toString());
-        
+
+        String finalMessage = String.format("Played %d/%d sounds successfully:\n%s",
+                successCount, totalCount, results.toString());
+
         Map<String, Object> replacements = new HashMap<>();
         replacements.put("message", finalMessage);
         replacements.put("success_count", successCount);
         replacements.put("total_count", totalCount);
-        
+
         if (successCount == totalCount) {
             return createSuccessResult("ACTION_SUCCESS", replacements, player);
         } else if (successCount > 0) {
@@ -148,18 +148,18 @@ public class SoundActionHandler extends BaseActionHandler {
             return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
         }
     }
-    
-    
+
+
     private ActionResult executeSingleSound(FormPlayer player, String soundData, ActionContext context) {
-        
+
         String processedData = processPlaceholders(soundData.trim(), context, player);
-        
-        
+
+
         String[] parts = processedData.split(":");
         String soundName = parts[0];
         float volume = 1.0f;
         float pitch = 1.0f;
-        
+
         if (parts.length > 1) {
             try {
                 volume = Float.parseFloat(parts[1]);
@@ -168,7 +168,7 @@ public class SoundActionHandler extends BaseActionHandler {
                 volume = 1.0f;
             }
         }
-        
+
         if (parts.length > 2) {
             try {
                 pitch = Float.parseFloat(parts[2]);
@@ -177,23 +177,22 @@ public class SoundActionHandler extends BaseActionHandler {
                 pitch = 1.0f;
             }
         }
-        
-        
+
+
         boolean success = soundManager.playSound(player, soundName, volume, pitch);
-        
+
         if (success) {
             logSuccess("sound", soundName + " (vol:" + volume + ", pitch:" + pitch + ")", player);
-            return createSuccessResult("ACTION_SOUND_SUCCESS", 
-                createReplacements("sound", soundName), player);
+            return createSuccessResult("ACTION_SOUND_SUCCESS",
+                    createReplacements("sound", soundName), player);
         } else {
             logFailure("sound", soundName, player);
-            return createFailureResult("ACTION_SOUND_FAILED", 
-                createReplacements("sound", soundName), player);
+            return createFailureResult("ACTION_SOUND_FAILED",
+                    createReplacements("sound", soundName), player);
         }
     }
-    
 
-    
+
     private boolean validateParameters(FormPlayer player, String actionData) {
         return player != null && actionData != null && !actionData.trim().isEmpty();
     }
@@ -203,12 +202,12 @@ public class SoundActionHandler extends BaseActionHandler {
         if (actionValue == null || actionValue.trim().isEmpty()) {
             return false;
         }
-        
-        
+
+
         String trimmed = actionValue.trim();
-        
+
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-            
+
             String listContent = trimmed.substring(1, trimmed.length() - 1);
             String[] sounds = listContent.split(",\\s*");
             for (String sound : sounds) {
@@ -221,16 +220,16 @@ public class SoundActionHandler extends BaseActionHandler {
             return isValidSingleSound(trimmed);
         }
     }
-    
+
     private boolean isValidSingleSound(String soundData) {
         if (soundData.isEmpty()) return false;
-        
+
         String[] parts = soundData.split(":");
         if (parts.length == 0 || parts[0].trim().isEmpty()) {
             return false;
         }
-        
-        
+
+
         if (parts.length > 1) {
             try {
                 Float.parseFloat(parts[1]);
@@ -238,7 +237,7 @@ public class SoundActionHandler extends BaseActionHandler {
                 return false;
             }
         }
-        
+
         if (parts.length > 2) {
             try {
                 Float.parseFloat(parts[2]);
@@ -246,7 +245,7 @@ public class SoundActionHandler extends BaseActionHandler {
                 return false;
             }
         }
-        
+
         return true;
     }
 
@@ -258,11 +257,11 @@ public class SoundActionHandler extends BaseActionHandler {
     @Override
     public String[] getUsageExamples() {
         return new String[]{
-            "New Format Examples:",
-            "sound { - \"ui.button.click\" }",
-            "sound { - \"entity.experience_orb.pickup:0.5:1.2\" }",
-            "sound { - \"ui.button.click\" - \"entity.experience_orb.pickup:0.8:1.0\" - \"block.note_block.harp:1.0:0.5\" }",
-            "sound { - \"entity.player.levelup:1.0:1.5\" - \"ui.toast.challenge_complete:0.7:1.0\" }"
+                "New Format Examples:",
+                "sound { - \"ui.button.click\" }",
+                "sound { - \"entity.experience_orb.pickup:0.5:1.2\" }",
+                "sound { - \"ui.button.click\" - \"entity.experience_orb.pickup:0.8:1.0\" - \"block.note_block.harp:1.0:0.5\" }",
+                "sound { - \"entity.player.levelup:1.0:1.5\" - \"ui.toast.challenge_complete:0.7:1.0\" }"
         };
     }
 }

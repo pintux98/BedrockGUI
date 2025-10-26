@@ -10,36 +10,36 @@ import java.util.Map;
 
 
 public class ConditionEvaluator {
-    
+
     private static PlatformPluginManager pluginManager;
-    
+
     private static final Logger logger = Logger.getLogger(ConditionEvaluator.class);
-    
-    
+
+
     public static void setPluginManager(PlatformPluginManager manager) {
         pluginManager = manager;
     }
-    
-    
+
+
     public static boolean evaluateCondition(FormPlayer player, String condition, ActionContext context, MessageData messageData) {
         if (condition == null || condition.trim().isEmpty()) {
-            return true; 
+            return true;
         }
-        
+
         try {
-            
+
             String processedCondition = PlaceholderUtil.processPlaceholders(condition.trim(), context.getPlaceholders(), player, messageData);
             String[] parts = processedCondition.split(":");
-            
+
             if (parts.length < 2) {
                 logger.warn("Invalid condition format: " + condition);
                 return false;
             }
-            
+
             boolean negate = false;
             int offset = 0;
-            
-            
+
+
             if ("not".equals(parts[0])) {
                 negate = true;
                 offset = 1;
@@ -48,12 +48,12 @@ public class ConditionEvaluator {
                     return false;
                 }
             }
-            
+
             String conditionType = parts[offset];
             String conditionValue = parts[offset + 1];
-            
+
             boolean conditionMet = false;
-            
+
             switch (conditionType.toLowerCase()) {
                 case "permission":
                     conditionMet = evaluatePermissionCondition(player, conditionValue);
@@ -80,26 +80,26 @@ public class ConditionEvaluator {
                     logger.warn("Unknown condition type: " + conditionType);
                     return false;
             }
-            
-            
+
+
             if (negate) {
                 conditionMet = !conditionMet;
             }
-            
+
             return conditionMet;
-            
+
         } catch (Exception e) {
             logger.error("Error evaluating condition '" + condition + "' for player " + player.getName() + ": " + e.getMessage());
             return false;
         }
     }
-    
-    
+
+
     private static boolean evaluatePermissionCondition(FormPlayer player, String permission) {
         return player.hasPermission(permission);
     }
-    
-    
+
+
     private static boolean evaluatePluginCondition(String pluginName) {
         if (pluginManager == null) {
             logger.warn("Plugin manager not initialized. Plugin conditions will always return false.");
@@ -107,38 +107,38 @@ public class ConditionEvaluator {
         }
         return pluginManager.isPluginEnabled(pluginName);
     }
-    
-    
+
+
     private static boolean evaluateBedrockPlayerCondition(FormPlayer player) {
         try {
-            
+
             return false;
         } catch (Exception e) {
             logger.warn("Error checking if player is Bedrock player: " + e.getMessage());
             return false;
         }
     }
-    
-    
+
+
     private static boolean evaluateJavaPlayerCondition(FormPlayer player) {
         try {
-            
+
             return true;
         } catch (Exception e) {
             logger.warn("Error checking if player is Java player: " + e.getMessage());
             return false;
         }
     }
-    
-    
+
+
     private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionContext context, FormPlayer player, MessageData messageData) {
         try {
-            
+
             String processedPlaceholderValue = PlaceholderUtil.processPlaceholders(placeholderValue, context.getPlaceholders(), player, messageData);
-            
-            
+
+
             String processedExpectedValue = PlaceholderUtil.processPlaceholders(expectedValue, context.getPlaceholders(), player, messageData);
-            
+
             switch (operator.toLowerCase()) {
                 case "equals":
                 case "==":
@@ -179,26 +179,26 @@ public class ConditionEvaluator {
             return false;
         }
     }
-    
-    
+
+
     private static int compareNumeric(String value1, String value2) throws NumberFormatException {
         double num1 = Double.parseDouble(value1);
         double num2 = Double.parseDouble(value2);
         return Double.compare(num1, num2);
     }
-    
-    
+
+
     public static boolean isValidCondition(String condition) {
         if (condition == null || condition.trim().isEmpty()) {
-            return true; 
+            return true;
         }
-        
+
         String[] parts = condition.trim().split(":");
-        
+
         if (parts.length < 2) {
             return false;
         }
-        
+
         int offset = 0;
         if ("not".equals(parts[0])) {
             offset = 1;
@@ -206,16 +206,16 @@ public class ConditionEvaluator {
                 return false;
             }
         }
-        
+
         String conditionType = parts[offset];
-        
+
         switch (conditionType.toLowerCase()) {
             case "permission":
-                return parts.length >= offset + 2; 
+                return parts.length >= offset + 2;
             case "placeholder":
-                return parts.length >= offset + 4; 
+                return parts.length >= offset + 4;
             case "plugin":
-                return parts.length >= offset + 2; 
+                return parts.length >= offset + 2;
             default:
                 return false;
         }

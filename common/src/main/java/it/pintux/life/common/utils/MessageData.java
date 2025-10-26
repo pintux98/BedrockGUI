@@ -6,21 +6,21 @@ import java.util.regex.Pattern;
 
 public class MessageData {
 
-    
+
     private static String PREFIX = "prefix";
-    
-    
+
+
     public static String NO_PEX = "noPex";
     public static String NO_PERMISSION = "no_permission";
-    
-    
+
+
     public static String MENU_NOPEX = "menu.noPex";
     public static String MENU_NOJAVA = "menu.noJava";
     public static String MENU_ARGS = "menu.arguments";
     public static String MENU_NOT_FOUND = "menu.notFound";
     public static String MENU_NOT_FOUND_ALT = "menu.menu_not_found";
-    
-    
+
+
     public static String ACTION_SUCCESS = "action.success";
     public static String ACTION_FAILED = "action.failed";
     public static String ACTION_INVALID_PARAMETERS = "action.invalid_parameters";
@@ -47,12 +47,12 @@ public class MessageData {
     public static String ACTION_ECONOMY_REMOVE_FAILED = "action.economy_remove_failed";
     public static String ACTION_ECONOMY_SET_FAILED = "action.economy_set_failed";
     public static String ACTION_ECONOMY_INSUFFICIENT = "action.economy_insufficient";
-    
-    
+
+
     public static String FORM_TIMEOUT = "form.timeout";
     public static String FORM_VALIDATION_FAILED = "form.validation_failed";
-    
-    
+
+
     public static String ECONOMY_INSUFFICIENT = "economy.insufficient";
     public static String ECONOMY_ADD_SUCCESS = "economy.add_success";
     public static String ECONOMY_ADD_FAILED = "economy.add_failed";
@@ -71,17 +71,17 @@ public class MessageData {
     public static String ECONOMY_INSUFFICIENT_FUNDS = "economy.insufficient_funds";
     public static String ECONOMY_AMOUNT_POSITIVE = "economy.amount_positive";
     public static String ECONOMY_AMOUNT_NEGATIVE = "economy.amount_negative";
-    
-    
+
+
     public static String PLAYER_NOT_FOUND = "player.not_found";
-    
-    
+
+
     public static final String ACTION_LIST_SUCCESS = "action.list.success";
     public static final String ACTION_LIST_NO_DATA = "action.list.no_data";
     public static final String ACTION_LIST_INVALID_PAGE = "action.list.invalid_page";
     public static final String ACTION_LIST_GENERATED = "action.list.generated";
-    
-    
+
+
     public static final String SYSTEM_TEMPLATE_NOT_FOUND = "system.template_not_found";
     public static final String SYSTEM_FORM_DISPLAY_ERROR = "system.form_display_error";
     public static final String SYSTEM_FORM_SENT_SUCCESS = "system.form_sent_success";
@@ -91,8 +91,8 @@ public class MessageData {
     public static final String SYSTEM_SERVICE_STATUS_CHECK_FAILED = "system.service_status_check_failed";
     public static final String SYSTEM_COMMAND_EXECUTION_FAILED = "system.command_execution_failed";
     public static final String SYSTEM_OPERATION_INTERRUPTED = "system.operation_interrupted";
-    
-    
+
+
     public static final String VALIDATION_INVALID_MENU_NAME = "validation.invalid_menu_name";
     public static final String VALIDATION_INVALID_FORM_TYPE = "validation.invalid_form_type";
     public static final String VALIDATION_INVALID_IMAGE_SOURCE = "validation.invalid_image_source";
@@ -113,30 +113,30 @@ public class MessageData {
     public static final String VALIDATION_CONDITION_EVALUATION_ERROR = "validation.condition_evaluation_error";
     public static final String VALIDATION_PLACEHOLDER_CONDITION_ERROR = "validation.placeholder_condition_error";
     public static final String VALIDATION_INVALID_STEP_INDEX = "validation.invalid_step_index";
-    
-    
+
+
     public static final String ACTIONS_SOUND_NO_SOUND_SPECIFIED = "actions.sound.no_sound_specified";
     public static final String ACTIONS_SOUND_INVALID_VOLUME = "actions.sound.invalid_volume";
     public static final String ACTIONS_SOUND_INVALID_PITCH = "actions.sound.invalid_pitch";
     public static final String ACTIONS_SOUND_SOUND_PLAYED = "actions.sound.sound_played";
     public static final String ACTIONS_SOUND_PLAY_FAILED = "actions.sound.play_failed";
     public static final String ACTIONS_SOUND_PLAY_ERROR = "actions.sound.play_error";
-    
-    
+
+
     public static final String ACTIONS_TITLE_INVALID_PARAMETERS = "actions.title.invalid_parameters";
     public static final String ACTIONS_TITLE_SYSTEM_UNAVAILABLE = "actions.title.system_unavailable";
     public static final String ACTIONS_TITLE_TITLE_SENT = "actions.title.title_sent";
     public static final String ACTIONS_TITLE_SEND_FAILED = "actions.title.send_failed";
     public static final String ACTIONS_TITLE_SEND_ERROR = "actions.title.send_error";
-    
-    
+
+
     public static final String ACTIONS_SERVER_INVALID_PARAMETERS = "actions.server.invalid_parameters";
     public static final String ACTIONS_SERVER_NO_COMMAND_SPECIFIED = "actions.server.no_command_specified";
     public static final String ACTIONS_SERVER_COMMAND_EXECUTED = "actions.server.command_executed";
     public static final String ACTIONS_SERVER_EXECUTION_FAILED = "actions.server.execution_failed";
     public static final String ACTIONS_SERVER_EXECUTION_ERROR = "actions.server.execution_error";
-    
-    
+
+
     public static final String ACTIONS_POTION_INVALID_EFFECT = "actions.potion.invalid_effect";
     public static final String ACTIONS_POTION_DURATION_POSITIVE = "actions.potion.duration_positive";
     public static final String ACTIONS_POTION_INVALID_DURATION_FORMAT = "actions.potion.invalid_duration_format";
@@ -150,14 +150,14 @@ public class MessageData {
     public static final String ACTIONS_POTION_CLEAR_FAILED = "actions.potion.clear_failed";
     public static final String ACTIONS_POTION_EFFECTS_LISTED = "actions.potion.effects_listed";
     public static final String ACTIONS_POTION_LIST_FAILED = "actions.potion.list_failed";
-    
-    
+
+
     public static final String ACTIONS_RANDOM_ACTION_EXECUTED = "actions.random.action_executed";
     public static final String ACTIONS_RANDOM_ACTION_FAILED = "actions.random.action_failed";
     public static final String ACTIONS_RANDOM_EXECUTION_INTERRUPTED = "actions.random.execution_interrupted";
     public static final String ACTIONS_RANDOM_EXECUTION_FAILED = "actions.random.execution_failed";
-    
-    
+
+
     public static final String FORMS_MODAL_DISPLAY_ERROR = "forms.modal_display_error";
     public static final String FORMS_MENU_DISPLAY_ERROR = "forms.menu_display_error";
     public static final String FORMS_CUSTOM_DISPLAY_ERROR = "forms.custom_display_error";
@@ -169,14 +169,14 @@ public class MessageData {
     public static final String FORMS_SEQUENCE_ERROR = "forms.sequence_error";
     public static final String FORMS_FALLBACK_MESSAGE_SENT = "forms.fallback_message_sent";
     public static final String FORMS_FALLBACK_ERROR = "forms.fallback_error";
-    
-    
+
+
     public static final String INTEGRATIONS_PLACEHOLDERAPI_NOT_FOUND = "integrations.placeholderapi.not_found";
     public static final String INTEGRATIONS_PLACEHOLDERAPI_INITIALIZED = "integrations.placeholderapi.initialized";
     public static final String INTEGRATIONS_PLACEHOLDERAPI_CLASS_NOT_FOUND = "integrations.placeholderapi.class_not_found";
     public static final String INTEGRATIONS_PLACEHOLDERAPI_INIT_FAILED = "integrations.placeholderapi.init_failed";
-    
-    
+
+
     public static final String ERRORS_OPERATION_FAILED = "errors.operation_failed";
     public static final String ERRORS_OPERATION_FAILED_FALLBACK = "errors.operation_failed_fallback";
     public static final String ERRORS_FALLBACK_FAILED = "errors.fallback_failed";
@@ -185,16 +185,16 @@ public class MessageData {
     public static final String ERRORS_START_FAILED = "errors.start_failed";
     public static final String ERRORS_ACTION_RESULT_ERROR = "errors.action_result_error";
     public static final String ERRORS_BASIC_FALLBACK = "errors.basic_fallback";
-    
-    
+
+
     public static final String EVENTS_HANDLER_ERROR = "events.handler_error";
     public static final String EVENTS_LISTENER_ERROR = "events.listener_error";
     public static final String EVENTS_VALIDATION_FAILED = "events.validation_failed";
     public static final String EVENTS_FORM_CLOSED = "events.form_closed";
     public static final String EVENTS_FORM_ERROR = "events.form_error";
     public static final String EVENTS_SEND_FAILED = "events.send_failed";
-    
-    
+
+
     public static final String VALIDATION_NO_FORMS = "validation.no_forms";
     public static final String VALIDATION_MENU_NULL = "validation.menu_null";
     public static final String VALIDATION_NO_TITLE = "validation.no_title";
@@ -245,11 +245,11 @@ public class MessageData {
     public String replaceVariables(String value, Map<String, Object> replacements, FormPlayer player) {
         if (replacements != null) {
             for (Map.Entry<String, Object> entry : replacements.entrySet()) {
-                
+
                 String dollarPlaceholder = "$" + entry.getKey();
                 String curlyPlaceholder = "{" + entry.getKey() + "}";
                 String replacementValue = String.valueOf(entry.getValue());
-                
+
                 value = value.replace(dollarPlaceholder, replacementValue);
                 value = value.replace(curlyPlaceholder, replacementValue);
             }
@@ -257,17 +257,17 @@ public class MessageData {
 
         value = config.setPlaceholders(player, value);
 
-        
+
         Matcher dollarMatcher = Pattern.compile("\\$(\\w+)").matcher(value);
         while (dollarMatcher.find()) {
             String placeholder = dollarMatcher.group(1);
-            
+
         }
-        
+
         Matcher curlyMatcher = Pattern.compile("\\{(\\w+)\\}").matcher(value);
         while (curlyMatcher.find()) {
             String placeholder = curlyMatcher.group(1);
-            
+
         }
 
         return value;

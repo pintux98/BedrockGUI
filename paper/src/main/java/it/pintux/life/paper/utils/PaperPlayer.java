@@ -37,8 +37,8 @@ public class PaperPlayer implements FormPlayer {
     public boolean hasPermission(String permission) {
         return player.hasPermission(permission);
     }
-    
-    
+
+
     public Player getBukkitPlayer() {
         return player;
     }

@@ -12,26 +12,26 @@ import java.util.HashMap;
 
 public class ErrorHandlingUtil {
     private static final Logger logger = Logger.getLogger(ErrorHandlingUtil.class);
-    
-    
+
+
     private static final int DEFAULT_MAX_RETRIES = 3;
     private static final long DEFAULT_RETRY_DELAY_MS = 1000;
     private static final double DEFAULT_BACKOFF_MULTIPLIER = 2.0;
-    
-    
-    public static <T> T executeWithRetry(Supplier<T> operation, Supplier<T> fallback, 
-                                        String operationName, int maxRetries) {
-        return executeWithRetry(operation, fallback, operationName, maxRetries, 
-                              DEFAULT_RETRY_DELAY_MS, DEFAULT_BACKOFF_MULTIPLIER);
+
+
+    public static <T> T executeWithRetry(Supplier<T> operation, Supplier<T> fallback,
+                                         String operationName, int maxRetries) {
+        return executeWithRetry(operation, fallback, operationName, maxRetries,
+                DEFAULT_RETRY_DELAY_MS, DEFAULT_BACKOFF_MULTIPLIER);
     }
-    
-    
-    public static <T> T executeWithRetry(Supplier<T> operation, Supplier<T> fallback, 
-                                        String operationName, int maxRetries, 
-                                        long initialDelayMs, double backoffMultiplier) {
+
+
+    public static <T> T executeWithRetry(Supplier<T> operation, Supplier<T> fallback,
+                                         String operationName, int maxRetries,
+                                         long initialDelayMs, double backoffMultiplier) {
         Exception lastException = null;
         long currentDelay = initialDelayMs;
-        
+
         for (int attempt = 1; attempt <= maxRetries; attempt++) {
             try {
                 T result = operation.get();
@@ -43,9 +43,9 @@ public class ErrorHandlingUtil {
                 }
             } catch (Exception e) {
                 lastException = e;
-                logger.warn("Operation '{}' failed on attempt {} of {}: {}", 
-                           operationName, attempt, maxRetries, e.getMessage());
-                
+                logger.warn("Operation '{}' failed on attempt {} of {}: {}",
+                        operationName, attempt, maxRetries, e.getMessage());
+
                 if (attempt < maxRetries) {
                     try {
                         Thread.sleep(currentDelay);
@@ -57,9 +57,9 @@ public class ErrorHandlingUtil {
                 }
             }
         }
-        
+
         logger.error("Operation '{}' failed after {} attempts, using fallback", operationName, maxRetries, lastException);
-        
+
         try {
             return fallback.get();
         } catch (Exception e) {
@@ -67,32 +67,32 @@ public class ErrorHandlingUtil {
             return null;
         }
     }
-    
-    
+
+
     public static <T> CompletableFuture<T> executeWithTimeout(Supplier<CompletableFuture<T>> operation,
-                                                             Supplier<T> fallback,
-                                                             String operationName,
-                                                             long timeoutMs) {
+                                                              Supplier<T> fallback,
+                                                              String operationName,
+                                                              long timeoutMs) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        
+
         try {
             CompletableFuture<T> operationFuture = operation.get();
-            
+
             operationFuture.orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                .whenComplete((result, throwable) -> {
-                    if (throwable != null) {
-                        logger.warn("Operation '{}' failed or timed out: {}", operationName, throwable.getMessage());
-                        try {
-                            T fallbackResult = fallback.get();
-                            future.complete(fallbackResult);
-                        } catch (Exception e) {
-                            logger.error("Fallback for operation '{}' failed: {}", operationName, e.getMessage());
-                            future.completeExceptionally(e);
+                    .whenComplete((result, throwable) -> {
+                        if (throwable != null) {
+                            logger.warn("Operation '{}' failed or timed out: {}", operationName, throwable.getMessage());
+                            try {
+                                T fallbackResult = fallback.get();
+                                future.complete(fallbackResult);
+                            } catch (Exception e) {
+                                logger.error("Fallback for operation '{}' failed: {}", operationName, e.getMessage());
+                                future.completeExceptionally(e);
+                            }
+                        } else {
+                            future.complete(result);
                         }
-                    } else {
-                        future.complete(result);
-                    }
-                });
+                    });
         } catch (Exception e) {
             logger.error("Failed to start operation '{}': {}", operationName, e.getMessage());
             try {
@@ -102,13 +102,13 @@ public class ErrorHandlingUtil {
                 future.completeExceptionally(fe);
             }
         }
-        
+
         return future;
     }
-    
-    
-    public static ActionResult createSafeActionResult(Supplier<ActionResult> operation, 
-                                                     FormPlayer player, String actionType) {
+
+
+    public static ActionResult createSafeActionResult(Supplier<ActionResult> operation,
+                                                      FormPlayer player, String actionType) {
         try {
             ActionResult result = operation.get();
             return result != null ? result : createFallbackFailureResult(player, actionType, "Operation returned null");
@@ -117,40 +117,40 @@ public class ErrorHandlingUtil {
             return createFallbackFailureResult(player, actionType, e.getMessage());
         }
     }
-    
-    
+
+
     private static ActionResult createFallbackFailureResult(FormPlayer player, String actionType, String error) {
         try {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("error", error);
             replacements.put("action", actionType);
-            
+
             return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
         } catch (Exception e) {
-            
+
             logger.error("Failed to create proper error message, using basic fallback", e);
             return ActionResult.failure("Action failed: " + error);
         }
     }
-    
-    
-    public static boolean validateServiceAvailability(Supplier<Boolean> serviceCheck, 
-                                                     String serviceName, 
-                                                     FormPlayer player) {
+
+
+    public static boolean validateServiceAvailability(Supplier<Boolean> serviceCheck,
+                                                      String serviceName,
+                                                      FormPlayer player) {
         try {
             boolean available = executeWithRetry(
-                serviceCheck,
-                () -> false,
-                serviceName + " availability check",
-                2  
+                    serviceCheck,
+                    () -> false,
+                    serviceName + " availability check",
+                    2
             );
-            
+
             if (!available) {
                 logger.warn("{} service is not available for player: {}", serviceName, player.getName());
                 player.sendMessage("Â§c" + serviceName + " service is currently unavailable. Please try again later.");
             }
-            
+
             return available;
         } catch (Exception e) {
             logger.error("Error checking {} service availability: {}", serviceName, e.getMessage());
@@ -158,25 +158,25 @@ public class ErrorHandlingUtil {
             return false;
         }
     }
-    
-    
-    public static boolean sendFormWithFallback(FormPlayer player, 
-                                              Supplier<Boolean> formSender,
-                                              String fallbackMessage) {
+
+
+    public static boolean sendFormWithFallback(FormPlayer player,
+                                               Supplier<Boolean> formSender,
+                                               String fallbackMessage) {
         try {
             boolean sent = executeWithRetry(
-                formSender,
-                () -> false,
-                "form sending to " + player.getName(),
-                2
+                    formSender,
+                    () -> false,
+                    "form sending to " + player.getName(),
+                    2
             );
-            
+
             if (!sent && fallbackMessage != null) {
                 logger.info("Form sending failed, sending fallback message to player: {}", player.getName());
                 player.sendMessage(fallbackMessage);
-                return true; 
+                return true;
             }
-            
+
             return sent;
         } catch (Exception e) {
             logger.error("Error in form sending with fallback: {}", e.getMessage());
@@ -187,23 +187,23 @@ public class ErrorHandlingUtil {
             return false;
         }
     }
-    
-    
+
+
     public static boolean executeCommandWithFallback(Supplier<Boolean> commandExecutor,
-                                                    String commandDescription,
-                                                    FormPlayer player) {
+                                                     String commandDescription,
+                                                     FormPlayer player) {
         try {
             boolean success = executeWithRetry(
-                commandExecutor,
-                () -> false,
-                commandDescription,
-                DEFAULT_MAX_RETRIES
+                    commandExecutor,
+                    () -> false,
+                    commandDescription,
+                    DEFAULT_MAX_RETRIES
             );
-            
+
             if (!success) {
                 player.sendMessage("Â§cCommand execution failed: " + commandDescription + ". Please contact an administrator.");
             }
-            
+
             return success;
         } catch (Exception e) {
             logger.error("Error executing command '{}': {}", commandDescription, e.getMessage());

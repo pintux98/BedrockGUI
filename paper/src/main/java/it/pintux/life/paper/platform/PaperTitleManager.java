@@ -31,11 +31,11 @@ public class PaperTitleManager implements PlatformTitleManager {
                 return false;
             }
             String msg = translate(message);
-            
+
             bukkitPlayer.sendActionBar(msg);
             return true;
         } catch (NoSuchMethodError err) {
-            
+
             try {
                 Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
                 if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {

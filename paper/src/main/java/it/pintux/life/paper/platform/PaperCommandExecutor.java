@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 
 public class PaperCommandExecutor implements PlatformCommandExecutor {
-    
+
     @Override
     public boolean executeAsConsole(String command) {
         try {
@@ -15,7 +15,7 @@ public class PaperCommandExecutor implements PlatformCommandExecutor {
             return false;
         }
     }
-    
+
     @Override
     public boolean executeAsPlayer(String playerName, String command) {
         try {
@@ -28,7 +28,7 @@ public class PaperCommandExecutor implements PlatformCommandExecutor {
             return false;
         }
     }
-    
+
     @Override
     public boolean commandExists(String command) {
         try {

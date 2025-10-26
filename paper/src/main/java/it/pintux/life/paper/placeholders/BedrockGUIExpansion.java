@@ -12,33 +12,33 @@ import java.util.stream.Collectors;
 
 
 public class BedrockGUIExpansion extends PlaceholderExpansion {
-    
+
     private final BedrockGUI plugin;
-    
+
     public BedrockGUIExpansion(BedrockGUI plugin) {
         this.plugin = plugin;
     }
-    
+
     @Override
     public @NotNull String getIdentifier() {
         return "bgui";
     }
-    
+
     @Override
     public @NotNull String getAuthor() {
         return "pintux";
     }
-    
+
     @Override
     public @NotNull String getVersion() {
         return plugin.getDescription().getVersion();
     }
-    
+
     @Override
     public boolean persist() {
         return true;
     }
-    
+
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
         switch (params.toLowerCase()) {
@@ -50,8 +50,8 @@ public class BedrockGUIExpansion extends PlaceholderExpansion {
                 return null;
         }
     }
-    
-    
+
+
     private String getOnlinePlayersList() {
         return Bukkit.getOnlinePlayers().stream()
                 .map(p -> p.getName() + ":" + p.getUniqueId().toString())

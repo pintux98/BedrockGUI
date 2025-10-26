@@ -7,13 +7,13 @@ import java.util.UUID;
 
 
 public interface PlatformFormSender {
-    
-    
+
+
     boolean sendForm(FormPlayer player, Form form);
-    
-    
+
+
     boolean isBedrockPlayer(UUID playerUuid);
-    
-    
+
+
     boolean isFormSystemAvailable();
 }

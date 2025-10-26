@@ -103,12 +103,7 @@ public class FormMenuUtil {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
             actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
             actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
-            this.permissionActionHandler = new PermissionActionHandler(commandExecutor);
-            actionRegistry.registerHandler(permissionActionHandler);
-            actionRegistry.registerHandler(new PotionActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new GameModeActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new HealthActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new TeleportActionHandler());
+            actionRegistry.registerHandler(new PermissionActionHandler(commandExecutor));
         }
         
         if (soundManager != null) {
@@ -126,14 +121,9 @@ public class FormMenuUtil {
         
         
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
-        this.randomActionHandler = new RandomActionHandler(actionExecutor);
-        actionRegistry.registerHandler(randomActionHandler);
-        
+        actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
         
         actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
-        
-        
-        actionRegistry.registerHandler(new ListActionHandler());
         
         
         if (commandExecutor != null && pluginManager != null && playerManager != null) {
@@ -627,9 +617,9 @@ public class FormMenuUtil {
         ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
         logger.debug(result.toString());
         if (result.isFailure()) {
-            logger.warn("Action execution failed for player " + player.getName() + ": " + result.getMessage());
-            if (result.getMessage() != null) {
-                player.sendMessage("Action failed: " + result.getMessage());
+            logger.warn("Action execution failed for player " + player.getName() + ": " + result.message());
+            if (result.message() != null) {
+                player.sendMessage("Action failed: " + result.message());
             }
         } else {
             logger.debug("Successfully executed action for player " + player.getName() + ": " + onClickAction);
@@ -675,7 +665,7 @@ public class FormMenuUtil {
                 ActionResult result = results.get(i);
                 if (result.isFailure()) {
                     hasFailures = true;
-                    logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.getMessage());
+                    logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.message());
                 }
             }
             
@@ -735,9 +725,9 @@ public class FormMenuUtil {
         ActionResult result = actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
         
         if (result.isFailure()) {
-            logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.getMessage());
-            if (result.getMessage() != null) {
-                player.sendMessage("Action failed: " + result.getMessage());
+            logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.message());
+            if (result.message() != null) {
+                player.sendMessage("Action failed: " + result.message());
             }
         } else {
             logger.debug("Successfully executed custom action for player " + player.getName() + ": " + action);

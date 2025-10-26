@@ -12,7 +12,7 @@ import it.pintux.life.common.utils.ValidationUtils;
 public class OpenUrlActionHandler extends BaseActionHandler {
 
     private final PlatformPlayerManager playerManager;
-    
+
     public OpenUrlActionHandler(PlatformPlayerManager playerManager) {
         this.playerManager = playerManager;
     }
@@ -36,7 +36,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         try {
             String processed = processPlaceholders(actionValue.trim(), context, player);
 
-            
+
             processed = ValidationUtils.sanitizeString(processed);
 
             if (processed == null || processed.trim().isEmpty()) {
@@ -44,12 +44,12 @@ public class OpenUrlActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
             }
 
-            
+
             if (!(processed.startsWith("http://") || processed.startsWith("https://"))) {
                 logger.warn("URL action value does not start with http/https after placeholder processing: " + processed);
             }
 
-            
+
             playerManager.sendMessage(player, processed);
 
             logger.debug("Sent URL to player " + player.getName() + ": " + processed);
@@ -73,7 +73,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         if (trimmed.length() > 2048) {
             return false;
         }
-        
+
         return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.contains("{") || trimmed.contains("}");
     }
 
@@ -84,7 +84,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
 
     @Override
     public String[] getUsageExamples() {
-        return new String[] {
+        return new String[]{
                 "url:https://example.com",
                 "url:https://docs.server.com/help",
                 "url:https://store.server.com/{player}"
