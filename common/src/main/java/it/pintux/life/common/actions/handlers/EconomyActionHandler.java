@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
@@ -28,7 +30,7 @@ public class EconomyActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
 
         if (!validateServiceAvailability(
                 () -> economyManager.isEconomyAvailable(),
@@ -38,7 +40,7 @@ public class EconomyActionHandler extends BaseActionHandler {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player)), player);
         }
 
-        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);
         if (validationResult != null) {
             return validationResult;
         }
@@ -63,7 +65,7 @@ public class EconomyActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionValue, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
         try {
             List<String> operations = parseNewFormatValues(actionValue);
 
@@ -93,9 +95,9 @@ public class EconomyActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleOperationsFromList(List<String> operations, FormPlayer player, ActionContext context) {
+    private ActionSystem.ActionResult executeMultipleOperationsFromList(List<String> operations, FormPlayer player, ActionSystem.ActionContext context) {
         for (String operation : operations) {
-            ActionResult result = executeSingleOperation(player, operation.trim(), context);
+            ActionSystem.ActionResult result = executeSingleOperation(player, operation.trim(), context);
             if (result.isFailure()) {
                 return result;
             }
@@ -115,7 +117,7 @@ public class EconomyActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleOperation(FormPlayer player, String operationData, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleOperation(FormPlayer player, String operationData, ActionSystem.ActionContext context) {
         String processedData = processPlaceholders(operationData.trim(), context, player);
         String[] parts = processedData.split(":");
 
@@ -144,13 +146,13 @@ public class EconomyActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleOperations(FormPlayer player, String multiValue, ActionContext context) {
+    private ActionSystem.ActionResult executeMultipleOperations(FormPlayer player, String multiValue, ActionSystem.ActionContext context) {
 
         String listContent = multiValue.trim().substring(1, multiValue.trim().length() - 1);
         String[] operations = listContent.split(",\\s*");
 
         for (String operation : operations) {
-            ActionResult result = executeSingleOperation(player, operation.trim(), context);
+            ActionSystem.ActionResult result = executeSingleOperation(player, operation.trim(), context);
             if (result.isFailure()) {
                 return result;
             }
@@ -169,7 +171,7 @@ public class EconomyActionHandler extends BaseActionHandler {
                 createReplacements("message", "Executed " + operations.length + " economy operations"), player);
     }
 
-    private ActionResult handleAdd(FormPlayer player, String[] parts) {
+    private ActionSystem.ActionResult handleAdd(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Add operation requires amount"), player);
         }
@@ -192,7 +194,7 @@ public class EconomyActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleRemove(FormPlayer player, String[] parts) {
+    private ActionSystem.ActionResult handleRemove(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Remove operation requires amount"), player);
         }
@@ -223,7 +225,7 @@ public class EconomyActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleSet(FormPlayer player, String[] parts) {
+    private ActionSystem.ActionResult handleSet(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Set operation requires amount"), player);
         }
@@ -246,7 +248,7 @@ public class EconomyActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleCheck(FormPlayer player, String[] parts) {
+    private ActionSystem.ActionResult handleCheck(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Check operation requires amount"), player);
         }
@@ -270,7 +272,7 @@ public class EconomyActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handlePay(FormPlayer player, String[] parts, ActionContext context) {
+    private ActionSystem.ActionResult handlePay(FormPlayer player, String[] parts, ActionSystem.ActionContext context) {
         if (parts.length < 3) {
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Pay operation requires target and amount"), player);
         }
@@ -377,4 +379,5 @@ public class EconomyActionHandler extends BaseActionHandler {
         };
     }
 }
+
 

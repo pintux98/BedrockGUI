@@ -1,6 +1,7 @@
 package it.pintux.life.common.form.obj;
+import it.pintux.life.common.actions.ActionSystem;
 
-import it.pintux.life.common.actions.ActionDefinition;
+import it.pintux.life.common.actions.ActionSystem.ActionDefinition;
 import it.pintux.life.common.actions.ActionParser;
 
 import java.util.List;
@@ -11,8 +12,8 @@ public class FormButton {
     private String text;
     private String image;
     private String onClick;
-    private ActionDefinition action;
-    private List<ActionDefinition> actions;
+    private ActionSystem.ActionDefinition action;
+    private List<ActionSystem.ActionDefinition> actions;
 
     public FormButton(String text, String image, String onClick) {
         this.text = text;
@@ -21,14 +22,14 @@ public class FormButton {
     }
 
 
-    public FormButton(String text, String image, ActionDefinition action) {
+    public FormButton(String text, String image, ActionSystem.ActionDefinition action) {
         this.text = text;
         this.image = image;
         this.action = action;
     }
 
 
-    public FormButton(String text, String image, List<ActionDefinition> actions) {
+    public FormButton(String text, String image, List<ActionSystem.ActionDefinition> actions) {
         this.text = text;
         this.image = image;
         this.actions = actions;
@@ -69,19 +70,19 @@ public class FormButton {
         this.onClick = onClick;
     }
 
-    public ActionDefinition getAction() {
+    public ActionSystem.ActionDefinition getAction() {
         return action;
     }
 
-    public void setAction(ActionDefinition action) {
+    public void setAction(ActionSystem.ActionDefinition action) {
         this.action = action;
     }
 
-    public List<ActionDefinition> getActions() {
+    public List<ActionSystem.ActionDefinition> getActions() {
         return actions;
     }
 
-    public void setActions(List<ActionDefinition> actions) {
+    public void setActions(List<ActionSystem.ActionDefinition> actions) {
         this.actions = actions;
     }
 
@@ -91,7 +92,7 @@ public class FormButton {
     }
 
 
-    public ActionDefinition getPrimaryAction() {
+    public ActionSystem.ActionDefinition getPrimaryAction() {
         if (action != null) {
             return action;
         }
@@ -103,7 +104,7 @@ public class FormButton {
     }
 
 
-    public List<ActionDefinition> getAllActions() {
+    public List<ActionSystem.ActionDefinition> getAllActions() {
         if (actions != null && !actions.isEmpty()) {
             return actions;
         }
@@ -149,4 +150,5 @@ public class FormButton {
         return joiner.toString();
     }
 }
+
 

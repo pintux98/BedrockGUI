@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.utils.FormPlayer;
 import org.geysermc.floodgate.api.FloodgateApi;
 
@@ -14,8 +16,8 @@ public class CloseActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
-        ActionResult validationResult = validateBasicParameters(player, actionValue);
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);
         if (validationResult != null) {
             return validationResult;
         }
@@ -49,3 +51,4 @@ public class CloseActionHandler extends BaseActionHandler {
         };
     }
 }
+

@@ -1,6 +1,7 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.actions.ActionContext;
+import it.pintux.life.common.actions.ActionSystem;
+import it.pintux.life.common.actions.ActionSystem.ActionContext;
 import it.pintux.life.common.platform.PlatformPluginManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
@@ -21,7 +22,7 @@ public class ConditionEvaluator {
     }
 
 
-    public static boolean evaluateCondition(FormPlayer player, String condition, ActionContext context, MessageData messageData) {
+    public static boolean evaluateCondition(FormPlayer player, String condition, ActionSystem.ActionContext context, MessageData messageData) {
         if (condition == null || condition.trim().isEmpty()) {
             return true;
         }
@@ -131,7 +132,7 @@ public class ConditionEvaluator {
     }
 
 
-    private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionContext context, FormPlayer player, MessageData messageData) {
+    private static boolean evaluatePlaceholderCondition(String placeholderValue, String operator, String expectedValue, ActionSystem.ActionContext context, FormPlayer player, MessageData messageData) {
         try {
 
             String processedPlaceholderValue = PlaceholderUtil.processPlaceholders(placeholderValue, context.getPlaceholders(), player, messageData);
@@ -221,3 +222,4 @@ public class ConditionEvaluator {
         }
     }
 }
+

@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -29,9 +31,9 @@ public class PermissionActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -59,7 +61,7 @@ public class PermissionActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeSinglePermissionOperation(String operationData, FormPlayer player) {
+    private ActionSystem.ActionResult executeSinglePermissionOperation(String operationData, FormPlayer player) {
         try {
             logger.info("Executing permission operation: " + operationData + " for player " + player.getName());
 
@@ -94,7 +96,7 @@ public class PermissionActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeMultiplePermissionOperations(List<String> operations, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultiplePermissionOperations(List<String> operations, FormPlayer player) {
         int successCount = 0;
         int totalCount = operations.size();
         StringBuilder results = new StringBuilder();
@@ -408,4 +410,5 @@ public class PermissionActionHandler extends BaseActionHandler {
         }
     }
 }
+
 

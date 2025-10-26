@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -25,9 +27,9 @@ public class TitleActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -62,7 +64,7 @@ public class TitleActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> titles = parseNewFormatValues(actionData);
 
@@ -92,7 +94,7 @@ public class TitleActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleTitlesFromList(List<String> titles, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleTitlesFromList(List<String> titles, FormPlayer player) {
         int successCount = 0;
         int totalCount = titles.size();
         StringBuilder results = new StringBuilder();
@@ -103,7 +105,7 @@ public class TitleActionHandler extends BaseActionHandler {
             try {
                 logger.info("Showing title " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + title);
 
-                ActionResult result = executeSingleTitle(player, title, null);
+                ActionSystem.ActionResult result = executeSingleTitle(player, title, null);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -150,7 +152,7 @@ public class TitleActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleTitle(FormPlayer player, String titleData, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleTitle(FormPlayer player, String titleData, ActionSystem.ActionContext context) {
         String processedData = processPlaceholders(titleData.trim(), context, player);
         String[] parts = processedData.split(":");
 
@@ -246,4 +248,5 @@ public class TitleActionHandler extends BaseActionHandler {
         }
     }
 }
+
 

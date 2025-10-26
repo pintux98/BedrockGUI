@@ -1,6 +1,6 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.actions.ActionContext;
+import it.pintux.life.common.actions.ActionSystem;
 
 import java.time.LocalTime;
 import java.util.HashMap;
@@ -125,7 +125,7 @@ public class PlaceholderUtil {
     }
 
 
-    public static String processPlaceholdersWithContext(String text, ActionContext context, FormPlayer player) {
+    public static String processPlaceholdersWithContext(String text, ActionSystem.ActionContext context, FormPlayer player) {
         if (context == null) {
             return text;
         }
@@ -143,8 +143,8 @@ public class PlaceholderUtil {
     }
 
 
-    public static ActionContext createContextWithBuiltinPlaceholders(FormPlayer player, Map<String, String> additionalPlaceholders) {
-        ActionContext.Builder builder = ActionContext.builder();
+    public static ActionSystem.ActionContext createContextWithBuiltinPlaceholders(FormPlayer player, Map<String, String> additionalPlaceholders) {
+        ActionSystem.ActionContext.Builder builder = ActionSystem.ActionContext.builder();
 
 
         if (additionalPlaceholders != null) {
@@ -167,7 +167,7 @@ public class PlaceholderUtil {
     }
 
 
-    public static ActionContext createContextWithBuiltinPlaceholders(FormPlayer player, Map<String, String> additionalPlaceholders, MessageData messageData) {
+    public static ActionSystem.ActionContext createContextWithBuiltinPlaceholders(FormPlayer player, Map<String, String> additionalPlaceholders, MessageData messageData) {
         Map<String, String> placeholders = new HashMap<>();
 
 
@@ -183,14 +183,14 @@ public class PlaceholderUtil {
             metadata.put("messageData", messageData);
         }
 
-        return ActionContext.builder()
+        return ActionSystem.ActionContext.builder()
                 .placeholders(placeholders)
                 .metadata(metadata)
                 .build();
     }
 
 
-    public static ActionContext addBuiltinPlaceholders(ActionContext context, FormPlayer player) {
+    public static ActionSystem.ActionContext addBuiltinPlaceholders(ActionSystem.ActionContext context, FormPlayer player) {
         if (context == null) {
             return createContextWithBuiltinPlaceholders(player, null);
         }
@@ -214,7 +214,7 @@ public class PlaceholderUtil {
     }
 
 
-    private static void populatePlatformSpecificPlaceholders(ActionContext.Builder builder, FormPlayer player) {
+    private static void populatePlatformSpecificPlaceholders(ActionSystem.ActionContext.Builder builder, FormPlayer player) {
         try {
 
             if (player.getClass().getName().contains("PaperPlayer")) {
@@ -230,7 +230,7 @@ public class PlaceholderUtil {
     }
 
 
-    private static void populatePaperPlaceholders(ActionContext.Builder builder, FormPlayer player) {
+    private static void populatePaperPlaceholders(ActionSystem.ActionContext.Builder builder, FormPlayer player) {
         try {
 
             java.lang.reflect.Field playerField = player.getClass().getDeclaredField("player");
@@ -275,7 +275,7 @@ public class PlaceholderUtil {
     }
 
 
-    private static void populateDefaultPlaceholders(ActionContext.Builder builder, FormPlayer player) {
+    private static void populateDefaultPlaceholders(ActionSystem.ActionContext.Builder builder, FormPlayer player) {
         builder.placeholder("x", "0.0")
                 .placeholder("y", "64.0")
                 .placeholder("z", "0.0")
@@ -356,7 +356,7 @@ public class PlaceholderUtil {
     }
 
 
-    private static void populateTimePlaceholders(ActionContext.Builder builder) {
+    private static void populateTimePlaceholders(ActionSystem.ActionContext.Builder builder) {
         LocalTime now = LocalTime.now();
 
 
@@ -389,3 +389,4 @@ public class PlaceholderUtil {
         placeholders.put("timestamp", String.valueOf(System.currentTimeMillis()));
     }
 }
+

@@ -17,3 +17,4 @@ public interface PlatformPlayerChecker {
 
     String getPlayerPlatform(UUID playerUuid);
 }
+

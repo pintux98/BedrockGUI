@@ -1,4 +1,5 @@
 package it.pintux.life.common.form;
+import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.actions.*;
 import it.pintux.life.common.actions.handlers.*;
@@ -193,7 +194,7 @@ public class FormMenuUtil {
                         
                         
                         if (onClick != null && !onClick.trim().isEmpty()) {
-                            ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
+                            ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                             conditionalButton.setAction(actionDef);
                         }
                         
@@ -215,7 +216,7 @@ public class FormMenuUtil {
                         
                         
                         if (onClick != null && !onClick.trim().isEmpty()) {
-                            ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
+                            ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                             formButton.setAction(actionDef);
                         }
                         
@@ -314,7 +315,7 @@ public class FormMenuUtil {
         }
         
         
-        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
         
         String button1Text, button2Text;
@@ -393,7 +394,7 @@ public class FormMenuUtil {
         List<String> onClickActions = new ArrayList<>();
         
         
-        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
         
         
         List<FormButton> processedButtons = buttons;
@@ -464,7 +465,7 @@ public class FormMenuUtil {
         CustomForm.Builder formBuilder = CustomForm.builder().title(title);
 
         
-        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         Map<Integer, String> componentActions = new HashMap<>();
         Map<String, Object> componentResults = new HashMap<>();
@@ -593,7 +594,7 @@ public class FormMenuUtil {
         onClickAction = replacePlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders, player, messageData);
 
         
-        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+        ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
 
         
         if (onClickAction.startsWith("[") && onClickAction.endsWith("]")) {
@@ -605,16 +606,16 @@ public class FormMenuUtil {
     }
     
     
-    private void handleSingleAction(FormPlayer player, String onClickAction, ActionContext context) {
+    private void handleSingleAction(FormPlayer player, String onClickAction, ActionSystem.ActionContext context) {
         
-        ActionExecutor.Action action = actionExecutor.parseAction(onClickAction);
+        ActionSystem.Action action = actionExecutor.parseAction(onClickAction);
         if (action == null) {
             logger.warn("Failed to parse onClick action: " + onClickAction);
             player.sendMessage("Invalid action format");
             return;
         }
 
-        ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
+        ActionSystem.ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
         logger.debug(result.toString());
         if (result.isFailure()) {
             logger.warn("Action execution failed for player " + player.getName() + ": " + result.message());
@@ -627,19 +628,19 @@ public class FormMenuUtil {
     }
     
     
-    private void handleMultipleActions(FormPlayer player, String onClickAction, ActionContext context) {
+    private void handleMultipleActions(FormPlayer player, String onClickAction, ActionSystem.ActionContext context) {
         try {
             
             String actionsString = onClickAction.substring(1, onClickAction.length() - 1);
             String[] actionStrings = actionsString.split(",");
             
-            List<ActionExecutor.Action> actions = new ArrayList<>();
+            List<ActionSystem.Action> actions = new ArrayList<>();
             
             
             for (String actionString : actionStrings) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
-                    ActionExecutor.Action action = actionExecutor.parseAction(trimmed);
+                    ActionSystem.Action action = actionExecutor.parseAction(trimmed);
                     if (action != null) {
                         actions.add(action);
                     } else {
@@ -657,12 +658,12 @@ public class FormMenuUtil {
             }
             
             
-            List<ActionResult> results = actionExecutor.executeActions(player, actions, context);
+            List<ActionSystem.ActionResult> results = actionExecutor.executeActions(player, actions, context);
             
             
             boolean hasFailures = false;
             for (int i = 0; i < results.size(); i++) {
-                ActionResult result = results.get(i);
+                ActionSystem.ActionResult result = results.get(i);
                 if (result.isFailure()) {
                     hasFailures = true;
                     logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.message());
@@ -712,17 +713,17 @@ public class FormMenuUtil {
             customPlaceholders.put("1", value); 
         }
         
-        ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
+        ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
         
         
-        ActionExecutor.Action parsedAction = actionExecutor.parseAction(action);
+        ActionSystem.Action parsedAction = actionExecutor.parseAction(action);
         if (parsedAction == null) {
             logger.warn("Failed to parse custom action: " + action);
             player.sendMessage("Invalid action format");
             return;
         }
         
-        ActionResult result = actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
+        ActionSystem.ActionResult result = actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
         
         if (result.isFailure()) {
             logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.message());
@@ -772,7 +773,7 @@ public class FormMenuUtil {
     }
     
     
-    public void registerActionHandler(ActionHandler handler) {
+    public void registerActionHandler(ActionSystem.ActionHandler handler) {
         actionRegistry.registerHandler(handler);
         logger.info("Registered custom action handler: " + handler.getActionType());
     }
@@ -849,7 +850,7 @@ public class FormMenuUtil {
     }
     
     
-    private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionContext context, Map<String, String> placeholders, MessageData messageData) {
+    private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionSystem.ActionContext context, Map<String, String> placeholders, MessageData messageData) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
@@ -875,7 +876,7 @@ public class FormMenuUtil {
     }
     
     
-    private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionContext context) {
+    private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
@@ -900,12 +901,12 @@ public class FormMenuUtil {
     }
     
     
-    private ActionDefinition convertOnClickToActionDefinition(String onClick) {
+    private ActionSystem.ActionDefinition convertOnClickToActionDefinition(String onClick) {
         if (onClick == null || onClick.trim().isEmpty()) {
             return null;
         }
         
-        ActionDefinition actionDef = new ActionDefinition();
+        ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         
         
         if (onClick.startsWith("[") && onClick.endsWith("]")) {
@@ -928,7 +929,7 @@ public class FormMenuUtil {
     }
     
     
-    private void parseAndAddAction(ActionDefinition actionDef, String actionString) {
+    private void parseAndAddAction(ActionSystem.ActionDefinition actionDef, String actionString) {
         String trimmed = actionString.trim();
         
         
@@ -953,7 +954,7 @@ public class FormMenuUtil {
         throw new IllegalArgumentException("Invalid action format. Actions must use curly-brace format: action { ... }");
     }
     
-     private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionContext context) {
+     private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
          if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
             
@@ -977,3 +978,4 @@ public class FormMenuUtil {
         return button.getOnClick();
     }
 }
+

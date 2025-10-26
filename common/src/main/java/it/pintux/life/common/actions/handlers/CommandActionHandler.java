@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -20,9 +22,9 @@ public class CommandActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -57,7 +59,7 @@ public class CommandActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> commands = parseNewFormatValues(actionData);
 
@@ -87,7 +89,7 @@ public class CommandActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleCommand(String command, FormPlayer player) {
+    private ActionSystem.ActionResult executeSingleCommand(String command, FormPlayer player) {
         String normalizedCommand = normalizeCommand(command);
 
         if (normalizedCommand.isEmpty()) {
@@ -113,7 +115,7 @@ public class CommandActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleCommands(List<String> commands, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleCommands(List<String> commands, FormPlayer player) {
         int successCount = 0;
         int totalCount = commands.size();
         StringBuilder results = new StringBuilder();
@@ -124,7 +126,7 @@ public class CommandActionHandler extends BaseActionHandler {
             try {
                 logger.info("Executing command " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + command);
 
-                ActionResult result = executeSingleCommand(command, player);
+                ActionSystem.ActionResult result = executeSingleCommand(command, player);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -204,8 +206,9 @@ public class CommandActionHandler extends BaseActionHandler {
 
 
     @Deprecated
-    protected String processPlaceholders(String command, ActionContext context, FormPlayer player) {
+    protected String processPlaceholders(String command, ActionSystem.ActionContext context, FormPlayer player) {
         return super.processPlaceholders(command, context, player);
     }
 }
+
 

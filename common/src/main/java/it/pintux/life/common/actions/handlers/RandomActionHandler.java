@@ -1,7 +1,10 @@
 package it.pintux.life.common.actions.handlers;
+import it.pintux.life.common.actions.ActionSystem;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -70,8 +73,8 @@ public class RandomActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (!validationResult.isSuccess()) {
             return validationResult;
         }
@@ -111,9 +114,9 @@ public class RandomActionHandler extends BaseActionHandler {
             logger.info("Selected random action for player " + player.getName() + ": " + selectedAction + " (1/" + weightedActions.size() + ")");
 
 
-            CompletableFuture<ActionResult> future = CompletableFuture.supplyAsync(() -> {
+            CompletableFuture<ActionSystem.ActionResult> future = CompletableFuture.supplyAsync(() -> {
 
-                ActionExecutor.Action parsedAction = actionExecutor.parseAction(selectedAction);
+                ActionSystem.Action parsedAction = actionExecutor.parseAction(selectedAction);
                 if (parsedAction == null) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                     HashMap<String, Object> replacements = new HashMap<>();
@@ -125,7 +128,7 @@ public class RandomActionHandler extends BaseActionHandler {
             }, executorService);
 
             try {
-                ActionResult result = future.get();
+                ActionSystem.ActionResult result = future.get();
                 if (result.isSuccess()) {
                     return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Executed random action: " + selectedAction), player);
                 } else {
@@ -240,3 +243,4 @@ public class RandomActionHandler extends BaseActionHandler {
         return weightedActions.get(weightedActions.size() - 1).getAction();
     }
 }
+

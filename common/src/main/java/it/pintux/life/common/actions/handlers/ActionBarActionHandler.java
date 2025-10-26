@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
 
@@ -24,9 +26,9 @@ public class ActionBarActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -61,7 +63,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> messages = parseNewFormatValues(actionData);
 
@@ -91,7 +93,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleActionBarsFromList(List<String> messages, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleActionBarsFromList(List<String> messages, FormPlayer player) {
         int successCount = 0;
         int totalCount = messages.size();
         StringBuilder results = new StringBuilder();
@@ -102,7 +104,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
             try {
                 logger.info("Sending action bar " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
 
-                ActionResult result = executeSingleActionBar(player, message, null);
+                ActionSystem.ActionResult result = executeSingleActionBar(player, message, null);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -149,7 +151,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleActionBar(FormPlayer player, String message, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleActionBar(FormPlayer player, String message, ActionSystem.ActionContext context) {
         String processedMessage = processPlaceholders(message.trim(), context, player);
 
         boolean success = titleManager.sendActionBar(player, processedMessage);
@@ -203,3 +205,4 @@ public class ActionBarActionHandler extends BaseActionHandler {
         };
     }
 }
+

@@ -1,4 +1,7 @@
 package it.pintux.life.common.actions.handlers;
+import it.pintux.life.common.actions.ActionSystem;
+
+import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.actions.*;
 import it.pintux.life.common.actions.ActionRegistry;
@@ -47,7 +50,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Conditional action called with empty data for player: " + player.getName());
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No conditional data specified"), player);
@@ -71,7 +74,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
 
             Matcher checkMatcher = CHECK_PATTERN.matcher(actionData);
@@ -97,10 +100,10 @@ public class ConditionalActionHandler extends BaseActionHandler {
             }
 
 
-            ActionResult lastResult = null;
+            ActionSystem.ActionResult lastResult = null;
             for (String action : actionsToExecute) {
-                ActionDefinition actionDef = parseActionString(action);
-                ActionResult result = actionExecutor.executeAction(player, actionDef, context);
+                ActionSystem.ActionDefinition actionDef = parseActionString(action);
+                ActionSystem.ActionResult result = actionExecutor.executeAction(player, actionDef, context);
                 lastResult = result;
 
                 if (!result.isSuccess()) {
@@ -122,7 +125,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeLegacyFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeLegacyFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         String[] parts = actionData.split(":");
 
         if (parts.length < 4) {
@@ -233,9 +236,9 @@ public class ConditionalActionHandler extends BaseActionHandler {
         }
 
 
-        ActionDefinition actionToExecute = new ActionDefinition();
+        ActionSystem.ActionDefinition actionToExecute = new ActionSystem.ActionDefinition();
         actionToExecute.addAction(actionType, actionDataToExecute);
-        ActionResult result = actionExecutor.executeAction(player, actionToExecute, context);
+        ActionSystem.ActionResult result = actionExecutor.executeAction(player, actionToExecute, context);
 
         if (result.isSuccess()) {
             return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Conditional action executed: " + result.message()), player);
@@ -245,7 +248,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private boolean evaluateComplexCondition(FormPlayer player, String condition, ActionContext context) {
+    private boolean evaluateComplexCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
 
         if (condition.contains("||")) {
             String[] orParts = condition.split("\\|\\|");
@@ -273,7 +276,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private boolean evaluateSingleCondition(FormPlayer player, String condition, ActionContext context) {
+    private boolean evaluateSingleCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
 
         if (condition.startsWith("placeholder:")) {
             return evaluatePlaceholderCondition(player, condition, context);
@@ -286,7 +289,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private boolean evaluatePlaceholderCondition(FormPlayer player, String condition, ActionContext context) {
+    private boolean evaluatePlaceholderCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
 
         String conditionPart = condition.substring("placeholder:".length());
 
@@ -317,7 +320,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private boolean evaluatePermissionCondition(FormPlayer player, String condition, ActionContext context) {
+    private boolean evaluatePermissionCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
         String permission = condition.substring("permission:".length()).trim();
         String conditionString = "permission:" + permission;
         return ConditionEvaluator.evaluateCondition(player, conditionString, context, null);
@@ -344,8 +347,8 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionDefinition parseActionString(String actionString) {
-        ActionDefinition actionDef = new ActionDefinition();
+    private ActionSystem.ActionDefinition parseActionString(String actionString) {
+        ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
 
 
         actionString = actionString.replaceAll("^\"|\"$", "");
@@ -426,3 +429,4 @@ public class ConditionalActionHandler extends BaseActionHandler {
         };
     }
 }
+

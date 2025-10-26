@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 
@@ -47,7 +49,7 @@ public class DelayActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Delay action called with empty delay time for player: " + player.getName());
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "ACTION_INVALID_PARAMETERS"), player);
@@ -143,17 +145,17 @@ public class DelayActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeChainedAction(FormPlayer player, String chainedAction, ActionContext context) {
+    private ActionSystem.ActionResult executeChainedAction(FormPlayer player, String chainedAction, ActionSystem.ActionContext context) {
         try {
 
-            ActionExecutor.Action action = actionExecutor.parseAction(chainedAction);
+            ActionSystem.Action action = actionExecutor.parseAction(chainedAction);
             if (action == null) {
                 logger.warn("Failed to parse chained action: " + chainedAction);
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Invalid chained action format: " + chainedAction), player);
             }
 
 
-            ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
+            ActionSystem.ActionResult result = actionExecutor.executeAction(player, action.getActionDefinition(), context);
 
             if (result.isSuccess()) {
                 logger.debug("Successfully executed chained action for player " + player.getName() + ": " + chainedAction);
@@ -169,3 +171,4 @@ public class DelayActionHandler extends BaseActionHandler {
         }
     }
 }
+

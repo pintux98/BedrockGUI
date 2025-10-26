@@ -19,3 +19,4 @@ public interface PlatformTitleManager {
 
     boolean isSupported();
 }
+

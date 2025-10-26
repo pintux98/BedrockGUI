@@ -1,4 +1,5 @@
 package it.pintux.life.common.actions;
+import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
@@ -39,27 +40,27 @@ public class ActionExecutor {
     }
 
     /**
-     * Executes a single ActionDefinition synchronously
+     * Executes a single ActionSystem.ActionDefinition synchronously
      *
      * @param player  the player executing the action
      * @param action  the action definition to execute
      * @param context the action context
      * @return the action result
      */
-    public ActionResult executeAction(FormPlayer player, ActionDefinition action, ActionContext context) {
+    public ActionSystem.ActionResult executeAction(FormPlayer player, ActionSystem.ActionDefinition action, ActionSystem.ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            return ActionSystem.ActionResult.failure("Player cannot be null");
         }
 
         if (action == null || action.isEmpty()) {
-            return ActionResult.failure("Action cannot be null or empty");
+            return ActionSystem.ActionResult.failure("Action cannot be null or empty");
         }
 
         // Execute all actions in the definition
-        List<ActionResult> results = new ArrayList<>();
+        List<ActionSystem.ActionResult> results = new ArrayList<>();
         for (String actionType : action.getActionTypes()) {
             Object actionValue = action.getAction(actionType);
-            ActionResult result = executeSingleAction(player, actionType, actionValue, context);
+            ActionSystem.ActionResult result = executeSingleAction(player, actionType, actionValue, context);
             results.add(result);
 
             // Stop on first failure for now (can be made configurable later)
@@ -69,7 +70,7 @@ public class ActionExecutor {
         }
 
         // Return success if all actions succeeded
-        return results.isEmpty() ? ActionResult.success("No actions to execute") : results.get(results.size() - 1);
+        return results.isEmpty() ? ActionSystem.ActionResult.success("No actions to execute") : results.get(results.size() - 1);
     }
 
     /**
@@ -81,27 +82,27 @@ public class ActionExecutor {
      * @param context     the action context
      * @return the action result
      */
-    public ActionResult executeSingleAction(FormPlayer player, String actionType, Object actionValue, ActionContext context) {
+    public ActionSystem.ActionResult executeSingleAction(FormPlayer player, String actionType, Object actionValue, ActionSystem.ActionContext context) {
         if (player == null) {
-            return ActionResult.failure("Player cannot be null");
+            return ActionSystem.ActionResult.failure("Player cannot be null");
         }
 
         if (ValidationUtils.isNullOrEmpty(actionType)) {
-            return ActionResult.failure("Action type cannot be null or empty");
+            return ActionSystem.ActionResult.failure("Action type cannot be null or empty");
         }
 
-        ActionHandler handler = registry.getHandler(actionType);
+        ActionSystem.ActionHandler handler = registry.getHandler(actionType);
         if (handler == null) {
             System.out.println("[BedrockGUI] Invalid action type '" + actionType + "' - not registered. Available actions: " + registry.getRegisteredActionTypes());
             logger.warn("No handler found for action type: " + actionType);
-            return ActionResult.failure("Unknown action type: " + actionType);
+            return ActionSystem.ActionResult.failure("Unknown action type: " + actionType);
         }
 
         String valueStr = actionValue != null ? actionValue.toString() : "";
 
         if (!handler.isValidAction(valueStr)) {
             logger.warn("Invalid action value '" + valueStr + "' for action type: " + actionType);
-            return ActionResult.failure("Invalid action value for type: " + actionType);
+            return ActionSystem.ActionResult.failure("Invalid action value for type: " + actionType);
         }
 
         try {
@@ -109,39 +110,8 @@ public class ActionExecutor {
             return handler.execute(player, valueStr, context);
         } catch (Exception e) {
             logger.error("Error executing action: " + actionType + " with value: " + actionValue, e);
-            return ActionResult.failure("Action execution failed: " + e.getMessage());
+            return ActionSystem.ActionResult.failure("Action execution failed: " + e.getMessage());
         }
-    }
-
-    /**
-     * Evaluates a condition string (simplified implementation)
-     */
-    private boolean evaluateCondition(FormPlayer player, String condition, ActionContext context) {
-        // This is a simplified implementation - in a real system you'd want
-        // a proper expression parser for complex conditions
-
-        if (condition.contains("placeholder=")) {
-            // Handle placeholder conditions like: placeholder=%vault_eco_balance%>=100
-            // For now, just return true (implement proper placeholder evaluation later)
-            return true;
-        }
-
-        if (condition.contains("permission=")) {
-            // Handle permission conditions like: permission=vip.access
-            String permission = condition.substring(condition.indexOf("permission=") + 11);
-            return player.hasPermission(permission.trim());
-        }
-
-        if (condition.contains("world=")) {
-            // TODO: Handle world conditions like: world=survival
-            // FormPlayer interface doesn't have getWorld() method
-            // This requires platform-specific implementation via PlatformPlayerManager
-            logger.warn("World conditions are not yet supported in simplified condition evaluation");
-            return true; // Default to true for now
-        }
-
-        // Default to true for unknown conditions (should be enhanced)
-        return true;
     }
 
     /**
@@ -152,7 +122,7 @@ public class ActionExecutor {
      * @param context the action context
      * @return CompletableFuture with the action result
      */
-    public CompletableFuture<ActionResult> executeActionAsync(FormPlayer player, ActionDefinition action, ActionContext context) {
+    public CompletableFuture<ActionSystem.ActionResult> executeActionAsync(FormPlayer player, ActionSystem.ActionDefinition action, ActionSystem.ActionContext context) {
         return CompletableFuture.supplyAsync(() -> executeAction(player, action, context), executorService);
     }
 
@@ -164,20 +134,20 @@ public class ActionExecutor {
      * @param context the action context
      * @return list of action results
      */
-    public List<ActionResult> executeActions(FormPlayer player, List<Action> actions, ActionContext context) {
-        List<ActionResult> results = new ArrayList<>();
+    public List<ActionSystem.ActionResult> executeActions(FormPlayer player, List<ActionSystem.Action> actions, ActionSystem.ActionContext context) {
+        List<ActionSystem.ActionResult> results = new ArrayList<>();
 
         if (actions == null || actions.isEmpty()) {
             return results;
         }
 
-        for (Action action : actions) {
+        for (ActionSystem.Action action : actions) {
             if (action == null) {
-                results.add(ActionResult.failure("Action cannot be null"));
+                results.add(ActionSystem.ActionResult.failure("Action cannot be null"));
                 continue;
             }
 
-            ActionResult result = executeAction(player, action.getActionDefinition(), context);
+            ActionSystem.ActionResult result = executeAction(player, action.getActionDefinition(), context);
             results.add(result);
 
             // Stop execution if action failed and is marked as critical
@@ -198,7 +168,7 @@ public class ActionExecutor {
      * @param context the action context
      * @return CompletableFuture with list of action results
      */
-    public CompletableFuture<List<ActionResult>> executeActionsAsync(FormPlayer player, List<Action> actions, ActionContext context) {
+    public CompletableFuture<List<ActionSystem.ActionResult>> executeActionsAsync(FormPlayer player, List<ActionSystem.Action> actions, ActionSystem.ActionContext context) {
         return CompletableFuture.supplyAsync(() -> executeActions(player, actions, context), executorService);
     }
 
@@ -208,7 +178,7 @@ public class ActionExecutor {
      * @param actionString the action string to parse
      * @return parsed Action object
      */
-    public Action parseAction(String actionString) {
+    public ActionSystem.Action parseAction(String actionString) {
         if (ValidationUtils.isNullOrEmpty(actionString)) {
             return null;
         }
@@ -229,22 +199,22 @@ public class ActionExecutor {
                 String actionType = parts[0].trim();
                 String actionValue = parts[1].trim();
 
-                ActionDefinition actionDef = new ActionDefinition();
+                ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
                 actionDef.addAction(actionType, actionValue);
-                return new Action(actionDef);
+                return new ActionSystem.Action(actionDef);
             }
         }
 
         // Default to command if no type specified
-        ActionDefinition actionDef = new ActionDefinition();
+        ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction("command", trimmed);
-        return new Action(actionDef);
+        return new ActionSystem.Action(actionDef);
     }
 
     /**
      * Parses the new unified action format
      */
-    private Action parseNewFormat(String actionString) {
+    private ActionSystem.Action parseNewFormat(String actionString) {
         Matcher matcher = NEW_FORMAT_PATTERN.matcher(actionString);
         if (!matcher.matches()) {
             return null;
@@ -264,12 +234,12 @@ public class ActionExecutor {
             return null;
         }
 
-        // Create ActionDefinition with the entire action string
+        // Create ActionSystem.ActionDefinition with the entire action string
         // The individual action handlers will parse the curly brace format themselves
-        ActionDefinition actionDef = new ActionDefinition();
+        ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction(actionType, actionString);
 
-        return new Action(actionDef);
+        return new ActionSystem.Action(actionDef);
     }
 
     /**
@@ -282,35 +252,6 @@ public class ActionExecutor {
         }
     }
 
-    /**
-     * Represents a single action with metadata
-     */
-    public static class Action {
-        private final ActionDefinition actionDefinition;
-        private final boolean critical;
 
-        public Action(ActionDefinition actionDefinition) {
-            this(actionDefinition, false);
-        }
-
-        public Action(ActionDefinition actionDefinition, boolean critical) {
-            this.actionDefinition = actionDefinition;
-            this.critical = critical;
-        }
-
-        // Legacy constructors removed - use ActionDefinition instead
-
-        public ActionDefinition getActionDefinition() {
-            return actionDefinition;
-        }
-
-        public boolean isCritical() {
-            return critical;
-        }
-
-        @Override
-        public String toString() {
-            return "Action{actionDefinition=" + actionDefinition + ", critical=" + critical + "}";
-        }
-    }
 }
+

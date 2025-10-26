@@ -13,3 +13,4 @@ public interface FormPlayer {
 
     boolean hasPermission(String permission);
 }
+

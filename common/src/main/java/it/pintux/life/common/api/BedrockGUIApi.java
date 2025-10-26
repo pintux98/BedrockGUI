@@ -1,4 +1,5 @@
 package it.pintux.life.common.api;
+import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.actions.*;
 import it.pintux.life.common.form.FormMenuUtil;
@@ -224,17 +225,17 @@ public class BedrockGUIApi {
     }
 
 
-    public void registerActionHandler(ActionHandler handler) {
+    public void registerActionHandler(ActionSystem.ActionHandler handler) {
         formMenuUtil.registerActionHandler(handler);
     }
 
 
-    public ActionResult executeAction(FormPlayer player, ActionDefinition action, ActionContext context) {
+    public ActionSystem.ActionResult executeAction(FormPlayer player, ActionSystem.ActionDefinition action, ActionSystem.ActionContext context) {
         return actionExecutor.executeAction(player, action, context);
     }
 
 
-    public List<ActionResult> executeActions(FormPlayer player, List<ActionExecutor.Action> actions, ActionContext context) {
+    public List<ActionSystem.ActionResult> executeActions(FormPlayer player, List<ActionSystem.Action> actions, ActionSystem.ActionContext context) {
         return actionExecutor.executeActions(player, actions, context);
     }
 
@@ -900,3 +901,4 @@ public class BedrockGUIApi {
         }
     }
 }
+

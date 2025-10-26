@@ -6,24 +6,24 @@ import java.util.*;
 public class ActionParser {
 
 
-    public static ActionDefinition parseFromMap(Map<String, Object> yamlMap) {
+    public static ActionSystem.ActionDefinition parseFromMap(Map<String, Object> yamlMap) {
         if (yamlMap == null || yamlMap.isEmpty()) {
-            return new ActionDefinition();
+            return new ActionSystem.ActionDefinition();
         }
 
-        return new ActionDefinition(yamlMap);
+        return new ActionSystem.ActionDefinition(yamlMap);
     }
 
 
-    public static List<ActionDefinition> parseFromList(List<Object> yamlList) {
-        List<ActionDefinition> actions = new ArrayList<>();
+    public static List<ActionSystem.ActionDefinition> parseFromList(List<Object> yamlList) {
+        List<ActionSystem.ActionDefinition> actions = new ArrayList<>();
 
         if (yamlList == null || yamlList.isEmpty()) {
             return actions;
         }
 
         for (Object item : yamlList) {
-            ActionDefinition action = convertToActionDefinition(item);
+            ActionSystem.ActionDefinition action = convertToActionDefinition(item);
             if (action != null && !action.isEmpty()) {
                 actions.add(action);
             }
@@ -33,31 +33,31 @@ public class ActionParser {
     }
 
 
-    public static ActionDefinition parse(String actionString) {
+    public static ActionSystem.ActionDefinition parse(String actionString) {
         if (actionString == null || actionString.trim().isEmpty()) {
-            return new ActionDefinition();
+            return new ActionSystem.ActionDefinition();
         }
 
 
-        ActionDefinition actionDef = new ActionDefinition();
+        ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction("command", actionString.trim());
         return actionDef;
     }
 
 
-    public static List<ActionDefinition> parseList(String yamlContent) {
+    public static List<ActionSystem.ActionDefinition> parseList(String yamlContent) {
         if (yamlContent == null || yamlContent.trim().isEmpty()) {
             return new ArrayList<>();
         }
 
 
-        List<ActionDefinition> actions = new ArrayList<>();
+        List<ActionSystem.ActionDefinition> actions = new ArrayList<>();
         actions.add(parse(yamlContent));
         return actions;
     }
 
 
-    public static String toYaml(List<ActionDefinition> actions) {
+    public static String toYaml(List<ActionSystem.ActionDefinition> actions) {
         if (actions == null || actions.isEmpty()) {
             return "";
         }
@@ -67,7 +67,7 @@ public class ActionParser {
     }
 
 
-    public static String toYaml(ActionDefinition action) {
+    public static String toYaml(ActionSystem.ActionDefinition action) {
         if (action == null || action.isEmpty()) {
             return "";
         }
@@ -82,13 +82,13 @@ public class ActionParser {
     }
 
 
-    public static ActionDefinition convertToActionDefinition(Object obj) {
+    public static ActionSystem.ActionDefinition convertToActionDefinition(Object obj) {
         if (obj == null) {
             return null;
         }
 
-        if (obj instanceof ActionDefinition) {
-            return (ActionDefinition) obj;
+        if (obj instanceof ActionSystem.ActionDefinition) {
+            return (ActionSystem.ActionDefinition) obj;
         }
 
         if (obj instanceof Map) {
@@ -97,8 +97,8 @@ public class ActionParser {
             return parseFromMap(map);
         }
 
-        if (obj instanceof ActionDefinition) {
-            return (ActionDefinition) obj;
+        if (obj instanceof ActionSystem.ActionDefinition) {
+            return (ActionSystem.ActionDefinition) obj;
         }
 
         if (obj instanceof String) {
@@ -110,7 +110,7 @@ public class ActionParser {
     }
 
 
-    public static boolean isValid(ActionDefinition action) {
+    public static boolean isValid(ActionSystem.ActionDefinition action) {
         if (action == null || action.isEmpty()) {
             return false;
         }
@@ -118,52 +118,5 @@ public class ActionParser {
 
         return !action.getActionTypes().isEmpty();
     }
-
-
-    public static List<ActionDefinition> getExamples() {
-        List<ActionDefinition> examples = new ArrayList<>();
-
-
-        examples.add(ActionDefinition.simple("command", "give @s diamond 1"));
-
-
-        examples.add(ActionDefinition.simple("message", "Hello &cWorld!"));
-
-
-        examples.add(ActionDefinition.simple("give_money", 100));
-
-
-        examples.add(ActionDefinition.simple("delay", 1000));
-
-
-        examples.add(ActionDefinition.simple("teleport", "spawn"));
-
-
-        Map<String, Object> multiActionMap = new HashMap<>();
-        multiActionMap.put("message", "Starting process...");
-        multiActionMap.put("give_money", 50);
-        multiActionMap.put("command", "effect give @s minecraft:speed 30 1");
-        examples.add(new ActionDefinition(multiActionMap));
-
-        return examples;
-    }
-
-
-    public static List<String> getYamlExamples() {
-        List<String> examples = new ArrayList<>();
-
-        examples.add("# Simple command\ncommand: \"give @s diamond 1\"");
-
-        examples.add("# Simple message\nmessage: \"Hello &cWorld!\"");
-
-        examples.add("# Give money\ngive_money: 100");
-
-        examples.add("# Multiple actions\ncommand: \"give @s diamond 1\"\ndelay: 1000\nmessage: \"You got a diamond!\"");
-
-        examples.add("# Button onClick with multiple actions\nonClick:\n  - command: \"give @s diamond 1\"\n  - delay: 500\n  - message: \"You received a diamond!\"\n  - give_money: 50");
-
-        return examples;
-    }
-
-
 }
+

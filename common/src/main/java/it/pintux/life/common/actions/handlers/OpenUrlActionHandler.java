@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.platform.PlatformPlayerManager;
@@ -27,7 +29,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
         if (!validateParameters(player, actionValue)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
@@ -93,3 +95,4 @@ public class OpenUrlActionHandler extends BaseActionHandler {
 
 
 }
+

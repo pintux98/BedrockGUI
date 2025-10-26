@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
@@ -27,9 +29,9 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -64,7 +66,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> broadcasts = parseNewFormatValues(actionData);
 
@@ -94,7 +96,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleBroadcastsFromList(List<String> broadcasts, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleBroadcastsFromList(List<String> broadcasts, FormPlayer player) {
         int successCount = 0;
         int totalCount = broadcasts.size();
         StringBuilder results = new StringBuilder();
@@ -105,7 +107,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
             try {
                 logger.info("Sending broadcast " + (i + 1) + "/" + totalCount + " from player " + player.getName() + ": " + broadcast);
 
-                ActionResult result = executeSingleBroadcast(player, broadcast, null);
+                ActionSystem.ActionResult result = executeSingleBroadcast(player, broadcast, null);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -152,7 +154,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleBroadcast(FormPlayer player, String broadcastData, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleBroadcast(FormPlayer player, String broadcastData, ActionSystem.ActionContext context) {
 
         String processedData = processPlaceholders(broadcastData.trim(), context, player);
         String[] parts = processedData.split(":", 3);
@@ -211,13 +213,13 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleBroadcasts(FormPlayer player, String multiValue, ActionContext context) {
+    private ActionSystem.ActionResult executeMultipleBroadcasts(FormPlayer player, String multiValue, ActionSystem.ActionContext context) {
 
         String listContent = multiValue.trim().substring(1, multiValue.trim().length() - 1);
         String[] broadcasts = listContent.split(",\\s*");
 
         for (String broadcast : broadcasts) {
-            ActionResult result = executeSingleBroadcast(player, broadcast.trim(), context);
+            ActionSystem.ActionResult result = executeSingleBroadcast(player, broadcast.trim(), context);
             if (result.isFailure()) {
                 return result;
             }
@@ -296,4 +298,5 @@ public class BroadcastActionHandler extends BaseActionHandler {
         };
     }
 }
+
 

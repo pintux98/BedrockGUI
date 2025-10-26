@@ -1,6 +1,8 @@
 package it.pintux.life.common.form.obj;
 
-import it.pintux.life.common.actions.ActionDefinition;
+import it.pintux.life.common.actions.ActionSystem;
+
+import it.pintux.life.common.actions.ActionSystem.ActionDefinition;
 import it.pintux.life.common.actions.ActionParser;
 
 import java.util.Map;
@@ -9,26 +11,16 @@ import java.util.StringJoiner;
 
 
 public class ConditionalButton extends FormButton {
-
-
     private String showCondition;
-
-
     private String alternativeText;
     private String alternativeImage;
     private String alternativeOnClick;
-
-
     private Map<String, ConditionalProperty> conditionalProperties;
-
-
     private int priority;
     private String priorityCondition;
-
-
-    private ActionDefinition actionDefinition;
-    private ActionDefinition alternativeActionDefinition;
-    private Map<String, ActionDefinition> conditionalActions;
+    private ActionSystem.ActionDefinition actionDefinition;
+    private ActionSystem.ActionDefinition alternativeActionDefinition;
+    private Map<String, ActionSystem.ActionDefinition> conditionalActions;
 
     public ConditionalButton(String text, String image, String onClick) {
         super(text, image, onClick);
@@ -49,7 +41,7 @@ public class ConditionalButton extends FormButton {
         this.actionDefinition = ActionParser.parse(onClick);
     }
 
-    public ConditionalButton(String text, String image, ActionDefinition actionDefinition) {
+    public ConditionalButton(String text, String image, ActionSystem.ActionDefinition actionDefinition) {
         super(text, image, actionDefinition);
         this.conditionalProperties = new HashMap<>();
         this.conditionalActions = new HashMap<>();
@@ -57,7 +49,7 @@ public class ConditionalButton extends FormButton {
         this.actionDefinition = actionDefinition;
     }
 
-    public ConditionalButton(String text, String image, ActionDefinition actionDefinition, String showCondition, int priority) {
+    public ConditionalButton(String text, String image, ActionSystem.ActionDefinition actionDefinition, String showCondition, int priority) {
         super(text, image, actionDefinition);
         this.showCondition = showCondition;
         this.conditionalProperties = new HashMap<>();
@@ -124,32 +116,32 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public ActionDefinition getActionDefinition() {
+    public ActionSystem.ActionDefinition getActionDefinition() {
         return actionDefinition;
     }
 
-    public void setActionDefinition(ActionDefinition actionDefinition) {
+    public void setActionDefinition(ActionSystem.ActionDefinition actionDefinition) {
         this.actionDefinition = actionDefinition;
     }
 
-    public ActionDefinition getAlternativeActionDefinition() {
+    public ActionSystem.ActionDefinition getAlternativeActionDefinition() {
         return alternativeActionDefinition;
     }
 
-    public void setAlternativeActionDefinition(ActionDefinition alternativeActionDefinition) {
+    public void setAlternativeActionDefinition(ActionSystem.ActionDefinition alternativeActionDefinition) {
         this.alternativeActionDefinition = alternativeActionDefinition;
     }
 
-    public Map<String, ActionDefinition> getConditionalActions() {
+    public Map<String, ActionSystem.ActionDefinition> getConditionalActions() {
         return conditionalActions;
     }
 
-    public void addConditionalAction(String condition, ActionDefinition action) {
+    public void addConditionalAction(String condition, ActionSystem.ActionDefinition action) {
         conditionalActions.put(condition, action);
     }
 
     public void addConditionalAction(String condition, String actionString) {
-        ActionDefinition action = ActionParser.parse(actionString);
+        ActionSystem.ActionDefinition action = ActionParser.parse(actionString);
         if (action != null) {
             conditionalActions.put(condition, action);
         }
@@ -218,10 +210,10 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public ActionDefinition getEffectiveActionDefinition(String condition) {
+    public ActionSystem.ActionDefinition getEffectiveActionDefinition(String condition) {
 
         if (condition != null) {
-            ActionDefinition conditionalAction = conditionalActions.get(condition);
+            ActionSystem.ActionDefinition conditionalAction = conditionalActions.get(condition);
             if (conditionalAction != null) {
                 return conditionalAction;
             }
@@ -300,3 +292,4 @@ public class ConditionalButton extends FormButton {
                 .toString();
     }
 }
+

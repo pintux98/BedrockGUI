@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
@@ -25,8 +27,8 @@ public class InventoryActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
-        ActionResult validationResult = validateBasicParameters(player, actionValue);
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);
         if (validationResult != null) {
             return validationResult;
         }
@@ -46,7 +48,7 @@ public class InventoryActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleInventoryOperation(FormPlayer player, String inventoryData, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleInventoryOperation(FormPlayer player, String inventoryData, ActionSystem.ActionContext context) {
 
         String processedData = processPlaceholders(inventoryData.trim(), context, player);
         String[] parts = processedData.split(":", 3);
@@ -76,13 +78,13 @@ public class InventoryActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleInventoryOperations(FormPlayer player, String multiValue, ActionContext context) {
+    private ActionSystem.ActionResult executeMultipleInventoryOperations(FormPlayer player, String multiValue, ActionSystem.ActionContext context) {
 
         String listContent = multiValue.trim().substring(1, multiValue.trim().length() - 1);
         String[] operations = listContent.split(",\\s*");
 
         for (String operation : operations) {
-            ActionResult result = executeSingleInventoryOperation(player, operation.trim(), context);
+            ActionSystem.ActionResult result = executeSingleInventoryOperation(player, operation.trim(), context);
             if (result.isFailure()) {
                 return result;
             }
@@ -101,7 +103,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                 createReplacements("message", "Executed " + operations.length + " inventory operations"), player);
     }
 
-    private ActionResult handleGiveItem(FormPlayer player, String itemData, String amountStr) {
+    private ActionSystem.ActionResult handleGiveItem(FormPlayer player, String itemData, String amountStr) {
         try {
             int amount = Integer.parseInt(amountStr);
             String command = "give " + player.getName() + " " + itemData + " " + amount;
@@ -130,7 +132,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleRemoveItem(FormPlayer player, String itemData, String amountStr) {
+    private ActionSystem.ActionResult handleRemoveItem(FormPlayer player, String itemData, String amountStr) {
         try {
             int amount = Integer.parseInt(amountStr);
             String command = "clear " + player.getName() + " " + itemData + " " + amount;
@@ -159,7 +161,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleClearInventory(FormPlayer player, String target) {
+    private ActionSystem.ActionResult handleClearInventory(FormPlayer player, String target) {
         String command;
         if ("all".equals(target) || target.isEmpty()) {
             command = "clear " + player.getName();
@@ -186,7 +188,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleCheckInventory(FormPlayer player, String itemData) {
+    private ActionSystem.ActionResult handleCheckInventory(FormPlayer player, String itemData) {
 
         String command = "testfor " + player.getName() + " {Inventory:[{id:\"" + itemData + "\"}]}";
 
@@ -274,3 +276,4 @@ public class InventoryActionHandler extends BaseActionHandler {
         };
     }
 }
+

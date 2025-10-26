@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionResult;
-import it.pintux.life.common.actions.ActionContext;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.platform.PlatformPluginManager;
 import it.pintux.life.common.platform.PlatformPlayerManager;
@@ -57,9 +59,9 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -87,7 +89,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeSinglePlaceholderOperation(String operationData, FormPlayer player) {
+    private ActionSystem.ActionResult executeSinglePlaceholderOperation(String operationData, FormPlayer player) {
         try {
             logger.info("Executing PlaceholderAPI operation: " + operationData + " for player " + player.getName());
 
@@ -102,7 +104,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
 
             boolean success = executeWithErrorHandling(
                     () -> {
-                        ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                        ActionSystem.ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
                         return result != null && result.isSuccess();
                     },
                     "PlaceholderAPI operation: " + operation,
@@ -111,7 +113,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
 
             if (success) {
                 logSuccess("PlaceholderAPI operation", operation, player);
-                ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                ActionSystem.ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
                 return result;
             } else {
                 Map<String, Object> errorReplacements = createReplacements("error", "Failed to execute operation: " + operation);
@@ -125,7 +127,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeMultiplePlaceholderOperations(List<String> operations, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultiplePlaceholderOperations(List<String> operations, FormPlayer player) {
         int successCount = 0;
         int totalCount = operations.size();
         StringBuilder results = new StringBuilder();
@@ -146,7 +148,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
 
                 boolean success = executeWithErrorHandling(
                         () -> {
-                            ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
+                            ActionSystem.ActionResult result = executeOperation(operation.toLowerCase(), parameters, player);
                             return result != null && result.isSuccess();
                         },
                         "PlaceholderAPI operation: " + operation,
@@ -198,7 +200,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeOperation(String operation, Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult executeOperation(String operation, Map<String, Object> parameters, FormPlayer player) {
         switch (operation) {
             case "set_placeholder":
                 return handleSetPlaceholder(parameters, player);
@@ -222,7 +224,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleSetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleSetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
         String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
         String value = processPlaceholders((String) parameters.get("value"), null, player);
         String targetPlayer = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
@@ -249,7 +251,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         return createSuccessResult("ACTION_SUCCESS", replacements, player);
     }
 
-    private ActionResult handleRemovePlaceholder(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleRemovePlaceholder(Map<String, Object> parameters, FormPlayer player) {
         String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
         String targetPlayer = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
 
@@ -269,7 +271,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         return createSuccessResult("ACTION_SUCCESS", replacements, player);
     }
 
-    private ActionResult handleGetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleGetPlaceholder(Map<String, Object> parameters, FormPlayer player) {
         String placeholder = processPlaceholders((String) parameters.get("placeholder"), null, player);
         String targetPlayerName = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
 
@@ -300,7 +302,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleParsePlaceholder(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleParsePlaceholder(Map<String, Object> parameters, FormPlayer player) {
         String text = processPlaceholders((String) parameters.get("text"), null, player);
         String targetPlayerName = processPlaceholders((String) parameters.getOrDefault("player", player.getName()), null, player);
 
@@ -331,7 +333,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleRegisterExpansion(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleRegisterExpansion(Map<String, Object> parameters, FormPlayer player) {
         String expansionName = processPlaceholders((String) parameters.get("expansion"), null, player);
 
         if (expansionName == null) {
@@ -354,7 +356,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleUnregisterExpansion(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleUnregisterExpansion(Map<String, Object> parameters, FormPlayer player) {
         String expansionName = processPlaceholders((String) parameters.get("expansion"), null, player);
 
         if (expansionName == null) {
@@ -377,7 +379,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleReloadExpansions(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleReloadExpansions(Map<String, Object> parameters, FormPlayer player) {
         try {
             String command = "papi reload";
             commandExecutor.executeAsConsole(command);
@@ -392,7 +394,7 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult handleListExpansions(Map<String, Object> parameters, FormPlayer player) {
+    private ActionSystem.ActionResult handleListExpansions(Map<String, Object> parameters, FormPlayer player) {
         try {
             String command = "papi list";
             commandExecutor.executeAsConsole(command);
@@ -475,3 +477,4 @@ public class PlaceholderAPIActionHandler extends BaseActionHandler {
         };
     }
 }
+

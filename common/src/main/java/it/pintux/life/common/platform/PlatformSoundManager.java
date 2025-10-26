@@ -19,3 +19,4 @@ public interface PlatformSoundManager {
 
     boolean soundExists(String soundName);
 }
+

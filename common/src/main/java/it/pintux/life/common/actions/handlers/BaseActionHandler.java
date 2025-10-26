@@ -1,8 +1,6 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionHandler;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
@@ -15,7 +13,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 
-public abstract class BaseActionHandler implements ActionHandler {
+public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
 
     protected final Logger logger;
 
@@ -24,39 +22,39 @@ public abstract class BaseActionHandler implements ActionHandler {
     }
 
 
-    protected ActionResult validateBasicParameters(FormPlayer player, String actionValue) {
+    protected ActionSystem.ActionResult validateBasicParameters(FormPlayer player, String actionValue) {
         if (player == null) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         return null;
     }
 
 
-    protected ActionResult createSuccessResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
+    protected ActionSystem.ActionResult createSuccessResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String message = messageData.getValueNoPrefix(messageKey, replacements, player);
-        return ActionResult.success(message);
+        return ActionSystem.ActionResult.success(message);
     }
 
 
-    protected ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
+    protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String message = messageData.getValueNoPrefix(messageKey, replacements, player);
-        return ActionResult.failure(message);
+        return ActionSystem.ActionResult.failure(message);
     }
 
 
-    protected ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player, Throwable exception) {
+    protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player, Throwable exception) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String message = messageData.getValueNoPrefix(messageKey, replacements, player);
-        return ActionResult.failure(message, exception);
+        return ActionSystem.ActionResult.failure(message, exception);
     }
 
 
@@ -82,7 +80,7 @@ public abstract class BaseActionHandler implements ActionHandler {
     }
 
 
-    protected String processPlaceholders(String text, ActionContext context, FormPlayer player) {
+    protected String processPlaceholders(String text, ActionSystem.ActionContext context, FormPlayer player) {
         if (ValidationUtils.isNullOrEmpty(text)) {
             return text;
         }
@@ -174,9 +172,9 @@ public abstract class BaseActionHandler implements ActionHandler {
     }
 
 
-    protected ActionResult validateActionParameters(FormPlayer player, String actionValue, Supplier<Boolean> additionalValidation) {
+    protected ActionSystem.ActionResult validateActionParameters(FormPlayer player, String actionValue, Supplier<Boolean> additionalValidation) {
 
-        ActionResult basicValidation = validateBasicParameters(player, actionValue);
+        ActionSystem.ActionResult basicValidation = validateBasicParameters(player, actionValue);
         if (basicValidation != null) {
             return basicValidation;
         }
@@ -186,7 +184,7 @@ public abstract class BaseActionHandler implements ActionHandler {
             try {
                 if (!additionalValidation.get()) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+                    return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
                 }
             } catch (Exception e) {
                 logger.error("Error during additional validation for player: " + player.getName(), e);
@@ -239,7 +237,7 @@ public abstract class BaseActionHandler implements ActionHandler {
      * @param player     the player for placeholder processing
      * @return list of parsed action strings
      */
-    protected java.util.List<String> parseActionData(String actionData, ActionContext context, FormPlayer player) {
+    protected java.util.List<String> parseActionData(String actionData, ActionSystem.ActionContext context, FormPlayer player) {
         java.util.List<String> result = new java.util.ArrayList<>();
 
         if (ValidationUtils.isNullOrEmpty(actionData)) {
@@ -331,3 +329,4 @@ public abstract class BaseActionHandler implements ActionHandler {
         return result;
     }
 }
+

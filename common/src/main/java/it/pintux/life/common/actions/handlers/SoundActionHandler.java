@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformSoundManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -25,9 +27,9 @@ public class SoundActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -62,7 +64,7 @@ public class SoundActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> sounds = parseNewFormatValues(actionData);
 
@@ -92,7 +94,7 @@ public class SoundActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleSoundsFromList(List<String> sounds, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleSoundsFromList(List<String> sounds, FormPlayer player) {
         int successCount = 0;
         int totalCount = sounds.size();
         StringBuilder results = new StringBuilder();
@@ -103,7 +105,7 @@ public class SoundActionHandler extends BaseActionHandler {
             try {
                 logger.info("Playing sound " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + sound);
 
-                ActionResult result = executeSingleSound(player, sound, null);
+                ActionSystem.ActionResult result = executeSingleSound(player, sound, null);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -150,7 +152,7 @@ public class SoundActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleSound(FormPlayer player, String soundData, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleSound(FormPlayer player, String soundData, ActionSystem.ActionContext context) {
 
         String processedData = processPlaceholders(soundData.trim(), context, player);
 
@@ -265,4 +267,5 @@ public class SoundActionHandler extends BaseActionHandler {
         };
     }
 }
+
 

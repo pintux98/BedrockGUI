@@ -31,3 +31,4 @@ public interface PlatformEconomyManager {
 
     String formatMoney(BigDecimal amount);
 }
+

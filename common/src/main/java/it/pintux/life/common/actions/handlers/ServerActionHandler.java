@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.ErrorHandlingManager;
@@ -26,9 +28,9 @@ public class ServerActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -63,7 +65,7 @@ public class ServerActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> commands = parseNewFormatValues(actionData);
 
@@ -92,7 +94,7 @@ public class ServerActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeSingleServerCommand(String command, FormPlayer player) {
+    private ActionSystem.ActionResult executeSingleServerCommand(String command, FormPlayer player) {
         try {
             logger.info("Executing server command: " + command + " for player " + player.getName());
 
@@ -122,7 +124,7 @@ public class ServerActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeMultipleServerCommands(List<String> commands, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleServerCommands(List<String> commands, FormPlayer player) {
         int successCount = 0;
         int totalCount = commands.size();
         StringBuilder results = new StringBuilder();
@@ -226,3 +228,4 @@ public class ServerActionHandler extends BaseActionHandler {
         };
     }
 }
+

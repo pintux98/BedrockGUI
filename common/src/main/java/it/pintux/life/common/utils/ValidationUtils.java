@@ -194,3 +194,4 @@ public final class ValidationUtils {
         return effectName.matches("^[a-z0-9_:]+$");
     }
 }
+

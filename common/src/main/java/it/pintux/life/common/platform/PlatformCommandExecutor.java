@@ -12,3 +12,4 @@ public interface PlatformCommandExecutor {
 
     boolean commandExists(String command);
 }
+

@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.MessageData;
@@ -29,9 +31,9 @@ public class MessageActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionValue, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionValue);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);
         if (validationResult != null) {
             return validationResult;
         }
@@ -50,7 +52,7 @@ public class MessageActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeNewFormat(FormPlayer player, String actionData, ActionContext context) {
+    private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
             List<String> messages = parseNewFormatValues(actionData);
 
@@ -73,7 +75,7 @@ public class MessageActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeMultipleMessagesFromList(FormPlayer player, List<String> messages, ActionContext context) {
+    private ActionSystem.ActionResult executeMultipleMessagesFromList(FormPlayer player, List<String> messages, ActionSystem.ActionContext context) {
         int successCount = 0;
         int totalCount = messages.size();
         StringBuilder results = new StringBuilder();
@@ -84,7 +86,7 @@ public class MessageActionHandler extends BaseActionHandler {
             try {
                 logger.info("Sending message " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
 
-                ActionResult result = executeSingleMessage(player, message, context);
+                ActionSystem.ActionResult result = executeSingleMessage(player, message, context);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -131,7 +133,7 @@ public class MessageActionHandler extends BaseActionHandler {
     }
 
 
-    private ActionResult executeSingleMessage(FormPlayer player, String message, ActionContext context) {
+    private ActionSystem.ActionResult executeSingleMessage(FormPlayer player, String message, ActionSystem.ActionContext context) {
         String processedMessage = processPlaceholders(message, context, player);
 
         if (ValidationUtils.isNullOrEmpty(processedMessage.trim())) {
@@ -272,4 +274,5 @@ public class MessageActionHandler extends BaseActionHandler {
         return result;
     }
 }
+
 

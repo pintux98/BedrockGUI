@@ -1,6 +1,6 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 
 import java.util.concurrent.CompletableFuture;
@@ -107,10 +107,10 @@ public class ErrorHandlingUtil {
     }
 
 
-    public static ActionResult createSafeActionResult(Supplier<ActionResult> operation,
+    public static ActionSystem.ActionResult createSafeActionResult(Supplier<ActionSystem.ActionResult> operation,
                                                       FormPlayer player, String actionType) {
         try {
-            ActionResult result = operation.get();
+            ActionSystem.ActionResult result = operation.get();
             return result != null ? result : createFallbackFailureResult(player, actionType, "Operation returned null");
         } catch (Exception e) {
             logger.error("Error creating ActionResult for {} action: {}", actionType, e.getMessage(), e);
@@ -119,18 +119,18 @@ public class ErrorHandlingUtil {
     }
 
 
-    private static ActionResult createFallbackFailureResult(FormPlayer player, String actionType, String error) {
+    private static ActionSystem.ActionResult createFallbackFailureResult(FormPlayer player, String actionType, String error) {
         try {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> replacements = new HashMap<>();
             replacements.put("error", error);
             replacements.put("action", actionType);
 
-            return ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
+            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
         } catch (Exception e) {
 
             logger.error("Failed to create proper error message, using basic fallback", e);
-            return ActionResult.failure("Action failed: " + error);
+            return ActionSystem.ActionResult.failure("Action failed: " + error);
         }
     }
 
@@ -212,3 +212,4 @@ public class ErrorHandlingUtil {
         }
     }
 }
+

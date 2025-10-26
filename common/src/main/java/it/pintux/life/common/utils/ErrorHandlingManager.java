@@ -1,6 +1,6 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.MessageData;
@@ -103,13 +103,13 @@ public final class ErrorHandlingManager {
     }
 
 
-    public static ActionResult createFailureResult(String messageKey, Map<String, String> replacements,
+    public static ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, String> replacements,
                                                    FormPlayer player, ErrorCategory category) {
         return createFailureResult(messageKey, replacements, player, category, null);
     }
 
 
-    public static ActionResult createFailureResult(String messageKey, Map<String, String> replacements,
+    public static ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, String> replacements,
                                                    FormPlayer player, ErrorCategory category, Exception exception) {
 
         String errorKey = category.name() + ":" + messageKey;
@@ -132,15 +132,15 @@ public final class ErrorHandlingManager {
                 replacements != null ? new HashMap<>(replacements) : new HashMap<>(), player);
 
         if (exception != null) {
-            return ActionResult.failure(localizedMessage, exception);
+            return ActionSystem.ActionResult.failure(localizedMessage, exception);
         } else {
-            return ActionResult.failure(localizedMessage);
+            return ActionSystem.ActionResult.failure(localizedMessage);
         }
     }
 
 
-    public static ActionResult createSuccessResult(String messageKey, Map<String, String> replacements, FormPlayer player) {
-        return ActionResult.success(messageKey, replacements);
+    public static ActionSystem.ActionResult createSuccessResult(String messageKey, Map<String, String> replacements, FormPlayer player) {
+        return ActionSystem.ActionResult.success(messageKey, replacements);
     }
 
 
@@ -188,7 +188,7 @@ public final class ErrorHandlingManager {
     }
 
 
-    public static ActionResult validateParameters(FormPlayer player, String actionValue,
+    public static ActionSystem.ActionResult validateParameters(FormPlayer player, String actionValue,
                                                   Supplier<Boolean> validator, String validationErrorMessage) {
         if (player == null) {
             return createFailureResult("PLAYER_NOT_FOUND",
@@ -262,3 +262,4 @@ public final class ErrorHandlingManager {
         }
     }
 }
+

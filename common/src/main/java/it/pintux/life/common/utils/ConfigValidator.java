@@ -1,11 +1,12 @@
 package it.pintux.life.common.utils;
+import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.form.obj.FormMenu;
 import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.ConditionalButton;
 import it.pintux.life.common.utils.ValidationUtils;
 import it.pintux.life.common.actions.ActionRegistry;
-import it.pintux.life.common.actions.ActionDefinition;
+import it.pintux.life.common.actions.ActionSystem.ActionDefinition;
 import it.pintux.life.common.actions.ActionParser;
 
 import java.util.*;
@@ -133,7 +134,7 @@ public class ConfigValidator {
 
     private void validateButtonActions(String menuName, int buttonIndex, FormButton button) {
 
-        ActionDefinition actionDef = null;
+        ActionSystem.ActionDefinition actionDef = null;
 
         if (button.hasActions()) {
 
@@ -155,14 +156,14 @@ public class ConfigValidator {
 
 
         if (button.hasActions()) {
-            for (ActionDefinition action : button.getAllActions()) {
+            for (ActionSystem.ActionDefinition action : button.getAllActions()) {
                 validateActionDefinition(menuName, buttonIndex, action);
             }
         }
     }
 
 
-    private void validateActionDefinition(String menuName, int buttonIndex, ActionDefinition actionDef) {
+    private void validateActionDefinition(String menuName, int buttonIndex, ActionSystem.ActionDefinition actionDef) {
         if (actionDef == null) {
             return;
         }
@@ -235,7 +236,7 @@ public class ConfigValidator {
         }
 
 
-        for (Map.Entry<String, ActionDefinition> entry : button.getConditionalActions().entrySet()) {
+        for (Map.Entry<String, ActionSystem.ActionDefinition> entry : button.getConditionalActions().entrySet()) {
             validateActionCondition(menuName, buttonIndex, entry.getKey());
             validateActionDefinition(menuName, buttonIndex, entry.getValue());
         }
@@ -377,7 +378,7 @@ public class ConfigValidator {
                 }
 
 
-                for (ActionDefinition conditionalAction : conditionalButton.getConditionalActions().values()) {
+                for (ActionSystem.ActionDefinition conditionalAction : conditionalButton.getConditionalActions().values()) {
                     if (checkActionForCircularReference(conditionalAction, formMenus, visited)) {
                         return true;
                     }
@@ -389,7 +390,7 @@ public class ConfigValidator {
     }
 
 
-    private boolean checkActionForCircularReference(ActionDefinition actionDef, Map<String, FormMenu> formMenus, Set<String> visited) {
+    private boolean checkActionForCircularReference(ActionSystem.ActionDefinition actionDef, Map<String, FormMenu> formMenus, Set<String> visited) {
         if (actionDef == null) {
             return false;
         }
@@ -441,3 +442,4 @@ public class ConfigValidator {
         }
     }
 }
+

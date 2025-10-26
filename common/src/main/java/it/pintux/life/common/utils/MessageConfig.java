@@ -7,3 +7,4 @@ public interface MessageConfig {
 
     String applyColor(String message);
 }
+

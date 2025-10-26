@@ -21,3 +21,4 @@ public interface PlatformPluginManager {
 
     <T> T getServiceProvider(Class<T> serviceClass);
 }
+

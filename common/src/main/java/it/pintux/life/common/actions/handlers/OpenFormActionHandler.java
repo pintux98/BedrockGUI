@@ -1,7 +1,9 @@
 package it.pintux.life.common.actions.handlers;
 
-import it.pintux.life.common.actions.ActionContext;
-import it.pintux.life.common.actions.ActionResult;
+import it.pintux.life.common.actions.ActionSystem;
+
+
+
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.FormPlayer;
@@ -28,9 +30,9 @@ public class OpenFormActionHandler extends BaseActionHandler {
     }
 
     @Override
-    public ActionResult execute(FormPlayer player, String actionData, ActionContext context) {
+    public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
 
-        ActionResult validationResult = validateBasicParameters(player, actionData);
+        ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
         if (validationResult != null) {
             return validationResult;
         }
@@ -66,7 +68,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeSingleFormOpen(String menuName, FormPlayer player) {
+    private ActionSystem.ActionResult executeSingleFormOpen(String menuName, FormPlayer player) {
         try {
             logger.info("Opening form: " + menuName + " for player " + player.getName());
 
@@ -118,7 +120,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionResult executeMultipleFormOpens(List<String> menuNames, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleFormOpens(List<String> menuNames, FormPlayer player) {
         int successCount = 0;
         int totalCount = menuNames.size();
         StringBuilder results = new StringBuilder();
@@ -252,3 +254,4 @@ public class OpenFormActionHandler extends BaseActionHandler {
         };
     }
 }
+

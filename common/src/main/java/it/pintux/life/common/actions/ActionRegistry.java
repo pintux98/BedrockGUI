@@ -13,7 +13,7 @@ public class ActionRegistry {
 
     private static final Logger logger = Logger.getLogger(ActionRegistry.class);
     private static ActionRegistry instance;
-    private final Map<String, ActionHandler> handlers = new ConcurrentHashMap<>();
+    private final Map<String, ActionSystem.ActionHandler> handlers = new ConcurrentHashMap<>();
 
     private ActionRegistry() {
 
@@ -31,7 +31,7 @@ public class ActionRegistry {
     }
 
 
-    public void registerHandler(ActionHandler handler) {
+    public void registerHandler(ActionSystem.ActionHandler handler) {
         if (handler == null) {
             throw new IllegalArgumentException("Action handler cannot be null");
         }
@@ -58,7 +58,7 @@ public class ActionRegistry {
         }
 
         actionType = actionType.toLowerCase().trim();
-        ActionHandler removed = handlers.remove(actionType);
+        ActionSystem.ActionHandler removed = handlers.remove(actionType);
 
         if (removed != null) {
             logger.info("Unregistered action handler for type: " + actionType);
@@ -69,7 +69,7 @@ public class ActionRegistry {
     }
 
 
-    public ActionHandler getHandler(String actionType) {
+    public ActionSystem.ActionHandler getHandler(String actionType) {
         if (ValidationUtils.isNullOrEmpty(actionType)) {
             return null;
         }
@@ -92,7 +92,7 @@ public class ActionRegistry {
     }
 
 
-    public Collection<ActionHandler> getAllHandlers() {
+    public Collection<ActionSystem.ActionHandler> getAllHandlers() {
         return handlers.values();
     }
 
@@ -108,3 +108,4 @@ public class ActionRegistry {
         return handlers.size();
     }
 }
+
