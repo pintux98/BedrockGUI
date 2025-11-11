@@ -123,6 +123,7 @@ public class FormMenuUtil {
     private void loadFormMenus() {
         for (String key : config.getKeys("forms")) {
             String command = config.getString("forms." + key + ".command");
+            String commandIntercept = config.getString("forms." + key + ".command_intercept");
             String permission = config.getString("forms." + key + ".permission");
             String type = config.getString("forms." + key + ".type", "SIMPLE");
             String title = config.getString("forms." + key + ".title", "Unknown");
@@ -226,7 +227,7 @@ public class FormMenuUtil {
 
             List<String> globalActions = config.getStringList("forms." + key + ".global_actions");
 
-            FormMenu menu = new FormMenu(command, permission, title, description, type, buttons, components, globalActions);
+            FormMenu menu = new FormMenu(command, commandIntercept, permission, title, description, type, buttons, components, globalActions);
             formMenus.put(key.toLowerCase(), menu);
             logger.info("Loaded form: " + key + " type: " + type);
         }
@@ -246,6 +247,54 @@ public class FormMenuUtil {
         validateConfiguration();
 
         logger.info("Successfully reloaded " + formMenus.size() + " form menus");
+    }
+
+    /**
+     * Updates the MessageData instance used by this FormMenuUtil.
+     * This is called during reload to ensure the FormMenuUtil uses the latest message configuration.
+     * 
+     * @param newMessageData The new MessageData instance with reloaded configuration
+     */
+    public void updateMessageData(MessageData newMessageData) {
+        if (newMessageData != null) {
+            try {
+                // Use reflection to update the final messageData field
+                java.lang.reflect.Field messageDataField = this.getClass().getDeclaredField("messageData");
+                messageDataField.setAccessible(true);
+                
+                // Remove the final modifier temporarily
+                java.lang.reflect.Field modifiersField = java.lang.reflect.Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(messageDataField, messageDataField.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+                
+                // Set the new MessageData instance
+                messageDataField.set(this, newMessageData);
+                
+                logger.info("MessageData updated successfully in FormMenuUtil during reload");
+            } catch (Exception e) {
+                logger.warn("Failed to update MessageData in FormMenuUtil: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Updates the FormConfig instance used by this FormMenuUtil.
+     * This allows reloading fresh configuration without recreating the FormMenuUtil.
+     */
+    public void updateFormConfig(FormConfig newConfig) {
+        if (newConfig != null) {
+            try {
+                java.lang.reflect.Field configField = this.getClass().getDeclaredField("config");
+                configField.setAccessible(true);
+                java.lang.reflect.Field modifiersField = java.lang.reflect.Field.class.getDeclaredField("modifiers");
+                modifiersField.setAccessible(true);
+                modifiersField.setInt(configField, configField.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
+                configField.set(this, newConfig);
+                logger.info("FormConfig updated successfully in FormMenuUtil during reload");
+            } catch (Exception e) {
+                logger.warn("Failed to update FormConfig in FormMenuUtil: " + e.getMessage());
+            }
+        }
     }
 
     public void openForm(FormPlayer player, String menuName, String[] args) {
@@ -739,6 +788,11 @@ public class FormMenuUtil {
 
         if (messageData != null && result.contains("%")) {
             result = messageData.replaceVariables(result, null, player);
+        }
+
+        // Always apply color codes translation at the end so '&' and '&x' hex sequences render
+        if (messageData != null) {
+            result = messageData.applyColor(result);
         }
 
         return result;

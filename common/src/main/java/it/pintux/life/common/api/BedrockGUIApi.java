@@ -77,6 +77,48 @@ public class BedrockGUIApi {
         }
     }
 
+    /**
+     * Updates the MessageData instance used by this API.
+     * This is called during reload to ensure the API uses the latest message configuration.
+     * 
+     * @param newMessageData The new MessageData instance with reloaded configuration
+     */
+    public void updateMessageData(MessageData newMessageData) {
+        if (newMessageData != null) {
+            // Update the messageData field to use the new instance
+            java.lang.reflect.Field messageDataField;
+            try {
+                messageDataField = this.getClass().getDeclaredField("messageData");
+                messageDataField.setAccessible(true);
+                messageDataField.set(this, newMessageData);
+                
+                // Also update the FormMenuUtil with the new MessageData
+                if (formMenuUtil != null) {
+                    formMenuUtil.updateMessageData(newMessageData);
+                }
+                
+                logger.info("MessageData updated successfully during reload");
+            } catch (Exception e) {
+                logger.warn("Failed to update MessageData: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Updates the underlying FormConfig used by the FormMenuUtil so subsequent reloads
+     * read the latest configuration from disk.
+     */
+    public void updateFormConfig(FormConfig newConfig) {
+        try {
+            if (newConfig != null && formMenuUtil != null) {
+                formMenuUtil.updateFormConfig(newConfig);
+                logger.info("FormConfig updated successfully during reload");
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to update FormConfig: " + e.getMessage());
+        }
+    }
+
 
     public SimpleFormBuilder createSimpleForm(String title) {
         return new SimpleFormBuilder(title);

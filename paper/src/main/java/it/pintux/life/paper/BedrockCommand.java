@@ -29,9 +29,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
 
     @Override
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
-        if (!(sender instanceof Player))
-            return true;
-        Player player = (Player) sender;
+        Player player = sender instanceof Player ? (Player) sender : null;
         if (args.length == 0) {
             sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
             sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name>");
@@ -39,7 +37,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         }
         String arg = args[0];
         if (arg.equalsIgnoreCase("reload")) {
-            if (!player.hasPermission("bedrockgui.admin")) {
+            if (player != null && !player.hasPermission("bedrockgui.admin")) {
                 sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
                 return true;
             }
@@ -49,6 +47,10 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         }
 
         if (arg.equalsIgnoreCase("open")) {
+            if (player == null) {
+                sender.sendMessage(ChatColor.RED + "Only players can use /bgui open");
+                return true;
+            }
             if (args.length < 2) {
                 sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name> [arguments]");
                 return true;

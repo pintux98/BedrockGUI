@@ -6,6 +6,7 @@ import java.util.StringJoiner;
 
 public class FormMenu {
     private String formCommand;
+    private String commandIntercept;
     private String permission;
     private String formTitle;
     private String formContent;
@@ -14,8 +15,9 @@ public class FormMenu {
     private Map<String, Map<String, Object>> components;
     private List<String> globalActions;
 
-    public FormMenu(String formCommand, String permission, String formTitle, String formContent, String formType, List<FormButton> formButtons, Map<String, Map<String, Object>> components, List<String> globalActions) {
+    public FormMenu(String formCommand, String commandIntercept, String permission, String formTitle, String formContent, String formType, List<FormButton> formButtons, Map<String, Map<String, Object>> components, List<String> globalActions) {
         this.formCommand = formCommand;
+        this.commandIntercept = commandIntercept;
         this.permission = permission;
         this.formTitle = formTitle;
         this.formContent = formContent;
@@ -31,6 +33,14 @@ public class FormMenu {
 
     public void setFormCommand(String formCommand) {
         this.formCommand = formCommand;
+    }
+
+    public String getCommandIntercept() {
+        return commandIntercept;
+    }
+
+    public void setCommandIntercept(String commandIntercept) {
+        this.commandIntercept = commandIntercept;
     }
 
     public String getPermission() {

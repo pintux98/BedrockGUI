@@ -17,7 +17,8 @@ import static org.bukkit.Bukkit.getServer;
 
 public class PaperMessageConfig implements MessageConfig {
 
-    private final Pattern hexPattern = Pattern.compile("<#([A-Fa-f0-9]){6}>");
+    private final Pattern hexAnglePattern = Pattern.compile("<#([A-Fa-f0-9]{6})>");
+    private final Pattern hexAmpPattern = Pattern.compile("&#([A-Fa-f0-9]{6})");
 
     private final FileConfiguration config;
 
@@ -42,14 +43,28 @@ public class PaperMessageConfig implements MessageConfig {
 
     @Override
     public String applyColor(String message) {
-        Matcher matcher = hexPattern.matcher(message);
-        while (matcher.find()) {
-            final ChatColor hexColor = ChatColor.of(matcher.group().substring(1, matcher.group().length() - 1));
-            final String before = message.substring(0, matcher.start());
-            final String after = message.substring(matcher.end());
+        if (message == null) return null;
+
+        // Support both "<#RRGGBB>" and "&#RRGGBB" styles by inserting Bungee hex color
+        Matcher angleMatcher = hexAnglePattern.matcher(message);
+        while (angleMatcher.find()) {
+            final ChatColor hexColor = ChatColor.of(angleMatcher.group().substring(1, angleMatcher.group().length() - 1));
+            final String before = message.substring(0, angleMatcher.start());
+            final String after = message.substring(angleMatcher.end());
             message = before + hexColor + after;
-            matcher = hexPattern.matcher(message);
+            angleMatcher = hexAnglePattern.matcher(message);
         }
+
+        Matcher ampMatcher = hexAmpPattern.matcher(message);
+        while (ampMatcher.find()) {
+            final ChatColor hexColor = ChatColor.of("#" + ampMatcher.group(1));
+            final String before = message.substring(0, ampMatcher.start());
+            final String after = message.substring(ampMatcher.end());
+            message = before + hexColor + after;
+            ampMatcher = hexAmpPattern.matcher(message);
+        }
+
+        // Translate '&' legacy codes and '&x' hex sequences into '§' variants
         return ChatColor.translateAlternateColorCodes('&', message);
     }
 }
