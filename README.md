@@ -2,7 +2,7 @@
 
 [![Spigot](https://img.shields.io/badge/Spigot-Plugin-ff6600)](https://www.spigotmc.org/resources/bedrockgui.119592/)
 [![Discord](https://img.shields.io/discord/1033791462313304234?label=Support%20Server&logo=discord&logoColor=white)](https://discord.gg/FD2MTETnyQ)
-[![Wiki](https://img.shields.io/badge/Wiki-Documentation-0066ff)](https://pintux.gitbook.io/pintux-support)
+[![Wiki](https://img.shields.io/badge/Wiki-Documentation-0066ff)](https://pintux.gitbook.io/pintux-support/bedrockgui-v2-beta)
 
 **BedrockGUI** is a simple yet powerful plugin that allows server owners to create custom GUI menus for Bedrock players on Java servers via [Geyser](https://geysermc.org/). Using the Floodgate API, this plugin offers seamless interaction for Bedrock players through custom forms and menus.  
 
