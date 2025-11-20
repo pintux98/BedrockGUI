@@ -1,0 +1,15 @@
+{
+  "id": "bedrockgui-velocity",
+  "name": "BedrockGUI-Velocity",
+  "version": "${version}",
+  "description": "BedrockGUI plugin for Velocity proxy",
+  "url": "https://github.com/pintux/life",
+  "authors": ["pintux"],
+  "dependencies": [
+    {
+      "id": "floodgate",
+      "optional": false
+    }
+  ],
+  "main": "it.pintux.life.velocity.BedrockGUI"
+}

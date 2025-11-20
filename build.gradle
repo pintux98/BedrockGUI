@@ -1,5 +1,6 @@
 plugins {
     id 'java'
+    id 'com.github.johnrengelman.shadow' version '8.1.1'
 }
 
 allprojects {
@@ -18,4 +19,27 @@ subprojects {
     dependencies {
 
     }
+}
+
+// Task to build all modules
+task buildAll {
+    dependsOn ':common:build'
+    dependsOn ':paper:shadowJar'
+    dependsOn ':velocity:shadowJar'
+    
+    description = 'Builds all modules (common, paper, velocity)'
+}
+
+// Task to build only Velocity
+task buildVelocity {
+    dependsOn ':velocity:shadowJar'
+    
+    description = 'Builds only the Velocity module'
+}
+
+// Task to build only Paper
+task buildPaper {
+    dependsOn ':paper:shadowJar'
+    
+    description = 'Builds only the Paper module'
 }
