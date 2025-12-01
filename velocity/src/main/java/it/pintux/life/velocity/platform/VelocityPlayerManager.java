@@ -28,8 +28,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
 
     @Override
     public Object getOfflinePlayer(String playerName) {
-        // Velocity doesn't have offline player storage like Bukkit
-        // Return the online player if available, otherwise null
         return getPlayer(playerName);
     }
 
@@ -62,7 +60,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
 
     @Override
     public Object getPlayerWorld(Object player) {
-        // Velocity doesn't have world concept - players are on servers
         if (player instanceof Player) {
             return ((Player) player).getCurrentServer().orElse(null);
         }
@@ -71,7 +68,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
 
     @Override
     public Object getPlayerLocation(Object player) {
-        // Velocity doesn't track player locations - this is backend-specific
         return null;
     }
 
@@ -93,7 +89,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
 
     @Override
     public String getWorldName(Object world) {
-        // Velocity doesn't have world names - return server name if available
         if (world instanceof ServerConnection) {
             return ((ServerConnection) world).getServerInfo().getName();
         }

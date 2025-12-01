@@ -26,8 +26,9 @@ task buildAll {
     dependsOn ':common:build'
     dependsOn ':paper:shadowJar'
     dependsOn ':velocity:shadowJar'
+    dependsOn ':bungeecord:shadowJar'
     
-    description = 'Builds all modules (common, paper, velocity)'
+    description = 'Builds all modules (common, paper, velocity, bungeecord)'
 }
 
 // Task to build only Velocity
@@ -35,6 +36,13 @@ task buildVelocity {
     dependsOn ':velocity:shadowJar'
     
     description = 'Builds only the Velocity module'
+}
+
+// Task to build only Bungeecord
+task buildBungeecord {
+    dependsOn ':bungeecord:shadowJar'
+    
+    description = 'Builds only the Bungeecord module'
 }
 
 // Task to build only Paper

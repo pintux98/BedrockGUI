@@ -88,9 +88,10 @@ public final class ValidationUtils {
         }
 
 
-        return imageSource.startsWith("http://") ||
-               imageSource.startsWith("https://") ||
-               imageSource.startsWith("textures/");
+        if (imageSource.startsWith("http://") || imageSource.startsWith("https://") || imageSource.startsWith("textures/")) {
+            return true;
+        }
+        return imageSource.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif|webp)$");
     }
 
 

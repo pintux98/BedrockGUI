@@ -25,16 +25,6 @@ import java.io.File;
 import java.nio.file.Path;
 import java.util.*;
 
-@Plugin(
-    id = "bedrockgui-velocity",
-    name = "BedrockGUI-Velocity",
-    version = "2.0.3-BETA",
-    description = "BedrockGUI plugin for Velocity proxy",
-    authors = {"pintux"},
-    dependencies = {
-        @Dependency(id = "floodgate")
-    }
-)
 public class BedrockGUI {
 
     private final ProxyServer server;
@@ -63,9 +53,6 @@ public class BedrockGUI {
         }
         
         reloadData();
-        
-        // Register event listeners
-        server.getEventManager().register(this, this);
         
         // Register command
         server.getCommandManager().register("bedrockgui", new VelocityCommandExecutor(this));
@@ -130,12 +117,15 @@ public class BedrockGUI {
         VelocityTitleManager titleManager = new VelocityTitleManager();
         VelocityPluginManager pluginManager = new VelocityPluginManager(server);
         VelocityPlayerManager playerManager = new VelocityPlayerManager(server);
+        it.pintux.life.velocity.platform.VelocityAssetServer assetServer = new it.pintux.life.velocity.platform.VelocityAssetServer(server, dataFolder, 8192);
+        assetServer.start();
 
         // Create API instance
         api = new BedrockGUIApi(config, messageData, commandExecutor, soundManager, economyManager, 
                                formSender, titleManager, pluginManager, playerManager);
 
         formMenuUtil = api.getFormMenuUtil();
+        formMenuUtil.setAssetServer(assetServer);
         logger.info("Using FormMenuUtil from BedrockGUIApi");
         
         logger.info("BedrockGUI for Velocity loaded and enabled");

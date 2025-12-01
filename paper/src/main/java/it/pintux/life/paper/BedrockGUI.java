@@ -40,6 +40,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     private MessageData messageData;
     private BedrockGUIApi api;
     private java.util.Set<String> interceptBaseLabels = new java.util.HashSet<>();
+    private it.pintux.life.paper.platform.PaperAssetServer assetServer;
 
 
     @Override
@@ -61,6 +62,10 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 getLogger().severe("Error during BedrockGUI shutdown: " + e.getMessage());
                 e.printStackTrace();
             }
+        }
+        if (assetServer != null) {
+            assetServer.shutdown();
+            assetServer = null;
         }
         getLogger().info("BedrockGUI disabled");
     }
@@ -101,10 +106,13 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperTitleManager titleManager = new PaperTitleManager();
         PaperPluginManager pluginManager = new PaperPluginManager();
         PaperPlayerManager playerManager = new PaperPlayerManager();
+        assetServer = new it.pintux.life.paper.platform.PaperAssetServer(getDataFolder(), 8191, org.bukkit.Bukkit.getIp());
+        assetServer.start();
 
         api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager);
 
         formMenuUtil = api.getFormMenuUtil();
+        formMenuUtil.setAssetServer(assetServer);
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
         if (DependencyValidator.isPluginCompatible("PlaceholderAPI", "2.10.0")) {

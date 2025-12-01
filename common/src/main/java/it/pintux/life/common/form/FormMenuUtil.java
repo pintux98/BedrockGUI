@@ -7,14 +7,8 @@ import it.pintux.life.common.form.obj.ConditionalButton;
 import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.FormMenu;
 import it.pintux.life.common.platform.*;
-import it.pintux.life.common.utils.ConditionEvaluator;
-import it.pintux.life.common.utils.FormConfig;
-import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
-import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.PlaceholderUtil;
-import it.pintux.life.common.utils.ConfigValidator;
-import it.pintux.life.common.utils.ErrorHandlingUtil;
+import it.pintux.life.common.utils.*;
+import it.pintux.life.common.utils.ValidationUtils;
 import org.geysermc.cumulus.form.CustomForm;
 import org.geysermc.cumulus.form.ModalForm;
 import org.geysermc.cumulus.form.SimpleForm;
@@ -37,6 +31,7 @@ public class FormMenuUtil {
     private final PlatformTitleManager titleManager;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
+    private it.pintux.life.common.platform.PlatformAssetServer assetServer;
 
 
     private DelayActionHandler delayActionHandler;
@@ -448,6 +443,7 @@ public class FormMenuUtil {
 
                 String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
                 String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
+                effectiveImage = mapImageSource(effectiveImage);
                 String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
 
 
@@ -464,7 +460,8 @@ public class FormMenuUtil {
 
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
                 if (button.getImage() != null) {
-                    formBuilder.button(buttonText, FormImage.Type.URL, button.getImage());
+                    String src = mapImageSource(button.getImage());
+                    formBuilder.button(buttonText, FormImage.Type.URL, src);
                 } else {
                     formBuilder.button(buttonText);
                 }
@@ -846,6 +843,11 @@ public class FormMenuUtil {
         if (delayActionHandler != null) {
             delayActionHandler.shutdown();
         }
+        if (assetServer != null) {
+            try {
+                assetServer.shutdown();
+            } catch (Exception ignored) {}
+        }
         logger.info("FormMenuUtil shutdown completed");
     }
 
@@ -929,7 +931,8 @@ public class FormMenuUtil {
         }
 
 
-        return button.getImage();
+        String src = button.getImage();
+        return src;
     }
 
 
@@ -1008,6 +1011,23 @@ public class FormMenuUtil {
 
 
         return button.getOnClick();
+    }
+
+    public void setAssetServer(it.pintux.life.common.platform.PlatformAssetServer assetServer) {
+        this.assetServer = assetServer;
+    }
+
+    private String mapImageSource(String image) {
+        if (image == null) return null;
+        String trimmed = image.trim();
+        if (ValidationUtils.isNullOrEmpty(trimmed)) return null;
+        boolean isUrl = trimmed.startsWith("http://") || trimmed.startsWith("https://");
+        boolean isTexture = trimmed.startsWith("textures/");
+        boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$") && !isUrl && !isTexture;
+        if (isLocal && assetServer != null && assetServer.isAvailable()) {
+            return assetServer.getAssetUrl(trimmed);
+        }
+        return trimmed;
     }
 }
 

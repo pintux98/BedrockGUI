@@ -81,7 +81,8 @@ system:
 validation:
   invalid_menu_name: "&cInvalid menu name: '{name}'"
   invalid_form_type: "&cInvalid form type '{type}' in menu '{menu}'"
-  invalid_image_source: "&cButton {index} in menu '{menu}' has invalid image source"
+  invalid_image_source: "&cButton {button} in menu '{menu}' has invalid image source"
+  button_invalid_image: "&cButton {button} in menu '{menu}' has invalid image"
   invalid_action_format: "&cInvalid action format in menu '{menu}' button {index}: '{action}'"
   invalid_delay_format: "&cInvalid delay format in menu '{menu}' button {index}: '{value}'"
   invalid_target_menu: "&cInvalid target menu name '{target}' in menu '{menu}' button {index}"

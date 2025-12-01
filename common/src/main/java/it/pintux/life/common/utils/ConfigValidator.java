@@ -125,7 +125,9 @@ public class ConfigValidator {
 
 
             if (button.getImage() != null && !ValidationUtils.isValidImageSource(button.getImage())) {
-                Map<String, Object> replacements = Map.of("button", i, "menu", menuName);
+                String buttonText = button.getText();
+                Object buttonLabel = (ValidationUtils.isNullOrEmpty(buttonText)) ? i : buttonText;
+                Map<String, Object> replacements = Map.of("button", buttonLabel, "menu", menuName);
                 validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_INVALID_IMAGE, replacements, null));
             }
         }

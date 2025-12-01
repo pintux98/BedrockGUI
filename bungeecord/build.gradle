@@ -10,14 +10,15 @@ repositories {
     mavenCentral()
     maven { url = "https://repo.papermc.io/repository/maven-public/" }
     maven { url = "https://repo.opencollab.dev/main/" }
-    maven { url = "https://nexus.velocitypowered.com/repository/maven-public/" }
+    maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+    maven { url = "https://repo.md-5.net/content/repositories/snapshots/" }
+    maven { url = "https://repo.md-5.net/content/groups/public/" }
 }
 
 dependencies {
     implementation project(':common')
-    compileOnly("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
-    compileOnly('org.geysermc.floodgate:api:2.2.3-SNAPSHOT')
-    annotationProcessor("com.velocitypowered:velocity-api:3.3.0-SNAPSHOT")
+    compileOnly 'net.md-5:bungeecord-api:1.20-R0.2'
+    compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
 }
 
 sourceSets {
@@ -55,7 +56,7 @@ processResources {
     inputs.properties props
     filteringCharset 'UTF-8'
 
-    filesMatching('velocity-plugin.json') {
+    filesMatching('bungee.yml') {
         expand props
     }
 
@@ -69,6 +70,6 @@ jar {
 shadowJar {
     minimize()
     archiveClassifier.set('')
-    archiveBaseName.set('BedrockGUI-Velocity')
-    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server/proxy/plugins"))
+    archiveBaseName.set('BedrockGUI-Bungee')
+    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server"))
 }
