@@ -256,20 +256,6 @@ public class MessageData {
         }
 
         value = config.setPlaceholders(player, value);
-
-
-        Matcher dollarMatcher = Pattern.compile("\\$(\\w+)").matcher(value);
-        while (dollarMatcher.find()) {
-            String placeholder = dollarMatcher.group(1);
-
-        }
-
-        Matcher curlyMatcher = Pattern.compile("\\{(\\w+)\\}").matcher(value);
-        while (curlyMatcher.find()) {
-            String placeholder = curlyMatcher.group(1);
-
-        }
-
         return value;
     }
 

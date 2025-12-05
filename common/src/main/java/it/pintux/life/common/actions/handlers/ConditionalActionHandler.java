@@ -16,25 +16,20 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
     private final ActionExecutor actionExecutor;
 
-    private static final Pattern NEW_FORMAT_PATTERN = Pattern.compile(
-            "^conditional\\s*\\{[\\s\\S]*\\}$", Pattern.MULTILINE
-    );
-
-
     private static final Pattern CHECK_PATTERN = Pattern.compile(
             "check:\\s*\"([^\"]+)\""
     );
 
     private static final Pattern TRUE_ACTIONS_PATTERN = Pattern.compile(
-            "true:\\s*([^}]*?)(?=false:|\\})"
+            "true:\\s*([\\s\\S]*?)(?=\\s*false:|\\Z)", Pattern.DOTALL
     );
 
     private static final Pattern FALSE_ACTIONS_PATTERN = Pattern.compile(
-            "false:\\s*([^}]*?)\\}"
+            "false:\\s*([\\s\\S]*?)(?=\\Z)", Pattern.DOTALL
     );
 
     private static final Pattern ACTION_LINE_PATTERN = Pattern.compile(
-            "-\\s*\"([^\"]+)\""
+            "-\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
     );
 
     public ConditionalActionHandler(ActionExecutor actionExecutor) {
@@ -75,7 +70,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
             String checkCondition = checkMatcher.group(1);
             boolean conditionMet = evaluateComplexCondition(player, checkCondition, context);
 
-
             List<String> actionsToExecute;
             if (conditionMet) {
                 actionsToExecute = parseActionList(actionData, TRUE_ACTIONS_PATTERN);
@@ -92,7 +86,8 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
             ActionSystem.ActionResult lastResult = null;
             for (String action : actionsToExecute) {
-                ActionSystem.ActionDefinition actionDef = parseActionString(action);
+                ActionSystem.Action parsed = actionExecutor.parseAction(action);
+                ActionSystem.ActionDefinition actionDef = parsed != null ? parsed.getActionDefinition() : parseActionString(action);
                 ActionSystem.ActionResult result = actionExecutor.executeAction(player, actionDef, context);
                 lastResult = result;
 
@@ -200,13 +195,63 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
         if (matcher.find()) {
             String actionsBlock = matcher.group(1);
-            Matcher actionMatcher = ACTION_LINE_PATTERN.matcher(actionsBlock);
-
-            while (actionMatcher.find()) {
-                String action = actionMatcher.group(1).trim();
-                if (!action.isEmpty()) {
-                    actions.add(action);
+            // First, handle multiple inline '- |' actions on a single line
+            java.util.regex.Matcher inlineMulti = java.util.regex.Pattern.compile("-\\s*\\|\\s*").matcher(actionsBlock);
+            if (inlineMulti.find()) {
+                java.util.regex.Matcher splitter = java.util.regex.Pattern.compile("-\\s*\\|\\s*(.+?)(?=\\s*-\\s*\\||\\Z)", java.util.regex.Pattern.DOTALL).matcher(actionsBlock);
+                while (splitter.find()) {
+                    String content = splitter.group(1).trim();
+                    if (!content.isEmpty()) {
+                        actions.add(content);
+                    }
                 }
+                return actions;
+            }
+
+            String[] lines = actionsBlock.split("\\r?\\n");
+            int i = 0;
+            while (i < lines.length) {
+                String line = lines[i];
+                if (line.trim().isEmpty()) { i++; continue; }
+
+                Matcher pipeMatcher = Pattern.compile("^\\s*-\\s*\\|\\s*$").matcher(line);
+                if (pipeMatcher.matches()) {
+                    int dashIndex = line.indexOf('-');
+                    String indent = dashIndex > 0 ? line.substring(0, dashIndex) : "";
+                    StringBuilder sb = new StringBuilder();
+                    i++;
+                    while (i < lines.length) {
+                        String next = lines[i];
+                        if (next.startsWith(indent + "-")) {
+                            break;
+                        }
+                        sb.append(next).append("\n");
+                        i++;
+                    }
+                    String content = sb.toString().trim();
+                    if (!content.isEmpty()) {
+                        actions.add(content);
+                    }
+                    continue;
+                }
+
+                Matcher simpleMatcher = ACTION_LINE_PATTERN.matcher(line);
+                if (simpleMatcher.find()) {
+                    String value = simpleMatcher.group(1).trim();
+                    if (!value.isEmpty()) {
+                        actions.add(value);
+                    }
+                } else {
+                    Matcher inlinePipe = Pattern.compile("^\\s*-\\s*\\|\\s*(.+)$").matcher(line);
+                    if (inlinePipe.find()) {
+                        String content = inlinePipe.group(1).trim();
+                        if (!content.isEmpty()) {
+                            actions.add(content);
+                        }
+                    }
+                }
+
+                i++;
             }
         }
 
@@ -255,7 +300,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
             }
         }
 
-        String conditionType = parts[offset];
+        String conditionType = parts[offset].replaceAll("\"", "").trim();
 
         switch (conditionType.toLowerCase()) {
             case "permission":

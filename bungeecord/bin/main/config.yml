@@ -1,0 +1,763 @@
+settings:
+  debug: true
+  placeholder_refresh_interval: 30
+  default_sound: "ui.button.click"
+  max_forms_per_player: 10
+  form_timeout: 300000
+  enable_analytics: true
+  pagination:
+    button_order: "next_first"
+    default_previous_text: "← Previous Page"
+    default_next_text: "Next Page →"
+
+commands:
+  gui:
+    description: "Open the main BedrockGUI hub"
+    permission: "bedrockgui.use"
+    aliases: [ "menu", "hub", "main" ]
+    form: "main_hub"
+
+forms:
+  main_hub:
+    type: "SIMPLE"
+    title: "§a§l⚡ BedrockGUI Action Test Hub"
+    content: "§7Test all action handlers with the new curly brace format"
+    buttons:
+      message_test:
+        text: "§b§l💬 Message Actions"
+        onClick:
+          - |
+            message {
+              - "§a§l=== MESSAGE ACTION TEST ==="
+              - "§eHello {player}! Welcome to the message test."
+              - "§bYour current balance: §a${vault_eco_balance}"
+              - "§dYour level: §6{player_level}"
+              - "§cThis demonstrates multiple sequential messages!"
+            }
+      command_test:
+        text: "§e§l⚡ Command Actions"
+        onClick:
+          - |
+            command {
+              - "me is testing the new command format"
+              - "time query daytime"
+              - "weather query"
+              - "list"
+            }
+      sound_test:
+        text: "§d§l🔊 Sound Actions"
+        onClick:
+          - |
+            sound {
+              - "ui.button.click:1.0:1.0"
+              - "entity.experience_orb.pickup:0.8:1.2"
+              - "block.note_block.harp:1.0:0.5"
+              - "entity.firework_rocket.launch:0.7:1.5"
+            }
+      economy_test:
+        text: "§2§l💰 Economy Actions"
+        onClick:
+          - |
+            economy {
+              - "check:100"
+              - "add:500"
+              - "check:600"
+              - "remove:100"
+            }
+      title_test:
+        text: "§6§l📺 Title Actions"
+        onClick:
+          - |
+            title {
+              - "§a§lTitle Test 1:§eSubtitle 1:10:30:10"
+              - "§b§lTitle Test 2:§dSubtitle 2:5:20:5"
+              - "§c§lFinal Title:§6All Done!:10:40:20"
+            }
+      server_test:
+        text: "§c§l⚙️ Server Actions"
+        onClick:
+          - |
+            server {
+              - "time set day"
+              - "weather clear"
+              - "say §a{player} is testing server commands!"
+              - "broadcast §eServer command test completed!"
+            }
+      teleport_test:
+        text: "§9§l🚀 Teleport Actions"
+        onClick:
+          - |
+            teleport {
+              - "spawn"
+              - "0 100 0"
+              - "spawn"
+            }
+      actionbar_test:
+        text: "§3§l📊 Action Bar Test"
+        onClick:
+          - |
+            actionbar {
+              - "§a§lAction Bar Test 1"
+              - "§b§lAction Bar Test 2"
+              - "§c§lAction Bar Test 3"
+              - "§d§lAction Bar Complete!"
+            }
+      broadcast_test:
+        text: "§5§l📢 Broadcast Test"
+        onClick:
+          - |
+            broadcast {
+              - "§a{player} is testing broadcasts!"
+              - "§eThis is broadcast message 2"
+              - "§cBroadcast test sequence complete!"
+            }
+      gamemode_test:
+        text: "§1§l🎮 Game Mode Test"
+        onClick:
+          - |
+            gamemode {
+              - "creative"
+              - "survival"
+              - "creative"
+            }
+      advanced_tests:
+        text: "§4§l🚀 Advanced Tests"
+        onClick:
+          - |
+            open {
+              - "advanced_test_menu"
+            }
+
+  advanced_test_menu:
+    type: "SIMPLE"
+    title: "§4§l🚀 Advanced Action Tests"
+    content: "§7Complex action sequences and combinations"
+    buttons:
+      mixed_actions:
+        text: "§a§l🎯 Mixed Action Sequence"
+        onClick:
+          - |
+            message {
+              - "§a§l=== STARTING COMPLEX SEQUENCE ==="
+              - "§eThis will test multiple action types together..."
+            }
+          - |
+            sound {
+              - "ui.button.click:1.0:1.0"
+              - "entity.experience_orb.pickup:0.8:1.2"
+            }
+          - |
+            economy {
+              - "add:1000"
+              - "check:1000"
+            }
+          - |
+            title {
+              - "§a§lReward!:§eYou earned $1000!:10:60:20"
+            }
+          - |
+            server {
+              - "say §a{player} completed the mixed action test!"
+            }
+          - |
+            message {
+              - "§a§l=== SEQUENCE COMPLETED ==="
+              - "§eAll action types executed successfully!"
+            }
+
+      conditional_new_format:
+        text: "§b§l🔀 Conditional + New Format"
+        onClick:
+          - |
+            conditional {
+              check: "placeholder:{vault_eco_balance} >= 500"
+              true:
+                - |
+                  message {
+                    - "§a§lYou have enough money!"
+                    - "§eExecuting VIP reward sequence..."
+                  }
+                - |
+                  economy {
+                    - "remove:500"
+                    - "add:1000"
+                  }
+                - |
+                  sound {
+                    - "entity.player.levelup:1.0:1.0"
+                    - "entity.experience_orb.pickup:0.8:1.2"
+                  }
+                - |
+                  title {
+                    - "§6§lVIP BONUS!:§a+$500 profit!:20:80:20"
+                  }
+                - |
+                  server {
+                    - "broadcast §6{player} §ejust earned a VIP bonus!"
+                  }
+              false:
+                - |
+                  message {
+                    - "§c§lInsufficient funds!"
+                    - "§eYou need at least $500"
+                    - "§7Current balance: §a${vault_eco_balance}"
+                  }
+                - |
+                  sound {
+                    - "block.note_block.bass:0.5:0.5"
+                  }
+                - |
+                  actionbar {
+                    - "§c§lNeed $500 to continue"
+                  }
+            }
+
+      performance_test:
+        text: "§e§l⚡ Performance Test"
+        onClick:
+          - |
+            message {
+              - "§e§lStarting performance test..."
+              - "§7This will execute many actions quickly"
+            }
+          - |
+            sound {
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+            }
+          - |
+            actionbar {
+              - "§aPerformance Test 1/5"
+              - "§bPerformance Test 2/5"
+              - "§cPerformance Test 3/5"
+              - "§dPerformance Test 4/5"
+              - "§ePerformance Test 5/5 - Complete!"
+            }
+          - |
+            title {
+              - "§a§lTest Complete:§eAll systems operational!:10:40:10"
+            }
+
+      error_test:
+        text: "§c§l⚠️ Error Handling Test"
+        onClick:
+          - |
+            message {
+              - "§c§lTesting error handling..."
+              - "§7Some operations may fail intentionally"
+            }
+          - |
+            command {
+              - "me is testing valid command"
+              - "invalidcommandthatdoesnotexist"
+              - "me completed error test"
+            }
+          - |
+            message {
+              - "§a§lError test completed!"
+              - "§7Check console for error handling results"
+            }
+
+      placeholder_test:
+        text: "§d§l🔧 Placeholder Test"
+        onClick:
+          - |
+            message {
+              - "§d§l=== PLACEHOLDER INTEGRATION TEST ==="
+              - "§ePlayer: §a{player}"
+              - "§eWorld: §b{player_world}"
+              - "§eBalance: §2${vault_eco_balance}"
+              - "§eLevel: §6{player_level}"
+              - "§eHealth: §c{player_health}/20"
+              - "§eGamemode: §9{player_gamemode}"
+            }
+          - |
+            title {
+              - "§a{player}:§eLevel {player_level}:10:60:20"
+            }
+          - |
+            actionbar {
+              - "§eBalance: §a${vault_eco_balance} §7| §eLevel: §6{player_level}"
+            }
+
+      back_main:
+        text: "§7← Back to Main"
+        onClick:
+          - |
+            open {
+              - "main_hub"
+            }
+
+  new_format_test:
+    type: "SIMPLE"
+    title: "§a§l📝 New Format Test"
+    content: "§7Testing the new curly-brace format exclusively"
+    buttons:
+      new_format_actions:
+        text: "§a§l📝 New Format Actions"
+        onClick:
+          - |
+            message {
+              - "§7This is now using the new message format"
+            }
+          - |
+            command {
+              - "me is using new command format"
+            }
+          - |
+            sound {
+              - "ui.button.click"
+            }
+          - |
+            economy {
+              - "add:100"
+            }
+          - |
+            title {
+              - "New Format Title:New Format Subtitle:10:60:20"
+            }
+
+      all_new_format:
+        text: "§6§l🔄 All New Format"
+        onClick:
+          - |
+            message {
+              - "§7First message using new format"
+              - "§a§lNow using new format!"
+              - "§eThis demonstrates consistency"
+            }
+          - |
+            sound {
+              - "ui.button.click"
+              - "entity.experience_orb.pickup:0.8:1.2"
+            }
+
+      back_main_new_format:
+        text: "§7← Back to Main"
+        onClick:
+          - |
+            open {
+              - "main_hub"
+            }
+
+  comprehensive_test:
+    type: "SIMPLE"
+    title: "§c§l🧪 Comprehensive Test Suite"
+    content: "§7Complete testing of all action handlers"
+    buttons:
+      all_actions_test:
+        text: "§a§l🎯 All Actions Test"
+        onClick:
+          - |
+            message {
+              - "§a§l=== COMPREHENSIVE ACTION TEST ==="
+              - "§eStarting complete action handler test..."
+            }
+          - |
+            sound {
+              - "ui.button.click:1.0:1.0"
+            }
+          - |
+            actionbar {
+              - "§eStep 1: Message and Sound ✓"
+            }
+          - |
+            economy {
+              - "add:250"
+            }
+          - |
+            actionbar {
+              - "§eStep 2: Economy ✓ (+$250)"
+            }
+          - |
+            command {
+              - "me is testing commands in sequence"
+            }
+          - |
+            actionbar {
+              - "§eStep 3: Command ✓"
+            }
+          - |
+            server {
+              - "say §a{player} is running comprehensive tests!"
+            }
+          - |
+            actionbar {
+              - "§eStep 4: Server Command ✓"
+            }
+          - |
+            gamemode {
+              - "creative"
+            }
+          - |
+            actionbar {
+              - "§eStep 5: Game Mode ✓"
+            }
+          - |
+            broadcast {
+              - "§6{player} §ecompleted the comprehensive test!"
+            }
+          - |
+            title {
+              - "§a§lTEST COMPLETE:§eAll systems working!:20:100:20"
+            }
+          - |
+            sound {
+              - "entity.player.levelup:1.0:1.0"
+              - "entity.firework_rocket.launch:0.8:1.5"
+            }
+          - |
+            message {
+              - "§a§l=== TEST COMPLETED SUCCESSFULLY ==="
+              - "§eAll action handlers are working with new format!"
+            }
+
+      stress_test:
+        text: "§c§l⚡ Stress Test"
+        onClick:
+          - |
+            message {
+              - "§c§l=== STRESS TEST STARTING ==="
+              - "§7This will execute many actions rapidly"
+            }
+          - |
+            sound {
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+              - "ui.button.click"
+            }
+          - |
+            actionbar {
+              - "§aStress Test 1/10"
+              - "§bStress Test 2/10"
+              - "§cStress Test 3/10"
+              - "§dStress Test 4/10"
+              - "§eStress Test 5/10"
+              - "§fStress Test 6/10"
+              - "§1Stress Test 7/10"
+              - "§2Stress Test 8/10"
+              - "§3Stress Test 9/10"
+              - "§4Stress Test 10/10 - COMPLETE!"
+            }
+          - |
+            economy {
+              - "add:10"
+              - "add:20"
+              - "add:30"
+              - "add:40"
+              - "add:50"
+            }
+          - |
+            message {
+              - "§a§lStress test completed!"
+              - "§eAll handlers performed well under load"
+            }
+
+      complex_conditional:
+        text: "§5§l🔀 Complex Conditional"
+        onClick:
+          - |
+            conditional {
+              check: "(placeholder:{vault_eco_balance} >= 1000 || placeholder:{player_level} >= 10) && permission:bedrockgui.use"
+              true:
+                - |
+                  message {
+                    - "§a§lCONDITION MET!"
+                    - "§eYou have money OR high level AND permission!"
+                    - "§bExecuting reward sequence..."
+                  }
+                - |
+                  sound {
+                    - "entity.player.levelup:1.0:1.0"
+                    - "entity.experience_orb.pickup:0.8:1.2"
+                  }
+                - |
+                  economy {
+                    - "add:2000"
+                  }
+                - |
+                  title {
+                    - "§6§lREWARD!:§a+$2000 bonus!:15:80:15"
+                  }
+                - |
+                  server {
+                    - "broadcast §6{player} §eearned a conditional reward!"
+                  }
+                - |
+                  actionbar {
+                    - "§a§lConditional reward granted!"
+                  }
+              false:
+                - |
+                  message {
+                    - "§c§lCondition not met!"
+                    - "§eRequirements:"
+                    - "§7- Balance ≥ $1000 OR Level ≥ 10"
+                    - "§7- Permission: bedrockgui.use"
+                    - "§eCurrent status:"
+                    - "§7- Balance: §a${vault_eco_balance}"
+                    - "§7- Level: §6{player_level}"
+                  }
+                - |
+                  sound {
+                    - "block.note_block.bass:0.5:0.5"
+                  }
+                - |
+                  actionbar {
+                    - "§c§lRequirements not met"
+                  }
+            }
+
+      single_value_test:
+        text: "§8§l📝 Single Value Test"
+        onClick:
+          - |
+            message {
+              - "Testing single value in new format"
+            }
+          - |
+            command {
+              - "me is testing single command"
+            }
+          - |
+            sound {
+              - "ui.button.click"
+            }
+          - |
+            economy {
+              - "add:100"
+            }
+          - |
+            title {
+              - "Single:Value Test:10:40:10"
+            }
+
+      back_hub:
+        text: "§7← Back to Hub"
+        onClick:
+          - |
+            open {
+              - "main_hub"
+            }
+
+  error_test_menu:
+    type: "SIMPLE"
+    title: "§c§l⚠️ Error Handling Tests"
+    content: "§7Test error handling and edge cases"
+    buttons:
+      empty_test:
+        text: "§7§l🔍 Empty Values Test"
+        onClick:
+          - |
+            message {
+              - "§7Testing error handling for edge cases..."
+            }
+          - |
+            command {
+              - "me testing error handling"
+            }
+
+      invalid_format:
+        text: "§c§l⚠️ Invalid Format Test"
+        onClick:
+          - |
+            message {
+              - "§c§lTesting invalid operations..."
+              - "§7Some operations may fail - this is expected"
+            }
+          - |
+            economy {
+              - "invalid_operation:999"
+              - "add:100"
+            }
+          - |
+            message {
+              - "§a§lError handling test completed!"
+            }
+
+      back_advanced:
+        text: "§7← Back to Advanced"
+        onClick:
+          - |
+            open {
+              - "advanced_test_menu"
+            }
+
+  performance_menu:
+    type: "SIMPLE"
+    title: "§e§l⚡ Performance Benchmarks"
+    content: "§7Test performance with various loads"
+    buttons:
+      light_load:
+        text: "§a§l🟢 Light Load (3 actions)"
+        onClick:
+          - |
+            message {
+              - "§a§lLight load test starting..."
+            }
+          - |
+            sound {
+              - "ui.button.click"
+            }
+          - |
+            actionbar {
+              - "§a§lLight load complete!"
+            }
+
+      medium_load:
+        text: "§e§l🟡 Medium Load (6 actions)"
+        onClick:
+          - |
+            message {
+              - "§e§lMedium load test starting..."
+            }
+          - |
+            sound {
+              - "ui.button.click"
+              - "entity.experience_orb.pickup:0.8:1.0"
+            }
+          - |
+            economy {
+              - "add:50"
+              - "check:50"
+            }
+          - |
+            actionbar {
+              - "§e§lMedium load complete!"
+            }
+
+      heavy_load:
+        text: "§c§l🔴 Heavy Load (10+ actions)"
+        onClick:
+          - |
+            message {
+              - "§c§l=== HEAVY LOAD TEST ==="
+              - "§7Executing maximum action sequence..."
+            }
+          - |
+            sound {
+              - "ui.button.click"
+              - "entity.experience_orb.pickup:0.5:1.0"
+              - "block.note_block.harp:1.0:0.8"
+              - "entity.firework_rocket.launch:0.7:1.5"
+              - "entity.player.levelup:1.0:1.0"
+            }
+          - |
+            actionbar {
+              - "§aHeavy Load 1/8"
+              - "§bHeavy Load 2/8"
+              - "§cHeavy Load 3/8"
+              - "§dHeavy Load 4/8"
+              - "§eHeavy Load 5/8"
+              - "§fHeavy Load 6/8"
+              - "§1Heavy Load 7/8"
+              - "§2Heavy Load 8/8 - DONE!"
+            }
+          - |
+            economy {
+              - "add:100"
+              - "add:200"
+              - "add:300"
+              - "check:600"
+            }
+          - |
+            command {
+              - "me completed heavy load test part 1"
+              - "me completed heavy load test part 2"
+              - "me completed heavy load test part 3"
+            }
+          - |
+            server {
+              - "say §c{player} §ecompleted heavy load test!"
+              - "broadcast §6Performance test completed by {player}!"
+            }
+          - |
+            title {
+              - "§c§lHEAVY LOAD:§a§lCOMPLETE!:20:100:20"
+            }
+          - |
+            message {
+              - "§a§l=== HEAVY LOAD TEST COMPLETED ==="
+              - "§eAll systems handled the load successfully!"
+              - "§bCheck console for detailed performance metrics"
+            }
+
+      back_advanced_perf:
+        text: "§7← Back to Advanced"
+        onClick:
+          - |
+            open {
+              - "advanced_test_menu"
+            }
+
+messages:
+  prefix: "§8[§aBedrockGUI§8] §r"
+  
+  # Action execution messages
+  action_success: "§aAction executed successfully!"
+  action_failed: "§cAction execution failed!"
+  action_partial_success: "§eAction partially completed!"
+  
+  # Test sequence messages
+  test_started: "§eTest sequence started..."
+  test_completed: "§aTest sequence completed!"
+  test_failed: "§cTest sequence failed!"
+  
+  # Error messages
+  invalid_parameters: "§cInvalid parameters provided!"
+  execution_error: "§cError during action execution!"
+  format_error: "§cInvalid action format!"
+  
+  # Success messages for specific actions
+  command_success: "§aCommand executed: §7{command}"
+  message_success: "§aMessage sent: §7{message}"
+  sound_success: "§aSound played: §7{sound}"
+  economy_success: "§aEconomy operation: §7{operation}"
+  title_success: "§aTitle displayed: §7{title}"
+
+placeholders:
+  # Test placeholders
+  test_value: "TestValue123"
+  reward_amount: "1000"
+  vip_price: "5000"
+  
+  # Server info placeholders
+  server_name: "BedrockGUI Test Server"
+  server_version: "1.20.4"
+  total_players: "10"
+
+permissions:
+  # Basic permissions
+  use: "bedrockgui.use"
+  admin: "bedrockgui.admin"
+  vip: "bedrockgui.vip"
+  
+  # Test permissions
+  test: "bedrockgui.test"
+  advanced: "bedrockgui.test.advanced"
+  performance: "bedrockgui.test.performance"
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
