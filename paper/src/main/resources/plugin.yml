@@ -2,6 +2,7 @@ name: BedrockGUI-Paper
 version: '${version}'
 main: it.pintux.life.paper.BedrockGUI
 api-version: '1.19'
+folia-supported: true
 author: "pintux"
 depend:
   - floodgate
