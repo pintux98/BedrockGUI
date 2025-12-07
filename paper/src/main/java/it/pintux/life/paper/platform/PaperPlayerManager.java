@@ -12,6 +12,12 @@ import java.util.UUID;
 
 public class PaperPlayerManager implements PlatformPlayerManager {
 
+    private final org.bukkit.plugin.java.JavaPlugin plugin;
+
+    public PaperPlayerManager(org.bukkit.plugin.java.JavaPlugin plugin) {
+        this.plugin = plugin;
+    }
+
     public Object getPlayerByName(String name) {
         return Bukkit.getPlayer(name);
     }
@@ -140,5 +146,15 @@ public class PaperPlayerManager implements PlatformPlayerManager {
             return ((org.bukkit.World) world).getName();
         }
         return null;
+    }
+
+    @Override
+    public void sendByteArray(FormPlayer player, String channel, byte[] data) {
+        if (player instanceof PaperPlayer) {
+            Player bukkitPlayer = ((PaperPlayer) player).getBukkitPlayer();
+            if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
+                bukkitPlayer.sendPluginMessage(plugin, channel, data);
+            }
+        }
     }
 }

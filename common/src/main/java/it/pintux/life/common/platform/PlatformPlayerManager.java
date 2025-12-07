@@ -37,5 +37,8 @@ public interface PlatformPlayerManager {
 
 
     String getWorldName(Object world);
+
+
+    void sendByteArray(FormPlayer player, String channel, byte[] data);
 }
 

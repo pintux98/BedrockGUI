@@ -56,6 +56,12 @@ jobs:
         name: BedrockGUI-Paper
         path: .
 
+    - name: Download Velocity JAR
+      uses: actions/download-artifact@v3
+      with:
+        name: BedrockGUI-Velocity
+        path: .
+
     - name: Create Release
       uses: ncipollo/release-action@v1
       with:
@@ -65,3 +71,4 @@ jobs:
         files: |
           ./BedrockGUI-Bungee-*.jar
           ./BedrockGUI-Paper-*.jar
+          ./BedrockGUI-Velocity-*.jar

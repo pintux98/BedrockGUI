@@ -109,6 +109,7 @@ public class FormMenuUtil {
 
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
         actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
+        actionRegistry.registerHandler(new BungeeActionHandler(playerManager));
 
         actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
 

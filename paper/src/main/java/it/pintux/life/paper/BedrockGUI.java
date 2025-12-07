@@ -105,9 +105,12 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperFormSender formSender = new PaperFormSender();
         PaperTitleManager titleManager = new PaperTitleManager();
         PaperPluginManager pluginManager = new PaperPluginManager();
-        PaperPlayerManager playerManager = new PaperPlayerManager();
+        PaperPlayerManager playerManager = new PaperPlayerManager(this);
         assetServer = new it.pintux.life.paper.platform.PaperAssetServer(getDataFolder(), 8191, org.bukkit.Bukkit.getIp());
         assetServer.start();
+
+        // Register BungeeCord channel
+        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
 
         api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager);
 

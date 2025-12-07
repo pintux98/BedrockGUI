@@ -52,4 +52,14 @@ public class BungeePlayerManager implements PlatformPlayerManager {
 
     @Override
     public String getWorldName(Object world) { return ""; }
+
+    @Override
+    public void sendByteArray(FormPlayer player, String channel, byte[] data) {
+        if (player instanceof BungeePlayer) {
+            ProxiedPlayer p = ((BungeePlayer) player).getPlayer();
+            if (p.getServer() != null) {
+                p.getServer().sendData(channel, data);
+            }
+        }
+    }
 }

@@ -94,4 +94,13 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
         }
         return "";
     }
+
+    @Override
+    public void sendByteArray(FormPlayer player, String channel, byte[] data) {
+        if (player instanceof VelocityPlayer) {
+            ((VelocityPlayer) player).getPlayer().getCurrentServer().ifPresent(server -> {
+                server.sendPluginMessage(new com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier(channel), data);
+            });
+        }
+    }
 }
