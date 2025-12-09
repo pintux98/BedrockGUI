@@ -3,7 +3,7 @@ plugins {
 }
 
 group = 'it.pintux.life'
-version = '2.0.4-RELEASE'
+version = '2.0.5-RELEASE'
 
 repositories {
     mavenCentral()
