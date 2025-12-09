@@ -14,6 +14,7 @@ public class FormMenu {
     private List<FormButton> formButtons;
     private Map<String, Map<String, Object>> components;
     private List<String> globalActions;
+    private JavaMenuDefinition javaMenu;
 
     public FormMenu(String formCommand, String commandIntercept, String permission, String formTitle, String formContent, String formType, List<FormButton> formButtons, Map<String, Map<String, Object>> components, List<String> globalActions) {
         this.formCommand = formCommand;
@@ -25,6 +26,14 @@ public class FormMenu {
         this.formButtons = formButtons;
         this.components = components;
         this.globalActions = globalActions;
+    }
+
+    public JavaMenuDefinition getJavaMenu() {
+        return javaMenu;
+    }
+
+    public void setJavaMenu(JavaMenuDefinition javaMenu) {
+        this.javaMenu = javaMenu;
     }
 
     public String getFormCommand() {

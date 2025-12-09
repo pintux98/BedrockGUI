@@ -32,6 +32,7 @@ public class FormMenuUtil {
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
     private it.pintux.life.common.platform.PlatformAssetServer assetServer;
+    private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
     private DelayActionHandler delayActionHandler;
@@ -224,6 +225,64 @@ public class FormMenuUtil {
             List<String> globalActions = config.getStringList("forms." + key + ".global_actions");
 
             FormMenu menu = new FormMenu(command, commandIntercept, permission, title, description, type, buttons, components, globalActions);
+
+            String javaTypeStr = config.getString("forms." + key + ".java.type");
+            if (javaTypeStr != null && !javaTypeStr.isEmpty()) {
+                it.pintux.life.common.form.obj.JavaMenuType javaType;
+                try {
+                    javaType = it.pintux.life.common.form.obj.JavaMenuType.valueOf(javaTypeStr.trim().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    logger.warn("Invalid java menu type for form '" + key + "': " + javaTypeStr);
+                    javaType = null;
+                }
+                if (javaType != null) {
+                    String javaTitle = config.getString("forms." + key + ".java.title", title);
+                    int size = 0;
+                    String sizeStr = config.getString("forms." + key + ".java.size");
+                    if (sizeStr != null) {
+                        try { size = Integer.parseInt(sizeStr); } catch (NumberFormatException ignored) {}
+                    }
+                    java.util.Map<Integer, it.pintux.life.common.form.obj.JavaMenuItem> itemMap = new java.util.HashMap<>();
+                    for (String itemKey : config.getKeys("forms." + key + ".java.items")) {
+                        String base = "forms." + key + ".java.items." + itemKey;
+                        String material = config.getString(base + ".material");
+                        String amountStr = config.getString(base + ".amount", "1");
+                        int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                        String itemName = config.getString(base + ".name");
+                        java.util.List<String> lore = config.getStringList(base + ".lore");
+                        boolean glow = "true".equalsIgnoreCase(config.getString(base + ".glow", "false"));
+                        it.pintux.life.common.form.obj.JavaMenuItem jmItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                        java.util.List<ActionSystem.Action> parsedActions = new java.util.ArrayList<>();
+                        java.util.List<String> onClickList = null;
+                        try {
+                            onClickList = config.getStringList(base + ".onClick");
+                        } catch (Exception ignored) {}
+                        if (onClickList != null && !onClickList.isEmpty()) {
+                            for (String block : onClickList) {
+                                String trimmed = block != null ? block.trim() : null;
+                                if (trimmed != null && !trimmed.isEmpty()) {
+                                    ActionSystem.Action action = actionExecutor.parseAction(trimmed);
+                                    if (action != null) parsedActions.add(action);
+                                }
+                            }
+                        } else {
+                            String single = config.getString(base + ".onClick");
+                            if (single != null && !single.trim().isEmpty()) {
+                                ActionSystem.Action action = actionExecutor.parseAction(single.trim());
+                                if (action != null) parsedActions.add(action);
+                            }
+                        }
+                        if (!parsedActions.isEmpty()) {
+                            jmItem.setActions(parsedActions);
+                        }
+                        int slot;
+                        try { slot = Integer.parseInt(itemKey); } catch (NumberFormatException ex) { slot = Integer.parseInt(config.getString(base + ".slot", "0")); }
+                        itemMap.put(slot, jmItem);
+                    }
+                    it.pintux.life.common.form.obj.JavaMenuDefinition jdef = new it.pintux.life.common.form.obj.JavaMenuDefinition(javaType, javaTitle, size, itemMap);
+                    menu.setJavaMenu(jdef);
+                }
+            }
             formMenus.put(key.toLowerCase(), menu);
             logger.info("Loaded form: " + key + " type: " + type);
         }
@@ -314,6 +373,12 @@ public class FormMenuUtil {
         Map<String, String> placeholders = new HashMap<>();
         for (int i = 0; i < args.length; i++) {
             placeholders.put(String.valueOf(i + 1), args[i]);
+        }
+
+        boolean isBedrock = formSender != null && formSender.isBedrockPlayer(player.getUniqueId());
+        if (!isBedrock && javaMenuManager != null && menu.getJavaMenu() != null) {
+            javaMenuManager.openJavaMenu(player, menu, placeholders, this);
+            return;
         }
 
         switch (type.toUpperCase()) {
@@ -1016,6 +1081,10 @@ public class FormMenuUtil {
 
     public void setAssetServer(it.pintux.life.common.platform.PlatformAssetServer assetServer) {
         this.assetServer = assetServer;
+    }
+
+    public void setJavaMenuManager(it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager) {
+        this.javaMenuManager = javaMenuManager;
     }
 
     private String mapImageSource(String image) {

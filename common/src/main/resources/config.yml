@@ -18,6 +18,61 @@ commands:
     form: "main_hub"
 
 forms:
+  dual_demo:
+    type: "SIMPLE"
+    title: "§a§lDual Platform Demo"
+    content: "§7Bedrock sees this form; Java sees inventory menu."
+    buttons:
+      info:
+        text: "§aBedrock: Info"
+        onClick:
+          - |
+            message {
+              - "§aYou are viewing the Bedrock form!"
+            }
+    java:
+      type: "CHEST"
+      title: "§6§lJava Demo Shop"
+      size: "27"
+      items:
+        11:
+          material: "DIAMOND_SWORD"
+          amount: "1"
+          name: "§aBuy Sword"
+          lore:
+            - "§7Cost: §b$100"
+          glow: "true"
+          onClick:
+            - |
+              conditional {
+                check: "placeholder:{vault_eco_balance} >= 100"
+                true:
+                  - |
+                    economy {
+                      - "remove:100"
+                    }
+                false:
+                  - |
+                    actionbar {
+                      - "§cInsufficient funds"
+                    }
+              }
+        15:
+          material: "GOLDEN_APPLE"
+          amount: "1"
+          name: "§6Buy Golden Apple"
+          lore:
+            - "§7Cost: §b$25"
+          glow: "false"
+          onClick:
+            - |
+              economy {
+                - "remove:25"
+              }
+            - |
+              message {
+                - "§ePurchased a golden apple for $25"
+              }
   main_hub:
     type: "SIMPLE"
     title: "§a§l⚡ BedrockGUI Action Test Hub"

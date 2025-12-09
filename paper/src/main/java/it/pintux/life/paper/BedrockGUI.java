@@ -116,6 +116,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
+        it.pintux.life.paper.platform.PaperJavaMenuManager javaMenuManager = new it.pintux.life.paper.platform.PaperJavaMenuManager(this, messageData);
+        getServer().getPluginManager().registerEvents(javaMenuManager, this);
+        formMenuUtil.setJavaMenuManager(javaMenuManager);
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
         if (DependencyValidator.isPluginCompatible("PlaceholderAPI", "2.10.0")) {

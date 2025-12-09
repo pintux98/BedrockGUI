@@ -97,13 +97,6 @@ public class MessageActionHandler extends BaseActionHandler {
 
                 if (i < messages.size() - 1) {
                     results.append("\n");
-
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
                 }
 
             } catch (Exception e) {
