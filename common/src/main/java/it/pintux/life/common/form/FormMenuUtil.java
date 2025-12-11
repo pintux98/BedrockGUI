@@ -280,6 +280,96 @@ public class FormMenuUtil {
                         itemMap.put(slot, jmItem);
                     }
                     it.pintux.life.common.form.obj.JavaMenuDefinition jdef = new it.pintux.life.common.form.obj.JavaMenuDefinition(javaType, javaTitle, size, itemMap);
+                    java.util.List<it.pintux.life.common.form.obj.JavaMenuFill> fills = new java.util.ArrayList<>();
+                    for (String fillKey : config.getKeys("forms." + key + ".java.fills")) {
+                        String base = "forms." + key + ".java.fills." + fillKey;
+                        String typeStr = config.getString(base + ".type");
+                        it.pintux.life.common.form.obj.JavaFillType ftype = null;
+                        if (typeStr != null) {
+                            try { ftype = it.pintux.life.common.form.obj.JavaFillType.valueOf(typeStr.trim().toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                        }
+                        Integer rowVal = null;
+                        Integer colVal = null;
+                        String rowStr = config.getString(base + ".row");
+                        String colStr = config.getString(base + ".column");
+                        try { if (rowStr != null) rowVal = Integer.parseInt(rowStr.trim()); } catch (NumberFormatException ignored) {}
+                        try { if (colStr != null) colVal = Integer.parseInt(colStr.trim()); } catch (NumberFormatException ignored) {}
+                        String itemBase = base + ".item";
+                        String material = config.getString(itemBase + ".material");
+                        String amountStr = config.getString(itemBase + ".amount", "1");
+                        int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                        String itemName = config.getString(itemBase + ".name");
+                        java.util.List<String> lore = config.getStringList(itemBase + ".lore");
+                        boolean glow = "true".equalsIgnoreCase(config.getString(itemBase + ".glow", "false"));
+                        it.pintux.life.common.form.obj.JavaMenuItem fillItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                        java.util.List<ActionSystem.Action> fActions = new java.util.ArrayList<>();
+                        java.util.List<String> onClickFill = null;
+                        try { onClickFill = config.getStringList(itemBase + ".onClick"); } catch (Exception ignored) {}
+                        if (onClickFill != null && !onClickFill.isEmpty()) {
+                            for (String block : onClickFill) {
+                                String trimmed = block != null ? block.trim() : null;
+                                if (trimmed != null && !trimmed.isEmpty()) {
+                                    ActionSystem.Action a = actionExecutor.parseAction(trimmed);
+                                    if (a != null) fActions.add(a);
+                                }
+                            }
+                        } else {
+                            String single = config.getString(itemBase + ".onClick");
+                            if (single != null && !single.trim().isEmpty()) {
+                                ActionSystem.Action a = actionExecutor.parseAction(single.trim());
+                                if (a != null) fActions.add(a);
+                            }
+                        }
+                        if (ftype != null) {
+                            fills.add(new it.pintux.life.common.form.obj.JavaMenuFill(ftype, rowVal, colVal, fillItem, fActions));
+                        }
+                    }
+                    if (fills.isEmpty()) {
+                        String base = "forms." + key + ".java.fill";
+                        String typeStr = config.getString(base + ".type");
+                        it.pintux.life.common.form.obj.JavaFillType ftype = null;
+                        if (typeStr != null) {
+                            try { ftype = it.pintux.life.common.form.obj.JavaFillType.valueOf(typeStr.trim().toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                        }
+                        if (ftype != null) {
+                            Integer rowVal = null;
+                            Integer colVal = null;
+                            String rowStr = config.getString(base + ".row");
+                            String colStr = config.getString(base + ".column");
+                            try { if (rowStr != null) rowVal = Integer.parseInt(rowStr.trim()); } catch (NumberFormatException ignored) {}
+                            try { if (colStr != null) colVal = Integer.parseInt(colStr.trim()); } catch (NumberFormatException ignored) {}
+                            String itemBase = base + ".item";
+                            String material = config.getString(itemBase + ".material");
+                            String amountStr = config.getString(itemBase + ".amount", "1");
+                            int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                            String itemName = config.getString(itemBase + ".name");
+                            java.util.List<String> lore = config.getStringList(itemBase + ".lore");
+                            boolean glow = "true".equalsIgnoreCase(config.getString(itemBase + ".glow", "false"));
+                            it.pintux.life.common.form.obj.JavaMenuItem fillItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                            java.util.List<ActionSystem.Action> fActions = new java.util.ArrayList<>();
+                            java.util.List<String> onClickFill = null;
+                            try { onClickFill = config.getStringList(itemBase + ".onClick"); } catch (Exception ignored) {}
+                            if (onClickFill != null && !onClickFill.isEmpty()) {
+                                for (String block : onClickFill) {
+                                    String trimmed = block != null ? block.trim() : null;
+                                    if (trimmed != null && !trimmed.isEmpty()) {
+                                        ActionSystem.Action a = actionExecutor.parseAction(trimmed);
+                                        if (a != null) fActions.add(a);
+                                    }
+                                }
+                            } else {
+                                String single = config.getString(itemBase + ".onClick");
+                                if (single != null && !single.trim().isEmpty()) {
+                                    ActionSystem.Action a = actionExecutor.parseAction(single.trim());
+                                    if (a != null) fActions.add(a);
+                                }
+                            }
+                            fills.add(new it.pintux.life.common.form.obj.JavaMenuFill(ftype, rowVal, colVal, fillItem, fActions));
+                        }
+                    }
+                    if (!fills.isEmpty()) {
+                        jdef.setFills(fills);
+                    }
                     menu.setJavaMenu(jdef);
                 }
             }

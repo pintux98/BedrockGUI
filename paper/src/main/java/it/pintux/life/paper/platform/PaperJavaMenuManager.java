@@ -2,10 +2,7 @@ package it.pintux.life.paper.platform;
 
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.form.FormMenuUtil;
-import it.pintux.life.common.form.obj.FormMenu;
-import it.pintux.life.common.form.obj.JavaMenuDefinition;
-import it.pintux.life.common.form.obj.JavaMenuItem;
-import it.pintux.life.common.form.obj.JavaMenuType;
+import it.pintux.life.common.form.obj.*;
 import it.pintux.life.common.platform.PlatformJavaMenuManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
@@ -38,6 +35,7 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
         final Map<Integer, java.util.List<ActionSystem.Action>> actions;
         final Map<String, String> placeholders;
         final FormMenuUtil util;
+
         Session(UUID playerId, Inventory inv, Map<Integer, java.util.List<ActionSystem.Action>> actions,
                 Map<String, String> placeholders, FormMenuUtil util) {
             this.playerId = playerId;
@@ -91,6 +89,52 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
             }
             if (item.getActions() != null && !item.getActions().isEmpty()) {
                 actions.put(slot, item.getActions());
+            }
+        }
+
+        if (jdef.getType() == JavaMenuType.CHEST && jdef.getFills() != null && !jdef.getFills().isEmpty()) {
+            int rows = inv.getSize() / 9;
+            for (JavaMenuFill fill : jdef.getFills()) {
+                ItemStack stack = buildItem(fill.getItem(), player, placeholders);
+                java.util.List<ActionSystem.Action> fActions = fill.getActions();
+                switch (fill.getType()) {
+                    case EMPTY -> {
+                        for (int slot = 0; slot < inv.getSize(); slot++) {
+                            ItemStack existing = inv.getItem(slot);
+                            if (existing == null || existing.getType() == Material.AIR) {
+                                inv.setItem(slot, stack);
+                                if (fActions != null && !fActions.isEmpty()) actions.put(slot, fActions);
+                            }
+                        }
+                    }
+                    case ROW -> {
+                        int row = fill.getRow() != null ? fill.getRow() : 1;
+                        if (row < 1) row = 1;
+                        if (row > rows) row = rows;
+                        int start = (row - 1) * 9;
+                        for (int slot = start; slot < start + 9; slot++) {
+                            ItemStack existing = inv.getItem(slot);
+                            if (existing == null || existing.getType() == Material.AIR) {
+                                inv.setItem(slot, stack);
+                                if (fActions != null && !fActions.isEmpty()) actions.put(slot, fActions);
+                            }
+                        }
+                    }
+                    case COLUMN -> {
+                        int col = fill.getColumn() != null ? fill.getColumn() : 1;
+                        if (col < 1) col = 1;
+                        if (col > 9) col = 9;
+                        int base = col - 1;
+                        for (int r = 0; r < rows; r++) {
+                            int slot = base + r * 9;
+                            ItemStack existing = inv.getItem(slot);
+                            if (existing == null || existing.getType() == Material.AIR) {
+                                inv.setItem(slot, stack);
+                                if (fActions != null && !fActions.isEmpty()) actions.put(slot, fActions);
+                            }
+                        }
+                    }
+                }
             }
         }
 

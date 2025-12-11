@@ -7,6 +7,7 @@ public class JavaMenuDefinition {
     private final String title;
     private final int size;
     private final Map<Integer, JavaMenuItem> items;
+    private java.util.List<JavaMenuFill> fills;
 
     public JavaMenuDefinition(JavaMenuType type, String title, int size, Map<Integer, JavaMenuItem> items) {
         this.type = type;
@@ -29,6 +30,14 @@ public class JavaMenuDefinition {
 
     public Map<Integer, JavaMenuItem> getItems() {
         return items;
+    }
+
+    public java.util.List<JavaMenuFill> getFills() {
+        return fills;
+    }
+
+    public void setFills(java.util.List<JavaMenuFill> fills) {
+        this.fills = fills;
     }
 }
 
