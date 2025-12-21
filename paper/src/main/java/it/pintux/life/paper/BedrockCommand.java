@@ -56,11 +56,6 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
 
-            PaperPlayerChecker playerChecker = new PaperPlayerChecker();
-            if (!playerChecker.isBedrockPlayer(player.getUniqueId())) {
-                sender.sendMessage(plugin.getMessageData().getValue(MessageData.MENU_NOJAVA, null, null));
-                return true;
-            }
             String menuName = args[1];
             String[] menuArgs = Arrays.copyOfRange(args, 2, args.length);
             PaperPlayer player1 = new PaperPlayer(player);

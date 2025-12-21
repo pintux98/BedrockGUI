@@ -32,6 +32,7 @@ public class FormMenuUtil {
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
     private it.pintux.life.common.platform.PlatformAssetServer assetServer;
+    private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
     private DelayActionHandler delayActionHandler;
@@ -148,16 +149,6 @@ public class FormMenuUtil {
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
 
-
-                    String priorityStr = config.getString("forms." + key + ".buttons." + button + ".priority");
-                    Integer priority = null;
-                    if (priorityStr != null) {
-                        try {
-                            priority = Integer.parseInt(priorityStr);
-                        } catch (NumberFormatException e) {
-
-                        }
-                    }
                     String viewRequirement = config.getString("forms." + key + ".buttons." + button + ".view_requirement");
 
 
@@ -224,6 +215,154 @@ public class FormMenuUtil {
             List<String> globalActions = config.getStringList("forms." + key + ".global_actions");
 
             FormMenu menu = new FormMenu(command, commandIntercept, permission, title, description, type, buttons, components, globalActions);
+
+            String javaTypeStr = config.getString("forms." + key + ".java.type");
+            if (javaTypeStr != null && !javaTypeStr.isEmpty()) {
+                it.pintux.life.common.form.obj.JavaMenuType javaType;
+                try {
+                    javaType = it.pintux.life.common.form.obj.JavaMenuType.valueOf(javaTypeStr.trim().toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    logger.warn("Invalid java menu type for form '" + key + "': " + javaTypeStr);
+                    javaType = null;
+                }
+                if (javaType != null) {
+                    String javaTitle = config.getString("forms." + key + ".java.title", title);
+                    int size = 0;
+                    String sizeStr = config.getString("forms." + key + ".java.size");
+                    if (sizeStr != null) {
+                        try { size = Integer.parseInt(sizeStr); } catch (NumberFormatException ignored) {}
+                    }
+                    java.util.Map<Integer, it.pintux.life.common.form.obj.JavaMenuItem> itemMap = new java.util.HashMap<>();
+                    for (String itemKey : config.getKeys("forms." + key + ".java.items")) {
+                        String base = "forms." + key + ".java.items." + itemKey;
+                        String material = config.getString(base + ".material");
+                        String amountStr = config.getString(base + ".amount", "1");
+                        int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                        String itemName = config.getString(base + ".name");
+                        java.util.List<String> lore = config.getStringList(base + ".lore");
+                        boolean glow = "true".equalsIgnoreCase(config.getString(base + ".glow", "false"));
+                        it.pintux.life.common.form.obj.JavaMenuItem jmItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                        java.util.List<ActionSystem.Action> parsedActions = new java.util.ArrayList<>();
+                        java.util.List<String> onClickList = null;
+                        try {
+                            onClickList = config.getStringList(base + ".onClick");
+                        } catch (Exception ignored) {}
+                        if (onClickList != null && !onClickList.isEmpty()) {
+                            for (String block : onClickList) {
+                                String trimmed = block != null ? block.trim() : null;
+                                if (trimmed != null && !trimmed.isEmpty()) {
+                                    ActionSystem.Action action = actionExecutor.parseAction(trimmed);
+                                    if (action != null) parsedActions.add(action);
+                                }
+                            }
+                        } else {
+                            String single = config.getString(base + ".onClick");
+                            if (single != null && !single.trim().isEmpty()) {
+                                ActionSystem.Action action = actionExecutor.parseAction(single.trim());
+                                if (action != null) parsedActions.add(action);
+                            }
+                        }
+                        if (!parsedActions.isEmpty()) {
+                            jmItem.setActions(parsedActions);
+                        }
+                        int slot;
+                        try { slot = Integer.parseInt(itemKey); } catch (NumberFormatException ex) { slot = Integer.parseInt(config.getString(base + ".slot", "0")); }
+                        itemMap.put(slot, jmItem);
+                    }
+                    it.pintux.life.common.form.obj.JavaMenuDefinition jdef = new it.pintux.life.common.form.obj.JavaMenuDefinition(javaType, javaTitle, size, itemMap);
+                    java.util.List<it.pintux.life.common.form.obj.JavaMenuFill> fills = new java.util.ArrayList<>();
+                    for (String fillKey : config.getKeys("forms." + key + ".java.fills")) {
+                        String base = "forms." + key + ".java.fills." + fillKey;
+                        String typeStr = config.getString(base + ".type");
+                        it.pintux.life.common.form.obj.JavaFillType ftype = null;
+                        if (typeStr != null) {
+                            try { ftype = it.pintux.life.common.form.obj.JavaFillType.valueOf(typeStr.trim().toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                        }
+                        Integer rowVal = null;
+                        Integer colVal = null;
+                        String rowStr = config.getString(base + ".row");
+                        String colStr = config.getString(base + ".column");
+                        try { if (rowStr != null) rowVal = Integer.parseInt(rowStr.trim()); } catch (NumberFormatException ignored) {}
+                        try { if (colStr != null) colVal = Integer.parseInt(colStr.trim()); } catch (NumberFormatException ignored) {}
+                        String itemBase = base + ".item";
+                        String material = config.getString(itemBase + ".material");
+                        String amountStr = config.getString(itemBase + ".amount", "1");
+                        int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                        String itemName = config.getString(itemBase + ".name");
+                        java.util.List<String> lore = config.getStringList(itemBase + ".lore");
+                        boolean glow = "true".equalsIgnoreCase(config.getString(itemBase + ".glow", "false"));
+                        it.pintux.life.common.form.obj.JavaMenuItem fillItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                        java.util.List<ActionSystem.Action> fActions = new java.util.ArrayList<>();
+                        java.util.List<String> onClickFill = null;
+                        try { onClickFill = config.getStringList(itemBase + ".onClick"); } catch (Exception ignored) {}
+                        if (onClickFill != null && !onClickFill.isEmpty()) {
+                            for (String block : onClickFill) {
+                                String trimmed = block != null ? block.trim() : null;
+                                if (trimmed != null && !trimmed.isEmpty()) {
+                                    ActionSystem.Action a = actionExecutor.parseAction(trimmed);
+                                    if (a != null) fActions.add(a);
+                                }
+                            }
+                        } else {
+                            String single = config.getString(itemBase + ".onClick");
+                            if (single != null && !single.trim().isEmpty()) {
+                                ActionSystem.Action a = actionExecutor.parseAction(single.trim());
+                                if (a != null) fActions.add(a);
+                            }
+                        }
+                        if (ftype != null) {
+                            fills.add(new it.pintux.life.common.form.obj.JavaMenuFill(ftype, rowVal, colVal, fillItem, fActions));
+                        }
+                    }
+                    if (fills.isEmpty()) {
+                        String base = "forms." + key + ".java.fill";
+                        String typeStr = config.getString(base + ".type");
+                        it.pintux.life.common.form.obj.JavaFillType ftype = null;
+                        if (typeStr != null) {
+                            try { ftype = it.pintux.life.common.form.obj.JavaFillType.valueOf(typeStr.trim().toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                        }
+                        if (ftype != null) {
+                            Integer rowVal = null;
+                            Integer colVal = null;
+                            String rowStr = config.getString(base + ".row");
+                            String colStr = config.getString(base + ".column");
+                            try { if (rowStr != null) rowVal = Integer.parseInt(rowStr.trim()); } catch (NumberFormatException ignored) {}
+                            try { if (colStr != null) colVal = Integer.parseInt(colStr.trim()); } catch (NumberFormatException ignored) {}
+                            String itemBase = base + ".item";
+                            String material = config.getString(itemBase + ".material");
+                            String amountStr = config.getString(itemBase + ".amount", "1");
+                            int amount = 1; try { amount = Integer.parseInt(amountStr); } catch (NumberFormatException ignored) {}
+                            String itemName = config.getString(itemBase + ".name");
+                            java.util.List<String> lore = config.getStringList(itemBase + ".lore");
+                            boolean glow = "true".equalsIgnoreCase(config.getString(itemBase + ".glow", "false"));
+                            it.pintux.life.common.form.obj.JavaMenuItem fillItem = new it.pintux.life.common.form.obj.JavaMenuItem(material, amount, itemName, lore, glow);
+                            java.util.List<ActionSystem.Action> fActions = new java.util.ArrayList<>();
+                            java.util.List<String> onClickFill = null;
+                            try { onClickFill = config.getStringList(itemBase + ".onClick"); } catch (Exception ignored) {}
+                            if (onClickFill != null && !onClickFill.isEmpty()) {
+                                for (String block : onClickFill) {
+                                    String trimmed = block != null ? block.trim() : null;
+                                    if (trimmed != null && !trimmed.isEmpty()) {
+                                        ActionSystem.Action a = actionExecutor.parseAction(trimmed);
+                                        if (a != null) fActions.add(a);
+                                    }
+                                }
+                            } else {
+                                String single = config.getString(itemBase + ".onClick");
+                                if (single != null && !single.trim().isEmpty()) {
+                                    ActionSystem.Action a = actionExecutor.parseAction(single.trim());
+                                    if (a != null) fActions.add(a);
+                                }
+                            }
+                            fills.add(new it.pintux.life.common.form.obj.JavaMenuFill(ftype, rowVal, colVal, fillItem, fActions));
+                        }
+                    }
+                    if (!fills.isEmpty()) {
+                        jdef.setFills(fills);
+                    }
+                    menu.setJavaMenu(jdef);
+                }
+            }
             formMenus.put(key.toLowerCase(), menu);
             logger.info("Loaded form: " + key + " type: " + type);
         }
@@ -314,6 +453,12 @@ public class FormMenuUtil {
         Map<String, String> placeholders = new HashMap<>();
         for (int i = 0; i < args.length; i++) {
             placeholders.put(String.valueOf(i + 1), args[i]);
+        }
+
+        boolean isBedrock = formSender != null && formSender.isBedrockPlayer(player.getUniqueId());
+        if (!isBedrock && javaMenuManager != null && menu.getJavaMenu() != null) {
+            javaMenuManager.openJavaMenu(player, menu, placeholders, this);
+            return;
         }
 
         switch (type.toUpperCase()) {
@@ -444,7 +589,10 @@ public class FormMenuUtil {
 
                 String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
                 String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
-                effectiveImage = mapImageSource(effectiveImage);
+                if (effectiveImage != null) {
+                    effectiveImage = replacePlaceholders(effectiveImage, placeholders, player, messageData);
+                    effectiveImage = mapImageSource(effectiveImage);
+                }
                 String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
 
 
@@ -461,7 +609,9 @@ public class FormMenuUtil {
 
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
                 if (button.getImage() != null) {
-                    String src = mapImageSource(button.getImage());
+                    String srcRaw = button.getImage();
+                    String srcProcessed = replacePlaceholders(srcRaw, placeholders, player, messageData);
+                    String src = mapImageSource(srcProcessed);
                     formBuilder.button(buttonText, FormImage.Type.URL, src);
                 } else {
                     formBuilder.button(buttonText);
@@ -1018,16 +1168,47 @@ public class FormMenuUtil {
         this.assetServer = assetServer;
     }
 
+    public void setJavaMenuManager(it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager) {
+        this.javaMenuManager = javaMenuManager;
+    }
+
     private String mapImageSource(String image) {
         if (image == null) return null;
         String trimmed = image.trim();
         if (ValidationUtils.isNullOrEmpty(trimmed)) return null;
+
+        if (trimmed.startsWith("http://textures.minecraft.net/texture/") ||
+            trimmed.startsWith("https://textures.minecraft.net/texture/")) {
+            String hash = trimmed.substring(trimmed.lastIndexOf('/') + 1);
+            return "https://mc-heads.net/head/" + hash + "/64";
+        }
+
+        if (trimmed.matches("^[A-Za-z0-9+/=]+$") && trimmed.length() > 40) {
+            try {
+                byte[] decoded = java.util.Base64.getDecoder().decode(trimmed);
+                String json = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile("\"url\"\\s*:\\s*\"https?://textures\\.minecraft\\.net/texture/([^\"]+)\"");
+                java.util.regex.Matcher m = p.matcher(json);
+                if (m.find()) {
+                    String hash = m.group(1);
+                    return "https://mc-heads.net/head/" + hash + "/64";
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
         boolean isUrl = trimmed.startsWith("http://") || trimmed.startsWith("https://");
         boolean isTexture = trimmed.startsWith("textures/");
         boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$") && !isUrl && !isTexture;
+
         if (isLocal && assetServer != null && assetServer.isAvailable()) {
             return assetServer.getAssetUrl(trimmed);
         }
+
+        if (!isUrl && !isTexture && !isLocal && trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
+            return "https://mc-heads.net/head/" + trimmed + "/64";
+        }
+
         return trimmed;
     }
 }

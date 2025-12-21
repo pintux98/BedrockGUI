@@ -45,6 +45,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
+import it.pintux.life.paper.utils.SchedulerAdapter;
 
 public class Metrics {
 
@@ -94,27 +95,36 @@ public class Metrics {
         boolean logResponseStatusText = config.getBoolean("logResponseStatusText", false);
         boolean isFolia = false;
         try {
-            isFolia = Class.forName("io.papermc.paper.threadedregions.RegionizedServer") != null;
+            if (Class.forName("io.papermc.paper.threadedregions.RegionizedServer") != null) {
+                isFolia = true;
+            }
         } catch (Exception e) {
         }
+        if (!isFolia) {
+            try {
+                if (Class.forName("io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler") != null) {
+                    isFolia = true;
+                }
+            } catch (Exception e) {
+            }
+        }
+        if (!isFolia) {
+            try {
+                if (Bukkit.class.getMethod("getGlobalRegionScheduler") != null) {
+                    isFolia = true;
+                }
+            } catch (Exception e) {
+            }
+        }
         metricsBase =
-                new // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        // See https://github.com/Bastian/bstats-metrics/pull/126
-                        MetricsBase(
+                new MetricsBase(
                         "bukkit",
                         serverUUID,
                         serviceId,
                         enabled,
                         this::appendPlatformData,
                         this::appendServiceData,
-                        isFolia
-                                ? null
-                                : submitDataTask -> Bukkit.getScheduler().runTask(plugin, submitDataTask),
+                        submitDataTask -> SchedulerAdapter.runSync(plugin, submitDataTask),
                         plugin::isEnabled,
                         (message, error) -> this.plugin.getLogger().log(Level.WARNING, message, error),
                         (message) -> this.plugin.getLogger().log(Level.INFO, message),

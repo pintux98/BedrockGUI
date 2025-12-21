@@ -87,11 +87,38 @@ public final class ValidationUtils {
             return false;
         }
 
+        String trimmed = imageSource.trim();
+        if (trimmed.isEmpty()) return false;
 
-        if (imageSource.startsWith("http://") || imageSource.startsWith("https://") || imageSource.startsWith("textures/")) {
+        // Placeholders are resolved at runtime
+        if (trimmed.contains("%")) {
             return true;
         }
-        return imageSource.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif|webp)$");
+
+        // Direct URLs and internal texture references
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("textures/")) {
+            return true;
+        }
+
+        // Mojang texture URLs
+        if (trimmed.startsWith("http://textures.minecraft.net/texture/") ||
+            trimmed.startsWith("https://textures.minecraft.net/texture/")) {
+            return true;
+        }
+
+        // Base64-encoded textures from Minecraft-Heads.com API (JSON with textures.SKIN.url)
+        // Accept typical Base64 character set and a reasonable minimum length
+        if (trimmed.matches("^[A-Za-z0-9+/=]+$") && trimmed.length() > 40) {
+            return true;
+        }
+
+        // Plain identifiers (player name, UUID, texture hash) mapped via image mapper
+        if (trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
+            return true;
+        }
+
+        // Local file references
+        return trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif|webp)$");
     }
 
 
