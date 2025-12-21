@@ -256,6 +256,13 @@ public class MessageData {
         }
 
         value = config.setPlaceholders(player, value);
+        if (player != null && value != null && value.contains("%")) {
+            String name = player.getName();
+            String uuid = player.getUniqueId().toString();
+            value = value.replace("%player_name%", name)
+                         .replace("%player%", name)
+                         .replace("%player_uuid%", uuid);
+        }
         return value;
     }
 

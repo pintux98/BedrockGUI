@@ -149,16 +149,6 @@ public class FormMenuUtil {
                         onClick = config.getString("forms." + key + ".buttons." + button + ".onClick");
                     }
 
-
-                    String priorityStr = config.getString("forms." + key + ".buttons." + button + ".priority");
-                    Integer priority = null;
-                    if (priorityStr != null) {
-                        try {
-                            priority = Integer.parseInt(priorityStr);
-                        } catch (NumberFormatException e) {
-
-                        }
-                    }
                     String viewRequirement = config.getString("forms." + key + ".buttons." + button + ".view_requirement");
 
 
@@ -599,7 +589,10 @@ public class FormMenuUtil {
 
                 String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
                 String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
-                effectiveImage = mapImageSource(effectiveImage);
+                if (effectiveImage != null) {
+                    effectiveImage = replacePlaceholders(effectiveImage, placeholders, player, messageData);
+                    effectiveImage = mapImageSource(effectiveImage);
+                }
                 String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
 
 
@@ -616,7 +609,9 @@ public class FormMenuUtil {
 
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
                 if (button.getImage() != null) {
-                    String src = mapImageSource(button.getImage());
+                    String srcRaw = button.getImage();
+                    String srcProcessed = replacePlaceholders(srcRaw, placeholders, player, messageData);
+                    String src = mapImageSource(srcProcessed);
                     formBuilder.button(buttonText, FormImage.Type.URL, src);
                 } else {
                     formBuilder.button(buttonText);
@@ -1181,12 +1176,39 @@ public class FormMenuUtil {
         if (image == null) return null;
         String trimmed = image.trim();
         if (ValidationUtils.isNullOrEmpty(trimmed)) return null;
+
+        if (trimmed.startsWith("http://textures.minecraft.net/texture/") ||
+            trimmed.startsWith("https://textures.minecraft.net/texture/")) {
+            String hash = trimmed.substring(trimmed.lastIndexOf('/') + 1);
+            return "https://mc-heads.net/head/" + hash + "/64";
+        }
+
+        if (trimmed.matches("^[A-Za-z0-9+/=]+$") && trimmed.length() > 40) {
+            try {
+                byte[] decoded = java.util.Base64.getDecoder().decode(trimmed);
+                String json = new String(decoded, java.nio.charset.StandardCharsets.UTF_8);
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile("\"url\"\\s*:\\s*\"https?://textures\\.minecraft\\.net/texture/([^\"]+)\"");
+                java.util.regex.Matcher m = p.matcher(json);
+                if (m.find()) {
+                    String hash = m.group(1);
+                    return "https://mc-heads.net/head/" + hash + "/64";
+                }
+            } catch (IllegalArgumentException ignored) {
+            }
+        }
+
         boolean isUrl = trimmed.startsWith("http://") || trimmed.startsWith("https://");
         boolean isTexture = trimmed.startsWith("textures/");
         boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$") && !isUrl && !isTexture;
+
         if (isLocal && assetServer != null && assetServer.isAvailable()) {
             return assetServer.getAssetUrl(trimmed);
         }
+
+        if (!isUrl && !isTexture && !isLocal && trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
+            return "https://mc-heads.net/head/" + trimmed + "/64";
+        }
+
         return trimmed;
     }
 }
