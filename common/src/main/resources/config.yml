@@ -1,22 +1,3 @@
-settings:
-  debug: true
-  placeholder_refresh_interval: 30
-  default_sound: "ui.button.click"
-  max_forms_per_player: 10
-  form_timeout: 300000
-  enable_analytics: true
-  pagination:
-    button_order: "next_first"
-    default_previous_text: "← Previous Page"
-    default_next_text: "Next Page →"
-
-commands:
-  gui:
-    description: "Open the main BedrockGUI hub"
-    permission: "bedrockgui.use"
-    aliases: [ "menu", "hub", "main" ]
-    form: "main_hub"
-
 forms:
   dual_demo:
     type: "SIMPLE"
@@ -754,53 +735,6 @@ forms:
             open {
               - "advanced_test_menu"
             }
-
-messages:
-  prefix: "§8[§aBedrockGUI§8] §r"
-  
-  # Action execution messages
-  action_success: "§aAction executed successfully!"
-  action_failed: "§cAction execution failed!"
-  action_partial_success: "§eAction partially completed!"
-  
-  # Test sequence messages
-  test_started: "§eTest sequence started..."
-  test_completed: "§aTest sequence completed!"
-  test_failed: "§cTest sequence failed!"
-  
-  # Error messages
-  invalid_parameters: "§cInvalid parameters provided!"
-  execution_error: "§cError during action execution!"
-  format_error: "§cInvalid action format!"
-  
-  # Success messages for specific actions
-  command_success: "§aCommand executed: §7{command}"
-  message_success: "§aMessage sent: §7{message}"
-  sound_success: "§aSound played: §7{sound}"
-  economy_success: "§aEconomy operation: §7{operation}"
-  title_success: "§aTitle displayed: §7{title}"
-
-placeholders:
-  # Test placeholders
-  test_value: "TestValue123"
-  reward_amount: "1000"
-  vip_price: "5000"
-  
-  # Server info placeholders
-  server_name: "BedrockGUI Test Server"
-  server_version: "1.20.4"
-  total_players: "10"
-
-permissions:
-  # Basic permissions
-  use: "bedrockgui.use"
-  admin: "bedrockgui.admin"
-  vip: "bedrockgui.vip"
-  
-  # Test permissions
-  test: "bedrockgui.test"
-  advanced: "bedrockgui.test.advanced"
-  performance: "bedrockgui.test.performance"
 
 
 

@@ -39,21 +39,24 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
 
     protected ActionSystem.ActionResult createSuccessResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-        String message = messageData.getValueNoPrefix(messageKey, replacements, player);
+        String normalizedKey = normalizeMessageKey(messageKey);
+        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.success(message);
     }
 
 
     protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-        String message = messageData.getValueNoPrefix(messageKey, replacements, player);
+        String normalizedKey = normalizeMessageKey(messageKey);
+        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.failure(message);
     }
 
 
     protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player, Throwable exception) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-        String message = messageData.getValueNoPrefix(messageKey, replacements, player);
+        String normalizedKey = normalizeMessageKey(messageKey);
+        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.failure(message, exception);
     }
 
@@ -205,6 +208,14 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
 
         String pattern = "^" + actionType + "\\s*\\{[\\s\\S]*\\}$";
         return trimmed.matches(pattern);
+    }
+
+    private String normalizeMessageKey(String key) {
+        if (key == null) return null;
+        if (key.matches("^[A-Z0-9_\\.]+$")) {
+            return key.toLowerCase().replace('_', '.');
+        }
+        return key;
     }
 
 

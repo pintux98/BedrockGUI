@@ -3,6 +3,8 @@ package it.pintux.life.velocity.utils;
 import com.velocitypowered.api.proxy.Player;
 import it.pintux.life.common.utils.FormPlayer;
 import net.kyori.adventure.text.Component;
+import com.google.common.io.ByteArrayDataOutput;
+import com.google.common.io.ByteStreams;
 
 import java.util.UUID;
 
@@ -31,9 +33,22 @@ public class VelocityPlayer implements FormPlayer {
 
     @Override
     public boolean executeAction(String action) {
-        // Actions would be executed on the backend server
-        // This is a simplified implementation
-        return false;
+        try {
+            String cmd = action == null ? "" : action.trim();
+            if (cmd.isEmpty()) return false;
+            player.getCurrentServer().ifPresent(serverConnection -> {
+                ByteArrayDataOutput out = ByteStreams.newDataOutput();
+                out.writeUTF(player.getUniqueId().toString());
+                out.writeUTF(cmd.startsWith("/") ? cmd.substring(1) : cmd);
+                serverConnection.sendPluginMessage(
+                        new com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier("bedrockgui:cmd"),
+                        out.toByteArray()
+                );
+            });
+            return true;
+        } catch (Exception e) {
+            return false;
+        }
     }
 
     @Override

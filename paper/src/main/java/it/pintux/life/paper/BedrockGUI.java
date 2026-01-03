@@ -111,8 +111,10 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         // Register BungeeCord channel
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
+        // Register incoming bridge for proxy-run player commands
+        this.getServer().getMessenger().registerIncomingPluginChannel(this, "bedrockgui:cmd", new it.pintux.life.paper.platform.CommandBridgeListener());
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager);
+        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);

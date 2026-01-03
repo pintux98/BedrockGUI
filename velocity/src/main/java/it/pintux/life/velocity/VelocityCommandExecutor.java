@@ -4,6 +4,7 @@ import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import it.pintux.life.velocity.utils.VelocityPlayer;
 
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -22,7 +23,8 @@ public class VelocityCommandExecutor implements SimpleCommand {
         String[] args = invocation.arguments();
 
         if (args.length == 0) {
-            source.sendMessage(Component.text("Usage: /bedrockgui <reload | open>", NamedTextColor.RED));
+            String msg = plugin.getMessageData().getValueNoPrefix("usage", null, null);
+            source.sendMessage(Component.text(msg.isEmpty() ? "Usage: /bedrockgui <reload | open>" : msg, NamedTextColor.RED));
             return;
         }
 
@@ -31,18 +33,21 @@ public class VelocityCommandExecutor implements SimpleCommand {
         switch (subCommand) {
             case "reload":
                 if (!source.hasPermission("bedrockgui.admin")) {
-                    source.sendMessage(Component.text("You don't have permission to use this command.", NamedTextColor.RED));
+                    String msg = plugin.getMessageData().getValue("no-permission", null, null);
+                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
                     return;
                 }
                 
                 plugin.getLogger().info("Reloading BedrockGUI...");
                 plugin.reloadData();
-                source.sendMessage(Component.text("BedrockGUI reloaded successfully!", NamedTextColor.GREEN));
+                String msg = plugin.getMessageData().getValue("reload-success", null, null);
+                source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.GREEN));
                 break;
                 
             case "open":
                 if (args.length < 2) {
-                    source.sendMessage(Component.text("Usage: /bedrockgui open <menu> [player]", NamedTextColor.RED));
+                    String umsg = plugin.getMessageData().getValueNoPrefix("usage-open", null, null);
+                    source.sendMessage(Component.text(umsg.isEmpty() ? "Usage: /bedrockgui open <menu> [player]" : umsg, NamedTextColor.RED));
                     return;
                 }
                 
@@ -53,25 +58,33 @@ public class VelocityCommandExecutor implements SimpleCommand {
                 if (targetPlayer != null) {
                     plugin.getServer().getPlayer(targetPlayer).ifPresentOrElse(
                         player -> {
-                            // Open menu for specific player
-                            plugin.getLogger().info("Opening menu " + menuName + " for player " + targetPlayer);
-                            source.sendMessage(Component.text("Menu " + menuName + " opened for " + targetPlayer, NamedTextColor.GREEN));
+                            VelocityPlayer vp = new VelocityPlayer(player);
+                            plugin.getApi().openMenu(vp, menuName);
+                            String ok = plugin.getMessageData().getValue("menu-opened", java.util.Map.of("menu", menuName), vp);
+                            source.sendMessage(Component.text(ok.replace("§", ""), NamedTextColor.GREEN));
                         },
-                        () -> source.sendMessage(Component.text("Player not found: " + targetPlayer, NamedTextColor.RED))
+                        () -> {
+                            String nf = plugin.getMessageData().getValue("player-not-found", java.util.Map.of("player", targetPlayer), null);
+                            source.sendMessage(Component.text(nf.replace("§", ""), NamedTextColor.RED));
+                        }
                     );
                 } else {
                     if (source instanceof com.velocitypowered.api.proxy.Player) {
                         com.velocitypowered.api.proxy.Player player = (com.velocitypowered.api.proxy.Player) source;
-                        plugin.getLogger().info("Opening menu " + menuName + " for " + player.getUsername());
-                        source.sendMessage(Component.text("Menu " + menuName + " opened!", NamedTextColor.GREEN));
+                        VelocityPlayer vp = new VelocityPlayer(player);
+                        plugin.getApi().openMenu(vp, menuName);
+                        String ok = plugin.getMessageData().getValue("menu-opened", java.util.Map.of("menu", menuName), vp);
+                        source.sendMessage(Component.text(ok.replace("§", ""), NamedTextColor.GREEN));
                     } else {
-                        source.sendMessage(Component.text("You must specify a player when running from console.", NamedTextColor.RED));
+                        String cmsg = plugin.getMessageData().getValueNoPrefix("console-player-required", null, null);
+                        source.sendMessage(Component.text(cmsg.isEmpty() ? "You must specify a player when running from console." : cmsg, NamedTextColor.RED));
                     }
                 }
                 break;
                 
             default:
-                source.sendMessage(Component.text("Unknown subcommand. Usage: /bedrockgui <reload | open>", NamedTextColor.RED));
+                String umsg2 = plugin.getMessageData().getValueNoPrefix("usage", null, null);
+                source.sendMessage(Component.text(umsg2.isEmpty() ? "Unknown subcommand. Usage: /bedrockgui <reload | open>" : umsg2, NamedTextColor.RED));
                 break;
         }
     }

@@ -189,6 +189,20 @@ public class TitleActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
 
+        // Support new unified format "title { ... }"
+        if (isNewCurlyBraceFormat(trimmed, "title")) {
+            try {
+                java.util.List<String> vals = parseNewFormatValues(trimmed);
+                for (String v : vals) {
+                    if (!isValidSingleTitle(v.trim())) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
 
             String listContent = trimmed.substring(1, trimmed.length() - 1);

@@ -122,13 +122,23 @@ public class BedrockGUI {
 
         // Create API instance
         api = new BedrockGUIApi(config, messageData, commandExecutor, soundManager, economyManager, 
-                               formSender, titleManager, pluginManager, playerManager);
+                               formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler());
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
         logger.info("Using FormMenuUtil from BedrockGUIApi");
         
         logger.info("BedrockGUI for Velocity loaded and enabled");
+
+        try {
+            formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
+                String formCmd = formMenu.getFormCommand();
+                if (formCmd != null && !formCmd.isEmpty()) {
+                    String base = formCmd.trim().split("\\s+")[0].toLowerCase();
+                    server.getCommandManager().register(base, new FormCommand(this, key));
+                }
+            });
+        } catch (Exception ignored) {}
     }
 
     public ProxyServer getServer() {

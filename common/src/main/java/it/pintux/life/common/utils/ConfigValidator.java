@@ -209,13 +209,12 @@ public class ConfigValidator {
 
         if (actionDef.hasAction("delay")) {
             Object delayValue = actionDef.getAction("delay");
-            try {
-                long delay = Long.parseLong(delayValue.toString());
-                if (delay < 0 || delay > 300000) {
-                    validationWarnings.add("Delay value " + delay + "ms may be too large in menu '" + menuName + "' button " + buttonIndex);
+            String delayStr = delayValue != null ? delayValue.toString() : "";
+            ActionSystem.ActionHandler handler = actionRegistry.getHandler("delay");
+            if (handler != null) {
+                if (!handler.isValidAction(delayStr)) {
+                    validationErrors.add("Invalid delay value '" + delayStr + "' in menu '" + menuName + "' button " + buttonIndex);
                 }
-            } catch (NumberFormatException e) {
-                validationErrors.add("Invalid delay value '" + delayValue + "' in menu '" + menuName + "' button " + buttonIndex);
             }
         }
     }

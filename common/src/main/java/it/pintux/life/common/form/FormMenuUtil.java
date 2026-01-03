@@ -28,6 +28,7 @@ public class FormMenuUtil {
     private final PlatformSoundManager soundManager;
     private final PlatformEconomyManager economyManager;
     private final PlatformFormSender formSender;
+    private final PlatformScheduler scheduler;
     private final PlatformTitleManager titleManager;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
@@ -48,7 +49,8 @@ public class FormMenuUtil {
                        PlatformFormSender formSender,
                        PlatformTitleManager titleManager,
                        PlatformPluginManager pluginManager,
-                       PlatformPlayerManager playerManager) {
+                       PlatformPlayerManager playerManager,
+                       PlatformScheduler scheduler) {
         this.config = config;
         formMenus = new HashMap<>();
         this.messageData = messageData;
@@ -59,6 +61,7 @@ public class FormMenuUtil {
         this.titleManager = titleManager;
         this.pluginManager = pluginManager;
         this.playerManager = playerManager;
+        this.scheduler = scheduler;
 
 
         this.actionRegistry = ActionRegistry.getInstance();
@@ -81,10 +84,10 @@ public class FormMenuUtil {
 
     private void registerDefaultActionHandlers() {
 
-        actionRegistry.registerHandler(new CommandActionHandler());
+        actionRegistry.registerHandler(new CommandActionHandler(commandExecutor));
         actionRegistry.registerHandler(new OpenFormActionHandler(this));
         actionRegistry.registerHandler(new MessageActionHandler(playerManager));
-        this.delayActionHandler = new DelayActionHandler(actionExecutor);
+        this.delayActionHandler = new DelayActionHandler(actionExecutor, scheduler);
         actionRegistry.registerHandler(delayActionHandler);
 
 

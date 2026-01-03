@@ -1,6 +1,7 @@
 package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
+import it.pintux.life.common.platform.PlatformCommandExecutor;
 
 
 
@@ -15,6 +16,15 @@ import java.util.Map;
 
 
 public class CommandActionHandler extends BaseActionHandler {
+    private final PlatformCommandExecutor commandExecutor;
+
+    public CommandActionHandler() {
+        this.commandExecutor = null;
+    }
+
+    public CommandActionHandler(PlatformCommandExecutor commandExecutor) {
+        this.commandExecutor = commandExecutor;
+    }
 
     @Override
     public String getActionType() {
@@ -97,11 +107,20 @@ public class CommandActionHandler extends BaseActionHandler {
                     createReplacements("error", "Empty command after processing"), player);
         }
 
-        boolean success = executeWithErrorHandling(
-                () -> player.executeAction("/" + normalizedCommand),
-                "Player command: " + normalizedCommand,
-                player
-        );
+        boolean success;
+        if (commandExecutor != null) {
+            success = executeWithErrorHandling(
+                    () -> commandExecutor.executeAsPlayer(player.getName(), normalizedCommand),
+                    "Player command: " + normalizedCommand,
+                    player
+            );
+        } else {
+            success = executeWithErrorHandling(
+                    () -> player.executeAction("/" + normalizedCommand),
+                    "Player command: " + normalizedCommand,
+                    player
+            );
+        }
 
         if (success) {
             logSuccess("command", normalizedCommand, player);

@@ -45,11 +45,12 @@ public class BedrockGUIApi {
                          PlatformFormSender formSender,
                          PlatformTitleManager platformTitleManager,
                          PlatformPluginManager pluginManager,
-                         PlatformPlayerManager playerManager) {
+                         PlatformPlayerManager playerManager,
+                         it.pintux.life.common.platform.PlatformScheduler scheduler) {
         this.messageData = messageData;
         this.formSender = formSender;
         this.platformTitleManager = platformTitleManager;
-        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager, pluginManager, playerManager);
+        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager, pluginManager, playerManager, scheduler);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
 

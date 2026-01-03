@@ -205,9 +205,22 @@ public class SoundActionHandler extends BaseActionHandler {
             return false;
         }
 
-
         String trimmed = actionValue.trim();
 
+        // Support new unified format "sound { ... }"
+        if (isNewCurlyBraceFormat(trimmed, "sound")) {
+            try {
+                java.util.List<String> values = parseNewFormatValues(trimmed);
+                for (String v : values) {
+                    if (!isValidSingleSound(v.trim())) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
 
             String listContent = trimmed.substring(1, trimmed.length() - 1);

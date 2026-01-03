@@ -118,7 +118,7 @@ public class RandomActionHandler extends BaseActionHandler {
     @Override
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionData);
-        if (!validationResult.isSuccess()) {
+        if (validationResult != null && !validationResult.isSuccess()) {
             return validationResult;
         }
 
@@ -126,7 +126,7 @@ public class RandomActionHandler extends BaseActionHandler {
             List<WeightedAction> weightedActions;
             
             // Check if it's the new YAML format with curly braces
-            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
+            if (isNewCurlyBraceFormat(actionData, "random")) {
                 weightedActions = parseNewFormatRandomActions(actionData, context, player);
             } else {
                 // Legacy format support - pipe-separated
@@ -138,8 +138,18 @@ public class RandomActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
 
-            // Select and execute random action
-            String selectedAction = selectWeightedRandom(weightedActions);
+            // Filter out recursive random entries
+            java.util.List<WeightedAction> filtered = new java.util.ArrayList<>();
+            for (WeightedAction wa : weightedActions) {
+                String a = wa.getAction();
+                if (a != null && !a.trim().matches("^random\\s*\\{[\\s\\S]*\\}$")) {
+                    filtered.add(wa);
+                }
+            }
+            if (filtered.isEmpty()) {
+                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No valid random actions"), player);
+            }
+            String selectedAction = selectWeightedRandom(filtered);
 
             logger.info("Selected random action for player " + player.getName() + ": " + selectedAction + " (1/" + weightedActions.size() + ")");
 
@@ -256,27 +266,19 @@ public class RandomActionHandler extends BaseActionHandler {
 
         String trimmed = actionString.trim();
 
-
         String[] parts = trimmed.split(":");
-        if (parts.length >= 3) {
-
+        // Treat trailing numeric as weight ONLY when there is exactly one colon (format "<type>:<data>[:weight]" is ambiguous)
+        // To avoid misinterpreting economy:add:50 amount as weight, require at most one ':' before weight (i.e., two parts total)
+        if (parts.length == 2) {
             String lastPart = parts[parts.length - 1];
             try {
                 double weight = Double.parseDouble(lastPart);
                 if (weight > 0) {
-
-                    StringBuilder actionBuilder = new StringBuilder();
-                    for (int i = 0; i < parts.length - 1; i++) {
-                        if (i > 0) actionBuilder.append(":");
-                        actionBuilder.append(parts[i]);
-                    }
-                    return new WeightedAction(actionBuilder.toString(), weight);
+                    String actionType = parts[0];
+                    return new WeightedAction(actionType, weight);
                 }
-            } catch (NumberFormatException e) {
-
-            }
+            } catch (NumberFormatException ignored) {}
         }
-
 
         return new WeightedAction(trimmed, 1.0);
     }

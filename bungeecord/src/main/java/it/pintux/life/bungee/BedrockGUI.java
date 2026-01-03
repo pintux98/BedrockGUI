@@ -62,7 +62,7 @@ public class BedrockGUI extends Plugin {
         assetServer.start();
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, soundManager, economyManager,
-                formSender, titleManager, pluginManager, playerManager);
+                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);

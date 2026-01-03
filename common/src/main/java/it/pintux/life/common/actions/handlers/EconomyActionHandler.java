@@ -317,6 +317,21 @@ public class EconomyActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
 
+        // Support new unified format "economy { ... }"
+        if (isNewCurlyBraceFormat(trimmed, "economy")) {
+            try {
+                java.util.List<String> ops = parseNewFormatValues(trimmed);
+                for (String op : ops) {
+                    if (!isValidSingleOperation(op.trim())) {
+                        return false;
+                    }
+                }
+                return true;
+            } catch (Exception e) {
+                return false;
+            }
+        }
+
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
 
             String listContent = trimmed.substring(1, trimmed.length() - 1);

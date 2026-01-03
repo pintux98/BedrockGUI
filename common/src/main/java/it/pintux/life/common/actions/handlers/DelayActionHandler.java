@@ -5,42 +5,28 @@ import it.pintux.life.common.actions.ActionSystem;
 
 
 import it.pintux.life.common.actions.ActionExecutor;
+import it.pintux.life.common.platform.PlatformScheduler;
 import it.pintux.life.common.utils.FormPlayer;
 
 
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 
 public class DelayActionHandler extends BaseActionHandler {
 
     private static final long MAX_DELAY_MS = 30000;
-    private static final ExecutorService executorService = Executors.newCachedThreadPool(r -> {
-        Thread thread = new Thread(r, "DelayActionHandler-" + System.currentTimeMillis());
-        thread.setDaemon(true);
-        return thread;
-    });
 
     private final ActionExecutor actionExecutor;
+    private final PlatformScheduler scheduler;
 
-    public DelayActionHandler(ActionExecutor actionExecutor) {
+    public DelayActionHandler(ActionExecutor actionExecutor, PlatformScheduler scheduler) {
         this.actionExecutor = actionExecutor;
+        this.scheduler = scheduler;
     }
 
 
     public void shutdown() {
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
-            try {
-                if (!executorService.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS)) {
-                    executorService.shutdownNow();
-                }
-            } catch (InterruptedException e) {
-                executorService.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
+        // no-op
     }
 
     @Override
@@ -56,8 +42,8 @@ public class DelayActionHandler extends BaseActionHandler {
         }
 
         try {
-            // Check if it's the new YAML format with curly braces
-            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
+            // Check if it's the new unified format "delay { ... }"
+            if (isNewCurlyBraceFormat(actionData, "delay")) {
                 return executeNewFormatDelay(player, actionData, context);
             }
             
@@ -134,21 +120,28 @@ public class DelayActionHandler extends BaseActionHandler {
         }
 
         logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
-
-        CompletableFuture.runAsync(() -> {
-            try {
-                Thread.sleep(delayMs);
-
-                if (chainedAction != null && !chainedAction.trim().isEmpty()) {
-                    executeChainedAction(player, chainedAction, context);
+        if (scheduler != null) {
+            scheduler.runLaterSync(delayMs, () -> {
+                try {
+                    if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                        executeChainedAction(player, chainedAction, context);
+                    }
+                } catch (Exception e) {
+                    logger.error("Error executing chained action after delay for player " + player.getName() + ": " + e.getMessage());
                 }
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                logger.warn("Delay was interrupted for player " + player.getName());
-            } catch (Exception e) {
-                logger.error("Error executing chained action after delay for player " + player.getName() + ": " + e.getMessage());
-            }
-        }, executorService);
+            });
+        } else {
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(delayMs);
+                    if (chainedAction != null && !chainedAction.trim().isEmpty()) {
+                        executeChainedAction(player, chainedAction, context);
+                    }
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
+            });
+        }
 
         String message = "Delay of " + delayMs + "ms scheduled";
         if (chainedAction != null && !chainedAction.trim().isEmpty()) {
@@ -165,8 +158,8 @@ public class DelayActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
         
-        // Support new YAML format
-        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        // Support new unified curly-brace format "delay { ... }"
+        if (isNewCurlyBraceFormat(trimmed, "delay")) {
             try {
                 java.util.List<String> values = parseNewFormatValues(trimmed);
                 if (values.isEmpty()) return false;

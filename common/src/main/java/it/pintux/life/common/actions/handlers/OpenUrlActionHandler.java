@@ -11,6 +11,7 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
+import org.geysermc.floodgate.api.FloodgateApi;
 
 
 public class OpenUrlActionHandler extends BaseActionHandler {
@@ -40,8 +41,8 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         try {
             String processed;
             
-            // Check if it's the new YAML format with curly braces
-            if (actionValue.trim().startsWith("{") && actionValue.trim().endsWith("}")) {
+            // Unified format: url { ... }
+            if (isNewCurlyBraceFormat(actionValue, "url")) {
                 List<String> urls = parseNewFormatValues(actionValue);
                 if (urls.isEmpty()) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
@@ -66,6 +67,8 @@ public class OpenUrlActionHandler extends BaseActionHandler {
                 logger.warn("URL action value does not start with http/https after placeholder processing: " + processed);
             }
 
+            // Strip surrounding quotes/backticks
+            processed = processed.replaceAll("^\\s*[\"`]", "").replaceAll("[\"`]\\s*$", "").trim();
             // Send URL to player
             playerManager.sendMessage(player, processed);
 
@@ -89,8 +92,8 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         
         String trimmed = actionValue.trim();
         
-        // Support new YAML format
-        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        // Support unified format: url { ... }
+        if (isNewCurlyBraceFormat(trimmed, "url")) {
             try {
                 List<String> urls = parseNewFormatValues(trimmed);
                 for (String url : urls) {

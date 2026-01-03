@@ -260,8 +260,8 @@ public class InventoryActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
 
-        // Support new YAML format
-        if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
+        // Support new unified format "inventory { ... }"
+        if (isNewCurlyBraceFormat(trimmed, "inventory")) {
             try {
                 java.util.List<String> operations = parseNewFormatValues(trimmed);
                 for (String operation : operations) {

@@ -11,6 +11,7 @@ action:
   invalid_parameters: "&cInvalid parameters for action"
   invalid_format: "&cInvalid action format"
   execution_error: "&cError executing action: {error}"
+  ACTION_EXECUTION_ERROR: "&cError executing action: {error}"
   form_not_found: "&cForm not found: {form}. Please check the form name in config.yml"
   command_success: "&aCommand executed successfully"
   command_failed: "&cCommand execution failed"

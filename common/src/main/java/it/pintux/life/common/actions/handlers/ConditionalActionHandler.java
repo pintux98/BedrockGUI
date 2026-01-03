@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.actions.*;
 import it.pintux.life.common.actions.ActionRegistry;
 import it.pintux.life.common.utils.ConditionEvaluator;
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 
 import java.util.*;
@@ -17,7 +18,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     private final ActionExecutor actionExecutor;
 
     private static final Pattern CHECK_PATTERN = Pattern.compile(
-            "check:\\s*\"([^\"]+)\""
+            "check:\\s*(?:\"([^\"]+)\"|([^\\r\\n]+))"
     );
 
     private static final Pattern TRUE_ACTIONS_PATTERN = Pattern.compile(
@@ -67,8 +68,8 @@ public class ConditionalActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No check condition found in conditional"), player);
             }
 
-            String checkCondition = checkMatcher.group(1);
-            boolean conditionMet = evaluateComplexCondition(player, checkCondition, context);
+            String checkCondition = checkMatcher.group(1) != null ? checkMatcher.group(1) : checkMatcher.group(2);
+            boolean conditionMet = evaluateExpression(player, checkCondition.trim(), context);
 
             List<String> actionsToExecute;
             if (conditionMet) {
@@ -122,7 +123,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
             return false;
         }
 
-
         if (condition.contains("&&")) {
             String[] andParts = condition.split("&&");
             for (String andPart : andParts) {
@@ -133,10 +133,90 @@ public class ConditionalActionHandler extends BaseActionHandler {
             return true;
         }
 
-
         return evaluateSingleCondition(player, condition.trim(), context);
     }
 
+    private boolean evaluateExpression(FormPlayer player, String expr, ActionSystem.ActionContext context) {
+        java.util.List<String> tokens = tokenize(expr);
+        java.util.Deque<String> output = new java.util.ArrayDeque<>();
+        java.util.Deque<String> ops = new java.util.ArrayDeque<>();
+        java.util.Map<String, Integer> prec = java.util.Map.of("||", 1, "&&", 2);
+        for (String t : tokens) {
+            if ("(".equals(t)) {
+                ops.push(t);
+            } else if (")".equals(t)) {
+                while (!ops.isEmpty() && !"(".equals(ops.peek())) {
+                    output.push(ops.pop());
+                }
+                if (!ops.isEmpty() && "(".equals(ops.peek())) ops.pop();
+            } else if ("||".equals(t) || "&&".equals(t)) {
+                while (!ops.isEmpty() && prec.getOrDefault(ops.peek(), 0) >= prec.getOrDefault(t, 0)) {
+                    output.push(ops.pop());
+                }
+                ops.push(t);
+            } else {
+                output.push(t);
+            }
+        }
+        while (!ops.isEmpty()) output.push(ops.pop());
+        java.util.Deque<Boolean> stack = new java.util.ArrayDeque<>();
+        java.util.List<String> rpn = new java.util.ArrayList<>(output);
+        java.util.Collections.reverse(rpn);
+        for (String t : rpn) {
+            if ("||".equals(t)) {
+                boolean b = stack.pop() | stack.pop();
+                stack.push(b);
+            } else if ("&&".equals(t)) {
+                boolean b = stack.pop() & stack.pop();
+                stack.push(b);
+            } else {
+                stack.push(evaluateComplexCondition(player, t.trim(), context));
+            }
+        }
+        return stack.isEmpty() ? false : stack.pop();
+    }
+
+    private java.util.List<String> tokenize(String s) {
+        java.util.List<String> tokens = new java.util.ArrayList<>();
+        int i = 0;
+        while (i < s.length()) {
+            char c = s.charAt(i);
+            if (Character.isWhitespace(c)) { i++; continue; }
+            if (c == '(' || c == ')') { tokens.add(String.valueOf(c)); i++; continue; }
+            if (i + 1 < s.length()) {
+                String two = s.substring(i, i + 2);
+                if ("||".equals(two) || "&&".equals(two)) { tokens.add(two); i += 2; continue; }
+            }
+            if (s.startsWith("placeholder:", i) || s.startsWith("permission:", i)) {
+                int j = i;
+                while (j < s.length()) {
+                    if (j + 1 < s.length()) {
+                        String two = s.substring(j, j + 2);
+                        if ("||".equals(two) || "&&".equals(two)) break;
+                    }
+                    char cj = s.charAt(j);
+                    if (cj == ')') break;
+                    j++;
+                }
+                tokens.add(s.substring(i, j).trim());
+                i = j;
+                continue;
+            }
+            int j = i;
+            while (j < s.length()) {
+                char cj = s.charAt(j);
+                if (cj == '(' || cj == ')' || Character.isWhitespace(cj)) break;
+                if (j + 1 < s.length()) {
+                    String two = s.substring(j, j + 2);
+                    if ("||".equals(two) || "&&".equals(two)) break;
+                }
+                j++;
+            }
+            tokens.add(s.substring(i, j));
+            i = j;
+        }
+        return tokens;
+    }
 
     private boolean evaluateSingleCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
 
@@ -178,14 +258,14 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
 
         String conditionString = "placeholder:" + placeholder + ":" + operator + ":" + expectedValue;
-        return ConditionEvaluator.evaluateCondition(player, conditionString, context, null);
+        return ConditionEvaluator.evaluateCondition(player, conditionString, context, BedrockGUIApi.getInstance().getMessageData());
     }
 
 
     private boolean evaluatePermissionCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
         String permission = condition.substring("permission:".length()).trim();
         String conditionString = "permission:" + permission;
-        return ConditionEvaluator.evaluateCondition(player, conditionString, context, null);
+        return ConditionEvaluator.evaluateCondition(player, conditionString, context, BedrockGUIApi.getInstance().getMessageData());
     }
 
 
@@ -284,32 +364,15 @@ public class ConditionalActionHandler extends BaseActionHandler {
         if (actionValue == null || actionValue.trim().isEmpty()) {
             return false;
         }
-
-        String[] parts = actionValue.split(":");
-        if (parts.length < 4) {
-            return false;
+        String trimmed = actionValue.trim();
+        if (isNewCurlyBraceFormat(trimmed, "conditional")) {
+            Matcher m = CHECK_PATTERN.matcher(trimmed);
+            if (!m.find()) return false;
+            boolean hasTrue = TRUE_ACTIONS_PATTERN.matcher(trimmed).find();
+            boolean hasFalse = FALSE_ACTIONS_PATTERN.matcher(trimmed).find();
+            return hasTrue || hasFalse;
         }
-
-        int offset = 1;
-
-
-        if (parts[offset].equalsIgnoreCase("not")) {
-            offset++;
-            if (parts.length < 5) {
-                return false;
-            }
-        }
-
-        String conditionType = parts[offset].replaceAll("\"", "").trim();
-
-        switch (conditionType.toLowerCase()) {
-            case "permission":
-                return parts.length >= offset + 4;
-            case "placeholder":
-                return parts.length >= offset + 6;
-            default:
-                return false;
-        }
+        return false;
     }
 
     @Override
