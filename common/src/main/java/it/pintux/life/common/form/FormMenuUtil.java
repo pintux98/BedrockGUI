@@ -600,7 +600,8 @@ public class FormMenuUtil {
 
 
                 if (effectiveImage != null) {
-                    formBuilder.button(effectiveText, FormImage.Type.URL, effectiveImage);
+                    FormImage.Type type = effectiveImage.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    formBuilder.button(effectiveText, type, effectiveImage);
                 } else {
                     formBuilder.button(effectiveText);
                 }
@@ -615,7 +616,8 @@ public class FormMenuUtil {
                     String srcRaw = button.getImage();
                     String srcProcessed = replacePlaceholders(srcRaw, placeholders, player, messageData);
                     String src = mapImageSource(srcProcessed);
-                    formBuilder.button(buttonText, FormImage.Type.URL, src);
+                    FormImage.Type type = src.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    formBuilder.button(buttonText, type, src);
                 } else {
                     formBuilder.button(buttonText);
                 }
