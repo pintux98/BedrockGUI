@@ -3,6 +3,7 @@ package it.pintux.life.paper;
 import it.pintux.life.paper.platform.PaperPlayerChecker;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperPlayer;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -63,6 +64,25 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             plugin.getApi().openMenu(player1, menuName, menuArgs);
         }
 
+        if (arg.equalsIgnoreCase("openfor")) {
+            if (args.length < 3) {
+                sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name> [arguments]");
+                return true;
+            }
+
+            String playerName = args[1];
+            String menuName = args[2];
+            String[] menuArgs = Arrays.copyOfRange(args, 3, args.length);
+            Player openPlayer = Bukkit.getPlayer(playerName);
+            if (openPlayer == null) {
+                sender.sendMessage(ChatColor.RED + "Player not found!");
+                return true;
+            }
+            PaperPlayer player1 = new PaperPlayer(openPlayer);
+
+            plugin.getApi().openMenu(player1, menuName, menuArgs);
+        }
+
         return true;
     }
 
@@ -80,15 +100,32 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             List<String> commands = new ArrayList<>();
             commands.add("reload");
             commands.add("open");
-            return commands;
-        }
-        if (args.length == 2 && args[0].equalsIgnoreCase("open")) {
-            return Stream.of(plugin.getFormMenuUtil().getFormMenus().keySet())
-                    .flatMap(Set::stream)
-                    .map(String::toLowerCase)
-                    .filter(c -> c.startsWith(args[1].toLowerCase()))
+            commands.add("openfor");
+            return commands.stream()
+                    .filter(c -> c.toLowerCase().startsWith(args[0].toLowerCase()))
                     .collect(Collectors.toList());
         }
+
+        if (args.length == 2) {
+            if (args[0].equalsIgnoreCase("open")) {
+                return plugin.getFormMenuUtil().getFormMenus().keySet().stream()
+                        .filter(c -> c.toLowerCase().startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+            if (args[0].equalsIgnoreCase("openfor")) {
+                return Bukkit.getOnlinePlayers().stream()
+                        .map(Player::getName)
+                        .filter(name -> name.toLowerCase().startsWith(args[1].toLowerCase()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("openfor")) {
+            return plugin.getFormMenuUtil().getFormMenus().keySet().stream()
+                    .filter(c -> c.toLowerCase().startsWith(args[2].toLowerCase()))
+                    .collect(Collectors.toList());
+        }
+
         return new ArrayList<>();
     }
 }

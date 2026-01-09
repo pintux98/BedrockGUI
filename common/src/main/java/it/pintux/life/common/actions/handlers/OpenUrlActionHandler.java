@@ -35,7 +35,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
         if (!validateParameters(player, actionValue)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
+            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
         }
 
         try {
@@ -46,7 +46,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
                 List<String> urls = parseNewFormatValues(actionValue);
                 if (urls.isEmpty()) {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No valid URLs found"), player);
+                    return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "No valid URLs found"), player);
                 }
                 // For URL action, we only use the first URL if multiple are provided
                 processed = processPlaceholders(urls.get(0), context, player);
@@ -59,7 +59,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
 
             if (processed == null || processed.trim().isEmpty()) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
+                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player)), player);
             }
 
             // Validate URL format
@@ -80,7 +80,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logger.error("Error executing URL action for player " + (player != null ? player.getName() : "null") + ": " + e.getMessage(), e);
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Failed to send URL: " + e.getMessage()), player);
+            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Failed to send URL: " + e.getMessage()), player);
         }
     }
 

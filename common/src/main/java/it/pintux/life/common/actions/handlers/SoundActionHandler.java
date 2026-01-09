@@ -45,7 +45,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
             if (sounds.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid sounds found");
-                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+                return createFailureResult("execution_error", errorReplacements, player);
             }
 
 
@@ -59,7 +59,7 @@ public class SoundActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("sound execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing sound: " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult("execution_error", errorReplacements, player, e);
         }
     }
 
@@ -69,7 +69,7 @@ public class SoundActionHandler extends BaseActionHandler {
             List<String> sounds = parseNewFormatValues(actionData);
 
             if (sounds.isEmpty()) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No sounds found in new format"), player);
+                return createFailureResult("execution_error", createReplacements("error", "No sounds found in new format"), player);
             }
 
 
@@ -89,7 +89,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format sound action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
+            return createFailureResult("execution_error", createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
         }
     }
 
@@ -147,7 +147,7 @@ public class SoundActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+            return createFailureResult("execution_error", replacements, player);
         }
     }
 

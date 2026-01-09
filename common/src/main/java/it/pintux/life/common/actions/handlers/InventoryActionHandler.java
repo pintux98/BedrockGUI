@@ -46,7 +46,7 @@ public class InventoryActionHandler extends BaseActionHandler {
             }
         } catch (Exception e) {
             logger.error("Error executing inventory action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR",
+            return createFailureResult("execution_error",
                     createReplacements("error", "Error executing inventory action: " + e.getMessage()), player);
         }
     }
@@ -58,7 +58,7 @@ public class InventoryActionHandler extends BaseActionHandler {
             java.util.List<String> operations = parseNewFormatValues(actionValue);
             
             if (operations.isEmpty()) {
-                return createFailureResult("ACTION_EXECUTION_ERROR",
+                return createFailureResult("execution_error",
                         createReplacements("error", "No inventory operations found in new format"), player);
             }
 
@@ -84,7 +84,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                     createReplacements("message", "Executed " + operations.size() + " inventory operations"), player);
         } catch (Exception e) {
             logger.error("Error parsing new format inventory action: " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR",
+            return createFailureResult("execution_error",
                     createReplacements("error", "Error parsing new format: " + e.getMessage()), player);
         }
     }
@@ -95,7 +95,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         String[] parts = processedData.split(":", 3);
 
         if (parts.length < 2) {
-            return createFailureResult("ACTION_EXECUTION_ERROR",
+            return createFailureResult("execution_error",
                     createReplacements("error", "Invalid inventory format. Expected: operation:item[:amount]"), player);
         }
 
@@ -113,7 +113,7 @@ public class InventoryActionHandler extends BaseActionHandler {
             case "check":
                 return handleCheckInventory(player, itemData);
             default:
-                return createFailureResult("ACTION_EXECUTION_ERROR",
+                return createFailureResult("execution_error",
                         createReplacements("error", "Unknown inventory operation: " + operation), player);
         }
     }
@@ -168,7 +168,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                         createReplacements("operation", "give " + itemData), player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR",
+            return createFailureResult("execution_error",
                     createReplacements("error", "Invalid amount: " + amountStr), player);
         }
     }
@@ -197,7 +197,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                         createReplacements("operation", "remove " + itemData), player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult("ACTION_EXECUTION_ERROR",
+            return createFailureResult("execution_error",
                     createReplacements("error", "Invalid amount: " + amountStr), player);
         }
     }

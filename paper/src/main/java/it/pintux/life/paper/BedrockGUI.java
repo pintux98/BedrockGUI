@@ -96,7 +96,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = null;
-        if (DependencyValidator.isPluginCompatible("Vault", "1.7.0")) {
+        if (DependencyValidator.isPluginCompatible("Vault", "1.0.0")) {
             economyManager = new PaperEconomyManager(this);
             getLogger().info("Vault integration enabled");
         } else if (Bukkit.getPluginManager().getPlugin("Vault") != null) {

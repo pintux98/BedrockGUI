@@ -191,7 +191,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
                 }
             } catch (Exception e) {
                 logger.error("Error during additional validation for player: " + player.getName(), e);
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Validation error: " + e.getMessage()), player, e);
+                return createFailureResult("execution_error", createReplacements("error", "Validation error: " + e.getMessage()), player, e);
             }
         }
 

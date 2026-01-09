@@ -10,7 +10,7 @@ public class DependencyValidator {
 
     private static final Logger logger = Logger.getLogger(DependencyValidator.class.getName());
 
-    private static final String MIN_VAULT_VERSION = "1.7.0";
+    private static final String MIN_VAULT_VERSION = "1.0.0";
     private static final String MIN_PLACEHOLDERAPI_VERSION = "2.10.0";
 
 

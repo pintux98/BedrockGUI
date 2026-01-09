@@ -47,7 +47,7 @@ public class MessageActionHandler extends BaseActionHandler {
             }
         } catch (Exception e) {
             logger.error("Error executing message action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error executing message action: " + e.getMessage()), player);
+            return createFailureResult("execution_error", createReplacements("error", "Error executing message action: " + e.getMessage()), player);
         }
     }
 
@@ -57,7 +57,7 @@ public class MessageActionHandler extends BaseActionHandler {
             List<String> messages = parseNewFormatValues(actionData);
 
             if (messages.isEmpty()) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No messages found in new format"), player);
+                return createFailureResult("execution_error", createReplacements("error", "No messages found in new format"), player);
             }
 
 
@@ -70,7 +70,7 @@ public class MessageActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format message action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new message format: " + e.getMessage()), player);
+            return createFailureResult("execution_error", createReplacements("error", "Error parsing new message format: " + e.getMessage()), player);
         }
     }
 
@@ -121,7 +121,7 @@ public class MessageActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+            return createFailureResult("execution_error", replacements, player);
         }
     }
 
@@ -130,7 +130,7 @@ public class MessageActionHandler extends BaseActionHandler {
         String processedMessage = processPlaceholders(message, context, player);
 
         if (ValidationUtils.isNullOrEmpty(processedMessage.trim())) {
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", MessageData.ACTION_INVALID_PARAMETERS), player);
+            return createFailureResult("execution_error", createReplacements("error", MessageData.ACTION_INVALID_PARAMETERS), player);
         }
 
 

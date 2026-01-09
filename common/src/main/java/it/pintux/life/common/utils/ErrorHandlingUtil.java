@@ -126,7 +126,7 @@ public class ErrorHandlingUtil {
             replacements.put("error", error);
             replacements.put("action", actionType);
 
-            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_EXECUTION_ERROR, replacements, player));
+            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.EXECUTION_ERROR, replacements, player));
         } catch (Exception e) {
 
             logger.error("Failed to create proper error message, using basic fallback", e);

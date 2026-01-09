@@ -45,7 +45,7 @@ public class TitleActionHandler extends BaseActionHandler {
 
             if (titles.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid titles found");
-                return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player);
+                return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player);
             }
 
 
@@ -59,7 +59,7 @@ public class TitleActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("title execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing title: " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
         }
     }
 
@@ -69,7 +69,7 @@ public class TitleActionHandler extends BaseActionHandler {
             List<String> titles = parseNewFormatValues(actionData);
 
             if (titles.isEmpty()) {
-                return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "No titles found in new format"), player);
+                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "No titles found in new format"), player);
             }
 
 
@@ -89,7 +89,7 @@ public class TitleActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format title action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("ACTION_EXECUTION_ERROR", createReplacements("error", "Error parsing new title format: " + e.getMessage()), player);
+            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Error parsing new title format: " + e.getMessage()), player);
         }
     }
 
@@ -147,7 +147,7 @@ public class TitleActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("ACTION_EXECUTION_ERROR", replacements, player);
+            return createFailureResult("MessageData.EXECUTION_ERROR", replacements, player);
         }
     }
 
