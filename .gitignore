@@ -11,3 +11,5 @@
 /paper/bin/
 /bungeecord/bin/
 /velocity/bin/
+/designer-app/dist/
+/designer-app/node_modules/
