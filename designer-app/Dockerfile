@@ -3,6 +3,9 @@ FROM node:18-alpine as builder
 
 WORKDIR /app
 
+ARG VITE_GA_MEASUREMENT_ID
+ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
+
 # Copy package files
 COPY package.json package-lock.json* ./
 
