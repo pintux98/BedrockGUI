@@ -1,0 +1,18 @@
+version: '3.8'
+
+services:
+  designer-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bedrockgui-designer
+    ports:
+      - "8080:80"
+    restart: always
+    environment:
+      - NODE_ENV=production
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3

@@ -1,0 +1,156 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'Silkscreen', cursive, monospace;
+}
+
+img.image-rendering-pixelated {
+  image-rendering: pixelated;
+}
+
+:root {
+  /* Bedrock Dark Theme Palette */
+  --ui-bg: 52 52 52;       /* #343434 Main Background */
+  --ui-surface: 72 73 74;  /* #48494a Panel Background */
+  --ui-surface-2: 30 30 30; /* #1e1e1e Input Background */
+  --ui-border: 139 139 139; /* #8b8b8b Light Border */
+  --ui-text: 255 255 255;   /* #ffffff Text */
+  --ui-muted: 180 180 180;  /* #b4b4b4 Muted Text */
+  --ui-accent: 60 133 39;   /* #3c8527 Green Button */
+  --ui-accent-text: 255 255 255;
+  --ui-focus: 255 255 255;
+}
+
+@layer utilities {
+  .font-minecraft {
+    font-family: 'Silkscreen', cursive, monospace;
+  }
+  .font-smooth-none {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+}
+
+@layer base {
+  body {
+    background: rgb(var(--ui-bg));
+    color: rgb(var(--ui-text));
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ui-focus));
+    outline-offset: -2px;
+  }
+  /* Custom Scrollbar for Webkit */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border: 1px solid #343434;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #8b8b8b;
+    border: 2px solid #1e1e1e;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+  }
+}
+
+@layer components {
+  /* Minecraft Panel Style (Outset Bevel) */
+  .ui-panel {
+    @apply p-4 bg-brand-surface text-brand-text rounded-none;
+    box-shadow: inset 2px 2px 0px rgba(255, 255, 255, 0.1),
+                inset -2px -2px 0px rgba(0, 0, 0, 0.3);
+    border: 2px solid #1e1e1e;
+  }
+  
+  .ui-panel-title {
+    @apply text-base font-normal mb-4 text-brand-text tracking-wide uppercase opacity-90;
+    text-shadow: 2px 2px 0px #000;
+  }
+
+  /* Minecraft Input Style (Inset Bevel) */
+  .ui-input {
+    @apply w-full bg-brand-surface2 rounded-none px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted outline-none;
+    border: 2px solid #555;
+    border-top-color: #101010;
+    border-left-color: #101010;
+    border-bottom-color: #555;
+    border-right-color: #555;
+  }
+  
+  .ui-input:focus {
+    @apply border-brand-text;
+  }
+
+  .ui-textarea {
+    @apply w-full bg-brand-surface2 rounded-none px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted outline-none;
+    border: 2px solid #555;
+    border-top-color: #101010;
+    border-left-color: #101010;
+    border-bottom-color: #555;
+    border-right-color: #555;
+  }
+
+  /* Minecraft Button Style */
+  .ui-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-none px-3 py-2 text-sm font-normal transition-none select-none active:translate-y-[1px];
+    box-shadow: inset 2px 2px 0px rgba(255, 255, 255, 0.2),
+                inset -2px -2px 0px rgba(0, 0, 0, 0.4);
+    border: 2px solid #1e1e1e;
+    text-shadow: 1px 1px 0px #000;
+  }
+
+  .ui-btn:active {
+    box-shadow: inset 2px 2px 0px rgba(0, 0, 0, 0.4),
+                inset -2px -2px 0px rgba(255, 255, 255, 0.1);
+  }
+
+  .ui-btn:disabled {
+    @apply opacity-50 cursor-not-allowed grayscale;
+  }
+
+  .ui-btn-primary {
+    @apply ui-btn bg-brand-accent text-brand-accentText;
+  }
+  
+  .ui-btn-primary:hover {
+    @apply brightness-110;
+  }
+
+  .ui-btn-secondary {
+    @apply ui-btn bg-[#585858] text-brand-text;
+  }
+  
+  .ui-btn-secondary:hover {
+    @apply brightness-110;
+  }
+
+  .ui-btn-ghost {
+    @apply ui-btn bg-transparent border-transparent shadow-none;
+    text-shadow: none;
+  }
+  
+  .ui-btn-ghost:hover {
+    @apply bg-white/10;
+  }
+
+  .ui-chip {
+    @apply inline-flex items-center rounded-none px-2 py-0.5 text-xs bg-brand-surface2 text-brand-muted border border-[#1e1e1e];
+  }
+}
