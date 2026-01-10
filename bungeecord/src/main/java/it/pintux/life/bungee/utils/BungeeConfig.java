@@ -18,6 +18,12 @@ public class BungeeConfig implements FormConfig {
         loadConfig();
     }
 
+    private BungeeConfig(File dataFolder, Map<String, Object> loaded) {
+        this.dataFolder = dataFolder;
+        this.yaml = new Yaml();
+        this.config = loaded != null ? loaded : new HashMap<>();
+    }
+
     private void loadConfig() {
         File configFile = new File(dataFolder, "config.yml");
         if (!configFile.exists()) { createDefaultConfig(configFile); }
@@ -80,6 +86,19 @@ public class BungeeConfig implements FormConfig {
         Object value = getValue(path);
         if (value instanceof Map) { return new HashMap<>((Map<String, Object>) value); }
         return new HashMap<>();
+    }
+
+    @Override
+    public FormConfig loadFormFile(String relativePath) {
+        File formsDir = new File(dataFolder, "forms");
+        File file = new File(formsDir, relativePath);
+        try (InputStream in = new FileInputStream(file)) {
+            Object loaded = yaml.load(in);
+            Map<String, Object> root = loaded instanceof Map ? (Map<String, Object>) loaded : new HashMap<>();
+            return new BungeeConfig(dataFolder, root);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load form file: " + relativePath, e);
+        }
     }
 
     private Object getValue(String path) {

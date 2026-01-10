@@ -7,6 +7,7 @@ import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.actions.ActionExecutor;
 import it.pintux.life.common.platform.PlatformScheduler;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 
 
 import java.util.concurrent.CompletableFuture;
@@ -38,7 +39,7 @@ public class DelayActionHandler extends BaseActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Delay action called with empty delay time for player: " + player.getName());
-            return createFailureResult("execution_error", createReplacements("error", "ACTION_INVALID_PARAMETERS"), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "ACTION_INVALID_PARAMETERS"), player);
         }
 
         try {
@@ -61,7 +62,7 @@ public class DelayActionHandler extends BaseActionHandler {
             return createFailureResult("ACTION_INVALID_PARAMETERS", createReplacements("error", "Invalid delay time format: " + actionData), player);
         } catch (Exception e) {
             logger.error("Error executing delay action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error executing delay: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error executing delay: " + e.getMessage()), player);
         }
     }
 
@@ -79,7 +80,7 @@ public class DelayActionHandler extends BaseActionHandler {
             values = processedValues;
             
             if (values.isEmpty()) {
-                return createFailureResult("execution_error",
+                return createFailureResult(MessageData.EXECUTION_ERROR,
                         createReplacements("error", "No delay values found in new format"), player);
             }
 
@@ -98,18 +99,18 @@ public class DelayActionHandler extends BaseActionHandler {
                     createReplacements("error", "Invalid delay time format in new format: " + actionData), player);
         } catch (Exception e) {
             logger.error("Error parsing new format delay action: " + e.getMessage());
-            return createFailureResult("execution_error",
+            return createFailureResult(MessageData.EXECUTION_ERROR,
                     createReplacements("error", "Error parsing new format: " + e.getMessage()), player);
         }
     }
 
     private ActionSystem.ActionResult executeDelayWithChain(FormPlayer player, long delayMs, String chainedAction, ActionSystem.ActionContext context) {
         if (delayMs < 0) {
-            return createFailureResult("execution_error", createReplacements("error", "Delay time cannot be negative"), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Delay time cannot be negative"), player);
         }
 
         if (delayMs > MAX_DELAY_MS) {
-            return createFailureResult("execution_error", createReplacements("error", "Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)"), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Delay time cannot exceed " + MAX_DELAY_MS + "ms (30 seconds)"), player);
         }
 
         if (delayMs == 0) {
@@ -208,7 +209,7 @@ public class DelayActionHandler extends BaseActionHandler {
             ActionSystem.Action action = actionExecutor.parseAction(chainedAction);
             if (action == null) {
                 logger.warn("Failed to parse chained action: " + chainedAction);
-                return createFailureResult("execution_error", createReplacements("error", "Invalid chained action format: " + chainedAction), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Invalid chained action format: " + chainedAction), player);
             }
 
 
@@ -224,7 +225,7 @@ public class DelayActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing chained action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error executing chained action: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error executing chained action: " + e.getMessage()), player);
         }
     }
 }

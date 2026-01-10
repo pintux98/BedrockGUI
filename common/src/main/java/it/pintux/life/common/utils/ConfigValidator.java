@@ -188,6 +188,8 @@ public class ConfigValidator {
                 Object actionValue = actionDef.getAction(actionType);
                 String actionValueStr = actionValue != null ? actionValue.toString() : "";
 
+                checkFormatWarnings(menuName, buttonIndex, actionType, actionValueStr);
+
 
                 if (actionValueStr.contains(":") && !actionValueStr.contains("{") && !actionValueStr.contains("}")) {
                     Map<String, Object> replacements = Map.of("menu", menuName, "index", buttonIndex, "action", actionType);
@@ -215,6 +217,27 @@ public class ConfigValidator {
                 if (!handler.isValidAction(delayStr)) {
                     validationErrors.add("Invalid delay value '" + delayStr + "' in menu '" + menuName + "' button " + buttonIndex);
                 }
+            }
+        }
+    }
+
+    private void checkFormatWarnings(String menuName, int buttonIndex, String actionType, String block) {
+        if (ValidationUtils.isNullOrEmpty(block)) {
+            return;
+        }
+
+        String trimmed = block.trim();
+        int opens = 0, closes = 0;
+        for (int i = 0; i < trimmed.length(); i++) {
+            char c = trimmed.charAt(i);
+            if (c == '{') opens++;
+            else if (c == '}') closes++;
+        }
+        if (opens != closes) {
+            if (opens > closes) {
+                validationWarnings.add("Action '" + actionType + "' in menu '" + menuName + "' button " + buttonIndex + " may be missing closing '}'");
+            } else {
+                validationWarnings.add("Action '" + actionType + "' in menu '" + menuName + "' button " + buttonIndex + " may be missing opening '{'");
             }
         }
     }

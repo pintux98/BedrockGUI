@@ -16,7 +16,7 @@ import java.util.regex.Matcher;
 
 public class ActionExecutor {
 
-    private static final Logger logger = Logger.getLogger(ActionExecutor.class);
+    private static final Logger logger = Logger.getLogger(ActionExecutor.class.getSimpleName());
     private final ActionRegistry registry;
     private final ExecutorService executorService;
 

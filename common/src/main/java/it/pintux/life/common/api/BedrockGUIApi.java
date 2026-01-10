@@ -19,7 +19,7 @@ import java.util.function.Predicate;
 
 public class BedrockGUIApi {
 
-    private static final Logger logger = Logger.getLogger(BedrockGUIApi.class);
+    private static final Logger logger = Logger.getLogger(BedrockGUIApi.class.getSimpleName());
     private static BedrockGUIApi instance;
 
     private final FormMenuUtil formMenuUtil;
@@ -28,6 +28,8 @@ public class BedrockGUIApi {
     private final PlatformFormSender formSender;
     private final MessageData messageData;
     private final PlatformTitleManager platformTitleManager;
+    private it.pintux.life.common.platform.PlatformAssetServer assetServer;
+    private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
     private final Map<String, DynamicForm> dynamicForms = new HashMap<>();
@@ -76,6 +78,40 @@ public class BedrockGUIApi {
         } else {
             logger.warn("FormMenuUtil is null, cannot reload configuration");
         }
+    }
+
+    public ActionExecutor getActionExecutor() {
+        return actionExecutor;
+    }
+
+    public ActionRegistry getActionRegistry() {
+        return actionRegistry;
+    }
+
+    public PlatformFormSender getFormSender() {
+        return formSender;
+    }
+
+    public void setAssetServer(it.pintux.life.common.platform.PlatformAssetServer assetServer) {
+        this.assetServer = assetServer;
+        if (formMenuUtil != null) {
+            formMenuUtil.setAssetServer(assetServer);
+        }
+    }
+
+    public void setJavaMenuManager(it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager) {
+        this.javaMenuManager = javaMenuManager;
+        if (formMenuUtil != null) {
+            formMenuUtil.setJavaMenuManager(javaMenuManager);
+        }
+    }
+
+    public it.pintux.life.common.platform.PlatformAssetServer getAssetServer() {
+        return assetServer;
+    }
+
+    public it.pintux.life.common.platform.PlatformJavaMenuManager getJavaMenuManager() {
+        return javaMenuManager;
     }
 
     /**
@@ -243,6 +279,32 @@ public class BedrockGUIApi {
 
     public void openMenu(FormPlayer player, String menuName, String... args) {
         formMenuUtil.openForm(player, menuName, args);
+    }
+
+    public ActionSystem.ActionResult executeActionString(FormPlayer player, String actionString, ActionSystem.ActionContext context) {
+        try {
+            ActionSystem.Action action = actionExecutor.parseAction(actionString);
+            if (action == null) {
+                return ActionSystem.ActionResult.failure("Invalid action format");
+            }
+            return actionExecutor.executeAction(player, action.getActionDefinition(), context);
+        } catch (Exception e) {
+            return ActionSystem.ActionResult.failure("Action execution failed: " + e.getMessage());
+        }
+    }
+
+    public ActionSystem.ActionContext createActionContext(Map<String, String> placeholders,
+                                                          Map<String, Object> formResults,
+                                                          Map<String, Object> metadata,
+                                                          String menuName,
+                                                          String formType) {
+        ActionSystem.ActionContext.Builder b = ActionSystem.ActionContext.builder();
+        if (placeholders != null) b.placeholders(placeholders);
+        if (formResults != null) b.formResults(formResults);
+        if (metadata != null) b.metadata(metadata);
+        if (menuName != null) b.menuName(menuName);
+        if (formType != null) b.formType(formType);
+        return b.build();
     }
 
 
@@ -544,15 +606,35 @@ public class BedrockGUIApi {
                 builder.content(content);
             }
 
+            builder.validResultHandler((form, response) -> {});
+
+            return builder.build();
+        }
+
+        @Override
+        public CompletableFuture<FormResult> send(FormPlayer player) {
+            ModalForm.Builder builder = ModalForm.builder()
+                    .title(title)
+                    .button1(button1Text)
+                    .button2(button2Text);
+
+            if (content != null) {
+                builder.content(content);
+            }
+
             builder.validResultHandler((form, response) -> {
                 if (response.clickedButtonId() == 0 && onButton1 != null) {
-
+                    onButton1.accept(player);
                 } else if (response.clickedButtonId() == 1 && onButton2 != null) {
-
+                    onButton2.accept(player);
+                }
+                if (onSubmitHandler != null) {
+                    boolean first = response.clickedButtonId() == 0;
+                    onSubmitHandler.accept(player, first);
                 }
             });
 
-            return builder.build();
+            return openForm(player, builder.build());
         }
     }
 

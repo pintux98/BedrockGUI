@@ -50,7 +50,7 @@ public class CommandActionHandler extends BaseActionHandler {
 
             if (commands.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid commands found");
-                return createFailureResult("execution_error", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
 
@@ -64,7 +64,7 @@ public class CommandActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("command execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing command: " + e.getMessage());
-            return createFailureResult("execution_error", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -74,7 +74,7 @@ public class CommandActionHandler extends BaseActionHandler {
             List<String> commands = parseNewFormatValues(actionData);
 
             if (commands.isEmpty()) {
-                return createFailureResult("execution_error", createReplacements("error", "No commands found in new format"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No commands found in new format"), player);
             }
 
 
@@ -94,7 +94,7 @@ public class CommandActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format command action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error parsing new command format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new command format: " + e.getMessage()), player);
         }
     }
 
@@ -103,7 +103,7 @@ public class CommandActionHandler extends BaseActionHandler {
         String normalizedCommand = normalizeCommand(command);
 
         if (normalizedCommand.isEmpty()) {
-            return createFailureResult("execution_error",
+            return createFailureResult(MessageData.EXECUTION_ERROR,
                     createReplacements("error", "Empty command after processing"), player);
         }
 
@@ -187,7 +187,7 @@ public class CommandActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("execution_error", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 

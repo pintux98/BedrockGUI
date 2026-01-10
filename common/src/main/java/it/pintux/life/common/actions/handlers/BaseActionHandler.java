@@ -91,22 +91,6 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     }
 
 
-    protected String processPlaceholders(String text, FormPlayer player) {
-        if (ValidationUtils.isNullOrEmpty(text)) {
-            return text;
-        }
-        return PlaceholderUtil.processPlaceholders(text, player, null);
-    }
-
-
-    protected String processPlaceholders(String text, Map<String, String> replacements, FormPlayer player, MessageData messageData) {
-        if (ValidationUtils.isNullOrEmpty(text)) {
-            return text;
-        }
-        return PlaceholderUtil.processPlaceholders(text, replacements, player, messageData);
-    }
-
-
     protected boolean containsDynamicPlaceholders(String text) {
         return PlaceholderUtil.containsDynamicPlaceholders(text);
     }
@@ -120,27 +104,6 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
             return false;
         }
     }
-
-
-    protected boolean isValidCommand(String command) {
-        if (ValidationUtils.isNullOrEmpty(command)) {
-            return false;
-        }
-
-        String trimmed = command.trim();
-        if (trimmed.isEmpty() || trimmed.equals("/")) {
-            return false;
-        }
-
-
-        if (trimmed.startsWith("/")) {
-            trimmed = trimmed.substring(1);
-        }
-
-
-        return !trimmed.contains("\n") && !trimmed.contains("\r") && !trimmed.trim().isEmpty();
-    }
-
 
     protected String normalizeCommand(String command) {
         if (ValidationUtils.isNullOrEmpty(command)) {
@@ -173,31 +136,6 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
             return false;
         }
     }
-
-
-    protected ActionSystem.ActionResult validateActionParameters(FormPlayer player, String actionValue, Supplier<Boolean> additionalValidation) {
-
-        ActionSystem.ActionResult basicValidation = validateBasicParameters(player, actionValue);
-        if (basicValidation != null) {
-            return basicValidation;
-        }
-
-
-        if (additionalValidation != null) {
-            try {
-                if (!additionalValidation.get()) {
-                    MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                    return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
-                }
-            } catch (Exception e) {
-                logger.error("Error during additional validation for player: " + player.getName(), e);
-                return createFailureResult("execution_error", createReplacements("error", "Validation error: " + e.getMessage()), player, e);
-            }
-        }
-
-        return null;
-    }
-
 
     protected boolean isNewCurlyBraceFormat(String actionData, String actionType) {
         if (actionData == null || actionData.trim().isEmpty()) {
@@ -257,18 +195,14 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
 
         String processedData = processPlaceholders(actionData, context, player);
 
-        // Check if it's the new curly brace format
         if (processedData.trim().contains("{") && processedData.trim().contains("}")) {
-            // Parse new format values
             java.util.List<String> values = parseNewFormatValues(processedData);
             if (!values.isEmpty()) {
                 return values;
             }
         }
 
-        // Check if it's an array format [item1, item2, item3] (legacy support)
         if (processedData.trim().startsWith("[") && processedData.trim().endsWith("]")) {
-            // Parse JSON-like array format
             String content = processedData.trim().substring(1, processedData.trim().length() - 1);
             if (!content.trim().isEmpty()) {
                 String[] items = content.split(",");
@@ -284,7 +218,6 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
                 }
             }
         } else {
-            // Single value
             result.add(processedData);
         }
 
@@ -306,24 +239,19 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
 
         String trimmed = actionValue.trim();
 
-        // Check if it's the new curly brace format
         if (trimmed.contains("{") && trimmed.contains("}")) {
-            // Parse new format values
             java.util.List<String> values = parseNewFormatValues(trimmed);
             if (!values.isEmpty()) {
                 return values;
             }
         }
 
-        // Check if it's an array format [item1, item2, item3] (legacy support)
         if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
-            // Parse JSON-like array format
             String content = trimmed.substring(1, trimmed.length() - 1);
             if (!content.trim().isEmpty()) {
                 String[] items = content.split(",");
                 for (String item : items) {
                     String itemTrimmed = item.trim();
-                    // Remove quotes if present
                     if (itemTrimmed.startsWith("\"") && itemTrimmed.endsWith("\"")) {
                         itemTrimmed = itemTrimmed.substring(1, itemTrimmed.length() - 1);
                     }
@@ -333,7 +261,6 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
                 }
             }
         } else {
-            // Single value
             result.add(trimmed);
         }
 

@@ -133,7 +133,6 @@ public class PlaceholderUtil {
         String result = processDynamicPlaceholders(text, context.getPlaceholders());
         result = processFormResults(result, context.getFormResults());
 
-
         if (context.getMetadata() != null && context.getMetadata().containsKey("messageData")) {
             Object messageData = context.getMetadata().get("messageData");
             result = processPlaceholders(result, player, messageData);

@@ -8,6 +8,7 @@ import it.pintux.life.common.actions.ActionRegistry;
 import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 
 import java.util.*;
 import java.util.regex.Matcher;
@@ -46,7 +47,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Conditional action called with empty data for player: " + player.getName());
-            return createFailureResult("execution_error", createReplacements("error", "No conditional data specified"), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No conditional data specified"), player);
         }
 
         try {
@@ -55,7 +56,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing conditional action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error executing conditional action: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error executing conditional action: " + e.getMessage()), player);
         }
     }
 
@@ -65,7 +66,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
             Matcher checkMatcher = CHECK_PATTERN.matcher(actionData);
             if (!checkMatcher.find()) {
-                return createFailureResult("execution_error", createReplacements("error", "No check condition found in conditional"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No check condition found in conditional"), player);
             }
 
             String checkCondition = checkMatcher.group(1) != null ? checkMatcher.group(1) : checkMatcher.group(2);
@@ -101,12 +102,12 @@ public class ConditionalActionHandler extends BaseActionHandler {
             if (lastResult != null && lastResult.isSuccess()) {
                 return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Conditional actions executed successfully"), player);
             } else {
-                return createFailureResult("execution_error", createReplacements("error", "Some conditional actions failed"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Some conditional actions failed"), player);
             }
 
         } catch (Exception e) {
             logger.error("Error executing new format conditional for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error parsing new conditional format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new conditional format: " + e.getMessage()), player);
         }
     }
 
@@ -288,6 +289,20 @@ public class ConditionalActionHandler extends BaseActionHandler {
                 return actions;
             }
 
+            // Handle inline actions without '|', e.g., "- message { ... } - server { ... }"
+            java.util.regex.Matcher inlineNoPipe = java.util.regex.Pattern.compile("-\\s+(\\w+[^\\{]*\\{[\\s\\S]*?\\})(?=\\s*-\\s+|\\Z)", java.util.regex.Pattern.DOTALL).matcher(actionsBlock);
+            boolean anyNoPipe = false;
+            while (inlineNoPipe.find()) {
+                String content = inlineNoPipe.group(1).trim();
+                if (!content.isEmpty()) {
+                    actions.add(content);
+                    anyNoPipe = true;
+                }
+            }
+            if (anyNoPipe) {
+                return actions;
+            }
+
             String[] lines = actionsBlock.split("\\r?\\n");
             int i = 0;
             while (i < lines.length) {
@@ -298,17 +313,17 @@ public class ConditionalActionHandler extends BaseActionHandler {
                 if (pipeMatcher.matches()) {
                     int dashIndex = line.indexOf('-');
                     String indent = dashIndex > 0 ? line.substring(0, dashIndex) : "";
-                    StringBuilder sb = new StringBuilder();
+                    StringBuilder block = new StringBuilder();
                     i++;
                     while (i < lines.length) {
                         String next = lines[i];
                         if (next.startsWith(indent + "-")) {
                             break;
                         }
-                        sb.append(next).append("\n");
+                        block.append(next).append("\n");
                         i++;
                     }
-                    String content = sb.toString().trim();
+                    String content = block.toString().trim();
                     if (!content.isEmpty()) {
                         actions.add(content);
                     }
@@ -330,7 +345,14 @@ public class ConditionalActionHandler extends BaseActionHandler {
                         }
                     }
                 }
-
+                // Fallback: action line without '|', capture single-line action
+                Matcher plainMatcher = Pattern.compile("^\\s*-\\s*(.+)$").matcher(line);
+                if (plainMatcher.matches()) {
+                    String content = plainMatcher.group(1).trim();
+                    if (!content.isEmpty()) {
+                        actions.add(content);
+                    }
+                }
                 i++;
             }
         }

@@ -42,12 +42,11 @@ public class BroadcastActionHandler extends BaseActionHandler {
                 return executeNewFormat(player, actionData, context);
             }
 
-
             List<String> broadcasts = parseActionData(actionData, context, player);
 
             if (broadcasts.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid broadcasts found");
-                return createFailureResult("execution_error", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
 
@@ -55,13 +54,12 @@ public class BroadcastActionHandler extends BaseActionHandler {
                 return executeSingleBroadcast(player, broadcasts.get(0), null);
             }
 
-
             return executeMultipleBroadcastsFromList(broadcasts, player);
 
         } catch (Exception e) {
             logError("broadcast execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing broadcast: " + e.getMessage());
-            return createFailureResult("execution_error", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -71,7 +69,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
             List<String> broadcasts = parseNewFormatValues(actionData);
 
             if (broadcasts.isEmpty()) {
-                return createFailureResult("execution_error", createReplacements("error", "No broadcasts found in new format"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No broadcasts found in new format"), player);
             }
 
 
@@ -91,7 +89,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format broadcast action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error parsing new broadcast format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new broadcast format: " + e.getMessage()), player);
         }
     }
 
@@ -149,7 +147,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("execution_error", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 

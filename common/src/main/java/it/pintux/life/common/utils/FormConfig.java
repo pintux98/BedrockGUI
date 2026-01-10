@@ -15,5 +15,6 @@ public interface FormConfig {
     Set<String> getKeys(String path);
 
     Map<String, Object> getValues(String path);
-}
 
+    FormConfig loadFormFile(String relativePath);
+}

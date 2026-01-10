@@ -40,7 +40,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
         if (formMenuUtil == null) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> errorReplacements = createReplacements("error", "FormMenuUtil not available");
-            return createFailureResult("execution_error", errorReplacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
         }
 
         try {
@@ -61,7 +61,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
 
             if (menuNames.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid menu names found");
-                return createFailureResult("execution_error", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
             // Single form opening
@@ -77,7 +77,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             Map<String, Object> errorReplacements = new HashMap<>();
             errorReplacements.put("error", e.getMessage());
-            return createFailureResult("execution_error", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -122,7 +122,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
             } else {
                 Map<String, Object> errorReplacements = new HashMap<>();
                 errorReplacements.put("error", "Failed to open form: " + menuName);
-                return createFailureResult("execution_error", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
         } catch (Exception e) {
@@ -218,7 +218,6 @@ public class OpenFormActionHandler extends BaseActionHandler {
 
         String trimmed = actionValue.trim();
         
-        // Support new YAML format
         if (trimmed.startsWith("{") && trimmed.endsWith("}")) {
             try {
                 List<String> menuNames = parseNewFormatValues(trimmed);

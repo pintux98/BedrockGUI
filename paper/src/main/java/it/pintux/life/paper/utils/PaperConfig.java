@@ -9,8 +9,10 @@ import java.util.Set;
 
 public class PaperConfig implements FormConfig {
     private final FileConfiguration config;
+    private final java.io.File dataFolder;
 
-    public PaperConfig(FileConfiguration config) {
+    public PaperConfig(java.io.File dataFolder, FileConfiguration config) {
+        this.dataFolder = dataFolder;
         this.config = config;
     }
 
@@ -45,5 +47,13 @@ public class PaperConfig implements FormConfig {
             return new java.util.HashMap<>();
         }
         return section.getValues(false);
+    }
+
+    @Override
+    public FormConfig loadFormFile(String relativePath) {
+        java.io.File formsDir = new java.io.File(dataFolder, "forms");
+        java.io.File file = new java.io.File(formsDir, relativePath);
+        org.bukkit.configuration.file.YamlConfiguration yaml = org.bukkit.configuration.file.YamlConfiguration.loadConfiguration(file);
+        return new PaperConfig(dataFolder, yaml);
     }
 }

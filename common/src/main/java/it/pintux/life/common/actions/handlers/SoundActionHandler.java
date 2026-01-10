@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.platform.PlatformSoundManager;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
             if (sounds.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid sounds found");
-                return createFailureResult("execution_error", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
 
@@ -59,7 +60,7 @@ public class SoundActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("sound execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing sound: " + e.getMessage());
-            return createFailureResult("execution_error", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -69,7 +70,7 @@ public class SoundActionHandler extends BaseActionHandler {
             List<String> sounds = parseNewFormatValues(actionData);
 
             if (sounds.isEmpty()) {
-                return createFailureResult("execution_error", createReplacements("error", "No sounds found in new format"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No sounds found in new format"), player);
             }
 
 
@@ -89,7 +90,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format sound action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("execution_error", createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
         }
     }
 
@@ -147,7 +148,7 @@ public class SoundActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("execution_error", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 

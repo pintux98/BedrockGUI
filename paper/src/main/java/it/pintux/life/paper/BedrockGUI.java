@@ -17,7 +17,6 @@ import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperConfig;
 import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.paper.utils.PaperMessageConfig;
-import it.pintux.life.paper.utils.DependencyValidator;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -72,16 +71,15 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
     public void reloadData() {
 
-        if (!DependencyValidator.validateDependencies()) {
-            getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
-        }
+        //if (!DependencyValidator.validateDependencies()) {
+        //    getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
+        //}
         reloadConfig();
         this.saveResource("messages.yml", false);
 
         File dataFolder = getDataFolder();
         MessageConfig configHandler = new PaperMessageConfig(dataFolder, "messages.yml");
         messageData = new MessageData(configHandler);
-
 
         if (api != null) {
             getLogger().info("Reloading BedrockGUI with fresh instances to avoid stale cache...");
@@ -92,15 +90,14 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             }
         }
 
-
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = null;
-        if (DependencyValidator.isPluginCompatible("Vault", "1.0.0")) {
+        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
             economyManager = new PaperEconomyManager(this);
             getLogger().info("Vault integration enabled");
-        } else if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
-            getLogger().warning("Vault found but version is incompatible. Economy features disabled.");
+        } else {
+            getLogger().warning("Vault not found. Economy features disabled.");
         }
         PaperFormSender formSender = new PaperFormSender();
         PaperTitleManager titleManager = new PaperTitleManager();
@@ -114,7 +111,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         // Register incoming bridge for proxy-run player commands
         this.getServer().getMessenger().registerIncomingPluginChannel(this, "bedrockgui:cmd", new it.pintux.life.paper.platform.CommandBridgeListener());
 
-        api = new BedrockGUIApi(new PaperConfig(getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
+        api = new BedrockGUIApi(new PaperConfig(getDataFolder(), getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
@@ -123,14 +120,12 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         formMenuUtil.setJavaMenuManager(javaMenuManager);
         getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
-        if (DependencyValidator.isPluginCompatible("PlaceholderAPI", "2.10.0")) {
+        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BedrockGUIExpansion(this).register();
             getLogger().info("PlaceholderAPI expansion registered");
-        } else if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
-            getLogger().warning("PlaceholderAPI found but version is incompatible. Placeholder features disabled.");
+        } else {
+            getLogger().warning("PlaceholderAPI not found. Placeholder features disabled.");
         }
-
-
         getLogger().info("BedrockGUI loaded and enabled");
 
         // Initial wrap; more wraps are triggered on ServerLoad/PluginEnable to catch late registrations
@@ -193,12 +188,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             java.util.Map<String, org.bukkit.command.Command> known = (java.util.Map<String, org.bukkit.command.Command>) knownField.get(commandMap);
 
             java.util.Set<String> excluded = new java.util.HashSet<>(java.util.Arrays.asList(
-                    // common administrative commands that may re-dispatch internally
                     "plugman", "help", "?", "ver", "version", "plugins",
-                    // bukkit-namespaced variants
                     "bukkit:help", "bukkit:?", "bukkit:ver", "bukkit:version", "bukkit:plugins",
-                    // our plugin command
-                    "bedrockgui"
+                    "bedrockgui", "bgui"
             ));
 
             int wrapped = 0;
@@ -214,7 +206,8 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                     String key = e.getKey();
                     String name = orig.getName();
                     String className = orig.getClass().getName();
-                    if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:"))) continue;
+                    if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:")))
+                        continue;
                     if (className.startsWith("org.bukkit.command.defaults")) continue;
                     if (name != null && excluded.contains(name.toLowerCase())) continue;
                     if (key != null && excluded.contains(key.toLowerCase())) continue;
@@ -236,7 +229,8 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 String name = cmd.getName();
                 String className = cmd.getClass().getName();
                 // Skip core/default commands and namespaced Minecraft/Bukkit commands
-                if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:"))) continue;
+                if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:")))
+                    continue;
                 if (className.startsWith("org.bukkit.command.defaults")) continue;
                 if (name != null && excluded.contains(name.toLowerCase())) continue;
                 if (key != null && excluded.contains(key.toLowerCase())) continue;

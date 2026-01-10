@@ -11,7 +11,7 @@ import java.util.Collection;
 
 public class ActionRegistry {
 
-    private static final Logger logger = Logger.getLogger(ActionRegistry.class);
+    private static final Logger logger = Logger.getLogger(ActionRegistry.class.getSimpleName());
     private static ActionRegistry instance;
     private final Map<String, ActionSystem.ActionHandler> handlers = new ConcurrentHashMap<>();
 
