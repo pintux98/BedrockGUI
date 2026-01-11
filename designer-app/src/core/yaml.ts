@@ -4,10 +4,8 @@ import { ActionInstance } from "./types";
 import { JavaMenuFill } from "./types";
 
 export function stateToYaml(state: DesignerState): string {
-  const forms: Record<string, unknown> = {};
-  const key = state.menuName;
-  forms[key] = stateToFormEntry(state);
-  return yaml.dump({ forms, configVersion: state.configVersion }, { lineWidth: -1, noRefs: true, forceQuotes: true });
+  const entry = stateToFormEntry(state);
+  return yaml.dump({ ...entry, configVersion: state.configVersion }, { lineWidth: -1, noRefs: true, forceQuotes: true });
 }
 
 export function stateToSnippetYaml(state: DesignerState): string {

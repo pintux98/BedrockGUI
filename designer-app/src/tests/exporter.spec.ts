@@ -4,19 +4,14 @@ import { stateToYaml } from "../core/yaml";
 import yaml from "js-yaml";
 
 describe("exporter", () => {
-  it("exports inline forms YAML", () => {
+  it("exports inline forms YAML without forms key", () => {
     const state = useDesignerStore.getState();
-    const forms: Record<string, unknown> = {};
-    const key = state.menuName;
-    forms[key] = {
-      bedrock: {
-        type: state.bedrock?.type,
-        title: state.bedrock?.title
-      }
-    };
-    const doc = yaml.dump({ forms });
-    expect(doc).toContain("forms:");
-    expect(doc).toContain(state.menuName);
+    const out = stateToYaml(state);
+    
+    expect(out).not.toContain("forms:");
+    expect(out).toContain("configVersion: '1.0.0'");
+    // Should contain bedrock or java key depending on default state
+    expect(out).toMatch(/(bedrock|java):/);
   });
 
   it("does not use block scalars for image urls", () => {

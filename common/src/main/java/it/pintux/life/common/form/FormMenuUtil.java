@@ -137,7 +137,9 @@ public class FormMenuUtil {
         String permission = cfg.getString(bedrockBase + ".permission");
         String type = cfg.getString(bedrockBase + ".type", "SIMPLE");
         String title = cfg.getString(bedrockBase + ".title", "Unknown");
+        String contentVal = cfg.getString(bedrockBase + ".content");
         String description = cfg.getString(bedrockBase + ".description");
+        String resolvedContent = contentVal != null ? contentVal : description;
 
         List<FormButton> buttons = readBedrockButtons(cfg, bedrockBase, key, type);
         if (buttons == null) {
@@ -147,7 +149,7 @@ public class FormMenuUtil {
         Map<String, Map<String, Object>> components = readBedrockComponents(cfg, bedrockBase, type);
         List<String> globalActions = cfg.getStringList(bedrockBase + ".global_actions");
 
-        FormMenu menu = new FormMenu(command, commandIntercept, permission, title, description, type, buttons, components, globalActions);
+        FormMenu menu = new FormMenu(command, commandIntercept, permission, title, resolvedContent, type, buttons, components, globalActions);
 
         it.pintux.life.common.form.obj.JavaMenuDefinition javaDef = readJavaMenu(cfg, javaBase, title, key);
         if (javaDef != null) {
