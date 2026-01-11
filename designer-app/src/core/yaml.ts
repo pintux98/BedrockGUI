@@ -7,11 +7,11 @@ export function stateToYaml(state: DesignerState): string {
   const forms: Record<string, unknown> = {};
   const key = state.menuName;
   forms[key] = stateToFormEntry(state);
-  return yaml.dump({ forms, configVersion: state.configVersion });
+  return yaml.dump({ forms, configVersion: state.configVersion }, { lineWidth: -1, noRefs: true, forceQuotes: true });
 }
 
 export function stateToSnippetYaml(state: DesignerState): string {
-  return yaml.dump(stateToFormEntry(state));
+  return yaml.dump(stateToFormEntry(state), { lineWidth: -1, noRefs: true, forceQuotes: true });
 }
 
 export function stateToFormEntry(state: DesignerState): Record<string, unknown> {

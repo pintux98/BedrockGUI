@@ -64,6 +64,8 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         if (args.length == 0) {
             sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
             sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name>");
+            sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name>");
+            sender.sendMessage(ChatColor.RED + "Usage: /bgui convert");
             return true;
         }
         String arg = args[0];
