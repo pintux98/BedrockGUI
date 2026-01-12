@@ -4,7 +4,12 @@ import { designerSchema } from "../core/schemas";
 import { stateToSnippetYaml, yamlToStateDoc } from "../core/yaml";
 import { deserializeActions } from "../core/yaml";
 
-export function YamlEditorPanel() {
+interface YamlEditorPanelProps {
+  onCollapseChange?: (collapsed: boolean) => void;
+  defaultExpanded?: boolean;
+}
+
+export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEditorPanelProps) {
   const state = useDesignerStore();
   const {
     setMenuName,
@@ -17,6 +22,17 @@ export function YamlEditorPanel() {
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("yaml_panel_collapsed") === "true";
   });
+
+  useEffect(() => {
+    if (defaultExpanded) {
+      setCollapsed(false);
+    }
+  }, [defaultExpanded]);
+
+  // Notify parent of collapse state
+  useEffect(() => {
+    onCollapseChange?.(collapsed);
+  }, [collapsed, onCollapseChange]);
 
   useEffect(() => {
     localStorage.setItem("yaml_panel_collapsed", String(collapsed));
@@ -69,41 +85,42 @@ export function YamlEditorPanel() {
     }
   };
 
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
   return (
-    <div 
-      className={`ui-panel flex flex-col transition-all duration-300 ease-in-out border-t border-brand-border ${
-        collapsed ? "flex-none h-8" : "flex-1 min-h-0"
-      }`}
-    >
+    <div className={`flex flex-col h-full border-t border-brand-border overflow-hidden transition-all duration-300 ${collapsed ? "bg-brand-surface" : "bg-brand-bg"}`}>
       <div 
-        className="ui-panel-title flex items-center justify-between cursor-pointer hover:bg-brand-surface2"
-        onClick={() => setCollapsed(!collapsed)}
+        className={`h-8 flex items-center px-4 bg-brand-surface border-b border-brand-border cursor-pointer hover:bg-brand-surface2 transition-colors justify-between shrink-0 ${defaultExpanded ? "cursor-default pointer-events-none" : ""}`}
+        onClick={() => !defaultExpanded && setCollapsed(!collapsed)}
       >
-        <span>Form YAML</span>
-        <span className="text-xs text-brand-muted">{collapsed ? "Show ▲" : "Hide ▼"}</span>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-brand-text">Form YAML</span>
+          {collapsed && <span className="text-[10px] text-brand-muted px-2 py-0.5 rounded bg-brand-bg border border-brand-border">Collapsed</span>}
+        </div>
+        {!defaultExpanded && <span className="text-xs text-brand-muted transition-transform duration-300" style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>}
       </div>
-      
       {!collapsed && (
-        <div className="flex-1 flex flex-col min-h-0 p-2 overflow-hidden">
+        <div className="flex-1 flex flex-col min-h-0 p-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
           <textarea
             className="ui-textarea flex-1 text-xs font-mono resize-none mb-2 w-full h-full"
             value={text}
-            onChange={(e) => setText(e.target.value)}
-            spellCheck={false}
+            readOnly
           />
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              className="ui-btn ui-btn-primary w-full"
-              onClick={applyYaml}
+          <div className="flex justify-end shrink-0">
+            <button 
+              className="ui-btn ui-btn-primary text-xs px-3 py-1"
+              onClick={copyToClipboard}
             >
-              Apply Changes
+              {copied ? "Copied!" : "Copy YAML"}
             </button>
           </div>
-          {error && (
-            <div className="mt-2 p-2 bg-red-900/20 border border-red-900/40 text-red-400 text-xs font-mono break-all shrink-0">
-              {error}
-            </div>
-          )}
         </div>
       )}
     </div>
