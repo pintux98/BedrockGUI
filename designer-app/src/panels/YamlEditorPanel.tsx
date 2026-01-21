@@ -17,7 +17,8 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
     setJava,
     setGlobalActions
   } = useDesignerStore();
-  const [text, setText] = useState("");
+  const [mode, setMode] = useState<"live" | "edit">("live");
+  const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [collapsed, setCollapsed] = useState(() => {
     return localStorage.getItem("yaml_panel_collapsed") === "true";
@@ -38,18 +39,16 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
     localStorage.setItem("yaml_panel_collapsed", String(collapsed));
   }, [collapsed]);
 
-  useEffect(() => {
-    setText(stateToSnippetYaml(state));
-  }, [state]);
+  const liveYaml = stateToSnippetYaml(state);
 
   const applyYaml = () => {
     try {
-      const { menuName, entry, configVersion } = yamlToStateDoc(text);
+      const { menuName, entry, configVersion } = yamlToStateDoc(draft);
       const bedrockEntry = entry?.bedrock ?? (entry?.type ? entry : undefined);
       const javaEntry = entry?.java ?? (entry?.type && entry?.items ? entry : undefined);
 
       const nextMenuName =
-        String(text).includes("\nforms:") || String(text).includes("\r\nforms:")
+        String(draft).includes("\nforms:") || String(draft).includes("\r\nforms:")
           ? menuName
           : state.menuName;
 
@@ -80,6 +79,7 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
       setBedrock(nextBedrock);
       setJava(nextJava);
       setGlobalActions(nextGlobalActions);
+      setMode("live");
     } catch (e: any) {
       setError(String(e.message ?? e));
     }
@@ -88,7 +88,8 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
   const [copied, setCopied] = useState(false);
 
   const copyToClipboard = () => {
-    navigator.clipboard.writeText(text).then(() => {
+    const toCopy = mode === "edit" ? draft : liveYaml;
+    navigator.clipboard.writeText(toCopy).then(() => {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     });
@@ -110,10 +111,56 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
         <div className="flex-1 flex flex-col min-h-0 p-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
           <textarea
             className="ui-textarea flex-1 text-xs font-mono resize-none mb-2 w-full h-full"
-            value={text}
-            readOnly
+            value={mode === "edit" ? draft : liveYaml}
+            readOnly={mode !== "edit"}
+            onChange={(e) => setDraft(e.target.value)}
+            spellCheck={false}
           />
-          <div className="flex justify-end shrink-0">
+          {error && (
+            <div className="mb-2 p-2 bg-red-900/20 border border-red-900/40 text-red-400 text-xs font-mono break-words shrink-0">
+              {error}
+            </div>
+          )}
+          <div className="flex justify-end gap-2 shrink-0">
+            {mode === "live" ? (
+              <button
+                className="ui-btn ui-btn-secondary text-xs px-3 py-1"
+                onClick={() => {
+                  setDraft(liveYaml);
+                  setError(null);
+                  setMode("edit");
+                }}
+              >
+                Edit
+              </button>
+            ) : (
+              <>
+                <button
+                  className="ui-btn ui-btn-secondary text-xs px-3 py-1"
+                  onClick={() => {
+                    setDraft(liveYaml);
+                    setError(null);
+                  }}
+                >
+                  Reset
+                </button>
+                <button
+                  className="ui-btn ui-btn-primary text-xs px-3 py-1"
+                  onClick={applyYaml}
+                >
+                  Apply Changes
+                </button>
+                <button
+                  className="ui-btn ui-btn-secondary text-xs px-3 py-1"
+                  onClick={() => {
+                    setError(null);
+                    setMode("live");
+                  }}
+                >
+                  Cancel
+                </button>
+              </>
+            )}
             <button 
               className="ui-btn ui-btn-primary text-xs px-3 py-1"
               onClick={copyToClipboard}

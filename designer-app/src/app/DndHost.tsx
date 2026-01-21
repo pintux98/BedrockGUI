@@ -82,14 +82,16 @@ export function DndHost({ children }: { children: React.ReactNode }) {
       const t = data?.type as string | undefined;
       if (!t) return;
       if (over === "bedrock-buttons" && (bedrock.type === "SIMPLE" || bedrock.type === "MODAL") && t === "button") {
+        const nextId = nextSequentialId("button", (bedrock.buttons ?? []).map((b: any) => String(b.id)));
+        const n = Number(nextId.split("_")[1] ?? (bedrock.buttons ?? []).length + 1);
         const buttons = [
           ...(bedrock.buttons ?? []),
-          { id: `button_${(bedrock.buttons ?? []).length + 1}`, text: `Button ${(bedrock.buttons ?? []).length + 1}` }
+          { id: nextId, text: `Button ${Number.isFinite(n) ? n : (bedrock.buttons ?? []).length + 1}` }
         ];
         setBedrock({ ...(bedrock as any), buttons } as BedrockForm);
       }
       if (over === "bedrock-components" && bedrock.type === "CUSTOM") {
-        const id = `component_${(bedrock.components ?? []).length + 1}`;
+        const id = nextSequentialId("component", (bedrock.components ?? []).map((c: any) => String(c.id)));
         const props = defaultBedrockComponentProps(t);
         const components = [
           ...(bedrock.components ?? []),
@@ -156,5 +158,12 @@ function defaultBedrockComponentProps(type: string) {
   if (type === "slider") return { text: "Slider", min: 0, max: 10, step: 1, default: 5 };
   if (type === "stepper") return { text: "Stepper", steps: ["A", "B", "C"], default: 0 };
   return {};
+}
+
+function nextSequentialId(prefix: string, existing: string[]) {
+  const used = new Set(existing);
+  let i = 1;
+  while (used.has(`${prefix}_${i}`)) i++;
+  return `${prefix}_${i}`;
 }
 

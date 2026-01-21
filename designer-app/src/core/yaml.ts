@@ -5,11 +5,18 @@ import { JavaMenuFill } from "./types";
 
 export function stateToYaml(state: DesignerState): string {
   const entry = stateToFormEntry(state);
-  return yaml.dump({ ...entry, configVersion: state.configVersion }, { lineWidth: -1, noRefs: true, forceQuotes: true });
+  return postprocessMultilineStrings(
+    yaml.dump(
+      { ...entry, configVersion: state.configVersion },
+      { lineWidth: -1, noRefs: true, forceQuotes: true, quotingType: "\"" }
+    )
+  );
 }
 
 export function stateToSnippetYaml(state: DesignerState): string {
-  return yaml.dump(stateToFormEntry(state), { lineWidth: -1, noRefs: true, forceQuotes: true });
+  return postprocessMultilineStrings(
+    yaml.dump(stateToFormEntry(state), { lineWidth: -1, noRefs: true, forceQuotes: true, quotingType: "\"" })
+  );
 }
 
 export function stateToFormEntry(state: DesignerState): Record<string, unknown> {
@@ -127,10 +134,10 @@ function serializeActionBlocks(actions?: ActionInstance[]) {
     .map((a) => {
       if (typeof a.raw === "string" && a.raw.trim()) return a.raw.trim();
       if (typeof a.params === "string" && a.params.trim()) return a.params.trim();
-      return null;
     })
     .filter(Boolean);
 }
+
 
 function serializeJavaFills(fills?: JavaMenuFill[]) {
   if (!fills?.length) return undefined;
@@ -182,6 +189,57 @@ function stripUndefined<T extends Record<string, any>>(obj: T): T {
     if (v === undefined) continue;
     if (v && typeof v === "object" && !Array.isArray(v)) out[k] = stripUndefined(v as any);
     else out[k] = v;
+  }
+  return out;
+}
+
+function postprocessMultilineStrings(text: string) {
+  const lines = text.split(/\r?\n/);
+  const out: string[] = [];
+
+  for (const line of lines) {
+    const m = line.match(/^(\s*-\s*)"((?:\\.|[^"\\])*)"\s*$/);
+    if (!m) {
+      out.push(line);
+      continue;
+    }
+
+    const prefix = m[1];
+    const inner = m[2];
+    if (!inner.includes("\\n")) {
+      out.push(line);
+      continue;
+    }
+
+    const indent = prefix.match(/^\s*/)?.[0] ?? "";
+    const decoded = unescapeDoubleQuoted(inner);
+    out.push(`${indent}- |-`);
+    for (const contentLine of decoded.split("\n")) {
+      out.push(`${indent}  ${contentLine}`);
+    }
+  }
+
+  return out.join("\n");
+}
+
+function unescapeDoubleQuoted(s: string) {
+  let out = "";
+  for (let i = 0; i < s.length; i++) {
+    const ch = s[i];
+    if (ch !== "\\") {
+      out += ch;
+      continue;
+    }
+    const next = s[i + 1];
+    if (next === undefined) {
+      out += "\\";
+      continue;
+    }
+    i++;
+    if (next === "n") out += "\n";
+    else if (next === "\"") out += "\"";
+    else if (next === "\\") out += "\\";
+    else out += `\\${next}`;
   }
   return out;
 }

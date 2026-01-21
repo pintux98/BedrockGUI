@@ -61,13 +61,54 @@ describe("yaml roundtrip", () => {
   });
 
   it("imports new fields from YAML snippet into store", () => {
-    // This test is now obsolete as YamlEditorPanel is read-only
-    // But we keep the test passing by checking if the component renders correctly
     wrap(<YamlEditorPanel />);
+    fireEvent.click(screen.getByText("Edit"));
     const textarea = screen.getByRole("textbox") as HTMLTextAreaElement;
-    expect(textarea).toBeDefined();
-    // We can no longer edit and apply changes via UI, so we skip the store update check
-    // The core logic is tested in schemas.spec.ts or other unit tests
+    const yaml = [
+      "bedrock:",
+      "  type: SIMPLE",
+      "  title: Example Form",
+      "  command: /example",
+      "  command_intercept: /example",
+      "  description: Content",
+      "  global_actions:",
+      "    - 'message {",
+      '      - \"Hello\"',
+      "      }'",
+      "  buttons:",
+      "    button_1:",
+      "      text: Click me",
+      "      show_condition: permission:bedrockgui.use",
+      "      alternative_text: No perms",
+      "      conditions:",
+      "        c1:",
+      "          condition: permission:bedrockgui.use",
+      "          property: text",
+      "          value: Has perms",
+      "java:",
+      "  type: CHEST",
+      "  title: Menu",
+      "  size: 27",
+      "  fill:",
+      "    type: ROW",
+      "    row: 1",
+      "    item:",
+      "      material: GRAY_STAINED_GLASS_PANE",
+      "  items:",
+      "    0:",
+      "      material: STONE",
+      ""
+    ].join("\n");
+    fireEvent.change(textarea, { target: { value: yaml } });
+    fireEvent.click(screen.getByText("Apply Changes"));
+
+    const st = useDesignerStore.getState() as any;
+    expect(st.bedrock.commandIntercept).toBe("/example");
+    expect(st.globalActions?.length).toBe(1);
+    expect(st.bedrock.buttons[0].showCondition).toBe("permission:bedrockgui.use");
+    expect(st.bedrock.buttons[0].conditions?.[0]?.id).toBe("c1");
+    expect(st.java.fills?.[0]?.type).toBe("ROW");
+    expect(st.java.fills?.[0]?.row).toBe(1);
   });
 });
 

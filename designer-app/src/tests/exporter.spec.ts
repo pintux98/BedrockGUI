@@ -9,7 +9,7 @@ describe("exporter", () => {
     const out = stateToYaml(state);
     
     expect(out).not.toContain("forms:");
-    expect(out).toContain("configVersion: '1.0.0'");
+    expect(out).toMatch(/configVersion:\s+["']1\.0\.0["']/);
     // Should contain bedrock or java key depending on default state
     expect(out).toMatch(/(bedrock|java):/);
   });
@@ -25,8 +25,27 @@ describe("exporter", () => {
     // Ensure state update is reflected
     const updatedState = useDesignerStore.getState();
     const out = stateToYaml(updatedState);
-    expect(out).toContain("image: 'http://example.com/image.png'");
     expect(out).not.toContain("image: >-");
+    expect(out).toMatch(/image:\s+["']http:\/\/example\.com\/image\.png["']/);
+  });
+
+  it("preserves multiline action formatting", () => {
+    const state = useDesignerStore.getState();
+    state.setBedrock({
+      type: "SIMPLE",
+      title: "Test",
+      buttons: [
+        {
+          id: "btn1",
+          text: "Click",
+          onClick: [{ id: "raw", params: 'message {\n  - "Hello"\n}', raw: 'message {\n  - "Hello"\n}' }]
+        }
+      ]
+    } as any);
+    const out = stateToYaml(useDesignerStore.getState() as any);
+    expect(out).toMatch(/onClick:\n\s+- \|-/);
+    expect(out).toContain("message {");
+    expect(out).toContain('  - "Hello"');
   });
 });
 
