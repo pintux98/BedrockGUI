@@ -103,7 +103,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
             String message = messages.get(i);
 
             try {
-                logger.info("Sending action bar " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
+                //logger.info("Sending action bar " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
 
                 ActionSystem.ActionResult result = executeSingleActionBar(player, message, null);
 

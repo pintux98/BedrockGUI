@@ -104,7 +104,7 @@ public class SoundActionHandler extends BaseActionHandler {
             String sound = sounds.get(i);
 
             try {
-                logger.info("Playing sound " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + sound);
+                //logger.info("Playing sound " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + sound);
 
                 ActionSystem.ActionResult result = executeSingleSound(player, sound, null);
 

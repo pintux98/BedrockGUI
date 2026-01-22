@@ -103,7 +103,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
             String broadcast = broadcasts.get(i);
 
             try {
-                logger.info("Sending broadcast " + (i + 1) + "/" + totalCount + " from player " + player.getName() + ": " + broadcast);
+                //logger.info("Sending broadcast " + (i + 1) + "/" + totalCount + " from player " + player.getName() + ": " + broadcast);
 
                 ActionSystem.ActionResult result = executeSingleBroadcast(player, broadcast, null);
 

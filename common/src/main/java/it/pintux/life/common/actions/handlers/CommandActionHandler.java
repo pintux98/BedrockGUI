@@ -143,7 +143,7 @@ public class CommandActionHandler extends BaseActionHandler {
             String command = commands.get(i);
 
             try {
-                logger.info("Executing command " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + command);
+                //logger.info("Executing command " + (i + 1) + "/" + totalCount + " for player " + player.getName() + ": " + command);
 
                 ActionSystem.ActionResult result = executeSingleCommand(command, player);
 

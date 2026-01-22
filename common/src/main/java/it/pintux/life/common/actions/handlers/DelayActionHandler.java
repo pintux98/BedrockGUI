@@ -120,7 +120,7 @@ public class DelayActionHandler extends BaseActionHandler {
             return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "No delay applied"), player);
         }
 
-        logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
+        //logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
         if (scheduler != null) {
             scheduler.runLaterSync(delayMs, () -> {
                 try {

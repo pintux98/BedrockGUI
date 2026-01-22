@@ -84,7 +84,7 @@ public class MessageActionHandler extends BaseActionHandler {
             String message = messages.get(i);
 
             try {
-                logger.info("Sending message " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
+                //logger.info("Sending message " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + message);
 
                 ActionSystem.ActionResult result = executeSingleMessage(player, message, context);
 

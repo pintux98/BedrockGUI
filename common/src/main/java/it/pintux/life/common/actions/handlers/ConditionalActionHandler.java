@@ -75,14 +75,14 @@ public class ConditionalActionHandler extends BaseActionHandler {
             List<String> actionsToExecute;
             if (conditionMet) {
                 actionsToExecute = parseActionList(actionData, TRUE_ACTIONS_PATTERN);
-                logger.info("Condition met for player " + player.getName() + ", executing " + actionsToExecute.size() + " success actions");
+                //logger.info("Condition met for player " + player.getName() + ", executing " + actionsToExecute.size() + " success actions");
             } else {
                 actionsToExecute = parseActionList(actionData, FALSE_ACTIONS_PATTERN);
                 if (actionsToExecute.isEmpty()) {
-                    logger.info("Condition not met for player " + player.getName() + ": " + checkCondition + " (no failure actions specified)");
+                    //logger.info("Condition not met for player " + player.getName() + ": " + checkCondition + " (no failure actions specified)");
                     return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Condition not met, action skipped"), player);
                 }
-                logger.info("Condition not met for player " + player.getName() + ", executing " + actionsToExecute.size() + " failure actions");
+                //logger.info("Condition not met for player " + player.getName() + ", executing " + actionsToExecute.size() + " failure actions");
             }
 
 
