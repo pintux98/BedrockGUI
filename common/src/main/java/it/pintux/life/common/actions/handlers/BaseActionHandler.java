@@ -165,7 +165,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
         }
 
 
-        java.util.regex.Pattern valuePattern = java.util.regex.Pattern.compile("-\\s*\"([^\"]+)\"");
+        java.util.regex.Pattern valuePattern = java.util.regex.Pattern.compile("-\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
         java.util.regex.Matcher matcher = valuePattern.matcher(actionData);
 
         while (matcher.find()) {

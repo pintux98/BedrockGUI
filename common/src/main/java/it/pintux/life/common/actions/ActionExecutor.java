@@ -27,7 +27,7 @@ public class ActionExecutor {
 
 
     private static final Pattern VALUE_PATTERN = Pattern.compile(
-            "-\\s*\"([^\"]+)\""
+            "-\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
     );
 
     public ActionExecutor(ActionRegistry registry) {
