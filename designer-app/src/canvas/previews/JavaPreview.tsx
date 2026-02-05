@@ -3,6 +3,8 @@ import { JavaMenu } from "../../core/types";
 import { useDroppable } from "@dnd-kit/core";
 import { useDesignerStore } from "../../core/store";
 import JAVA_ASSETS from "virtual:java-assets-index";
+import { MinecraftText } from "../../components/MinecraftText";
+import { stripMinecraftCodes } from "../../core/minecraftText";
 
 export function JavaPreview({ menu }: { menu: JavaMenu }) {
   const { selectedJavaSlot, setSelectedJavaSlot } = useDesignerStore();
@@ -43,6 +45,8 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
             {slots.map((slot) => {
               const item = itemsBySlot.get(slot);
               const icon = item ? materialToIconUrl(item.material) : undefined;
+              const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
+              const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
               return (
                 <JavaSlot
                   key={slot}
@@ -50,6 +54,8 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
                   label={item ? item.material : String(slot)}
                   iconUrl={icon}
                   muted={fillSlots.has(slot) && !menu.items.some((it) => it.slot === slot)}
+                  tooltipTitle={tooltipTitle}
+                  tooltipLore={tooltipLore}
                   registerRef={(el) => {
                     slotRefs.current[slot] = el;
                   }}
@@ -92,6 +98,8 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
             {[0, 1, 2].map((slot) => {
               const item = menu.items.find((it) => it.slot === slot);
               const icon = item ? materialToIconUrl(item.material) : undefined;
+              const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
+              const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
               return (
                 <JavaSlot
                   key={slot}
@@ -99,6 +107,8 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
                   label={item ? item.material : String(slot)}
                   iconUrl={icon}
                   tall
+                  tooltipTitle={tooltipTitle}
+                  tooltipLore={tooltipLore}
                   registerRef={(el) => {
                     slotRefs.current[slot] = el;
                   }}
@@ -138,12 +148,16 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((slot) => {
                 const item = menu.items.find((it) => it.slot === slot);
                 const icon = item ? materialToIconUrl(item.material) : undefined;
+                const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
+                const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
                 return (
                   <JavaSlot
                     key={slot}
                     slot={slot}
                     label={item ? item.material : String(slot)}
                     iconUrl={icon}
+                    tooltipTitle={tooltipTitle}
+                    tooltipLore={tooltipLore}
                     registerRef={(el) => {
                       slotRefs.current[slot] = el;
                     }}
@@ -156,12 +170,16 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
                {(() => {
                  const resultItem = menu.items.find((it) => it.slot === 0);
                  const resultIcon = resultItem ? materialToIconUrl(resultItem.material) : undefined;
+                 const tooltipTitle = resultItem?.name ?? resultItem?.material ?? "Result";
+                 const tooltipLore = Array.isArray(resultItem?.lore) ? resultItem.lore : [];
                  return (
                    <JavaSlot
                      slot={0}
                      label={resultItem ? resultItem.material : "Result"}
                      iconUrl={resultIcon}
                      tall
+                     tooltipTitle={tooltipTitle}
+                     tooltipLore={tooltipLore}
                      registerRef={(el) => {
                        slotRefs.current[0] = el;
                      }}
@@ -186,7 +204,9 @@ function JavaSlot({
   tall,
   iconUrl,
   registerRef,
-  muted
+  muted,
+  tooltipTitle,
+  tooltipLore
 }: {
   slot: number;
   label: string;
@@ -194,10 +214,13 @@ function JavaSlot({
   iconUrl?: string;
   registerRef?: (el: HTMLButtonElement | null) => void;
   muted?: boolean;
+  tooltipTitle?: string;
+  tooltipLore?: string[];
 }) {
   const { isOver, setNodeRef } = useDroppable({ id: `java-slot-${slot}` });
   const { selectedJavaSlot, setSelectedJavaSlot, setSelectedBedrockButtonId, setSelectedBedrockComponentId } = useDesignerStore();
   const selected = selectedJavaSlot === slot;
+  const titlePlain = stripMinecraftCodes(tooltipTitle ?? label);
   return (
     <button
       ref={(node) => {
@@ -210,9 +233,9 @@ function JavaSlot({
         setSelectedBedrockComponentId(null);
       }}
       type="button"
-      aria-label={`Slot ${slot}: ${label}`}
+      aria-label={`Slot ${slot}: ${titlePlain}`}
       className={`${tall ? "h-12" : "h-9"} w-9 bg-[#8b8b8b] flex items-center justify-center text-[10px] cursor-pointer select-none relative group ${muted ? "opacity-75" : ""}`}
-      title={label}
+      title={titlePlain}
       style={{
         boxShadow: selected || isOver 
           ? "inset 0 0 0 2px white" 
@@ -220,6 +243,24 @@ function JavaSlot({
       }}
     >
       <div className="absolute inset-0 hover:bg-white/20 pointer-events-none" />
+      {tooltipTitle ? (
+        <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 hidden group-hover:block pointer-events-none z-50">
+          <div className="bg-black/90 border border-[#2b2b2b] px-2 py-1 rounded-sm shadow-2xl font-minecraft text-xs text-white max-w-[260px] whitespace-pre-wrap break-words">
+            <div className="leading-tight">
+              <MinecraftText text={tooltipTitle} />
+            </div>
+            {tooltipLore && tooltipLore.length > 0 && (
+              <div className="mt-1 space-y-0.5 text-[#AAAAAA]">
+                {tooltipLore.map((line, idx) => (
+                  <div key={idx} className="leading-tight">
+                    <MinecraftText text={line} />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
       {iconUrl ? <img src={iconUrl} className="w-7 h-7 image-rendering-pixelated" /> : <span className="text-[#2b2b2b] hidden group-hover:block">{label.slice(0,2)}</span>}
     </button>
   );

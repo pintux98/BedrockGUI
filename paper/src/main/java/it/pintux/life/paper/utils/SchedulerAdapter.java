@@ -39,6 +39,24 @@ public final class SchedulerAdapter {
         Bukkit.getScheduler().runTask(plugin, task);
     }
 
+    public static void runSyncLater(Plugin plugin, Runnable task, long delay) {
+        if (FOLIA) {
+            try {
+                Object grs = Bukkit.class
+                        .getMethod("getGlobalRegionScheduler")
+                        .invoke(null);
+                Consumer<Object> consumer = st -> task.run();
+                grs.getClass()
+                        .getMethod("runDelayed", Plugin.class, Consumer.class, long.class)
+                        .invoke(grs, plugin, consumer, delay);
+                return;
+            } catch (Throwable ignored) {
+            }
+        }
+
+        Bukkit.getScheduler().runTaskLater(plugin, task, delay);
+    }
+
     public static void runAsync(Plugin plugin, Runnable task) {
         if (FOLIA) {
             try {

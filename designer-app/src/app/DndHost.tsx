@@ -31,7 +31,7 @@ export function DndHost({ children }: { children: React.ReactNode }) {
 
   const overlay = useMemo(() => {
     if (activeMaterial) {
-      return <IconTile id={activeMaterial} name={activeMaterial} />;
+      return <IconTile id={activeMaterial} name={activeLabel ?? activeMaterial} iconUrl={activeIconUrl ?? undefined} />;
     }
     if (activeLabel) {
       return (
@@ -41,7 +41,7 @@ export function DndHost({ children }: { children: React.ReactNode }) {
       );
     }
     return null;
-  }, [activeLabel, activeMaterial]);
+  }, [activeIconUrl, activeLabel, activeMaterial]);
 
   const onDragEnd = (event: DragEndEvent) => {
     const over = event.over?.id?.toString();
@@ -50,6 +50,7 @@ export function DndHost({ children }: { children: React.ReactNode }) {
     setActiveId(null);
     setActiveLabel(null);
     setActiveMaterial(null);
+    setActiveIconUrl(null);
     if (!over) return;
     if (!active) return;
 
@@ -127,12 +128,14 @@ export function DndHost({ children }: { children: React.ReactNode }) {
         const d = e.active.data.current as any;
         setActiveLabel(d?.label ?? null);
         setActiveMaterial(d?.material ?? null);
+        setActiveIconUrl(d?.iconUrl ?? null);
       }}
       onDragEnd={onDragEnd}
       onDragCancel={() => {
         setActiveId(null);
         setActiveLabel(null);
         setActiveMaterial(null);
+        setActiveIconUrl(null);
       }}
     >
       {children}
