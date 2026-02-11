@@ -662,6 +662,7 @@ public class FormMenuUtil {
 
         Map<Integer, String> componentActions = new HashMap<>();
         Map<String, Object> componentResults = new HashMap<>();
+        Map<String, List<String>> resolvedDropdownOptions = new HashMap<>();
         int[] componentIndex = {0};
 
         for (String componentKey : formMenu.getComponents().keySet()) {
@@ -692,9 +693,12 @@ public class FormMenuUtil {
                 case "dropdown":
                     String dropdownTextRaw = (String) component.get("text");
                     String dropdownText = dropdownTextRaw != null ? replacePlaceholders(dropdownTextRaw, placeholders, player, messageData) : "";
-                    @SuppressWarnings("unchecked")
-                    List<String> options = (List<String>) component.get("options");
+                    List<String> options = resolveDropdownOptions(component.get("options"), placeholders, player, messageData);
+                    resolvedDropdownOptions.put(componentKey, options);
                     int defaultDropdown = (int) component.get("default");
+                    if (defaultDropdown < 0 || defaultDropdown >= options.size()) {
+                        defaultDropdown = 0;
+                    }
                     formBuilder.dropdown(dropdownText, options, defaultDropdown);
                     componentActions.put(componentIndex[0], (String) component.get("action"));
                     componentResults.put(componentKey, "");
@@ -733,9 +737,15 @@ public class FormMenuUtil {
                         break;
                     case "dropdown":
                         int dropdownResult = customFormResponse.asDropdown(componentIndex[0]);
-                        @SuppressWarnings("unchecked")
-                        List<String> options = (List<String>) component.get("options");
-                        result = options.get(dropdownResult);
+                        List<String> options = resolvedDropdownOptions.get(componentKey);
+                        if (options == null) {
+                            options = resolveDropdownOptions(component.get("options"), placeholders, player, messageData);
+                        }
+                        if (dropdownResult >= 0 && dropdownResult < options.size()) {
+                            result = options.get(dropdownResult);
+                        } else {
+                            result = "";
+                        }
                         componentResults.put(componentKey, result);
                         break;
                     case "toggle":
@@ -954,6 +964,67 @@ public class FormMenuUtil {
         }
 
         return result;
+    }
+
+    private List<String> resolveDropdownOptions(Object rawOptions, Map<String, String> placeholders, FormPlayer player, MessageData messageData) {
+        if (rawOptions == null) {
+            return List.of("");
+        }
+
+        List<String> baseOptions;
+        if (rawOptions instanceof List) {
+            baseOptions = new ArrayList<>();
+            for (Object option : (List<?>) rawOptions) {
+                if (option == null) {
+                    continue;
+                }
+                baseOptions.add(String.valueOf(option));
+            }
+        } else {
+            baseOptions = List.of(String.valueOf(rawOptions));
+        }
+
+        boolean rawIsString = rawOptions instanceof String;
+
+        List<String> resolved = new ArrayList<>();
+        for (String raw : baseOptions) {
+            if (raw == null) {
+                continue;
+            }
+
+            String rawTrimmed = raw.trim();
+            String processed = replacePlaceholders(raw, placeholders, player, messageData);
+
+            boolean splitAsCsv = isSinglePercentPlaceholderToken(rawTrimmed) || (rawIsString && rawTrimmed.contains(","));
+            if (splitAsCsv) {
+                for (String part : processed.split(",")) {
+                    String candidate = part.trim();
+                    if (!candidate.isEmpty()) {
+                        resolved.add(candidate);
+                    }
+                }
+            } else {
+                resolved.add(processed);
+            }
+        }
+
+        if (resolved.isEmpty()) {
+            resolved.add("");
+        }
+
+        return resolved;
+    }
+
+    private boolean isSinglePercentPlaceholderToken(String raw) {
+        if (raw == null) {
+            return false;
+        }
+        String trimmed = raw.trim();
+        if (trimmed.length() < 2 || !trimmed.startsWith("%") || !trimmed.endsWith("%")) {
+            return false;
+        }
+        int secondPercent = trimmed.indexOf('%', 1);
+        return secondPercent == trimmed.length() - 1;
     }
 
 
