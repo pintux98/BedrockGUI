@@ -148,10 +148,11 @@ export function PropertiesPanel() {
                     }}
                   />
                   <div className="flex gap-2 mb-2">
-                    <BufferedInput
-                      className="flex-1 ui-input px-2 py-1"
+                    <BufferedTextArea
+                      className="flex-1 ui-textarea px-2 py-1 text-xs h-14"
                       value={b.text}
-                      maxLength={bedrock.type === "MODAL" ? 32 : 64}
+                      maxLength={bedrock.type === "MODAL" ? 64 : 128}
+                      placeholder="text (supports new lines)"
                       onCommit={(v) => {
                         const buttons = [...bedrock.buttons];
                         buttons[idx] = { ...b, text: v };
@@ -613,12 +614,21 @@ function ActionBlocksEditor({ value, onChange }: { value: string[]; onChange: (v
             <div className="flex items-center justify-between mb-2">
               <select
                 className="ui-input px-2 py-1 text-xs"
-                value={en.mode === "raw" ? "raw" : en.type}
+                value={en.mode === "raw" ? "raw" : en.mode === "bungee" ? "bungee" : en.type}
                 onChange={(e) => {
                   const v = e.target.value;
                   const next = [...entries];
-                  if (v === "raw") next[idx] = { mode: "raw", raw: en.mode === "raw" ? en.raw : serializeActionEntry(en) ?? "" };
-                  else next[idx] = { mode: "list", type: v, lines: en.mode === "list" ? en.lines : [""] };
+                  if (v === "raw") {
+                    next[idx] = { mode: "raw", raw: en.mode === "raw" ? en.raw : serializeActionEntry(en) ?? "" };
+                  } else if (v === "bungee") {
+                    next[idx] = {
+                      mode: "bungee",
+                      subchannel: en.mode === "bungee" ? en.subchannel : "Connect",
+                      args: en.mode === "bungee" ? en.args : en.mode === "list" ? en.lines : [""]
+                    };
+                  } else {
+                    next[idx] = { mode: "list", type: v, lines: en.mode === "list" ? en.lines : en.mode === "bungee" ? en.args : [""] };
+                  }
                   update(next);
                 }}
               >
@@ -684,6 +694,29 @@ function ActionBlocksEditor({ value, onChange }: { value: string[]; onChange: (v
                   update(next);
                 }}
               />
+            ) : en.mode === "bungee" ? (
+              <div className="space-y-2">
+                <BufferedInput
+                  className="ui-input px-2 py-1 text-xs"
+                  placeholder='subchannel (e.g. "Connect")'
+                  value={en.subchannel}
+                  onCommit={(v) => {
+                    const next = [...entries];
+                    next[idx] = { ...en, subchannel: v };
+                    update(next);
+                  }}
+                />
+                <BufferedTextArea
+                  className="ui-textarea h-20 text-xs"
+                  placeholder="args (one per row)"
+                  value={(en.args ?? []).join("\n")}
+                  onCommit={(v) => {
+                    const next = [...entries];
+                    next[idx] = { ...en, args: v.split("\n") };
+                    update(next);
+                  }}
+                />
+              </div>
             ) : (
               <BufferedTextArea
                 className="ui-textarea h-20 text-xs"
@@ -706,6 +739,7 @@ function ActionBlocksEditor({ value, onChange }: { value: string[]; onChange: (v
 
 type ActionEntry =
   | { mode: "list"; type: string; lines: string[] }
+  | { mode: "bungee"; subchannel: string; args: string[] }
   | { mode: "raw"; raw: string };
 
 const ACTION_TYPES: { value: string; label: string }[] = [
@@ -722,11 +756,12 @@ const ACTION_TYPES: { value: string; label: string }[] = [
   { value: "delay", label: "delay" },
   { value: "random", label: "random" },
   { value: "url", label: "url" },
+  { value: "bungee", label: "bungee" },
   { value: "raw", label: "raw" }
 ];
 
 const LIST_ACTION_SET = new Set(
-  ACTION_TYPES.map((t) => t.value).filter((v) => v !== "raw")
+  ACTION_TYPES.map((t) => t.value).filter((v) => v !== "raw" && v !== "bungee")
 );
 
 function parseActionEntry(raw: string): ActionEntry {
@@ -743,6 +778,12 @@ function parseActionEntry(raw: string): ActionEntry {
       .map((l) => l.replace(/^-+\s*/, "").trim())
       .map((v) => v.replace(/^"+|"+$/g, ""))
       .map((v) => v.replace(/\\"/g, '"'));
+    if (type && type.toLowerCase() === "bungee") {
+      const m = inner.match(/subchannel\s*:\s*"((?:\\.|[^"\\])*)"/i);
+      const subchannel = (m?.[1] ?? "").replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+      const args = lines.length ? lines : [""];
+      return { mode: "bungee", subchannel, args };
+    }
     if (type && LIST_ACTION_SET.has(type)) return { mode: "list", type, lines: lines.length ? lines : [""] };
   }
   return { mode: "raw", raw: s };
@@ -750,6 +791,18 @@ function parseActionEntry(raw: string): ActionEntry {
 
 function serializeActionEntry(entry: ActionEntry): string | undefined {
   if (entry.mode === "raw") return entry.raw?.trim() ? entry.raw.trim() : undefined;
+  if (entry.mode === "bungee") {
+    const subchannel = String(entry.subchannel ?? "").trim();
+    const args = (entry.args ?? [])
+      .map((l) => String(l ?? "").replace(/\r/g, ""))
+      .map((l) => l.trim())
+      .filter((l) => l.length > 0);
+    const safeArgs = args.length ? args : [""];
+    const argsBody = safeArgs
+      .map((l) => `  - "${l.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`)
+      .join("\n");
+    return `bungee {\n  subchannel: "${subchannel.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"\n${argsBody}\n}`;
+  }
   const type = entry.type.trim();
   const lines = entry.lines.map((l) => l.replace(/\r/g, "")).map((l) => l.trim()).filter(Boolean);
   const body = lines.map((l) => `  - "${l.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"`).join("\n");

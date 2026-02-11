@@ -42,6 +42,18 @@ describe("Preview Components", () => {
       expect(screen.getByText("Modal Form")).toBeDefined();
       expect(screen.getByText("Yes")).toBeDefined();
     });
+
+    it("renders Minecraft color codes in title and button text", () => {
+      const form: any = {
+        type: "SIMPLE",
+        title: "&aGreen Title",
+        content: "",
+        buttons: [{ id: "b1", text: "&#ff00ffPink" }]
+      };
+      wrap(<BedrockPreview form={form} />);
+      expect(screen.getByText("Green Title")).toHaveStyle({ color: "#55FF55" });
+      expect(screen.getByText("Pink")).toHaveStyle({ color: "#FF00FF" });
+    });
   });
 
   describe("JavaPreview", () => {

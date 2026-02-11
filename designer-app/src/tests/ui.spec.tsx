@@ -62,6 +62,34 @@ describe("ui panels", () => {
     expect(actions[0].raw).toContain("Hello");
   });
 
+  it("bedrock button text supports new lines", () => {
+    wrap(<PropertiesPanel />);
+    const textarea = screen.getAllByPlaceholderText("text (supports new lines)")[0] as HTMLTextAreaElement;
+    fireEvent.change(textarea, { target: { value: "Line1\nLine2" } });
+    fireEvent.blur(textarea);
+    const st = useDesignerStore.getState() as any;
+    expect(st.bedrock.buttons[0].text).toBe("Line1\nLine2");
+  });
+
+  it("action editor supports bungee action blocks", () => {
+    wrap(<PropertiesPanel />);
+    fireEvent.click(screen.getAllByText("Add action")[0]);
+    screen.getAllByPlaceholderText("one line per row")[0];
+    const select = screen.getAllByRole("combobox").find((el) => (el as HTMLSelectElement).value === "message") as HTMLSelectElement;
+    fireEvent.change(select, { target: { value: "bungee" } });
+    const sub = screen.getByPlaceholderText('subchannel (e.g. "Connect")') as HTMLInputElement;
+    fireEvent.change(sub, { target: { value: "Connect" } });
+    fireEvent.blur(sub);
+    const args = screen.getByPlaceholderText("args (one per row)") as HTMLTextAreaElement;
+    fireEvent.change(args, { target: { value: "lobby" } });
+    fireEvent.blur(args);
+    const st = useDesignerStore.getState() as any;
+    const actions = st.bedrock.buttons[0].onClick;
+    expect(actions[0].raw).toContain("bungee");
+    expect(actions[0].raw).toContain('subchannel: "Connect"');
+    expect(actions[0].raw).toContain('"lobby"');
+  });
+
   it("java lore add line updates item lore", () => {
     useDesignerStore.setState({
       platform: "java",

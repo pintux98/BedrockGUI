@@ -198,19 +198,6 @@ export function TopBar() {
           <div className="h-6 w-[1px] bg-[#3f3f3f] mx-1"></div>
 
           <a
-            href="https://www.spigotmc.org/resources/bedrockgui-spigot-and-bungeecord-support.119592/"
-            target="_blank"
-            rel="noreferrer"
-            className="ui-btn-secondary px-3 py-1.5 text-[#ff9f43] hover:text-[#ffb775] transition-colors relative group flex items-center gap-2"
-            title="SpigotMC"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-               <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z" />
-            </svg>
-            <span className="text-xs font-medium hidden xl:inline">Spigot</span>
-          </a>
-
-          <a
             href="https://modrinth.com/plugin/bedrockgui"
             target="_blank"
             rel="noreferrer"

@@ -198,25 +198,43 @@ function postprocessMultilineStrings(text: string) {
   const out: string[] = [];
 
   for (const line of lines) {
-    const m = line.match(/^(\s*-\s*)"((?:\\.|[^"\\])*)"\s*$/);
-    if (!m) {
-      out.push(line);
+    const listItem = line.match(/^(\s*-\s*)"((?:\\.|[^"\\])*)"\s*$/);
+    if (listItem) {
+      const prefix = listItem[1];
+      const inner = listItem[2];
+      if (!inner.includes("\\n")) {
+        out.push(line);
+        continue;
+      }
+
+      const indent = prefix.match(/^\s*/)?.[0] ?? "";
+      const decoded = unescapeDoubleQuoted(inner);
+      out.push(`${indent}- |-`);
+      for (const contentLine of decoded.split("\n")) {
+        out.push(`${indent}  ${contentLine}`);
+      }
       continue;
     }
 
-    const prefix = m[1];
-    const inner = m[2];
-    if (!inner.includes("\\n")) {
-      out.push(line);
+    const mappingValue = line.match(/^(\s*[^:\n][^:\n]*:\s*)"((?:\\.|[^"\\])*)"\s*$/);
+    if (mappingValue) {
+      const prefix = mappingValue[1];
+      const inner = mappingValue[2];
+      if (!inner.includes("\\n")) {
+        out.push(line);
+        continue;
+      }
+
+      const indent = prefix.match(/^\s*/)?.[0] ?? "";
+      const decoded = unescapeDoubleQuoted(inner);
+      out.push(`${prefix}|-`);
+      for (const contentLine of decoded.split("\n")) {
+        out.push(`${indent}  ${contentLine}`);
+      }
       continue;
     }
 
-    const indent = prefix.match(/^\s*/)?.[0] ?? "";
-    const decoded = unescapeDoubleQuoted(inner);
-    out.push(`${indent}- |-`);
-    for (const contentLine of decoded.split("\n")) {
-      out.push(`${indent}  ${contentLine}`);
-    }
+    out.push(line);
   }
 
   return out.join("\n");

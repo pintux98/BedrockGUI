@@ -47,5 +47,22 @@ describe("exporter", () => {
     expect(out).toContain("message {");
     expect(out).toContain('  - "Hello"');
   });
+
+  it("exports multiline bedrock description and button text safely", () => {
+    const state = useDesignerStore.getState();
+    state.setBedrock({
+      type: "SIMPLE",
+      title: "Test",
+      content: "&6%luckperms_meta_kingdom%'s Gold &f%vault_eco_balance%\n&bSecond line\n\n&6Third line",
+      buttons: [{ id: "deposit_10", text: "&6Pay\n&f%vault_eco_balance%" }]
+    } as any);
+    const out = stateToYaml(useDesignerStore.getState() as any);
+
+    expect(out).toContain("description: |-");
+    expect(out).toContain("&6%luckperms_meta_kingdom%'s Gold");
+
+    expect(out).toContain("text: |-");
+    expect(out).toContain("&f%vault_eco_balance%");
+  });
 });
 

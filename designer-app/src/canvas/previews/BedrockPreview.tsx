@@ -3,6 +3,8 @@ import { BedrockForm } from "../../core/types";
 import ReactMarkdown from "react-markdown";
 import { useDroppable } from "@dnd-kit/core";
 import { useDesignerStore } from "../../core/store";
+import { MinecraftText } from "../../components/MinecraftText";
+import { hasMinecraftCodes } from "../../core/minecraftText";
 
 export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed?: boolean }) {
   const { selectedBedrockButtonId, setSelectedBedrockButtonId, selectedBedrockComponentId, setSelectedBedrockComponentId, setSelectedJavaSlot } =
@@ -59,7 +61,9 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
         style={{ width: "min(520px, 100%)", border: "2px solid #48494a" }}
       >
         <div className={`h-10 flex items-center justify-between px-3 ${headerStyle} border-b-2 ${borderStyle}`}>
-          <div className="font-semibold text-lg truncate font-smooth-none">{form.title}</div>
+          <div className="font-semibold text-lg truncate font-smooth-none">
+            <MinecraftText text={form.title} />
+          </div>
           <button className="text-white hover:text-red-400 font-bold" type="button" aria-label="Close preview">
             ✕
           </button>
@@ -81,7 +85,7 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
           )}
           {form.type !== "MODAL" && "content" in form && form.content && (
             <div className="text-gray-300 p-2 text-base mb-2 whitespace-pre-wrap font-smooth-none">
-              {form.type === "MODAL" ? <ReactMarkdown>{form.content}</ReactMarkdown> : form.content}
+              <MinecraftText text={form.content} />
             </div>
           )}
 
@@ -117,7 +121,9 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
                       <div className="w-8 flex items-center justify-center">
                         {display.image ? <BedrockButtonImage image={display.image} /> : <div className="w-6 h-6" />}
                       </div>
-                      <div className="flex-1 text-left">{display.text}</div>
+                      <div className="flex-1 text-left whitespace-pre-wrap">
+                        <MinecraftText text={display.text} />
+                      </div>
                     </button>
                   ))}
               </div>
@@ -128,7 +134,11 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
             <div className="grid grid-cols-1 gap-1">
               <div className="text-gray-300 p-2 text-base h-32 overflow-y-auto whitespace-pre-wrap font-smooth-none">
                 {"content" in form && form.content ? (
-                  <ReactMarkdown>{form.content}</ReactMarkdown>
+                  hasMinecraftCodes(form.content) ? (
+                    <MinecraftText text={form.content} />
+                  ) : (
+                    <ReactMarkdown>{form.content}</ReactMarkdown>
+                  )
                 ) : (
                   <div className="opacity-50">Content...</div>
                 )}
@@ -156,7 +166,9 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
                     }`}
                   >
                     {detailed && <div className="absolute top-0 right-0 bg-black/50 text-[8px] px-1 text-gray-300 font-mono">{b.id}</div>}
-                    {display.text}
+                    <span className="whitespace-pre-wrap">
+                      <MinecraftText text={display.text} />
+                    </span>
                   </button>
                 ))}
               </div>
@@ -179,7 +191,9 @@ export function BedrockPreview({ form, detailed }: { form: BedrockForm; detailed
       style={{ width: "min(520px, 100%)", border: "2px solid #48494a" }}
     >
       <div className={`h-10 flex items-center justify-between px-3 ${headerStyle} border-b-2 ${borderStyle}`}>
-        <div className="font-semibold text-lg truncate font-smooth-none">{form.title}</div>
+        <div className="font-semibold text-lg truncate font-smooth-none">
+          <MinecraftText text={form.title} />
+        </div>
         <button className="text-white hover:text-red-400 font-bold" type="button" aria-label="Close preview">
           ✕
         </button>
@@ -229,14 +243,20 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
   }, [props?.default]);
 
   if (type === "label") {
-    return <div className="text-base text-white font-smooth-none">{props?.text ?? "Label"}</div>;
+    return (
+      <div className="text-base text-white font-smooth-none">
+        <MinecraftText text={String(props?.text ?? "Label")} />
+      </div>
+    );
   }
   if (type === "input") {
     return (
       <div className="space-y-1">
-        <div className="text-sm text-white font-smooth-none">{props?.text ?? "Input"}</div>
+        <div className="text-sm text-white font-smooth-none">
+          <MinecraftText text={String(props?.text ?? "Input")} />
+        </div>
         <div className="bg-[rgb(30,30,30)] border border-gray-600 px-2 py-2 text-base text-white font-smooth-none">
-          {props?.placeholder ?? "Type here..."}
+          <MinecraftText text={String(props?.placeholder ?? "Type here...")} />
         </div>
       </div>
     );
@@ -245,9 +265,13 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
     const opts = Array.isArray(props?.options) ? props.options : [];
     return (
       <div className="space-y-1">
-        <div className="text-sm text-white font-smooth-none">{props?.text ?? "Dropdown"}</div>
+        <div className="text-sm text-white font-smooth-none">
+          <MinecraftText text={String(props?.text ?? "Dropdown")} />
+        </div>
         <div className="bg-[rgb(30,30,30)] border border-gray-600 px-2 py-2 text-base text-white flex justify-between font-smooth-none">
-          <span>{opts[(props?.default ?? 0)] ?? opts[0] ?? "Option 1"}</span>
+          <span>
+            <MinecraftText text={String(opts[(props?.default ?? 0)] ?? opts[0] ?? "Option 1")} />
+          </span>
           <span className="text-gray-400">▼</span>
         </div>
       </div>
@@ -260,7 +284,9 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
         className="flex items-center justify-between cursor-pointer"
         onClick={() => setLocalValue(!checked)}
       >
-        <div className="text-base text-white font-smooth-none">{props?.text ?? "Toggle"}</div>
+        <div className="text-base text-white font-smooth-none">
+          <MinecraftText text={String(props?.text ?? "Toggle")} />
+        </div>
         <div className={`w-12 h-6 border-2 ${checked ? "bg-brand-accent border-brand-accent" : "bg-[rgb(58,58,58)] border-gray-500"}`}>
           <div className={`w-4 h-4 bg-white mt-0.5 ${checked ? "ml-6" : "ml-1"} transition-all`} />
         </div>
@@ -276,7 +302,9 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
     
     return (
       <div className="space-y-1">
-        <div className="text-base text-white font-smooth-none">{props?.text ?? "Slider"}</div>
+        <div className="text-base text-white font-smooth-none">
+          <MinecraftText text={String(props?.text ?? "Slider")} />
+        </div>
         <div className="h-4 bg-[rgb(30,30,30)] border border-gray-600 relative cursor-pointer"
              onClick={(e) => {
                const rect = e.currentTarget.getBoundingClientRect();

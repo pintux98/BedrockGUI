@@ -101,6 +101,7 @@ validation:
   placeholder_condition_error: "&cError evaluating placeholder condition: {error}"
   invalid_step_index: "&cInvalid step index: {index}"
   button_no_action: "&cButton has no action defined"
+  button_no_text: "&cButton has no text defined, showing empty"
   no_buttons: "&cMenu has no buttons defined"
   unknown_action_type: "&cUnknown action type '{type}' in menu '{menu}' button {index}"
   empty_action_value: "&cEmpty action value in menu '{menu}' button {index}"

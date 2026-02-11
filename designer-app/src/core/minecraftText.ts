@@ -77,6 +77,15 @@ export function stripMinecraftCodes(input: string) {
     .join("");
 }
 
+export function hasMinecraftCodes(input: string) {
+  if (!input) return false;
+  if (/#([0-9a-fA-F]{6})/.test(input)) return true;
+  if (/([&§])#([0-9a-fA-F]{6})/.test(input)) return true;
+  if (/([&§])[0-9a-fA-FrRlLoOnNmM]/.test(input)) return true;
+  if (/([&§])x((?:\1[0-9a-fA-F]){6})/.test(input)) return true;
+  return false;
+}
+
 export function parseMinecraftText(input: string): MinecraftTextSegment[] {
   const out: MinecraftTextSegment[] = [];
   let style: MinecraftTextStyle = {};

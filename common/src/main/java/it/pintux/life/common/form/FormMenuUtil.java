@@ -87,7 +87,7 @@ public class FormMenuUtil {
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
             actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
-            //actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
+            actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
         }
 
         if (soundManager != null) {
@@ -106,8 +106,6 @@ public class FormMenuUtil {
         actionRegistry.registerHandler(new ConditionalActionHandler(actionExecutor));
         actionRegistry.registerHandler(new RandomActionHandler(actionExecutor));
         actionRegistry.registerHandler(new BungeeActionHandler(playerManager));
-
-        //actionRegistry.registerHandler(new OpenUrlActionHandler(playerManager));
 
         logger.info("Registered " + actionRegistry.size() + " action handlers");
     }
@@ -137,8 +135,8 @@ public class FormMenuUtil {
         String permission = cfg.getString(bedrockBase + ".permission");
         String type = cfg.getString(bedrockBase + ".type", "SIMPLE");
         String title = cfg.getString(bedrockBase + ".title", "Unknown");
-        String contentVal = cfg.getString(bedrockBase + ".content");
-        String description = cfg.getString(bedrockBase + ".description");
+        String contentVal = readMultilineText(cfg, bedrockBase + ".content");
+        String description = readMultilineText(cfg, bedrockBase + ".description");
         String resolvedContent = contentVal != null ? contentVal : description;
 
         List<FormButton> buttons = readBedrockButtons(cfg, bedrockBase, key, type);
@@ -156,6 +154,31 @@ public class FormMenuUtil {
             menu.setJavaMenu(javaDef);
         }
         return menu;
+    }
+
+    private String readMultilineText(FormConfig cfg, String path) {
+        String s = cfg.getString(path);
+        if (s != null) return s;
+
+        List<String> list = null;
+        try {
+            list = cfg.getStringList(path);
+        } catch (Exception ignored) {
+        }
+        if (list != null && !list.isEmpty()) {
+            return String.join("\n", list);
+        }
+
+        Map<String, Object> values = null;
+        try {
+            values = cfg.getValues(path);
+        } catch (Exception ignored) {
+        }
+        if (values != null && !values.isEmpty()) {
+            return String.join("\n", values.keySet());
+        }
+
+        return null;
     }
 
     private List<FormButton> readBedrockButtons(FormConfig cfg, String base, String key, String type) {
@@ -802,12 +825,11 @@ public class FormMenuUtil {
         try {
 
             String actionsString = onClickAction.substring(1, onClickAction.length() - 1);
-            String[] actionStrings = actionsString.split(",");
 
             List<ActionSystem.Action> actions = new ArrayList<>();
 
 
-            for (String actionString : actionStrings) {
+            for (String actionString : splitActionSequence(actionsString)) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
                     ActionSystem.Action action = actionExecutor.parseAction(trimmed);
@@ -941,12 +963,6 @@ public class FormMenuUtil {
         }
         return formMenus.containsKey(menuName.toLowerCase());
     }
-
-
-    public void openMenu(FormPlayer player, String menuName) {
-        openForm(player, menuName, new String[0]);
-    }
-
 
     public void registerActionHandler(ActionSystem.ActionHandler handler) {
         actionRegistry.registerHandler(handler);
@@ -1084,9 +1100,8 @@ public class FormMenuUtil {
         if (onClick.startsWith("[") && onClick.endsWith("]")) {
 
             String actionsString = onClick.substring(1, onClick.length() - 1);
-            String[] actionStrings = actionsString.split(",");
 
-            for (String actionString : actionStrings) {
+            for (String actionString : splitActionSequence(actionsString)) {
                 String trimmed = actionString.trim();
                 if (!trimmed.isEmpty()) {
                     parseAndAddAction(actionDef, trimmed);
@@ -1098,6 +1113,61 @@ public class FormMenuUtil {
         }
 
         return actionDef;
+    }
+
+    private List<String> splitActionSequence(String actionsString) {
+        List<String> out = new ArrayList<>();
+        if (actionsString == null || actionsString.isEmpty()) return out;
+
+        StringBuilder current = new StringBuilder();
+        int braceDepth = 0;
+        boolean inQuotes = false;
+        boolean escaped = false;
+
+        for (int i = 0; i < actionsString.length(); i++) {
+            char c = actionsString.charAt(i);
+
+            if (escaped) {
+                current.append(c);
+                escaped = false;
+                continue;
+            }
+
+            if (inQuotes && c == '\\') {
+                current.append(c);
+                escaped = true;
+                continue;
+            }
+
+            if (c == '"') {
+                current.append(c);
+                inQuotes = !inQuotes;
+                continue;
+            }
+
+            if (!inQuotes) {
+                if (c == '{') {
+                    current.append(c);
+                    braceDepth++;
+                    continue;
+                }
+                if (c == '}') {
+                    current.append(c);
+                    if (braceDepth > 0) braceDepth--;
+                    continue;
+                }
+                if (c == ',' && braceDepth == 0) {
+                    out.add(current.toString());
+                    current.setLength(0);
+                    continue;
+                }
+            }
+
+            current.append(c);
+        }
+
+        if (current.length() > 0) out.add(current.toString());
+        return out;
     }
 
 
