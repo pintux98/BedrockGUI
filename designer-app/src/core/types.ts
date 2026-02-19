@@ -78,7 +78,32 @@ export interface BedrockComponent {
   onClick?: ActionInstance[];
 }
 
-export type JavaMenuType = "CHEST" | "ANVIL" | "CRAFTING";
+export type JavaMenuType =
+  | "CHEST"
+  | "ANVIL"
+  | "BARREL"
+  | "BEACON"
+  | "BLAST_FURNACE"
+  | "BREWING"
+  | "CARTOGRAPHY"
+  | "CRAFTING"
+  | "CREATIVE"
+  | "DISPENSER"
+  | "DROPPER"
+  | "ENCHANTING"
+  | "ENDER_CHEST"
+  | "FURNACE"
+  | "GRINDSTONE"
+  | "HOPPER"
+  | "LECTERN"
+  | "LOOM"
+  | "MERCHANT"
+  | "PLAYER"
+  | "SHULKER_BOX"
+  | "SMITHING"
+  | "SMOKER"
+  | "STONECUTTER"
+  | "WORKBENCH";
 
 export interface JavaMenuItem {
   slot: number;

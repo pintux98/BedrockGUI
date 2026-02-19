@@ -44,32 +44,26 @@ public class OpenFormActionHandler extends BaseActionHandler {
         }
 
         try {
-            List<String> menuNames;
-            
-            // Check if it's the new YAML format with curly braces
-            if (actionData.trim().startsWith("{") && actionData.trim().endsWith("}")) {
-                List<String> rawMenuNames = parseNewFormatValues(actionData);
-                menuNames = new ArrayList<>();
-                for (String menuName : rawMenuNames) {
-                    String processedMenuName = processPlaceholders(menuName, context, player);
-                    menuNames.add(processedMenuName);
-                }
-            } else {
-                // Legacy format support
-                menuNames = parseActionData(actionData, context, player);
-            }
+            boolean parsedFromCurlyList = isNewCurlyBraceFormat(actionData, "open") ||
+                (actionData.trim().startsWith("{") && actionData.trim().endsWith("}"));
+
+            List<String> menuNames = parseActionData(actionData, context, player);
 
             if (menuNames.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid menu names found");
                 return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
-            // Single form opening
             if (menuNames.size() == 1) {
                 return executeSingleFormOpen(menuNames.get(0), player);
             }
 
-            // Multiple form opening
+            if (parsedFromCurlyList && !shouldTreatValuesAsMenuChain(menuNames)) {
+                String menuName = menuNames.get(0);
+                String[] args = menuNames.subList(1, menuNames.size()).toArray(new String[0]);
+                return executeSingleFormOpenWithArgs(menuName, args, player);
+            }
+
             return executeMultipleFormOpens(menuNames, player);
 
         } catch (Exception e) {
@@ -79,6 +73,21 @@ public class OpenFormActionHandler extends BaseActionHandler {
             errorReplacements.put("error", e.getMessage());
             return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
+    }
+
+    private boolean shouldTreatValuesAsMenuChain(List<String> menuNames) {
+        if (menuNames == null || menuNames.size() < 2) {
+            return false;
+        }
+        for (String menuName : menuNames) {
+            if (!ValidationUtils.isValidMenuName(menuName)) {
+                return false;
+            }
+            if (!formMenuUtil.hasMenu(menuName)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private ActionSystem.ActionResult executeSingleFormOpen(String menuName, FormPlayer player) {
@@ -106,6 +115,55 @@ public class OpenFormActionHandler extends BaseActionHandler {
             boolean success = executeWithErrorHandling(
                     () -> {
                         BedrockGUIApi.getInstance().openMenu(player, menuName);
+                        return true;
+                    },
+                    "Open form: " + menuName,
+                    player
+            );
+
+            if (success) {
+                logSuccess("form opening", menuName, player);
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("menu", menuName);
+                replacements.put("message", "Successfully opened form: " + menuName);
+                return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            } else {
+                Map<String, Object> errorReplacements = new HashMap<>();
+                errorReplacements.put("error", "Failed to open form: " + menuName);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
+            }
+
+        } catch (Exception e) {
+            logError("form opening", menuName, player, e);
+            Map<String, Object> errorReplacements = new HashMap<>();
+            errorReplacements.put("error", "Error opening form: " + e.getMessage());
+            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+        }
+    }
+
+    private ActionSystem.ActionResult executeSingleFormOpenWithArgs(String menuName, String[] args, FormPlayer player) {
+        try {
+            logger.info("Opening form: " + menuName + " for player " + player.getName());
+
+            if (!ValidationUtils.isValidMenuName(menuName)) {
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> errorReplacements = new HashMap<>();
+                errorReplacements.put("menu", menuName);
+                return createFailureResult("ACTION_INVALID_FORMAT", errorReplacements, player);
+            }
+
+            if (!formMenuUtil.hasMenu(menuName)) {
+                logger.warn("Attempted to open non-existent menu '" + menuName + "' for player " + player.getName());
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> errorReplacements = new HashMap<>();
+                errorReplacements.put("menu", menuName);
+                return createFailureResult("ACTION_FORM_NOT_FOUND", errorReplacements, player);
+            }
+
+            boolean success = executeWithErrorHandling(
+                    () -> {
+                        BedrockGUIApi.getInstance().openMenu(player, menuName, args);
                         return true;
                     },
                     "Open form: " + menuName,

@@ -82,7 +82,7 @@ public class ConfigValidator {
         }
 
 
-        validateButtons(menuName, formMenu.getFormButtons());
+        validateButtons(menuName, formMenu.getFormType(), formMenu.getFormButtons());
 
 
         validateFormTypeSpecific(menuName, formMenu);
@@ -94,10 +94,12 @@ public class ConfigValidator {
     }
 
 
-    private void validateButtons(String menuName, List<FormButton> buttons) {
+    private void validateButtons(String menuName, String formType, List<FormButton> buttons) {
         if (buttons == null || buttons.isEmpty()) {
-            Map<String, Object> replacements = Map.of("menu", menuName);
-            validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_BUTTONS, replacements, null));
+            if (formType != null && formType.equalsIgnoreCase("modal")) {
+                Map<String, Object> replacements = Map.of("menu", menuName);
+                validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_BUTTONS, replacements, null));
+            }
             return;
         }
 
@@ -148,8 +150,6 @@ public class ConfigValidator {
         }
 
         if (actionDef == null) {
-            Map<String, Object> replacements = Map.of("button", buttonIndex, "menu", menuName);
-            validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NO_ACTION, replacements, null));
             return;
         }
 
@@ -340,10 +340,6 @@ public class ConfigValidator {
                 break;
 
             case "custom":
-
-                if (formMenu.getFormButtons().isEmpty()) {
-                    validationWarnings.add("Custom form '" + menuName + "' has no input elements");
-                }
                 break;
         }
     }

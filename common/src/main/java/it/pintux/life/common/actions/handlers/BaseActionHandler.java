@@ -18,7 +18,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     protected final Logger logger;
 
     protected BaseActionHandler() {
-        this.logger = Logger.getLogger(this.getClass());
+        this.logger = Logger.getLogger(this.getClass().getSimpleName());
     }
 
 

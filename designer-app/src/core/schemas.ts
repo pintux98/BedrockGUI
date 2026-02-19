@@ -79,7 +79,35 @@ export const javaItemSchema = z.object({
 });
 
 export const javaMenuSchema = z.object({
-  type: z.enum(["CHEST", "ANVIL", "CRAFTING"] as unknown as JavaMenuType[]),
+  type: z.enum(
+    [
+      "CHEST",
+      "ANVIL",
+      "BARREL",
+      "BEACON",
+      "BLAST_FURNACE",
+      "BREWING",
+      "CARTOGRAPHY",
+      "CRAFTING",
+      "CREATIVE",
+      "DISPENSER",
+      "DROPPER",
+      "ENCHANTING",
+      "ENDER_CHEST",
+      "FURNACE",
+      "GRINDSTONE",
+      "HOPPER",
+      "LECTERN",
+      "LOOM",
+      "MERCHANT",
+      "PLAYER",
+      "SHULKER_BOX",
+      "SMITHING",
+      "SMOKER",
+      "STONECUTTER",
+      "WORKBENCH"
+    ] as unknown as JavaMenuType[]
+  ),
   title: z.string().min(1),
   size: z.number().min(9).max(54).optional(),
   items: z.array(javaItemSchema),

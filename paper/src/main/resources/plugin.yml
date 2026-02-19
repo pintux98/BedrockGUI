@@ -12,9 +12,6 @@ softdepend:
   - LuckPerms
 commands:
   bedrockgui:
-    usage: "/bedrockgui <reload | open | openfor>"
-    permission: "bedrockgui.admin"
+    usage: "/bgui <reload | open | openfor | convert>"
     aliases:
       - "bgui"
-
-

@@ -72,11 +72,16 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
             inv = Bukkit.createInventory((InventoryHolder) null, size, title);
         } else if (jdef.getType() == JavaMenuType.ANVIL) {
             inv = Bukkit.createInventory((InventoryHolder) null, org.bukkit.event.inventory.InventoryType.ANVIL, title);
-        } else if (jdef.getType() == JavaMenuType.CRAFTING) {
+        } else if (jdef.getType() == JavaMenuType.CRAFTING || jdef.getType() == JavaMenuType.WORKBENCH) {
             bukkitPlayer.openWorkbench(bukkitPlayer.getLocation(), true);
             return;
         } else {
-            return;
+            try {
+                org.bukkit.event.inventory.InventoryType invType = org.bukkit.event.inventory.InventoryType.valueOf(jdef.getType().name());
+                inv = Bukkit.createInventory((InventoryHolder) null, invType, title);
+            } catch (Exception e) {
+                return;
+            }
         }
 
         Map<Integer, java.util.List<ActionSystem.Action>> actions = new HashMap<>();

@@ -28,6 +28,98 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         this.plugin = plugin;
     }
 
+    private static String convertLegacyPrefixedActionIfNeeded(String raw) {
+        if (raw == null) {
+            return null;
+        }
+
+        String trimmed = raw.trim();
+        if (trimmed.isEmpty()) {
+            return raw;
+        }
+
+        if (trimmed.startsWith("[") || trimmed.contains("{") || trimmed.contains(":")) {
+            return raw;
+        }
+
+        String[] parts = trimmed.split("\\s+", 2);
+        if (parts.length < 2) {
+            return raw;
+        }
+
+        String type = parts[0].trim().toLowerCase();
+        String value = parts[1].trim();
+        if (value.isEmpty()) {
+            return raw;
+        }
+
+        if ("openform".equals(type) || "open_form".equals(type)) {
+            type = "open";
+        }
+
+        java.util.Set<String> supported = java.util.Set.of(
+            "command",
+            "open",
+            "message",
+            "server",
+            "broadcast",
+            "inventory",
+            "sound",
+            "economy",
+            "title",
+            "actionbar",
+            "bungee",
+            "delay",
+            "conditional",
+            "random"
+        );
+
+        if (!supported.contains(type)) {
+            return raw;
+        }
+
+        if ("open".equals(type)) {
+            java.util.List<String> tokens = tokenizeByWhitespace(value);
+            if (tokens.isEmpty()) {
+                return raw;
+            }
+            StringBuilder b = new StringBuilder();
+            b.append("open {");
+            for (String token : tokens) {
+                b.append(" - \"").append(escapeActionValue(token)).append("\"");
+            }
+            b.append(" }");
+            return b.toString();
+        }
+
+        return type + " { - \"" + escapeActionValue(value) + "\" }";
+    }
+
+    private static String escapeActionValue(String value) {
+        if (value == null) {
+            return "";
+        }
+        return value.replace("\\", "\\\\").replace("\"", "\\\"");
+    }
+
+    private static java.util.List<String> tokenizeByWhitespace(String input) {
+        java.util.List<String> out = new java.util.ArrayList<>();
+        if (input == null) {
+            return out;
+        }
+        String s = input.trim();
+        if (s.isEmpty()) {
+            return out;
+        }
+        for (String part : s.split("\\s+")) {
+            String p = part.trim();
+            if (!p.isEmpty()) {
+                out.add(p);
+            }
+        }
+        return out;
+    }
+
     private void copySection(org.bukkit.configuration.file.FileConfiguration src, String srcPath,
                               org.bukkit.configuration.file.YamlConfiguration dest, String destPath) {
         org.bukkit.configuration.ConfigurationSection section = src.getConfigurationSection(srcPath);
@@ -38,19 +130,42 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             if (val instanceof org.bukkit.configuration.ConfigurationSection) {
                 copySection(src, srcPath + "." + key, dest, destPath + "." + key);
             } else {
-                if ("onClick".equalsIgnoreCase(key) && val instanceof java.util.List) {
-                    java.util.List<?> list = (java.util.List<?>) val;
-                    java.util.List<String> flattened = new java.util.ArrayList<>();
-                    for (Object item : list) {
-                        if (item instanceof String) {
-                            String s = (String) item;
-                            String noNewlines = s.replaceAll("\\r?\\n", " ");
-                            String normalized = noNewlines.replaceAll("-\\s*\\|", "- ");
-                            normalized = normalized.replaceAll("\\s+", " ").trim();
-                            flattened.add(normalized);
+                if ("onClick".equalsIgnoreCase(key)) {
+                    if (val instanceof java.util.List) {
+                        java.util.List<?> list = (java.util.List<?>) val;
+                        java.util.List<String> flattened = new java.util.ArrayList<>();
+                        for (Object item : list) {
+                            if (item instanceof String) {
+                                String s = (String) item;
+                                String noNewlines = s.replaceAll("\\r?\\n", " ");
+                                String normalized = noNewlines.replaceAll("-\\s*\\|", "- ");
+                                normalized = normalized.replaceAll("\\s+", " ").trim();
+                                flattened.add(convertLegacyPrefixedActionIfNeeded(normalized));
+                            }
                         }
+                        dest.set(destKey, flattened);
+                    } else if (val instanceof String) {
+                        dest.set(destKey, convertLegacyPrefixedActionIfNeeded((String) val));
+                    } else {
+                        dest.set(destKey, val);
                     }
-                    dest.set(destKey, flattened);
+                } else if ("action".equalsIgnoreCase(key) && val instanceof String) {
+                    dest.set(destKey, convertLegacyPrefixedActionIfNeeded((String) val));
+                } else if ("global_actions".equalsIgnoreCase(key)) {
+                    if (val instanceof java.util.List) {
+                        java.util.List<?> list = (java.util.List<?>) val;
+                        java.util.List<String> converted = new java.util.ArrayList<>();
+                        for (Object item : list) {
+                            if (item instanceof String) {
+                                converted.add(convertLegacyPrefixedActionIfNeeded(((String) item).trim()));
+                            }
+                        }
+                        dest.set(destKey, converted);
+                    } else if (val instanceof String) {
+                        dest.set(destKey, java.util.List.of(convertLegacyPrefixedActionIfNeeded(((String) val).trim())));
+                    } else {
+                        dest.set(destKey, val);
+                    }
                 } else {
                     dest.set(destKey, val);
                 }
@@ -62,14 +177,16 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args) {
         Player player = sender instanceof Player ? (Player) sender : null;
         if (args.length == 0) {
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
+            if(player.hasPermission("bedrockgui.admin")){
+                sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
+                sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name>");
+                sender.sendMessage(ChatColor.RED + "Usage: /bgui convert");
+            }
             sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name>");
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name>");
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui convert");
             return true;
         }
         String arg = args[0];
-        if (arg.equalsIgnoreCase("reload")) {
+        if (arg.equalsIgnoreCase("reload") && player.hasPermission("bedrockgui.admin")) {
             if (player != null && !player.hasPermission("bedrockgui.admin")) {
                 sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
                 return true;
@@ -97,43 +214,73 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 formsDir.mkdirs();
 
                 org.bukkit.configuration.ConfigurationSection formsSec = cfg.getConfigurationSection("forms");
-                if (formsSec == null) {
+                org.bukkit.configuration.ConfigurationSection menuSec = cfg.getConfigurationSection("menu");
+
+                java.util.List<String> rootsToConvert = new java.util.ArrayList<>();
+                boolean hasInlineForms = formsSec != null && !formsSec.getKeys(false).isEmpty();
+                boolean hasLegacyMenu = menuSec != null && !menuSec.getKeys(false).isEmpty();
+
+                if (hasInlineForms) {
+                    rootsToConvert.add("forms");
+                }
+                if (hasLegacyMenu) {
+                    rootsToConvert.add("menu");
+                }
+
+                if (rootsToConvert.isEmpty()) {
                     sender.sendMessage(ChatColor.YELLOW + "No inline forms found to convert.");
                     return true;
                 }
 
                 int converted = 0;
-                for (String key : formsSec.getKeys(false)) {
-                    String existingFile = cfg.getString("forms." + key + ".file");
-                    if (existingFile != null && !existingFile.trim().isEmpty()) {
+                java.util.Set<String> processedKeys = new java.util.HashSet<>();
+                for (String root : rootsToConvert) {
+                    org.bukkit.configuration.ConfigurationSection rootSec = cfg.getConfigurationSection(root);
+                    if (rootSec == null) {
                         continue;
                     }
-                    String bedrockBase = "forms." + key;
-                    String javaBase = bedrockBase + ".java";
+                    for (String key : rootSec.getKeys(false)) {
+                        if (!processedKeys.add(key)) {
+                            continue;
+                        }
 
-                    org.bukkit.configuration.file.YamlConfiguration out = new org.bukkit.configuration.file.YamlConfiguration();
+                        String existingFile = cfg.getString("forms." + key + ".file");
+                        if (existingFile != null && !existingFile.trim().isEmpty()) {
+                            continue;
+                        }
 
-                    // Copy bedrock block
-                    copySection(cfg, bedrockBase, out, "bedrock");
-                    // Copy java block if present
-                    if (cfg.getConfigurationSection(javaBase) != null) {
-                        copySection(cfg, javaBase, out, "java");
+                        String bedrockBase = root + "." + key;
+                        String javaBase = bedrockBase + ".java";
+
+                        org.bukkit.configuration.file.YamlConfiguration out = new org.bukkit.configuration.file.YamlConfiguration();
+
+                        copySection(cfg, bedrockBase, out, "bedrock");
+                        if (cfg.getConfigurationSection(javaBase) != null) {
+                            copySection(cfg, javaBase, out, "java");
+                        }
+
+                        String rel = key + ".yml";
+                        java.io.File outFile = new java.io.File(formsDir, rel);
+                        out.save(outFile);
+
+                        if ("menu".equals(root)) {
+                            cfg.set(bedrockBase, null);
+                        } else {
+                            if (cfg.getConfigurationSection(bedrockBase) != null) {
+                                for (String child : cfg.getConfigurationSection(bedrockBase).getKeys(true)) {
+                                    cfg.set(bedrockBase + "." + child, null);
+                                }
+                            }
+                        }
+
+                        cfg.set(javaBase, null);
+                        cfg.set("forms." + key + ".file", rel);
+                        converted++;
                     }
+                }
 
-                    // Save to file
-                    String rel = key + ".yml";
-                    java.io.File outFile = new java.io.File(formsDir, rel);
-                    out.save(outFile);
-
-                    // Rewrite main config entry to file-only
-                    for (String child : cfg.getConfigurationSection(bedrockBase).getKeys(true)) {
-                        cfg.set(bedrockBase + "." + child, null);
-                    }
-                    // Remove java sub-tree
-                    cfg.set(javaBase, null);
-                    // Set file property
-                    cfg.set("forms." + key + ".file", rel);
-                    converted++;
+                if (hasLegacyMenu) {
+                    cfg.set("menu", null);
                 }
 
                 plugin.saveConfig();
@@ -163,6 +310,10 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         }
 
         if (arg.equalsIgnoreCase("openfor")) {
+            if (player != null && !player.hasPermission("bedrockgui.openfor")) {
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
+                return true;
+            }
             if (args.length < 3) {
                 sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name> [arguments]");
                 return true;

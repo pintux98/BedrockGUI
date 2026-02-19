@@ -11,7 +11,7 @@ import java.util.HashMap;
 
 
 public class ErrorHandlingUtil {
-    private static final Logger logger = Logger.getLogger(ErrorHandlingUtil.class);
+    private static final Logger logger = Logger.getLogger(ErrorHandlingUtil.class.getSimpleName());
 
 
     private static final int DEFAULT_MAX_RETRIES = 3;
