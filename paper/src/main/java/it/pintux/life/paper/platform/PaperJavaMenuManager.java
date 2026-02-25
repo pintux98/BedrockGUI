@@ -213,7 +213,7 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
                 java.util.List<ActionSystem.ActionResult> resList = exec.executeActions(fp, defs, ctx);
                 for (ActionSystem.ActionResult res : resList) {
                     if (res.isFailure() && res.message() != null) {
-                        player.sendMessage("Action failed: " + res.message());
+                        player.sendMessage(messageData.getValue(MessageData.FORMS_ACTION_FAILED, Map.of("message", res.message()), fp));
                         break;
                     }
                 }

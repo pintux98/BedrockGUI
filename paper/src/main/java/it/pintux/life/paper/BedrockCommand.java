@@ -178,21 +178,21 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         Player player = sender instanceof Player ? (Player) sender : null;
         if (args.length == 0) {
             if(player.hasPermission("bedrockgui.admin")){
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui reload");
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name>");
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui convert");
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null));
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null));
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null));
             }
-            sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name>");
+            sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null));
             return true;
         }
         String arg = args[0];
-        if (arg.equalsIgnoreCase("reload") && player.hasPermission("bedrockgui.admin")) {
+        if (arg.equalsIgnoreCase("reload")) {
             if (player != null && !player.hasPermission("bedrockgui.admin")) {
                 sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
                 return true;
             }
             plugin.reloadData();
-            sender.sendMessage(ChatColor.GREEN + "Reloaded BedrockGUI and features!");
+            sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_RELOAD_SUCCESS, null, null));
             return true;
         }
 
@@ -228,7 +228,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 }
 
                 if (rootsToConvert.isEmpty()) {
-                    sender.sendMessage(ChatColor.YELLOW + "No inline forms found to convert.");
+                    sender.sendMessage(plugin.getMessageData().getValue(MessageData.FORMS_NO_INLINE_FORMS, null, null));
                     return true;
                 }
 
@@ -284,9 +284,9 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 }
 
                 plugin.saveConfig();
-                sender.sendMessage(ChatColor.GREEN + "Converted " + converted + " forms to external files. Backup saved as " + backupName);
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_SUCCESS, java.util.Map.of("count", converted, "backup", backupName), null));
             } catch (Exception e) {
-                sender.sendMessage(ChatColor.RED + "Conversion failed: " + e.getMessage());
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_FAILED, java.util.Map.of("error", e.getMessage()), null));
                 plugin.getLogger().warning("Form conversion error: " + e.getMessage());
             }
             return true;
@@ -294,11 +294,11 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
 
         if (arg.equalsIgnoreCase("open")) {
             if (player == null) {
-                sender.sendMessage(ChatColor.RED + "Only players can use /bgui open");
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_PLAYER_ONLY, null, null));
                 return true;
             }
             if (args.length < 2) {
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui open <menu_name> [arguments]");
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null));
                 return true;
             }
 
@@ -315,7 +315,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                 return true;
             }
             if (args.length < 3) {
-                sender.sendMessage(ChatColor.RED + "Usage: /bgui openfor <player_name> <menu_name> [arguments]");
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null));
                 return true;
             }
 
@@ -324,7 +324,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             String[] menuArgs = Arrays.copyOfRange(args, 3, args.length);
             Player openPlayer = Bukkit.getPlayer(playerName);
             if (openPlayer == null) {
-                sender.sendMessage(ChatColor.RED + "Player not found!");
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.PLAYER_NOT_FOUND, java.util.Map.of("player", playerName), null));
                 return true;
             }
             PaperPlayer player1 = new PaperPlayer(openPlayer);

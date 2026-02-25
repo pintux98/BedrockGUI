@@ -556,11 +556,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, formBuilder.build()),
-                "Â§eModal form could not be displayed. Please use the command interface or contact an administrator."
+                messageData.getValue(MessageData.MENU_NOJAVA, null, player)
             );
         } else {
             logger.warn("FormSender is null, cannot send modal form to player: " + player.getName());
-            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
+            player.sendMessage(messageData.getValue(MessageData.FORMS_SYSTEM_UNAVAILABLE, null, player));
         }
     }
 
@@ -645,11 +645,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, form),
-                "Â§eMenu '" + formMenu.getFormTitle() + "' could not be displayed. Please use commands or contact an administrator."
+                    messageData.getValue(MessageData.MENU_NOJAVA, null, player)
             );
         } else {
             logger.warn("FormSender is null, cannot send simple form to player: " + player.getName());
-            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
+            player.sendMessage(messageData.getValue(MessageData.FORMS_SYSTEM_UNAVAILABLE, null, player));
         }
     }
 
@@ -676,18 +676,46 @@ public class FormMenuUtil {
                     String placeholder = (String) component.get("placeholder");
                     String defaultValue = (String) component.get("default");
                     formBuilder.input(inputText, placeholder, defaultValue);
-                    componentActions.put(componentIndex[0], (String) component.get("action"));
+                    Object inputAction = component.get("action");
+                    if (inputAction instanceof List) {
+                        componentActions.put(componentIndex[0], "[" + String.join(", ", (List<String>) inputAction) + "]");
+                    } else {
+                        componentActions.put(componentIndex[0], (String) inputAction);
+                    }
                     componentResults.put(componentKey, "");
                     break;
                 case "slider":
                     String sliderTextRaw = (String) component.get("text");
                     String sliderText = sliderTextRaw != null ? replacePlaceholders(sliderTextRaw, placeholders, player, messageData) : "";
-                    int min = (int) component.get("min");
-                    int max = (int) component.get("max");
-                    int step = (int) component.get("step");
-                    int defaultSlider = (int) component.get("default");
+                    
+                    // Handle numbers safely
+                    int min = 0;
+                    if (component.get("min") instanceof Number) {
+                        min = ((Number) component.get("min")).intValue();
+                    }
+                    
+                    int max = 10;
+                    if (component.get("max") instanceof Number) {
+                        max = ((Number) component.get("max")).intValue();
+                    }
+                    
+                    int step = 1;
+                    if (component.get("step") instanceof Number) {
+                        step = ((Number) component.get("step")).intValue();
+                    }
+                    
+                    int defaultSlider = min;
+                    if (component.get("default") instanceof Number) {
+                        defaultSlider = ((Number) component.get("default")).intValue();
+                    }
+                    
                     formBuilder.slider(sliderText, min, max, step, defaultSlider);
-                    componentActions.put(componentIndex[0], (String) component.get("action"));
+                    Object sliderAction = component.get("action");
+                    if (sliderAction instanceof List) {
+                        componentActions.put(componentIndex[0], "[" + String.join(", ", (List<String>) sliderAction) + "]");
+                    } else {
+                        componentActions.put(componentIndex[0], (String) sliderAction);
+                    }
                     componentResults.put(componentKey, 0);
                     break;
                 case "dropdown":
@@ -695,20 +723,43 @@ public class FormMenuUtil {
                     String dropdownText = dropdownTextRaw != null ? replacePlaceholders(dropdownTextRaw, placeholders, player, messageData) : "";
                     List<String> options = resolveDropdownOptions(component.get("options"), placeholders, player, messageData);
                     resolvedDropdownOptions.put(componentKey, options);
-                    int defaultDropdown = (int) component.get("default");
+                    
+                    int defaultDropdown = 0;
+                    if (component.get("default") instanceof Number) {
+                        defaultDropdown = ((Number) component.get("default")).intValue();
+                    }
+                    
                     if (defaultDropdown < 0 || defaultDropdown >= options.size()) {
                         defaultDropdown = 0;
                     }
                     formBuilder.dropdown(dropdownText, options, defaultDropdown);
-                    componentActions.put(componentIndex[0], (String) component.get("action"));
+                    Object dropdownAction = component.get("action");
+                    if (dropdownAction instanceof List) {
+                        componentActions.put(componentIndex[0], "[" + String.join(", ", (List<String>) dropdownAction) + "]");
+                    } else {
+                        componentActions.put(componentIndex[0], (String) dropdownAction);
+                    }
                     componentResults.put(componentKey, "");
                     break;
                 case "toggle":
                     String toggleTextRaw = (String) component.get("text");
                     String toggleText = toggleTextRaw != null ? replacePlaceholders(toggleTextRaw, placeholders, player, messageData) : "";
-                    boolean defaultToggle = (boolean) component.get("default");
+                    
+                    boolean defaultToggle = false;
+                    Object defToggleObj = component.get("default");
+                    if (defToggleObj instanceof Boolean) {
+                        defaultToggle = (Boolean) defToggleObj;
+                    } else if (defToggleObj instanceof String) {
+                        defaultToggle = Boolean.parseBoolean((String) defToggleObj);
+                    }
+                    
                     formBuilder.toggle(toggleText, defaultToggle);
-                    componentActions.put(componentIndex[0], (String) component.get("action"));
+                    Object toggleAction = component.get("action");
+                    if (toggleAction instanceof List) {
+                        componentActions.put(componentIndex[0], "[" + String.join(", ", (List<String>) toggleAction) + "]");
+                    } else {
+                        componentActions.put(componentIndex[0], (String) toggleAction);
+                    }
                     componentResults.put(componentKey, false);
                     break;
             }
@@ -780,11 +831,11 @@ public class FormMenuUtil {
             ErrorHandlingUtil.sendFormWithFallback(
                 player,
                 () -> formSender.sendForm(player, form),
-                "Â§eCustom form '" + formMenu.getFormTitle() + "' could not be displayed. Please use alternative methods or contact an administrator."
+                    messageData.getValue(MessageData.MENU_NOJAVA, null, player)
             );
         } else {
             logger.warn("FormSender is null, cannot send custom form to player: " + player.getName());
-            player.sendMessage("Â§cForm system is unavailable. Please try again later.");
+            player.sendMessage(messageData.getValue(MessageData.FORMS_SYSTEM_UNAVAILABLE, null, player));
         }
     }
 
@@ -814,7 +865,7 @@ public class FormMenuUtil {
         ActionSystem.Action action = actionExecutor.parseAction(onClickAction);
         if (action == null) {
             logger.warn("Failed to parse onClick action: " + onClickAction);
-            player.sendMessage("Invalid action format");
+            player.sendMessage(messageData.getValue(MessageData.FORMS_INVALID_ACTION_FORMAT, null, player));
             return;
         }
 
@@ -823,7 +874,7 @@ public class FormMenuUtil {
         if (result.isFailure()) {
             logger.warn("Action execution failed for player " + player.getName() + ": " + result.message());
             if (result.message() != null) {
-                player.sendMessage("Action failed: " + result.message());
+                player.sendMessage(messageData.getValue(MessageData.FORMS_ACTION_FAILED, Map.of("message", result.message()), player));
             }
         } else {
             logger.debug("Successfully executed action for player " + player.getName() + ": " + onClickAction);
@@ -847,7 +898,7 @@ public class FormMenuUtil {
                         actions.add(action);
                     } else {
                         logger.warn("Failed to parse action in multi-action sequence: " + trimmed);
-                        player.sendMessage("Invalid action in sequence: " + trimmed);
+                        player.sendMessage(messageData.getValue(MessageData.FORMS_INVALID_ACTION_SEQUENCE, Map.of("action", trimmed), player));
                         return;
                     }
                 }
@@ -855,7 +906,7 @@ public class FormMenuUtil {
 
             if (actions.isEmpty()) {
                 logger.warn("No valid actions found in multi-action sequence for player: " + player.getName());
-                player.sendMessage("No valid actions found in sequence");
+                player.sendMessage(messageData.getValue(MessageData.FORMS_NO_VALID_ACTIONS, null, player));
                 return;
             }
 
@@ -873,14 +924,14 @@ public class FormMenuUtil {
             }
 
             if (hasFailures) {
-                player.sendMessage("Some actions in the sequence failed. Check logs for details.");
+                player.sendMessage(messageData.getValue(MessageData.FORMS_SEQUENCE_PARTIAL_FAILURE, null, player));
             } else {
                 logger.debug("Successfully executed all actions in sequence for player " + player.getName());
             }
 
         } catch (Exception e) {
             logger.error("Error executing multi-action sequence for player " + player.getName(), e);
-            player.sendMessage("Error executing action sequence: " + e.getMessage());
+            player.sendMessage(messageData.getValue(MessageData.FORMS_SEQUENCE_ERROR, Map.of("error", e.getMessage()), player));
         }
     }
 
@@ -921,7 +972,7 @@ public class FormMenuUtil {
         ActionSystem.Action parsedAction = actionExecutor.parseAction(action);
         if (parsedAction == null) {
             logger.warn("Failed to parse custom action: " + action);
-            player.sendMessage("Invalid action format");
+            player.sendMessage(messageData.getValue(MessageData.FORMS_INVALID_ACTION_FORMAT, null, player));
             return;
         }
 
@@ -930,7 +981,7 @@ public class FormMenuUtil {
         if (result.isFailure()) {
             logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.message());
             if (result.message() != null) {
-                player.sendMessage("Action failed: " + result.message());
+                player.sendMessage(messageData.getValue(MessageData.FORMS_ACTION_FAILED, Map.of("message", result.message()), player));
             }
         } else {
             logger.debug("Successfully executed custom action for player " + player.getName() + ": " + action);

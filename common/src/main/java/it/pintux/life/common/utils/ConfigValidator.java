@@ -39,7 +39,7 @@ public class ConfigValidator {
         validationWarnings.clear();
 
         if (formMenus == null || formMenus.isEmpty()) {
-            validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_FORMS, null, null));
+            validationErrors.add(messageData.getValue(MessageData.VALIDATION_NO_FORMS, null, null));
             return new ValidationResult(validationErrors, validationWarnings);
         }
 
@@ -58,27 +58,27 @@ public class ConfigValidator {
     private void validateFormMenu(String menuName, FormMenu formMenu) {
         if (formMenu == null) {
             Map<String, Object> replacements = Map.of("menu", menuName);
-            validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_MENU_NULL, replacements, null));
+            validationErrors.add(messageData.getValue(MessageData.VALIDATION_MENU_NULL, replacements, null));
             return;
         }
 
 
         if (!ValidationUtils.isValidMenuName(menuName)) {
             Map<String, Object> replacements = Map.of("name", menuName);
-            validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_MENU_NAME, replacements, null));
+            validationErrors.add(messageData.getValue(MessageData.VALIDATION_INVALID_MENU_NAME, replacements, null));
         }
 
 
         String formType = formMenu.getFormType();
         if (formType == null || !VALID_FORM_TYPES.contains(formType.toLowerCase())) {
             Map<String, Object> replacements = Map.of("type", formType, "menu", menuName);
-            validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_FORM_TYPE, replacements, null));
+            validationErrors.add(messageData.getValue(MessageData.VALIDATION_INVALID_FORM_TYPE, replacements, null));
         }
 
 
         if (ValidationUtils.isNullOrEmpty(formMenu.getFormTitle())) {
             Map<String, Object> replacements = Map.of("menu", menuName);
-            validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_TITLE, replacements, null));
+            validationWarnings.add(messageData.getValue(MessageData.VALIDATION_NO_TITLE, replacements, null));
         }
 
 
@@ -98,7 +98,7 @@ public class ConfigValidator {
         if (buttons == null || buttons.isEmpty()) {
             if (formType != null && formType.equalsIgnoreCase("modal")) {
                 Map<String, Object> replacements = Map.of("menu", menuName);
-                validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_NO_BUTTONS, replacements, null));
+                validationWarnings.add(messageData.getValue(MessageData.VALIDATION_NO_BUTTONS, replacements, null));
             }
             return;
         }
@@ -107,14 +107,14 @@ public class ConfigValidator {
             FormButton button = buttons.get(i);
             if (button == null) {
                 Map<String, Object> replacements = Map.of("button", i, "menu", menuName);
-                validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NULL, replacements, null));
+                validationErrors.add(messageData.getValue(MessageData.VALIDATION_BUTTON_NULL, replacements, null));
                 continue;
             }
 
 
             if (ValidationUtils.isNullOrEmpty(button.getText())) {
                 Map<String, Object> replacements = Map.of("button", i, "menu", menuName);
-                validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_NO_TEXT, replacements, null));
+                validationWarnings.add(messageData.getValue(MessageData.VALIDATION_BUTTON_NO_TEXT, replacements, null));
             }
 
 
@@ -130,7 +130,7 @@ public class ConfigValidator {
                 String buttonText = button.getText();
                 Object buttonLabel = (ValidationUtils.isNullOrEmpty(buttonText)) ? i : buttonText;
                 Map<String, Object> replacements = Map.of("button", buttonLabel, "menu", menuName);
-                validationWarnings.add(messageData.getValueNoPrefix(MessageData.VALIDATION_BUTTON_INVALID_IMAGE, replacements, null));
+                validationWarnings.add(messageData.getValue(MessageData.VALIDATION_BUTTON_INVALID_IMAGE, replacements, null));
             }
         }
     }
@@ -173,7 +173,7 @@ public class ConfigValidator {
 
         if (!ActionParser.isValid(actionDef)) {
             Map<String, Object> replacements = Map.of("menu", menuName, "button", buttonIndex);
-            validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_INVALID_ACTION_FORMAT, replacements, null));
+            validationErrors.add(messageData.getValue(MessageData.VALIDATION_INVALID_ACTION_FORMAT, replacements, null));
             return;
         }
 
@@ -193,14 +193,14 @@ public class ConfigValidator {
 
                 if (actionValueStr.contains(":") && !actionValueStr.contains("{") && !actionValueStr.contains("}")) {
                     Map<String, Object> replacements = Map.of("menu", menuName, "index", buttonIndex, "action", actionType);
-                    validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_LEGACY_FORMAT_DETECTED, replacements, null));
+                    validationErrors.add(messageData.getValue(MessageData.VALIDATION_LEGACY_FORMAT_DETECTED, replacements, null));
                     continue;
                 }
 
 
                 if (!actionRegistry.getRegisteredActionTypes().contains(actionType.toLowerCase())) {
                     Map<String, Object> replacements = Map.of("type", actionType, "menu", menuName, "index", buttonIndex);
-                    validationErrors.add(messageData.getValueNoPrefix(MessageData.VALIDATION_UNKNOWN_ACTION_TYPE, replacements, null));
+                    validationErrors.add(messageData.getValue(MessageData.VALIDATION_UNKNOWN_ACTION_TYPE, replacements, null));
                 }
 
 

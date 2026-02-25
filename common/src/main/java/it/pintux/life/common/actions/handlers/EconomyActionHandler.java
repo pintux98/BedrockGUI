@@ -37,7 +37,7 @@ public class EconomyActionHandler extends BaseActionHandler {
                 "Economy",
                 player)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player)), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", messageData.getValue(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player)), player);
         }
 
         ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);

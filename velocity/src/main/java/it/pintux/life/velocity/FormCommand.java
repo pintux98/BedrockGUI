@@ -25,7 +25,7 @@ public class FormCommand implements SimpleCommand {
             String ok = plugin.getMessageData().getValue("menu-opened", java.util.Map.of("menu", menuKey), vp);
             source.sendMessage(Component.text(ok.replace("§", ""), NamedTextColor.GREEN));
         } else {
-            String cmsg = plugin.getMessageData().getValueNoPrefix("console-player-required", null, null);
+            String cmsg = plugin.getMessageData().getValue("console-player-required", null, null);
             source.sendMessage(Component.text(cmsg.isEmpty() ? "You must specify a player when running from console." : cmsg, NamedTextColor.RED));
         }
     }

@@ -126,7 +126,7 @@ public class ErrorHandlingUtil {
             replacements.put("error", error);
             replacements.put("action", actionType);
 
-            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.EXECUTION_ERROR, replacements, player));
+            return ActionSystem.ActionResult.failure(messageData.getValue(MessageData.EXECUTION_ERROR, replacements, player));
         } catch (Exception e) {
 
             logger.error("Failed to create proper error message, using basic fallback", e);
@@ -148,13 +148,19 @@ public class ErrorHandlingUtil {
 
             if (!available) {
                 logger.warn("{} service is not available for player: {}", serviceName, player.getName());
-                player.sendMessage("Â§c" + serviceName + " service is currently unavailable. Please try again later.");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("service", serviceName);
+                player.sendMessage(messageData.getValue(MessageData.SYSTEM_SERVICE_UNAVAILABLE, replacements, player));
             }
 
             return available;
         } catch (Exception e) {
             logger.error("Error checking {} service availability: {}", serviceName, e.getMessage());
-            player.sendMessage("Â§cUnable to verify " + serviceName + " service status. Please try again later.");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            Map<String, Object> replacements = new HashMap<>();
+            replacements.put("service", serviceName);
+            player.sendMessage(messageData.getValue(MessageData.SYSTEM_SERVICE_STATUS_CHECK_FAILED, replacements, player));
             return false;
         }
     }
@@ -201,13 +207,17 @@ public class ErrorHandlingUtil {
             );
 
             if (!success) {
-                player.sendMessage("Â§cCommand execution failed: " + commandDescription + ". Please contact an administrator.");
+                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+                Map<String, Object> replacements = new HashMap<>();
+                replacements.put("description", commandDescription);
+                player.sendMessage(messageData.getValue(MessageData.SYSTEM_COMMAND_EXECUTION_FAILED, replacements, player));
             }
 
             return success;
         } catch (Exception e) {
             logger.error("Error executing command '{}': {}", commandDescription, e.getMessage());
-            player.sendMessage("Â§cAn error occurred while executing the command. Please try again later.");
+            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
+            player.sendMessage(messageData.getValue(MessageData.SYSTEM_OPERATION_INTERRUPTED, null, player));
             return false;
         }
     }

@@ -140,86 +140,34 @@ public class ConditionEvaluator {
 
             String processedExpectedValue = PlaceholderUtil.processPlaceholders(expectedValue, context.getPlaceholders(), player, messageData);
 
-            switch (operator.toLowerCase()) {
-                case "equals":
-                case "==":
-                    return processedPlaceholderValue.equals(processedExpectedValue);
-                case "not_equals":
-                case "!=":
-                    return !processedPlaceholderValue.equals(processedExpectedValue);
-                case "contains":
-                    return processedPlaceholderValue.contains(processedExpectedValue);
-                case "starts_with":
-                    return processedPlaceholderValue.startsWith(processedExpectedValue);
-                case "ends_with":
-                    return processedPlaceholderValue.endsWith(processedExpectedValue);
-                case ">":
-                case "greater_than":
-                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) > 0;
-                case ">=":
-                case "greater_equal":
-                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) >= 0;
-                case "<":
-                case "less_than":
-                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) < 0;
-                case "<=":
-                case "less_equal":
-                    return compareNumeric(processedPlaceholderValue, processedExpectedValue) <= 0;
-                case "regex":
-                    return processedPlaceholderValue.matches(processedExpectedValue);
-                case "empty":
-                    return processedPlaceholderValue == null || processedPlaceholderValue.trim().isEmpty();
-                case "not_empty":
-                    return processedPlaceholderValue != null && !processedPlaceholderValue.trim().isEmpty();
-                default:
+            return switch (operator.toLowerCase()) {
+                case "equals", "==" -> processedPlaceholderValue.equals(processedExpectedValue);
+                case "not_equals", "!=" -> !processedPlaceholderValue.equals(processedExpectedValue);
+                case "contains" -> processedPlaceholderValue.contains(processedExpectedValue);
+                case "starts_with" -> processedPlaceholderValue.startsWith(processedExpectedValue);
+                case "ends_with" -> processedPlaceholderValue.endsWith(processedExpectedValue);
+                case ">", "greater_than" -> compareNumeric(processedPlaceholderValue, processedExpectedValue) > 0;
+                case ">=", "greater_equal" -> compareNumeric(processedPlaceholderValue, processedExpectedValue) >= 0;
+                case "<", "less_than" -> compareNumeric(processedPlaceholderValue, processedExpectedValue) < 0;
+                case "<=", "less_equal" -> compareNumeric(processedPlaceholderValue, processedExpectedValue) <= 0;
+                case "regex" -> processedPlaceholderValue.matches(processedExpectedValue);
+                case "empty" -> processedPlaceholderValue == null || processedPlaceholderValue.trim().isEmpty();
+                case "not_empty" -> processedPlaceholderValue != null && !processedPlaceholderValue.trim().isEmpty();
+                default -> {
                     logger.warn("Unknown operator in placeholder condition: " + operator);
-                    return false;
-            }
+                    yield false;
+                }
+            };
         } catch (Exception e) {
             logger.warn("Error evaluating placeholder condition: " + e.getMessage());
             return false;
         }
     }
 
-
     private static int compareNumeric(String value1, String value2) throws NumberFormatException {
         double num1 = Double.parseDouble(value1);
         double num2 = Double.parseDouble(value2);
         return Double.compare(num1, num2);
-    }
-
-
-    public static boolean isValidCondition(String condition) {
-        if (condition == null || condition.trim().isEmpty()) {
-            return true;
-        }
-
-        String[] parts = condition.trim().split(":");
-
-        if (parts.length < 2) {
-            return false;
-        }
-
-        int offset = 0;
-        if ("not".equals(parts[0])) {
-            offset = 1;
-            if (parts.length < 3) {
-                return false;
-            }
-        }
-
-        String conditionType = parts[offset];
-
-        switch (conditionType.toLowerCase()) {
-            case "permission":
-                return parts.length >= offset + 2;
-            case "placeholder":
-                return parts.length >= offset + 4;
-            case "plugin":
-                return parts.length >= offset + 2;
-            default:
-                return false;
-        }
     }
 }
 

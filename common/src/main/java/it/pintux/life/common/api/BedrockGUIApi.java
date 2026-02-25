@@ -32,9 +32,6 @@ public class BedrockGUIApi {
     private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
-    private final Map<String, DynamicForm> dynamicForms = new HashMap<>();
-
-
     private final Map<String, FormTemplate> formTemplates = new HashMap<>();
 
 
@@ -222,18 +219,6 @@ public class BedrockGUIApi {
         return template.createForm(parameters);
     }
 
-
-    public void registerDynamicForm(String formId, DynamicForm form) {
-        dynamicForms.put(formId, form);
-        logger.info("Registered dynamic form: " + formId);
-    }
-
-
-    public DynamicForm getDynamicForm(String formId) {
-        return dynamicForms.get(formId);
-    }
-
-
     public void registerTemplate(String templateName, FormTemplate template) {
         formTemplates.put(templateName, template);
         logger.info("Registered form template: " + templateName);
@@ -259,7 +244,7 @@ public class BedrockGUIApi {
             boolean sent = ErrorHandlingUtil.sendFormWithFallback(
                     player,
                     () -> formSender.sendForm(player, form),
-                    "Â§eForm could not be displayed. Please try using commands or contact an administrator."
+                    messageData.getValue(MessageData.MENU_NOJAVA, null, player)
             );
 
             if (sent) {
@@ -372,7 +357,6 @@ public class BedrockGUIApi {
 
     public void shutdown() {
         formMenuUtil.shutdown();
-        dynamicForms.clear();
         formTemplates.clear();
         formValidators.clear();
         logger.info("BedrockGUIApi shutdown completed");
@@ -927,15 +911,6 @@ public class BedrockGUIApi {
 
             return builder.build();
         }
-    }
-
-
-    public interface DynamicForm {
-        Form generateForm(FormPlayer player, Map<String, Object> context);
-
-        void updateForm(String property, Object value);
-
-        boolean isValid();
     }
 
 

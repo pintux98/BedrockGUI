@@ -202,7 +202,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
                 "New Format Examples:",
                 "actionbar { - \"Processing your request...\" }",
                 "actionbar { - \"Loading...\" - \"Almost done...\" - \"Complete!\" }",
-                "actionbar { - \"Â§eWelcome {player}!\" - \"Â§aEnjoy your stay!\" }"
+                "actionbar { - \"§eWelcome {player}!\" - \"§aEnjoy your stay!\" }"
         };
     }
 }

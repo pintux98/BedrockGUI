@@ -25,12 +25,12 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     protected ActionSystem.ActionResult validateBasicParameters(FormPlayer player, String actionValue) {
         if (player == null) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+            return ActionSystem.ActionResult.failure(messageData.getValue(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         if (ValidationUtils.isNullOrEmpty(actionValue)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return ActionSystem.ActionResult.failure(messageData.getValueNoPrefix(MessageData.ACTION_INVALID_PARAMETERS, null, player));
+            return ActionSystem.ActionResult.failure(messageData.getValue(MessageData.ACTION_INVALID_PARAMETERS, null, player));
         }
 
         return null;
@@ -40,7 +40,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     protected ActionSystem.ActionResult createSuccessResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String normalizedKey = normalizeMessageKey(messageKey);
-        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
+        String message = messageData.getValue(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.success(message);
     }
 
@@ -48,7 +48,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String normalizedKey = normalizeMessageKey(messageKey);
-        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
+        String message = messageData.getValue(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.failure(message);
     }
 
@@ -56,7 +56,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     protected ActionSystem.ActionResult createFailureResult(String messageKey, Map<String, Object> replacements, FormPlayer player, Throwable exception) {
         MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
         String normalizedKey = normalizeMessageKey(messageKey);
-        String message = messageData.getValueNoPrefix(normalizedKey, replacements, player);
+        String message = messageData.getValue(normalizedKey, replacements, player);
         return ActionSystem.ActionResult.failure(message, exception);
     }
 

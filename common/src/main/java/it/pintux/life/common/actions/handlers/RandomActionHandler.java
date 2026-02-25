@@ -135,7 +135,7 @@ public class RandomActionHandler extends BaseActionHandler {
 
             if (weightedActions.isEmpty()) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
+                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
 
             // Filter out recursive random entries
@@ -160,7 +160,7 @@ public class RandomActionHandler extends BaseActionHandler {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                     HashMap<String, Object> replacements = new HashMap<>();
                     replacements.put("action", selectedAction);
-                    return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValueNoPrefix(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
+                    return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
                 }
 
                 return actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
