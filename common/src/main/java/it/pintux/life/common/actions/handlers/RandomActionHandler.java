@@ -135,7 +135,7 @@ public class RandomActionHandler extends BaseActionHandler {
 
             if (weightedActions.isEmpty()) {
                 MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, null, player)), player);
             }
 
             // Filter out recursive random entries
@@ -147,7 +147,7 @@ public class RandomActionHandler extends BaseActionHandler {
                 }
             }
             if (filtered.isEmpty()) {
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "No valid random actions"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No valid random actions"), player);
             }
             String selectedAction = selectWeightedRandom(filtered);
 
@@ -160,7 +160,7 @@ public class RandomActionHandler extends BaseActionHandler {
                     MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
                     HashMap<String, Object> replacements = new HashMap<>();
                     replacements.put("action", selectedAction);
-                    return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
+                    return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", messageData.getValue(MessageData.ACTION_INVALID_FORMAT, replacements, player)), player);
                 }
 
                 return actionExecutor.executeAction(player, parsedAction.getActionDefinition(), context);
@@ -169,13 +169,13 @@ public class RandomActionHandler extends BaseActionHandler {
             try {
                 ActionSystem.ActionResult result = future.get();
                 if (result.isSuccess()) {
-                    return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Executed random action: " + selectedAction), player);
+                    return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Executed random action: " + selectedAction), player);
                 } else {
-                    return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Random action failed: " + result.message()), player);
+                    return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Random action failed: " + result.message()), player);
                 }
             } catch (Exception e) {
                 logger.error("Error waiting for random action execution: " + e.getMessage());
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Random action execution interrupted: " + e.getMessage()), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Random action execution interrupted: " + e.getMessage()), player);
             }
 
         } catch (Exception e) {
@@ -183,7 +183,7 @@ public class RandomActionHandler extends BaseActionHandler {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
             HashMap<String, Object> replacements = new HashMap<>();
             replacements.put("error", e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Failed to execute random action: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Failed to execute random action: " + e.getMessage()), player);
         }
     }
 

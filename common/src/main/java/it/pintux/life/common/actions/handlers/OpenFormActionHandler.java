@@ -127,7 +127,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("menu", menuName);
                 replacements.put("message", "Successfully opened form: " + menuName);
-                return createSuccessResult("ACTION_SUCCESS", replacements, player);
+                return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
             } else {
                 Map<String, Object> errorReplacements = new HashMap<>();
                 errorReplacements.put("error", "Failed to open form: " + menuName);
@@ -138,7 +138,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
             logError("form opening", menuName, player, e);
             Map<String, Object> errorReplacements = new HashMap<>();
             errorReplacements.put("error", "Error opening form: " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -176,7 +176,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("menu", menuName);
                 replacements.put("message", "Successfully opened form: " + menuName);
-                return createSuccessResult("ACTION_SUCCESS", replacements, player);
+                return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
             } else {
                 Map<String, Object> errorReplacements = new HashMap<>();
                 errorReplacements.put("error", "Failed to open form: " + menuName);
@@ -187,7 +187,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
             logError("form opening", menuName, player, e);
             Map<String, Object> errorReplacements = new HashMap<>();
             errorReplacements.put("error", "Error opening form: " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -204,13 +204,13 @@ public class OpenFormActionHandler extends BaseActionHandler {
 
 
                 if (!ValidationUtils.isValidMenuName(menuName)) {
-                    results.append("âś— Form ").append(i + 1).append(": ").append(menuName).append(" - Invalid name");
+                    results.append(" Form ").append(i + 1).append(": ").append(menuName).append(" - Invalid name");
                     continue;
                 }
 
 
                 if (!formMenuUtil.hasMenu(menuName)) {
-                    results.append("âś— Form ").append(i + 1).append(": ").append(menuName).append(" - Not found");
+                    results.append(" Form ").append(i + 1).append(": ").append(menuName).append(" - Not found");
                     continue;
                 }
 
@@ -225,10 +225,10 @@ public class OpenFormActionHandler extends BaseActionHandler {
 
                 if (success) {
                     successCount++;
-                    results.append("âś“ Form ").append(i + 1).append(": ").append(menuName).append(" - Success");
+                    results.append(" Form ").append(i + 1).append(": ").append(menuName).append(" - Success");
                     logSuccess("form opening", menuName, player);
                 } else {
-                    results.append("âś— Form ").append(i + 1).append(": ").append(menuName).append(" - Failed");
+                    results.append(" Form ").append(i + 1).append(": ").append(menuName).append(" - Failed");
                 }
 
                 if (i < menuNames.size() - 1) {
@@ -243,7 +243,7 @@ public class OpenFormActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Form ").append(i + 1).append(": ").append(menuName).append(" - Error: ").append(e.getMessage());
+                results.append(" Form ").append(i + 1).append(": ").append(menuName).append(" - Error: ").append(e.getMessage());
                 logError("form opening", menuName, player, e);
                 if (i < menuNames.size() - 1) {
                     results.append("\n");
@@ -260,11 +260,11 @@ public class OpenFormActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("MessageData.EXECUTION_ERROR", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 

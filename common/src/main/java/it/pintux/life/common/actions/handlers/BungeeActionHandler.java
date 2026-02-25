@@ -77,7 +77,7 @@ public class BungeeActionHandler extends BaseActionHandler {
 
             playerManager.sendByteArray(player, CHANNEL, out.toByteArray());
             
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Sent BungeeCord message: " + subchannel), player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Sent BungeeCord message: " + subchannel), player);
 
         } catch (Exception e) {
             logger.error("Error executing bungee action: " + e.getMessage());

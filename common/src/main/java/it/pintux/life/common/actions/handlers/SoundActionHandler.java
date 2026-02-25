@@ -110,9 +110,9 @@ public class SoundActionHandler extends BaseActionHandler {
 
                 if (result.isSuccess()) {
                     successCount++;
-                    results.append("âś“ Sound ").append(i + 1).append(": ").append(sound).append(" - Success");
+                    results.append(" Sound ").append(i + 1).append(": ").append(sound).append(" - Success");
                 } else {
-                    results.append("âś— Sound ").append(i + 1).append(": ").append(sound).append(" - Failed");
+                    results.append(" Sound ").append(i + 1).append(": ").append(sound).append(" - Failed");
                 }
 
                 if (i < sounds.size() - 1) {
@@ -127,7 +127,7 @@ public class SoundActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Sound ").append(i + 1).append(": ").append(sound).append(" - Error: ").append(e.getMessage());
+                results.append(" Sound ").append(i + 1).append(": ").append(sound).append(" - Error: ").append(e.getMessage());
                 logger.error("Error playing sound " + (i + 1) + " for player " + player.getName(), e);
                 if (i < sounds.size() - 1) {
                     results.append("\n");
@@ -144,7 +144,7 @@ public class SoundActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {

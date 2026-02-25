@@ -109,9 +109,9 @@ public class BroadcastActionHandler extends BaseActionHandler {
 
                 if (result.isSuccess()) {
                     successCount++;
-                    results.append("âś“ Broadcast ").append(i + 1).append(": Sent successfully");
+                    results.append(" Broadcast ").append(i + 1).append(": Sent successfully");
                 } else {
-                    results.append("âś— Broadcast ").append(i + 1).append(": Failed to send");
+                    results.append(" Broadcast ").append(i + 1).append(": Failed to send");
                 }
 
                 if (i < broadcasts.size() - 1) {
@@ -126,7 +126,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Broadcast ").append(i + 1).append(": Error - ").append(e.getMessage());
+                results.append(" Broadcast ").append(i + 1).append(": Error - ").append(e.getMessage());
                 logger.error("Error sending broadcast " + (i + 1) + " from player " + player.getName(), e);
                 if (i < broadcasts.size() - 1) {
                     results.append("\n");
@@ -143,9 +143,9 @@ public class BroadcastActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
-            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else {
             return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }

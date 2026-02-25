@@ -74,7 +74,7 @@ public class OpenUrlActionHandler extends BaseActionHandler {
 
             logger.debug("Sent URL to player " + player.getName() + ": " + processed);
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", messageData != null
+            return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", messageData != null
                     ? messageData.getValue(MessageData.ACTION_MESSAGE_SENT, null, player)
                     : "URL sent"), player);
         } catch (Exception e) {

@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class TitleActionHandler extends BaseActionHandler {
 
             if (titles.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid titles found");
-                return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
 
@@ -59,7 +60,7 @@ public class TitleActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("title execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing title: " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -69,7 +70,7 @@ public class TitleActionHandler extends BaseActionHandler {
             List<String> titles = parseNewFormatValues(actionData);
 
             if (titles.isEmpty()) {
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "No titles found in new format"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No titles found in new format"), player);
             }
 
 
@@ -89,7 +90,7 @@ public class TitleActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format title action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Error parsing new title format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new title format: " + e.getMessage()), player);
         }
     }
 
@@ -109,9 +110,9 @@ public class TitleActionHandler extends BaseActionHandler {
 
                 if (result.isSuccess()) {
                     successCount++;
-                    results.append("âś“ Title ").append(i + 1).append(": ").append(title).append(" - Success");
+                    results.append(" Title ").append(i + 1).append(": ").append(title).append(" - Success");
                 } else {
-                    results.append("âś— Title ").append(i + 1).append(": ").append(title).append(" - Failed");
+                    results.append(" Title ").append(i + 1).append(": ").append(title).append(" - Failed");
                 }
 
                 if (i < titles.size() - 1) {
@@ -126,7 +127,7 @@ public class TitleActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Title ").append(i + 1).append(": ").append(title).append(" - Error: ").append(e.getMessage());
+                results.append(" Title ").append(i + 1).append(": ").append(title).append(" - Error: ").append(e.getMessage());
                 logger.error("Error showing title " + (i + 1) + " to player " + player.getName(), e);
                 if (i < titles.size() - 1) {
                     results.append("\n");
@@ -143,11 +144,11 @@ public class TitleActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult("MessageData.EXECUTION_ERROR", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 

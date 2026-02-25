@@ -90,9 +90,9 @@ public class MessageActionHandler extends BaseActionHandler {
 
                 if (result.isSuccess()) {
                     successCount++;
-                    results.append("âś“ Message ").append(i + 1).append(": Sent successfully");
+                    results.append(" Message ").append(i + 1).append(": Sent successfully");
                 } else {
-                    results.append("âś— Message ").append(i + 1).append(": Failed to send");
+                    results.append(" Message ").append(i + 1).append(": Failed to send");
                 }
 
                 if (i < messages.size() - 1) {
@@ -100,7 +100,7 @@ public class MessageActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Message ").append(i + 1).append(": Error - ").append(e.getMessage());
+                results.append(" Message ").append(i + 1).append(": Error - ").append(e.getMessage());
                 logger.error("Error sending message " + (i + 1) + " to player " + player.getName(), e);
                 if (i < messages.size() - 1) {
                     results.append("\n");
@@ -117,9 +117,9 @@ public class MessageActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
-            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else {
             return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
@@ -138,7 +138,7 @@ public class MessageActionHandler extends BaseActionHandler {
         playerManager.sendMessage(player, coloredMessage);
 
         logSuccess("message", processedMessage, player);
-        return createSuccessResult("ACTION_MESSAGE_SUCCESS", createReplacements("message", processedMessage), player);
+        return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", processedMessage), player);
     }
 
     @Override

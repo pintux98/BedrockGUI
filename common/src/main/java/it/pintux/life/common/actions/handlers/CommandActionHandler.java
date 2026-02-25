@@ -149,9 +149,9 @@ public class CommandActionHandler extends BaseActionHandler {
 
                 if (result.isSuccess()) {
                     successCount++;
-                    results.append("âś“ Command ").append(i + 1).append(": ").append(command).append(" - Success");
+                    results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Success");
                 } else {
-                    results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Failed");
+                    results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Failed");
                 }
 
                 if (i < commands.size() - 1) {
@@ -166,7 +166,7 @@ public class CommandActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
+                results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
                 logger.error("Error executing command " + (i + 1) + " for player " + player.getName(), e);
                 if (i < commands.size() - 1) {
                     results.append("\n");

@@ -80,7 +80,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
                 actionsToExecute = parseActionList(actionData, FALSE_ACTIONS_PATTERN);
                 if (actionsToExecute.isEmpty()) {
                     //logger.info("Condition not met for player " + player.getName() + ": " + checkCondition + " (no failure actions specified)");
-                    return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Condition not met, action skipped"), player);
+                    return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Condition not met, action skipped"), player);
                 }
                 //logger.info("Condition not met for player " + player.getName() + ", executing " + actionsToExecute.size() + " failure actions");
             }
@@ -100,7 +100,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
             }
 
             if (lastResult != null && lastResult.isSuccess()) {
-                return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "Conditional actions executed successfully"), player);
+                return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Conditional actions executed successfully"), player);
             } else {
                 return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Some conditional actions failed"), player);
             }

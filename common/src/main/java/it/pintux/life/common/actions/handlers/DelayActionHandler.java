@@ -117,7 +117,7 @@ public class DelayActionHandler extends BaseActionHandler {
             if (chainedAction != null && !chainedAction.trim().isEmpty()) {
                 return executeChainedAction(player, chainedAction, context);
             }
-            return createSuccessResult("ACTION_SUCCESS", createReplacements("message", "No delay applied"), player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "No delay applied"), player);
         }
 
         //logger.info("Applying delay of " + delayMs + "ms for player " + player.getName());
@@ -148,7 +148,7 @@ public class DelayActionHandler extends BaseActionHandler {
         if (chainedAction != null && !chainedAction.trim().isEmpty()) {
             message += " with chained action";
         }
-        return createSuccessResult("ACTION_SUCCESS", createReplacements("message", message), player);
+        return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", message), player);
     }
 
     @Override

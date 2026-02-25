@@ -6,6 +6,7 @@ import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.platform.PlatformCommandExecutor;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
@@ -45,7 +46,7 @@ public class ServerActionHandler extends BaseActionHandler {
 
             if (commands.isEmpty()) {
                 Map<String, Object> errorReplacements = createReplacements("error", "No valid commands found");
-                return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
 
@@ -59,7 +60,7 @@ public class ServerActionHandler extends BaseActionHandler {
         } catch (Exception e) {
             logError("server command execution", actionData, player, e);
             Map<String, Object> errorReplacements = createReplacements("error", "Error executing server command: " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -69,7 +70,7 @@ public class ServerActionHandler extends BaseActionHandler {
             List<String> commands = parseNewFormatValues(actionData);
 
             if (commands.isEmpty()) {
-                return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "No server commands found in new format"), player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No server commands found in new format"), player);
             }
 
 
@@ -89,7 +90,7 @@ public class ServerActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format server action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Error parsing new server format: " + e.getMessage()), player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new server format: " + e.getMessage()), player);
         }
     }
 
@@ -108,18 +109,18 @@ public class ServerActionHandler extends BaseActionHandler {
                 logSuccess("server command", command, player);
                 Map<String, Object> replacements = new HashMap<>();
                 replacements.put("message", "Server command executed successfully: " + command);
-                return createSuccessResult("ACTION_SUCCESS", replacements, player);
+                return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
             } else {
                 Map<String, Object> errorReplacements = new HashMap<>();
                 errorReplacements.put("error", "Failed to execute server command: " + command);
-                return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player);
+                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
             }
 
         } catch (Exception e) {
             logError("server command execution", command, player, e);
             Map<String, Object> errorReplacements = new HashMap<>();
             errorReplacements.put("error", "Error executing server command: " + e.getMessage());
-            return createFailureResult("MessageData.EXECUTION_ERROR", errorReplacements, player, e);
+            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
         }
     }
 
@@ -142,10 +143,10 @@ public class ServerActionHandler extends BaseActionHandler {
 
                 if (success) {
                     successCount++;
-                    results.append("âś“ Command ").append(i + 1).append(": ").append(command).append(" - Success");
+                    results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Success");
                     logSuccess("server command", command, player);
                 } else {
-                    results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Failed");
+                    results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Failed");
                 }
 
                 if (i < commands.size() - 1) {
@@ -160,7 +161,7 @@ public class ServerActionHandler extends BaseActionHandler {
                 }
 
             } catch (Exception e) {
-                results.append("âś— Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
+                results.append(" Command ").append(i + 1).append(": ").append(command).append(" - Error: ").append(e.getMessage());
                 logError("server command execution", command, player, e);
                 if (i < commands.size() - 1) {
                     results.append("\n");
@@ -177,11 +178,11 @@ public class ServerActionHandler extends BaseActionHandler {
         replacements.put("total_count", totalCount);
 
         if (successCount == totalCount) {
-            return createSuccessResult("ACTION_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else if (successCount > 0) {
-            return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
+            return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else {
-            return createFailureResult("MessageData.EXECUTION_ERROR", replacements, player);
+            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
         }
     }
 
