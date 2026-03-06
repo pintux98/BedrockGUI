@@ -1,15 +1,12 @@
 package it.pintux.life.common.utils;
 
 import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class MessageData {
 
     public static String NO_PEX = "noPex";
-    public static String NO_PERMISSION = "no_permission";
 
-    public static String MENU_NOPEX = "menu.noPex";
+    public static String MENU_NOPEX = "menu.no_permission";
     public static String MENU_NOJAVA = "menu.noJava";
     public static String MENU_ARGS = "menu.arguments";
     public static String MENU_NOT_FOUND = "menu.notFound";
@@ -44,6 +41,7 @@ public class MessageData {
     public static String FORMS_CONVERSION_SUCCESS = "forms.conversion_success";
     public static String FORMS_CONVERSION_FAILED = "forms.conversion_failed";
 
+    public static String COMMAND_NO_PERMISSION = "command.no_permission";
     public static String COMMAND_RELOAD_SUCCESS = "command.reload_success";
     public static String COMMAND_PLAYER_ONLY = "command.player_only";
     public static String COMMAND_USAGE_RELOAD = "command.usage.reload";

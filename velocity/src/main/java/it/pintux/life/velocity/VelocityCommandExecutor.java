@@ -40,7 +40,7 @@ public class VelocityCommandExecutor implements SimpleCommand {
         switch (subCommand) {
             case "reload": {
                 if (!source.hasPermission("bedrockgui.admin")) {
-                    String msg = plugin.getMessageData().getValue(MessageData.NO_PERMISSION, null, null);
+                    String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
                     source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
                     return;
                 }
@@ -55,7 +55,7 @@ public class VelocityCommandExecutor implements SimpleCommand {
             case "convert":
             case "convertforms": {
                 if (!source.hasPermission("bedrockgui.admin")) {
-                    String msg = plugin.getMessageData().getValue(MessageData.NO_PERMISSION, null, null);
+                    String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
                     source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
                     return;
                 }
@@ -105,7 +105,7 @@ public class VelocityCommandExecutor implements SimpleCommand {
                 
             case "openfor": {
                 if (!source.hasPermission("bedrockgui.admin")) {
-                    String msg = plugin.getMessageData().getValue(MessageData.NO_PERMISSION, null, null);
+                    String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
                     source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
                     return;
                 }

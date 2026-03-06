@@ -444,7 +444,7 @@ public class FormMenuUtil {
     public void openForm(FormPlayer player, String menuName, String[] args) {
         FormMenu menu = formMenus.get(menuName.toLowerCase());
         if (menu == null) {
-            player.sendMessage(messageData.getValue(MessageData.MENU_NOT_FOUND, null, null));
+            player.sendMessage(messageData.getValue(MessageData.MENU_NOT_FOUND, Map.of("{menu}", menuName), null));
             return;
         }
 

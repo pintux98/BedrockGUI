@@ -1,17 +1,15 @@
 prefix: "&8[&bBedrockGUI&8] &r"
-no_permission: "&cYou don't have permission to use this command!"
 menu:
   no_permission: "&4&lYou don't have permission to open this menu"
   noJava: "&4You are not a bedrock player. Please open this menu only from bedrock client"
   arguments: "&4This command requires at least {args} arguments."
-  notFound: "&cMenu not found: {menu}"
+  notFound: "&cForm not found: {menu}. Please check the form name in config.yml"
 action:
   success: "&aAction completed successfully!"
   failed: "&cAction failed: {error}"
   invalid_parameters: "&cInvalid parameters for action"
   invalid_format: "&cInvalid action format"
   execution_error: "&cError executing action: {error}"
-  form_not_found: "&cForm not found: {form}. Please check the form name in config.yml"
   command_success: "&aCommand executed successfully"
   command_failed: "&cCommand execution failed"
   message_sent: "&aMessage sent successfully"
@@ -28,7 +26,7 @@ system:
   command_execution_failed: "&cCommand execution failed: {description}. Please contact an administrator."
   operation_interrupted: "&cAn error occurred while executing the command. Please try again later."
 validation:
-  invalid_menu_name: "&cInvalid menu name: '{name}'"
+  invalid_menu_name: "&cInvalid menu name: '{menu}'"
   invalid_form_type: "&cInvalid form type '{type}' in menu '{menu}'"
   button_invalid_image: "&cButton {button} in menu '{menu}' has invalid image"
   invalid_action_format: "&cInvalid action format in menu '{menu}' button {index}: '{action}'"
@@ -68,6 +66,7 @@ forms:
 command:
   reload_success: "&aBedrockGUI and features reloaded successfully!"
   player_only: "&cOnly players can use this command"
+  no_permission: "&cYou don't have permission to use this command!"
   usage:
     reload: "&cUsage: /bgui reload"
     open: "&cUsage: /bgui open <menu_name> [arguments]"
