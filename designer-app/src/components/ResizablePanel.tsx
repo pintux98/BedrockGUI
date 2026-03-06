@@ -21,6 +21,7 @@ export function ResizablePanel({
   className = "",
   forceCollapse = false
 }: ResizablePanelProps) {
+  const containerRef = React.useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(() => {
     if (persistenceKey) {
       const saved = localStorage.getItem(persistenceKey);
@@ -56,24 +57,20 @@ export function ResizablePanel({
         }
 
         let newSize = size;
+        const rect = containerRef.current?.parentElement?.getBoundingClientRect();
+        if (!rect) return;
         if (side === "left") {
-          newSize = clientX;
+          newSize = clientX - rect.left;
         } else if (side === "right") {
-          newSize = window.innerWidth - clientX;
+          newSize = rect.right - clientX;
         } else if (side === "top") {
-          newSize = clientY;
+          newSize = clientY - rect.top;
         } else if (side === "bottom") {
-          // For bottom resizing (like YAML panel), we usually calculate from bottom up
-          // But usually this component wraps the bottom element, so size is height
-          // We need the bounding rect of the parent to be accurate, but simplified:
-          // If we are dragging the top edge of a bottom panel:
-          const parentHeight = window.innerHeight; // Approximate for full screen app
-          newSize = parentHeight - clientY;
+          newSize = rect.bottom - clientY;
         }
 
-        if (newSize >= minSize && newSize <= maxSize) {
-          setSize(newSize);
-        }
+        const clamped = Math.max(minSize, Math.min(maxSize, newSize));
+        setSize(clamped);
       }
     },
     [isResizing, minSize, maxSize, side, size]
@@ -113,6 +110,7 @@ export function ResizablePanel({
 
   return (
     <div 
+      ref={containerRef}
       className={`relative flex flex-col shrink-0 ${className}`} 
       style={{ 
         width: isVertical ? "100%" : (forceCollapse ? "32px" : `${size}px`),

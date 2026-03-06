@@ -1,11 +1,12 @@
 import { z } from "zod";
-import { BedrockFormType, JavaFillType, JavaMenuType } from "./types";
 
 export const actionSchema = z.object({
   id: z.string(),
   params: z.any(),
   raw: z.string().optional()
 });
+
+const bedrockButtonConditionPropertySchema = z.enum(["text", "image", "onClick"]);
 
 export const bedrockButtonSchema = z.object({
   id: z.string().min(1),
@@ -21,7 +22,7 @@ export const bedrockButtonSchema = z.object({
       z.object({
         id: z.string().min(1),
         condition: z.string().min(1),
-        property: z.enum(["text", "image", "onClick"] as unknown as any[]),
+        property: bedrockButtonConditionPropertySchema,
         value: z.string()
       })
     )
@@ -44,7 +45,7 @@ export const bedrockComponentSchema = z.object({
 });
 
 export const bedrockBaseSchema = z.object({
-  type: z.enum(["SIMPLE", "MODAL", "CUSTOM"] as unknown as BedrockFormType[]),
+  type: z.enum(["SIMPLE", "MODAL", "CUSTOM"]),
   title: z.string().min(1),
   content: z.string().optional(),
   description: z.string().optional(),
@@ -79,35 +80,33 @@ export const javaItemSchema = z.object({
 });
 
 export const javaMenuSchema = z.object({
-  type: z.enum(
-    [
-      "CHEST",
-      "ANVIL",
-      "BARREL",
-      "BEACON",
-      "BLAST_FURNACE",
-      "BREWING",
-      "CARTOGRAPHY",
-      "CRAFTING",
-      "CREATIVE",
-      "DISPENSER",
-      "DROPPER",
-      "ENCHANTING",
-      "ENDER_CHEST",
-      "FURNACE",
-      "GRINDSTONE",
-      "HOPPER",
-      "LECTERN",
-      "LOOM",
-      "MERCHANT",
-      "PLAYER",
-      "SHULKER_BOX",
-      "SMITHING",
-      "SMOKER",
-      "STONECUTTER",
-      "WORKBENCH"
-    ] as unknown as JavaMenuType[]
-  ),
+  type: z.enum([
+    "CHEST",
+    "ANVIL",
+    "BARREL",
+    "BEACON",
+    "BLAST_FURNACE",
+    "BREWING",
+    "CARTOGRAPHY",
+    "CRAFTING",
+    "CREATIVE",
+    "DISPENSER",
+    "DROPPER",
+    "ENCHANTING",
+    "ENDER_CHEST",
+    "FURNACE",
+    "GRINDSTONE",
+    "HOPPER",
+    "LECTERN",
+    "LOOM",
+    "MERCHANT",
+    "PLAYER",
+    "SHULKER_BOX",
+    "SMITHING",
+    "SMOKER",
+    "STONECUTTER",
+    "WORKBENCH"
+  ]),
   title: z.string().min(1),
   size: z.number().min(9).max(54).optional(),
   items: z.array(javaItemSchema),
@@ -115,7 +114,7 @@ export const javaMenuSchema = z.object({
     .array(
       z.object({
         id: z.string().min(1),
-        type: z.enum(["ROW", "COLUMN", "EMPTY"] as unknown as JavaFillType[]),
+        type: z.enum(["ROW", "COLUMN", "EMPTY"]),
         row: z.number().int().optional(),
         column: z.number().int().optional(),
         item: z.object({

@@ -14,6 +14,7 @@ export function ActionEditor({
   const def = ActionRegistry[action.id];
   const defaultValues = useMemo(() => action.params, [action]);
   const form = useForm({ defaultValues, resolver: zodResolver(def.schema as any) });
+  const rawValue = form.getValues() as unknown;
   return (
     <form
       className="space-y-2"
@@ -24,7 +25,7 @@ export function ActionEditor({
         <textarea
           className="w-full h-24 bg-gray-800 border border-gray-700 rounded px-2 py-1 text-xs"
           placeholder="One entry per line"
-          value={(form.getValues() as any[] | string)?.join?.("\n") ?? ""}
+          value={Array.isArray(rawValue) ? rawValue.join("\n") : ""}
           onChange={(e) =>
             onChange({
               ...action,

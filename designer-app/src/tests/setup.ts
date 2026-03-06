@@ -1,10 +1,9 @@
-import { expect } from "vitest";
-import * as matchers from "@testing-library/jest-dom/matchers";
-
-expect.extend(matchers);
+import "@testing-library/jest-dom/vitest";
 
 if (!Element.prototype.scrollIntoView) {
-  // @ts-ignore
-  Element.prototype.scrollIntoView = () => {};
+  Object.defineProperty(Element.prototype, "scrollIntoView", {
+    value: () => {},
+    writable: true
+  });
 }
 

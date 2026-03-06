@@ -2,12 +2,13 @@ import React from "react";
 import { JavaMenu } from "../../core/types";
 import { useDroppable } from "@dnd-kit/core";
 import { useDesignerStore } from "../../core/store";
-import JAVA_ASSETS from "virtual:java-assets-index";
 import { MinecraftText } from "../../components/MinecraftText";
 import { stripMinecraftCodes } from "../../core/minecraftText";
+import { useJavaAssetsIndex } from "../../data/javaAssetsIndex";
 
 export function JavaPreview({ menu }: { menu: JavaMenu }) {
   const { selectedJavaSlot, setSelectedJavaSlot } = useDesignerStore();
+  const index = useJavaAssetsIndex();
   const slotRefs = React.useRef<Record<number, HTMLButtonElement | null>>({});
   React.useEffect(() => {
     if (selectedJavaSlot === null) return;
@@ -44,7 +45,7 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
           <div className="grid grid-cols-9 gap-0.5 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
             {slots.map((slot) => {
               const item = itemsBySlot.get(slot);
-              const icon = item ? materialToIconUrl(item.material) : undefined;
+              const icon = item ? materialToIconUrl(item.material, index) : undefined;
               const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
               const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
               return (
@@ -97,7 +98,7 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
           <div className="grid grid-cols-3 gap-2 bg-[#8b8b8b] p-2 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
             {[0, 1, 2].map((slot) => {
               const item = menu.items.find((it) => it.slot === slot);
-              const icon = item ? materialToIconUrl(item.material) : undefined;
+              const icon = item ? materialToIconUrl(item.material, index) : undefined;
               const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
               const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
               return (
@@ -147,7 +148,7 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
             <div className="grid grid-cols-3 gap-0.5 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((slot) => {
                 const item = menu.items.find((it) => it.slot === slot);
-                const icon = item ? materialToIconUrl(item.material) : undefined;
+                const icon = item ? materialToIconUrl(item.material, index) : undefined;
                 const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
                 const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
                 return (
@@ -169,7 +170,7 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
              <div className="grid grid-cols-1 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
                {(() => {
                  const resultItem = menu.items.find((it) => it.slot === 0);
-                 const resultIcon = resultItem ? materialToIconUrl(resultItem.material) : undefined;
+                 const resultIcon = resultItem ? materialToIconUrl(resultItem.material, index) : undefined;
                  const tooltipTitle = resultItem?.name ?? resultItem?.material ?? "Result";
                  const tooltipLore = Array.isArray(resultItem?.lore) ? resultItem.lore : [];
                  return (
@@ -261,7 +262,7 @@ function JavaSlot({
           </div>
         </div>
       ) : null}
-      {iconUrl ? <img src={iconUrl} className="w-7 h-7 image-rendering-pixelated" /> : <span className="text-[#2b2b2b] hidden group-hover:block">{label.slice(0,2)}</span>}
+      {iconUrl ? <img src={iconUrl} alt="" className="w-7 h-7 image-rendering-pixelated" /> : <span className="text-[#2b2b2b] hidden group-hover:block">{label.slice(0,2)}</span>}
     </button>
   );
 }
@@ -323,9 +324,9 @@ function computeChestPreviewItems(menu: JavaMenu, rows: number) {
   return { itemsBySlot: base, fillSlots };
 }
 
-function materialToIconUrl(material: string): string | undefined {
+function materialToIconUrl(material: string, index: Record<string, string> | null): string | undefined {
   const base = material.toLowerCase();
-  const file = (JAVA_ASSETS as any)[base];
+  const file = index?.[base];
   if (!file) return undefined;
   return `/${file}`;
 }

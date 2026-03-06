@@ -55,7 +55,7 @@ export function DndHost({ children }: { children: React.ReactNode }) {
     if (!active) return;
 
     if (platform === "bedrock" && bedrock) {
-      if (active.startsWith("bedrock-button-") && over.startsWith("bedrock-button-") && bedrock.type !== "MODAL") {
+      if (active.startsWith("bedrock-button-") && over.startsWith("bedrock-button-") && bedrock.type === "SIMPLE") {
         const activeKey = active.replace("bedrock-button-", "");
         const overKey = over.replace("bedrock-button-", "");
         const from = (bedrock.buttons ?? []).findIndex((b: any) => b.id === activeKey);

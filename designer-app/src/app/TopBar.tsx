@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useExporter } from "../exporters/useExporter";
 import { useImporter } from "../importers/useImporter";
 import { useDesignerStore } from "../core/store";
-import { DesignerState } from "../core/types";
+import { toast } from "../core/toast";
+import { confirmDialog } from "../core/confirm";
 
 export function TopBar() {
   const { exportYaml } = useExporter();
@@ -14,6 +15,7 @@ export function TopBar() {
   const [projects, setProjects] = useState<string[]>([]);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
   const mobileMenuRef = React.useRef<HTMLDivElement>(null);
+  const projectsMenuId = React.useId();
 
   useEffect(() => {
     updateProjectList();
@@ -44,11 +46,16 @@ export function TopBar() {
   };
 
   const saveProject = () => {
+    const name = String(menuName ?? "").trim();
+    if (!name) {
+      toast.error("Project name is required.");
+      return;
+    }
     const state = useDesignerStore.getState();
     const data = JSON.stringify(state);
-    localStorage.setItem(`project_${menuName}`, data);
+    localStorage.setItem(`project_${name}`, data);
     updateProjectList();
-    alert(`Project '${menuName}' saved!`);
+    toast.success(`Project '${name}' saved.`);
   };
 
   const loadProject = (name: string) => {
@@ -58,23 +65,31 @@ export function TopBar() {
         const state = JSON.parse(data);
         loadState(state);
         setShowProjects(false);
+        toast.success(`Project '${name}' loaded.`);
       } catch (e) {
         console.error("Failed to load project", e);
+        toast.error(`Failed to load project '${name}'.`);
       }
     }
   };
 
-  const deleteProject = (name: string, e: React.MouseEvent) => {
+  const deleteProject = async (name: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (confirm(`Delete project '${name}'?`)) {
-      localStorage.removeItem(`project_${name}`);
-      updateProjectList();
-    }
+    const ok = await confirmDialog({
+      title: "Delete project",
+      message: `Delete project '${name}'?`,
+      confirmText: "Delete",
+      cancelText: "Cancel"
+    });
+    if (!ok) return;
+    localStorage.removeItem(`project_${name}`);
+    updateProjectList();
+    toast.info(`Project '${name}' deleted.`);
   };
 
   return (
-    <div className="h-14 flex items-center justify-between px-4 bg-[#2b2b2b] border-b-4 border-[#1e1e1e] shadow-md z-10 shrink-0">
-      <div className="flex items-center gap-4">
+    <div className="relative min-h-14 flex flex-wrap items-center justify-between gap-2 px-4 py-2 pt-[calc(0.5rem+env(safe-area-inset-top))] bg-[#2b2b2b] border-b-4 border-[#1e1e1e] shadow-md z-10 shrink-0">
+      <div className="flex flex-wrap md:flex-nowrap items-center gap-x-2 gap-y-2 min-w-0 flex-1">
         <div className="flex items-center gap-3">
           <div className="w-8 h-8 bg-brand-accent border-2 border-white flex items-center justify-center text-white font-bold text-xl select-none">
               B
@@ -84,41 +99,45 @@ export function TopBar() {
           </div>
         </div>
         
-        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2"></div>
+        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2 hidden sm:block"></div>
         
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <button 
-            className="ui-btn ui-btn-secondary px-3 py-1 text-xs"
+            className="ui-btn ui-btn-secondary px-2 sm:px-3 py-1 text-xs"
             onClick={undo}
             disabled={!undoStack.length}
             title="Undo (Ctrl+Z)"
           >
-            ↶ Undo
+            ↶ <span className="hidden sm:inline">Undo</span>
           </button>
           <button 
-            className="ui-btn ui-btn-secondary px-3 py-1 text-xs"
+            className="ui-btn ui-btn-secondary px-2 sm:px-3 py-1 text-xs"
             onClick={redo}
             disabled={!redoStack.length}
             title="Redo (Ctrl+Y)"
           >
-            ↷ Redo
+            ↷ <span className="hidden sm:inline">Redo</span>
           </button>
         </div>
 
-        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2"></div>
+        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2 hidden sm:block"></div>
 
       {/* Project Management - List Based */}
-      <div className="relative" ref={dropdownRef}>
-        <div 
-          className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer border transition-colors ${showProjects ? "bg-[#4a4a4a] border-brand-accent" : "bg-[#3a3a3a] border-[#555] hover:bg-[#4a4a4a]"}`}
+      <div className="relative shrink-0" ref={dropdownRef}>
+        <button
+          type="button"
+          className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer border transition-colors max-w-[65vw] sm:max-w-none ${showProjects ? "bg-[#4a4a4a] border-brand-accent" : "bg-[#3a3a3a] border-[#555] hover:bg-[#4a4a4a]"}`}
           onClick={() => setShowProjects(!showProjects)}
+          aria-haspopup="menu"
+          aria-expanded={showProjects}
+          aria-controls={projectsMenuId}
         >
-          <div className="text-sm font-bold text-white">{menuName}</div>
+          <div className="text-sm font-bold text-white truncate max-w-[45vw] sm:max-w-none">{menuName}</div>
           <div className={`text-xs text-gray-400 transition-transform ${showProjects ? "rotate-180" : ""}`}>▼</div>
-        </div>
+        </button>
 
         {showProjects && (
-          <div className="absolute top-full left-0 mt-2 w-72 bg-[#2b2b2b] border border-[#555] shadow-xl rounded z-50 flex flex-col max-h-[80vh]">
+          <div id={projectsMenuId} role="menu" className="absolute top-full mt-2 w-72 max-w-[calc(100vw-2rem)] right-0 sm:left-0 sm:right-auto bg-[#2b2b2b] border border-[#555] shadow-xl rounded z-50 flex flex-col max-h-[80vh]">
             <div className="p-3 border-b border-[#444] bg-[#252525]">
                <div className="text-xs text-brand-muted uppercase font-bold mb-1">Current Project</div>
                <input 
@@ -138,11 +157,15 @@ export function TopBar() {
                   key={p} 
                   className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer group transition-colors mb-0.5 ${p === menuName ? "bg-brand-accent/20 border border-brand-accent/50" : "hover:bg-[#3a3a3a] border border-transparent"}`}
                   onClick={(e) => {
-                    // Prevent closing if clicking the already active project (optional, but good for "persistent" feel)
-                    // If switching, we load and keep menu open if desired, or close it. 
-                    // User said "Activated links remain visible", implying selection state.
                     if (p !== menuName) loadProject(p);
                   }}
+                  onKeyDown={(e) => {
+                    if (e.key !== "Enter" && e.key !== " ") return;
+                    e.preventDefault();
+                    if (p !== menuName) loadProject(p);
+                  }}
+                  role="menuitem"
+                  tabIndex={0}
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
                     <span className={`w-2 h-2 rounded-full ${p === menuName ? "bg-brand-accent" : "bg-transparent border border-gray-500"}`}></span>
@@ -163,6 +186,7 @@ export function TopBar() {
               <button 
                 className="flex-1 ui-btn ui-btn-primary text-xs py-2 font-medium"
                 onClick={saveProject}
+                type="button"
               >
                 💾 Save
               </button>
@@ -170,8 +194,8 @@ export function TopBar() {
                 className="flex-1 ui-btn ui-btn-secondary text-xs py-2 font-medium"
                 onClick={() => {
                    setMenuName("New Project");
-                   // Don't close menu, allow them to start editing right away
                 }}
+                type="button"
               >
                 + New
               </button>
@@ -180,7 +204,7 @@ export function TopBar() {
         )}
       </div>
         {/* External Links - Desktop */}
-        <div className="hidden lg:flex items-center gap-2 mx-2">
+        <div className="hidden xl:flex items-center gap-2 mx-2">
           <a
             href="https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2"
             target="_blank"
@@ -238,11 +262,13 @@ export function TopBar() {
         </div>
       </div>
 
-      <div className="flex gap-2">
+      <div className="flex gap-2 shrink-0">
         {/* Mobile Menu Toggle */}
         <button 
-          className="lg:hidden p-2 text-gray-400 hover:text-white"
+          className="xl:hidden p-2 text-gray-400 hover:text-white"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
+          type="button"
+          aria-label="Open menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -273,12 +299,13 @@ export function TopBar() {
 
       {/* Mobile Menu Dropdown */}
       {showMobileMenu && (
-        <div ref={mobileMenuRef} className="absolute top-14 right-0 w-64 bg-[#2b2b2b] border-l border-b border-[#555] shadow-xl z-50 p-4 flex flex-col gap-4 lg:hidden">
+        <div ref={mobileMenuRef} className="absolute top-full right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-[#2b2b2b] border border-[#555] shadow-xl z-50 p-4 flex flex-col gap-4 xl:hidden">
            {/* Mobile Import/Export if hidden on small screens */}
            <div className="flex gap-2 sm:hidden">
               <button
                 className="flex-1 ui-btn ui-btn-primary px-4 py-2 text-sm uppercase tracking-wide"
                 onClick={() => { exportYaml(); setShowMobileMenu(false); }}
+                type="button"
               >
                 Export
               </button>

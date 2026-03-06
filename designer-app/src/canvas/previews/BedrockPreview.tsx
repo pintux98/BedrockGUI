@@ -280,22 +280,25 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
   if (type === "toggle") {
     const checked = localValue !== undefined ? Boolean(localValue) : Boolean(props?.default);
     return (
-      <div 
-        className="flex items-center justify-between cursor-pointer"
+      <button
+        type="button"
+        className="w-full flex items-center justify-between cursor-pointer"
         onClick={() => setLocalValue(!checked)}
+        aria-pressed={checked}
       >
-        <div className="text-base text-white font-smooth-none">
+        <div className="text-base text-white font-smooth-none text-left">
           <MinecraftText text={String(props?.text ?? "Toggle")} />
         </div>
         <div className={`w-12 h-6 border-2 ${checked ? "bg-brand-accent border-brand-accent" : "bg-[rgb(58,58,58)] border-gray-500"}`}>
           <div className={`w-4 h-4 bg-white mt-0.5 ${checked ? "ml-6" : "ml-1"} transition-all`} />
         </div>
-      </div>
+      </button>
     );
   }
   if (type === "slider") {
     const min = Number(props?.min ?? 0);
     const max = Number(props?.max ?? 10);
+    const step = Number(props?.step ?? 1);
     const def = Number(props?.default ?? min);
     const current = localValue !== undefined ? Number(localValue) : def;
     const pct = max > min ? ((current - min) / (max - min)) * 100 : 0;
@@ -305,17 +308,19 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
         <div className="text-base text-white font-smooth-none">
           <MinecraftText text={String(props?.text ?? "Slider")} />
         </div>
-        <div className="h-4 bg-[rgb(30,30,30)] border border-gray-600 relative cursor-pointer"
-             onClick={(e) => {
-               const rect = e.currentTarget.getBoundingClientRect();
-               const x = e.clientX - rect.left;
-               const p = Math.max(0, Math.min(1, x / rect.width));
-               const val = Math.round(min + p * (max - min));
-               setLocalValue(val);
-             }}
-        >
+        <div className="h-4 bg-[rgb(30,30,30)] border border-gray-600 relative">
           <div className="h-full bg-brand-accent absolute top-0 left-0" style={{ width: `${Math.max(0, Math.min(100, pct))}%` }} />
           <div className="w-2 h-5 bg-white absolute top-[-2px] border border-gray-500" style={{ left: `${Math.max(0, Math.min(100, pct))}%`, transform: 'translateX(-50%)' }} />
+          <input
+            type="range"
+            min={min}
+            max={max}
+            step={Number.isFinite(step) && step > 0 ? step : 1}
+            value={Number.isFinite(current) ? current : def}
+            onChange={(e) => setLocalValue(Number(e.target.value))}
+            aria-label={String(props?.text ?? "Slider")}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
         </div>
         <div className="text-right text-xs text-white font-mono">{current}</div>
       </div>
@@ -326,7 +331,7 @@ function BedrockComponentView({ type, props }: { type: string; props: any }) {
 
 function BedrockButtonImage({ image }: { image: string }) {
   const src = resolveBedrockImageSrc(image);
-  if (src) return <img src={src} className="w-7 h-7 image-rendering-pixelated" />;
+  if (src) return <img src={src} alt="" className="w-7 h-7 image-rendering-pixelated" />;
   const label = image.trim().slice(0, 2).toUpperCase() || "IMG";
   return (
     <div className="w-7 h-7 bg-[#5b5b5b] border border-[#8b8b8b] flex items-center justify-center text-[9px] text-white">

@@ -194,5 +194,20 @@ export const useDesignerStore = create<
          selectedBedrockComponentId: null
        });
     }
+  },
+
+  loadState: (state: DesignerState) => {
+    const snap = getSnapshot(get());
+    set((s) => ({
+      ...state,
+      configVersion: state.configVersion ?? "1.0.0",
+      dirty: false,
+      undoStack: [...s.undoStack, { state: snap, description: "Loaded project", timestamp: Date.now() }],
+      redoStack: [],
+      selectedJavaSlot: null,
+      selectedBedrockButtonId: null,
+      selectedBedrockComponentId: null,
+      isWizardOpen: false
+    }));
   }
 }));

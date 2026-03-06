@@ -2,14 +2,15 @@ import React, { useMemo, useState } from "react";
 import { useDesignerStore } from "../core/store";
 import { IconTile } from "../components/IconTile";
 import { useDraggable } from "@dnd-kit/core";
-import JAVA_ASSETS from "virtual:java-assets-index";
+import { useJavaAssetsIndex } from "../data/javaAssetsIndex";
 
 export function JavaPalette() {
   const { java, setJava, selectedJavaSlot } = useDesignerStore();
   const [query, setQuery] = useState("");
+  const index = useJavaAssetsIndex();
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const entries = Object.entries(JAVA_ASSETS).map(([base, file]) => {
+    const entries = Object.entries(index ?? {}).map(([base, file]) => {
       const id = base.toUpperCase();
       const name = titleCase(base.replace(/_/g, " "));
       return { base, id, name, file };
@@ -18,7 +19,7 @@ export function JavaPalette() {
       ? entries.filter((e) => e.base.includes(q) || e.name.toLowerCase().includes(q))
       : entries;
     return out.slice(0, 400);
-  }, [query]);
+  }, [index, query]);
   return (
     <div className="ui-panel h-full flex flex-col">
       <div className="ui-panel-title">Java Palette</div>
@@ -31,6 +32,7 @@ export function JavaPalette() {
         />
       </div>
       <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
+        {!index && <div className="text-xs text-brand-muted px-1 pb-2">Loading icons…</div>}
         <div className="grid grid-cols-5 gap-1">
           {filtered.map((m) => (
             <DraggableMaterial

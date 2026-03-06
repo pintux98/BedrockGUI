@@ -1,9 +1,11 @@
 import React, { useState } from "react";
 import { useDesignerStore } from "../core/store";
+import { Dialog } from "./Dialog";
 
 export function Wizard() {
   const { setIsWizardOpen, setPlatform, setBedrock, setJava, setMenuName } = useDesignerStore();
   const [step, setStep] = useState(1);
+  const titleId = React.useId();
   
   // Form State
   const [platform, setLocalPlatform] = useState<"bedrock" | "java">("bedrock");
@@ -38,13 +40,20 @@ export function Wizard() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="bg-[#343434] border-4 border-[#1e1e1e] shadow-2xl w-[500px] text-white font-minecraft p-1 relative">
+    <Dialog
+      open={true}
+      onClose={() => setIsWizardOpen(false)}
+      labelledBy={titleId}
+      overlayClassName="bg-black/80 backdrop-blur-sm animate-in fade-in duration-200"
+      className="bg-[#343434] border-4 border-[#1e1e1e] shadow-2xl w-[500px] text-white font-minecraft p-1 relative"
+    >
         <div className="bg-[#2b2b2b] border-b-4 border-[#1e1e1e] p-4 flex justify-between items-center mb-1">
-          <h2 className="text-xl font-bold tracking-wide text-white drop-shadow-md">Create New Form</h2>
+          <h2 id={titleId} className="text-xl font-bold tracking-wide text-white drop-shadow-md">Create New Form</h2>
           <button 
             onClick={() => setIsWizardOpen(false)}
             className="text-gray-400 hover:text-white"
+            type="button"
+            aria-label="Close wizard"
           >
             ✕
           </button>
@@ -171,6 +180,7 @@ export function Wizard() {
           <button
             onClick={() => step > 1 ? setStep(step - 1) : setIsWizardOpen(false)}
             className="ui-btn ui-btn-secondary px-6"
+            type="button"
           >
             {step === 1 ? "Cancel" : "Back"}
           </button>
@@ -178,11 +188,11 @@ export function Wizard() {
           <button
             onClick={() => step < 3 ? setStep(step + 1) : handleFinish()}
             className="ui-btn ui-btn-primary px-8"
+            type="button"
           >
             {step === 3 ? "Create Form" : "Next"}
           </button>
         </div>
-      </div>
-    </div>
+    </Dialog>
   );
 }

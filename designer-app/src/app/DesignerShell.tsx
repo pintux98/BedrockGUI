@@ -30,7 +30,7 @@ export function DesignerShell() {
   }, []);
 
   return (
-    <div className="h-full w-full flex flex-col bg-brand-bg text-brand-text relative">
+    <div className="h-[100dvh] w-full flex flex-col bg-brand-bg text-brand-text relative">
       <TopBar />
       {isWizardOpen && <Wizard />}
       <div className="flex-1 overflow-hidden relative flex flex-col min-h-0">
@@ -116,11 +116,11 @@ export function DesignerShell() {
             ) : (
               // Mobile View: Properties Tab
               <div className={`w-full flex-1 flex flex-col overflow-hidden min-h-0 ${mobileTab === "properties" ? "flex" : "hidden"}`}>
-                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar flex flex-col">
-                  <div className="shrink-0 min-h-max">
+                <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+                  <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar min-h-0">
                     <PropertiesPanel />
                   </div>
-                  <div className="h-[300px] border-t border-brand-border shrink-0">
+                  <div className="border-t border-brand-border shrink-0 h-[min(300px,35dvh)] overflow-hidden">
                     <YamlEditorPanel defaultExpanded={true} />
                   </div>
                 </div>
@@ -130,7 +130,7 @@ export function DesignerShell() {
 
           {/* Mobile Bottom Navigation */}
           {!isDesktop && (
-            <div className="h-14 bg-[#2b2b2b] border-t border-brand-border shrink-0 flex items-center justify-around px-2 z-50">
+            <div className="min-h-14 bg-[#2b2b2b] border-t border-brand-border shrink-0 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] z-50">
               <button 
                 onClick={() => setMobileTab("tools")}
                 className={`flex flex-col items-center justify-center w-20 py-1 rounded transition-colors ${mobileTab === "tools" ? "text-brand-accent bg-[#3a3a3a]" : "text-gray-400"}`}

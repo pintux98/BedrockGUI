@@ -3,6 +3,7 @@ import { useDesignerStore } from "../core/store";
 import { designerSchema } from "../core/schemas";
 import { stateToSnippetYaml, yamlToStateDoc } from "../core/yaml";
 import { deserializeActions } from "../core/yaml";
+import { BedrockForm, JavaMenu } from "../core/types";
 
 interface YamlEditorPanelProps {
   onCollapseChange?: (collapsed: boolean) => void;
@@ -17,6 +18,7 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
     setJava,
     setGlobalActions
   } = useDesignerStore();
+  const contentId = React.useId();
   const [mode, setMode] = useState<"live" | "edit">("live");
   const [draft, setDraft] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -97,18 +99,22 @@ export function YamlEditorPanel({ onCollapseChange, defaultExpanded }: YamlEdito
 
   return (
     <div className={`flex flex-col h-full border-t border-brand-border overflow-hidden transition-all duration-300 ${collapsed ? "bg-brand-surface" : "bg-brand-bg"}`}>
-      <div 
-        className={`h-8 flex items-center px-4 bg-brand-surface border-b border-brand-border cursor-pointer hover:bg-brand-surface2 transition-colors justify-between shrink-0 ${defaultExpanded ? "cursor-default pointer-events-none" : ""}`}
+      <button
+        type="button"
+        className={`h-8 flex items-center px-4 bg-brand-surface border-b border-brand-border hover:bg-brand-surface2 transition-colors justify-between shrink-0 ${defaultExpanded ? "cursor-default" : "cursor-pointer"}`}
         onClick={() => !defaultExpanded && setCollapsed(!collapsed)}
+        disabled={Boolean(defaultExpanded)}
+        aria-expanded={!collapsed}
+        aria-controls={contentId}
       >
         <div className="flex items-center gap-2">
           <span className="text-xs font-bold text-brand-text">Form YAML</span>
           {collapsed && <span className="text-[10px] text-brand-muted px-2 py-0.5 rounded bg-brand-bg border border-brand-border">Collapsed</span>}
         </div>
         {!defaultExpanded && <span className="text-xs text-brand-muted transition-transform duration-300" style={{ transform: collapsed ? 'rotate(180deg)' : 'rotate(0deg)' }}>▼</span>}
-      </div>
+      </button>
       {!collapsed && (
-        <div className="flex-1 flex flex-col min-h-0 p-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
+        <div id={contentId} className="flex-1 flex flex-col min-h-0 p-2 overflow-hidden animate-in fade-in slide-in-from-bottom-2 duration-300">
           <textarea
             className="ui-textarea flex-1 text-xs font-mono resize-none mb-2 w-full h-full"
             value={mode === "edit" ? draft : liveYaml}
@@ -180,13 +186,13 @@ function normalizeModalButtons(buttons: any[]) {
   return trimmed;
 }
 
-function parseBedrockFromYaml(bedrockEntry: any) {
+function parseBedrockFromYaml(bedrockEntry: any): BedrockForm | undefined {
   if (!bedrockEntry?.type || !bedrockEntry?.title) return undefined;
   if (bedrockEntry.type === "SIMPLE" || bedrockEntry.type === "MODAL") {
     const parsedButtons = Object.entries(bedrockEntry.buttons ?? {}).map(([id, b]: any) => ({
-      id,
-      text: b.text,
-      image: b.image,
+      id: String(id),
+      text: String(b.text ?? ""),
+      image: b.image !== undefined ? String(b.image) : undefined,
       onClick: deserializeActions(b.onClick),
       showCondition: b.show_condition,
       alternativeText: b.alternative_text,
@@ -194,7 +200,7 @@ function parseBedrockFromYaml(bedrockEntry: any) {
       alternativeOnClick: b.alternative_onClick,
       conditions: b.conditions
         ? Object.entries(b.conditions).map(([cid, c]: any) => ({
-            id: cid,
+            id: String(cid),
             condition: c.condition,
             property: c.property,
             value: c.value
@@ -208,11 +214,11 @@ function parseBedrockFromYaml(bedrockEntry: any) {
           ? parsedButtons
           : [{ id: "button_1", text: "Button 1" }];
     return {
-      type: bedrockEntry.type,
+      type: bedrockEntry.type as "SIMPLE" | "MODAL",
       command: bedrockEntry.command,
       commandIntercept: bedrockEntry.command_intercept,
       permission: bedrockEntry.permission,
-      title: bedrockEntry.title,
+      title: String(bedrockEntry.title ?? ""),
       content: bedrockEntry.content ?? bedrockEntry.description,
       buttons
     };
@@ -223,9 +229,9 @@ function parseBedrockFromYaml(bedrockEntry: any) {
       command: bedrockEntry.command,
       commandIntercept: bedrockEntry.command_intercept,
       permission: bedrockEntry.permission,
-      title: bedrockEntry.title,
+      title: String(bedrockEntry.title ?? ""),
       components: Object.entries(bedrockEntry.components ?? {}).map(([id, c]: any) => ({
-        id,
+        id: String(id),
         type: c.type,
         props: Object.fromEntries(Object.entries(c).filter(([k]) => !["type", "onClick"].includes(k))),
         onClick: deserializeActions(c.onClick)
@@ -235,7 +241,7 @@ function parseBedrockFromYaml(bedrockEntry: any) {
   return undefined;
 }
 
-function parseJavaFromYaml(javaEntry: any) {
+function parseJavaFromYaml(javaEntry: any): JavaMenu | undefined {
   if (!javaEntry?.type) return undefined;
   const items = javaEntry.items
     ? Object.entries(javaEntry.items).map(([slot, v]: [string, any]) => ({
