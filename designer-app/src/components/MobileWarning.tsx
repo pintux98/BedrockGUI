@@ -32,7 +32,7 @@ export function MobileWarning() {
       overlayClassName="bg-brand-bg/92 p-4 text-center"
       className="bg-brand-surface border border-brand-border p-6 rounded-lg shadow-lg max-w-md w-full"
     >
-        <div className="text-3xl mb-3">�</div>
+        <div className="text-3xl mb-3">📱</div>
         <h2 id={titleId} className="text-xl font-semibold text-white mb-2">Compact View Enabled</h2>
         <p id={descriptionId} className="text-brand-muted mb-6 text-sm leading-relaxed">
           This screen size uses a simplified layout with tabbed navigation.
