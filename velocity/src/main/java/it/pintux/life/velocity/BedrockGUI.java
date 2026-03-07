@@ -2,35 +2,31 @@ package it.pintux.life.velocity;
 
 import com.google.inject.Inject;
 import com.velocitypowered.api.event.Subscribe;
-import com.velocitypowered.api.event.connection.DisconnectEvent;
-import com.velocitypowered.api.event.connection.PostLoginEvent;
 import com.velocitypowered.api.event.proxy.ProxyInitializeEvent;
 import com.velocitypowered.api.event.proxy.ProxyShutdownEvent;
-import com.velocitypowered.api.plugin.Dependency;
-import com.velocitypowered.api.plugin.Plugin;
 import com.velocitypowered.api.plugin.annotation.DataDirectory;
 import com.velocitypowered.api.proxy.ProxyServer;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.form.FormMenuUtil;
+import it.pintux.life.common.utils.AssetServer;
+import it.pintux.life.common.utils.FormSender;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.velocity.platform.*;
 import it.pintux.life.velocity.utils.VelocityConfig;
 import it.pintux.life.velocity.utils.VelocityMessageConfig;
-import it.pintux.life.velocity.utils.VelocityPlayer;
 import it.pintux.life.velocity.utils.DependencyValidator;
 import org.slf4j.Logger;
 
 import java.io.File;
 import java.nio.file.Path;
-import java.util.*;
 
 public class BedrockGUI {
 
     private final ProxyServer server;
     private final Logger logger;
     private final Path dataDirectory;
-    
+
     private FormMenuUtil formMenuUtil;
     private MessageData messageData;
     private BedrockGUIApi api;
@@ -46,24 +42,22 @@ public class BedrockGUI {
     @Subscribe
     public void onProxyInitialization(ProxyInitializeEvent event) {
         logger.info("Enabling BedrockGUI for Velocity...");
-        
-        // Create data directory if it doesn't exist
+
         if (!dataDirectory.toFile().exists()) {
             dataDirectory.toFile().mkdirs();
         }
-        
+
         reloadData();
-        
-        // Register command
+
         server.getCommandManager().register("bedrockgui", new VelocityCommandExecutor(this));
-        
+
         logger.info("BedrockGUI for Velocity enabled successfully!");
     }
 
     @Subscribe
     public void onProxyShutdown(ProxyShutdownEvent event) {
         logger.info("Disabling BedrockGUI for Velocity...");
-        
+
         if (api != null) {
             try {
                 api.shutdown();
@@ -72,18 +66,8 @@ public class BedrockGUI {
                 logger.error("Error during BedrockGUI shutdown: " + e.getMessage(), e);
             }
         }
-        
+
         logger.info("BedrockGUI for Velocity disabled");
-    }
-
-    @Subscribe
-    public void onPlayerLogin(PostLoginEvent event) {
-        // Handle player login events if needed
-    }
-
-    @Subscribe
-    public void onPlayerDisconnect(DisconnectEvent event) {
-        // Handle player disconnect events if needed
     }
 
     public void reloadData() {
@@ -91,15 +75,12 @@ public class BedrockGUI {
             logger.warn("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
         }
 
-        // Load configuration
         File dataFolder = dataDirectory.toFile();
         config = new VelocityConfig(dataFolder);
-        
-        // Load messages
+
         MessageConfig configHandler = new VelocityMessageConfig(dataFolder, "messages.yml");
         messageData = new MessageData(configHandler);
 
-        // Shutdown existing API if reloading
         if (api != null) {
             logger.info("Reloading BedrockGUI with fresh instances to avoid stale cache...");
             try {
@@ -109,25 +90,21 @@ public class BedrockGUI {
             }
         }
 
-        // Initialize platform-specific managers
-        it.pintux.life.velocity.platform.VelocityCommandExecutor commandExecutor = new it.pintux.life.velocity.platform.VelocityCommandExecutor();
-        VelocitySoundManager soundManager = new VelocitySoundManager();
-        VelocityEconomyManager economyManager = null; // Economy not typically available on proxy
-        VelocityFormSender formSender = new VelocityFormSender(server);
+        it.pintux.life.velocity.platform.VelocityCommandExecutor commandExecutor = new it.pintux.life.velocity.platform.VelocityCommandExecutor(getServer());
+        FormSender formSender = new FormSender();
         VelocityTitleManager titleManager = new VelocityTitleManager();
         VelocityPluginManager pluginManager = new VelocityPluginManager(server);
         VelocityPlayerManager playerManager = new VelocityPlayerManager(server);
-        it.pintux.life.velocity.platform.VelocityAssetServer assetServer = new it.pintux.life.velocity.platform.VelocityAssetServer(server, dataFolder, 8192);
+        AssetServer assetServer = new AssetServer(server.getBoundAddress().getHostString(), 8192, dataFolder);
         assetServer.start();
 
-        // Create API instance
-        api = new BedrockGUIApi(config, messageData, commandExecutor, soundManager, economyManager, 
-                               formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler());
+        api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
+                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler(getServer()));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
         logger.info("Using FormMenuUtil from BedrockGUIApi");
-        
+
         logger.info("BedrockGUI for Velocity loaded and enabled");
 
         try {
@@ -138,7 +115,8 @@ public class BedrockGUI {
                     server.getCommandManager().register(base, new FormCommand(this, key));
                 }
             });
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
     }
 
     public ProxyServer getServer() {
@@ -163,9 +141,5 @@ public class BedrockGUI {
 
     public BedrockGUIApi getApi() {
         return api;
-    }
-
-    public VelocityConfig getConfig() {
-        return config;
     }
 }

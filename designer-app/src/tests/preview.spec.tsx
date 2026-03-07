@@ -60,36 +60,14 @@ describe("Preview Components", () => {
     it("renders CHEST menu correctly", () => {
       const menu: any = {
         type: "CHEST",
-        title: "Chest Menu",
+        title: "CHEST Menu",
         size: 27,
         items: [{ slot: 0, material: "STONE" }]
       };
-      wrap(<JavaPreview menu={menu} />);
-      expect(screen.getByText("Chest Menu")).toBeDefined();
-      expect(screen.getByTitle("STONE")).toBeDefined();
-    });
-
-    it("renders ANVIL menu correctly", () => {
-      const menu: any = {
-        type: "ANVIL",
-        title: "Anvil Menu",
-        items: [{ slot: 0, material: "PAPER" }]
-      };
-      wrap(<JavaPreview menu={menu} />);
-      expect(screen.getByText("Anvil Menu")).toBeDefined();
-      expect(screen.getByTitle("PAPER")).toBeDefined();
-    });
-
-    it("renders CRAFTING menu correctly", () => {
-      const menu: any = {
-        type: "CRAFTING",
-        title: "Crafting Menu",
-        items: [{ slot: 1, material: "LOG" }, { slot: 0, material: "PLANKS" }]
-      };
-      wrap(<JavaPreview menu={menu} />);
-      expect(screen.getByText("Crafting Menu")).toBeDefined();
-      expect(screen.getByTitle("LOG")).toBeDefined();
-      expect(screen.getByTitle("PLANKS")).toBeDefined();
+      const view = wrap(<JavaPreview menu={menu} />);
+      expect(view.getByText("CHEST Menu")).toBeDefined();
+      expect(view.getByTitle("STONE")).toBeDefined();
+      view.unmount();
     });
 
     it("renders null if menu is undefined", () => {

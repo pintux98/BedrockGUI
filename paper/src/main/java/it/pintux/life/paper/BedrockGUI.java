@@ -1,8 +1,9 @@
 package it.pintux.life.paper;
 
 import it.pintux.life.common.api.BedrockGUIApi;
+import it.pintux.life.common.utils.AssetServer;
+import it.pintux.life.common.utils.FormSender;
 import it.pintux.life.paper.placeholders.BedrockGUIExpansion;
-import it.pintux.life.paper.platform.PaperFormSender;
 import it.pintux.life.paper.platform.PaperPlayerChecker;
 import it.pintux.life.paper.platform.PaperCommandExecutor;
 import it.pintux.life.paper.platform.PaperEconomyManager;
@@ -39,7 +40,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     private MessageData messageData;
     private BedrockGUIApi api;
     private java.util.Set<String> interceptBaseLabels = new java.util.HashSet<>();
-    private it.pintux.life.paper.platform.PaperAssetServer assetServer;
+    private AssetServer assetServer;
 
 
     @Override
@@ -70,10 +71,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     }
 
     public void reloadData() {
-
-        //if (!DependencyValidator.validateDependencies()) {
-        //    getLogger().warning("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
-        //}
         reloadConfig();
         this.saveResource("messages.yml", false);
 
@@ -99,16 +96,14 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("Vault not found. Economy features disabled.");
         }
-        PaperFormSender formSender = new PaperFormSender();
+        FormSender formSender = new FormSender();
         PaperTitleManager titleManager = new PaperTitleManager();
         PaperPluginManager pluginManager = new PaperPluginManager();
         PaperPlayerManager playerManager = new PaperPlayerManager(this);
-        assetServer = new it.pintux.life.paper.platform.PaperAssetServer(getDataFolder(), 8191, org.bukkit.Bukkit.getIp());
+        assetServer = new AssetServer(org.bukkit.Bukkit.getIp(),8191, getDataFolder() );
         assetServer.start();
 
-        // Register BungeeCord channel
         this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        // Register incoming bridge for proxy-run player commands
         this.getServer().getMessenger().registerIncomingPluginChannel(this, "bedrockgui:cmd", new it.pintux.life.paper.platform.CommandBridgeListener());
 
         api = new BedrockGUIApi(new PaperConfig(getDataFolder(), getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
@@ -128,7 +123,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         }
         getLogger().info("BedrockGUI loaded and enabled");
 
-        // Initial wrap; more wraps are triggered on ServerLoad/PluginEnable to catch late registrations
         wrapKnownCommands();
     }
 
@@ -137,14 +131,12 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         String command = event.getCommand();
         PaperPlayerChecker playerChecker = new PaperPlayerChecker();
 
-        // Use sender if it is a player; otherwise try to find a target player mentioned in the command line
         Player senderPlayer = event.getSender() instanceof Player ? (Player) event.getSender() : null;
         Player targetPlayer = senderPlayer != null ? senderPlayer : findTargetPlayerFromCommand(command);
         if (targetPlayer == null) {
             return;
         }
 
-        // Only intercept for Bedrock players
         if (!playerChecker.isBedrockPlayer(targetPlayer.getUniqueId())) {
             return;
         }
@@ -172,10 +164,8 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         });
     }
 
-    // Re-wrap known commands after plugins finish enabling and on demand
     private void wrapKnownCommands() {
         try {
-            // Compute base labels from config (formCommand + explicit intercept patterns)
             interceptBaseLabels = computeInterceptBaseLabels();
             Object craftServer = Bukkit.getServer();
             java.lang.reflect.Field mapField = craftServer.getClass().getDeclaredField("commandMap");
@@ -199,7 +189,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             for (java.util.Map.Entry<String, org.bukkit.command.Command> e : new java.util.ArrayList<>(known.entrySet())) {
                 org.bukkit.command.Command cmd = e.getValue();
                 if (cmd == null) continue;
-                // If already wrapped, decide if it still matches; if not, unwrap
                 if (cmd instanceof InterceptingCommand) {
                     InterceptingCommand ic = (InterceptingCommand) cmd;
                     org.bukkit.command.Command orig = ic.getOriginal();
@@ -228,19 +217,16 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 String key = e.getKey();
                 String name = cmd.getName();
                 String className = cmd.getClass().getName();
-                // Skip core/default commands and namespaced Minecraft/Bukkit commands
                 if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:")))
                     continue;
                 if (className.startsWith("org.bukkit.command.defaults")) continue;
                 if (name != null && excluded.contains(name.toLowerCase())) continue;
                 if (key != null && excluded.contains(key.toLowerCase())) continue;
-                // Skip wrapping commands owned by our plugin (redundant) or disabled plugins
                 if (cmd instanceof org.bukkit.command.PluginIdentifiableCommand) {
                     org.bukkit.plugin.Plugin owner = ((org.bukkit.command.PluginIdentifiableCommand) cmd).getPlugin();
                     if (owner == this) continue;
                     if (owner != null && !owner.isEnabled()) continue;
                 }
-                // Wrap only commands whose base label matches our cached set
                 boolean match = false;
                 if (name != null && interceptBaseLabels.contains(name.toLowerCase())) match = true;
                 if (!match && key != null) {
@@ -270,7 +256,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onServerLoad(ServerLoadEvent event) {
-        // Ensure wrapping after the server finishes loading all plugins/commands
         wrapKnownCommands();
     }
 
@@ -288,7 +273,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                     String intercept = formMenu.getCommandIntercept();
                     if (intercept != null && !intercept.isEmpty()) {
                         String p = intercept.trim().toLowerCase();
-                        // Only include explicit base labels (no leading wildcard)
                         if (!p.startsWith("%")) {
                             String[] tokens = p.split(" ");
                             if (tokens.length > 0) labels.add(tokens[0]);
@@ -304,7 +288,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPluginEnable(PluginEnableEvent event) {
-        // Some plugins register commands during enable; re-wrap to keep interception intact
         wrapKnownCommands();
     }
 

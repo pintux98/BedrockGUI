@@ -13,18 +13,7 @@ public class VelocityPlayerChecker implements PlatformPlayerChecker {
         try {
             return FloodgateApi.getInstance().isFloodgatePlayer(playerUuid);
         } catch (Exception e) {
-            // Floodgate not available or player not found
             return false;
-        }
-    }
-
-    @Override
-    public boolean isJavaPlayer(UUID playerUuid) {
-        try {
-            return !FloodgateApi.getInstance().isFloodgatePlayer(playerUuid);
-        } catch (Exception e) {
-            // If Floodgate is not available, assume Java player
-            return true;
         }
     }
 
@@ -35,15 +24,5 @@ public class VelocityPlayerChecker implements PlatformPlayerChecker {
         } catch (Exception e) {
             return false;
         }
-    }
-
-    @Override
-    public String getPlayerPlatform(UUID playerUuid) {
-        if (isBedrockPlayer(playerUuid)) {
-            return "Bedrock";
-        } else if (isJavaPlayer(playerUuid)) {
-            return "Java";
-        }
-        return "Unknown";
     }
 }

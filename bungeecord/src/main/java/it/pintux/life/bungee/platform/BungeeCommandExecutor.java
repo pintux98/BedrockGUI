@@ -7,6 +7,4 @@ public class BungeeCommandExecutor implements PlatformCommandExecutor {
     public boolean executeAsConsole(String command) { return false; }
     @Override
     public boolean executeAsPlayer(String playerName, String command) { return false; }
-    @Override
-    public boolean commandExists(String command) { return false; }
 }

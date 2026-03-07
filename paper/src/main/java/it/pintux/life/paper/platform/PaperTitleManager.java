@@ -53,22 +53,6 @@ public class PaperTitleManager implements PlatformTitleManager {
     }
 
     @Override
-    public void clearTitle(FormPlayer player) {
-        Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
-        if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
-            bukkitPlayer.resetTitle();
-        }
-    }
-
-    @Override
-    public void resetTitle(FormPlayer player) {
-        Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
-        if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
-            bukkitPlayer.resetTitle();
-        }
-    }
-
-    @Override
     public boolean isSupported() {
         return true;
     }

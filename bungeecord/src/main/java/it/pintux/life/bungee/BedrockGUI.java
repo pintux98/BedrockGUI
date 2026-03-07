@@ -2,6 +2,8 @@ package it.pintux.life.bungee;
 
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.form.FormMenuUtil;
+import it.pintux.life.common.utils.AssetServer;
+import it.pintux.life.common.utils.FormSender;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.bungee.platform.*;
@@ -17,7 +19,7 @@ public class BedrockGUI extends Plugin {
     private MessageData messageData;
     private BedrockGUIApi api;
     private BungeeConfig config;
-    private BungeeAssetServer assetServer;
+    private AssetServer assetServer;
 
     @Override
     public void onEnable() {
@@ -33,7 +35,8 @@ public class BedrockGUI extends Plugin {
         if (api != null) {
             try {
                 api.shutdown();
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
         }
         if (assetServer != null) {
             assetServer.shutdown();
@@ -48,27 +51,36 @@ public class BedrockGUI extends Plugin {
         messageData = new MessageData(configHandler);
 
         if (api != null) {
-            try { api.shutdown(); } catch (Exception ignored) {}
+            try {
+                api.shutdown();
+            } catch (Exception ignored) {
+            }
         }
 
         BungeeCommandExecutor commandExecutor = new BungeeCommandExecutor();
-        BungeeSoundManager soundManager = new BungeeSoundManager();
-        BungeeEconomyManager economyManager = null;
-        BungeeFormSender formSender = new BungeeFormSender();
+        FormSender formSender = new FormSender();
         BungeeTitleManager titleManager = new BungeeTitleManager();
         BungeePluginManager pluginManager = new BungeePluginManager(getProxy());
         BungeePlayerManager playerManager = new BungeePlayerManager(getProxy());
-        assetServer = new BungeeAssetServer(getProxy(), dataFolder, 8193);
+        assetServer = new AssetServer(getProxy().getConfig().getListeners().stream().findFirst().map(s -> s.getHost().getHostString()).orElse("127.0.0.1"), 8193, dataFolder);
         assetServer.start();
 
-        api = new BedrockGUIApi(config, messageData, commandExecutor, soundManager, economyManager,
+        api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
                 formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
     }
 
-    public FormMenuUtil getFormMenuUtil() { return formMenuUtil; }
-    public MessageData getMessageData() { return messageData; }
-    public BedrockGUIApi getApi() { return api; }
+    public FormMenuUtil getFormMenuUtil() {
+        return formMenuUtil;
+    }
+
+    public MessageData getMessageData() {
+        return messageData;
+    }
+
+    public BedrockGUIApi getApi() {
+        return api;
+    }
 }

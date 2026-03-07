@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 import { useDesignerStore } from "../core/store";
 import { Dialog } from "./Dialog";
+import { JAVA_MENU_TYPE_OPTIONS, supportsJavaMenuSize } from "../core/javaMenu";
+import { JavaMenuType } from "../core/types";
 
 export function Wizard() {
   const { setIsWizardOpen, setPlatform, setBedrock, setJava, setMenuName } = useDesignerStore();
@@ -10,7 +12,7 @@ export function Wizard() {
   // Form State
   const [platform, setLocalPlatform] = useState<"bedrock" | "java">("bedrock");
   const [bedrockType, setBedrockType] = useState<"SIMPLE" | "MODAL" | "CUSTOM">("SIMPLE");
-  const [javaType, setJavaType] = useState<"CHEST" | "ANVIL" | "CRAFTING">("CHEST");
+  const [javaType, setJavaType] = useState<JavaMenuType>("CHEST");
   const [name, setName] = useState("new_form");
   const [title, setTitle] = useState("New Form");
 
@@ -32,7 +34,7 @@ export function Wizard() {
       setJava({
         type: javaType as any,
         title: title,
-        size: 27,
+        size: supportsJavaMenuSize(javaType) ? 27 : undefined,
         items: []
       });
     }
@@ -123,9 +125,11 @@ export function Wizard() {
                     </>
                   ) : (
                     <>
-                      <option value="CHEST">Chest Menu</option>
-                      <option value="ANVIL">Anvil Menu</option>
-                      <option value="CRAFTING">Crafting Table</option>
+                      {JAVA_MENU_TYPE_OPTIONS.map((opt) => (
+                        <option key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </option>
+                      ))}
                     </>
                   )}
                 </select>

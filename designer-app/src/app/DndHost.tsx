@@ -15,6 +15,7 @@ import { BedrockForm, JavaMenu } from "../core/types";
 import { IconTile } from "../components/IconTile";
 import { arrayMove } from "@dnd-kit/sortable";
 import { sortableKeyboardCoordinates } from "@dnd-kit/sortable";
+import { isJavaSlotValid } from "../core/javaMenu";
 
 export function DndHost({ children }: { children: React.ReactNode }) {
   const { platform, bedrock, java, setBedrock, setJava } = useDesignerStore();
@@ -109,11 +110,7 @@ export function DndHost({ children }: { children: React.ReactNode }) {
       if (!over.startsWith("java-slot-")) return;
       const slot = Number(over.replace("java-slot-", ""));
       if (Number.isNaN(slot)) return;
-      if (java.type === "ANVIL" && (slot < 0 || slot > 2)) return;
-      if (java.type === "CHEST") {
-        const max = (java.size ?? 9) - 1;
-        if (slot < 0 || slot > max) return;
-      }
+      if (!isJavaSlotValid(java as JavaMenu, slot)) return;
       const withoutSlot = java.items.filter((i) => i.slot !== slot);
       const items = [...withoutSlot, { slot, material }];
       setJava({ ...(java as JavaMenu), items });

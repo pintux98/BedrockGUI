@@ -29,27 +29,6 @@ public class PaperSoundManager implements PlatformSoundManager {
         }
     }
 
-    @Override
-    public boolean stopAllSounds(FormPlayer player) {
-        try {
-            Player bukkitPlayer = Bukkit.getPlayer(player.getUniqueId());
-            if (bukkitPlayer == null || !bukkitPlayer.isOnline()) {
-                return false;
-            }
-
-            bukkitPlayer.stopAllSounds();
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean soundExists(String soundName) {
-        return parseSound(soundName) != null;
-    }
-
-
     private Sound parseSound(String soundName) {
         if (soundName == null || soundName.isEmpty()) {
             return null;

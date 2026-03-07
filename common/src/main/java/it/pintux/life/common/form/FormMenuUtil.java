@@ -27,12 +27,12 @@ public class FormMenuUtil {
     private final PlatformCommandExecutor commandExecutor;
     private final PlatformSoundManager soundManager;
     private final PlatformEconomyManager economyManager;
-    private final PlatformFormSender formSender;
+    private final FormSender formSender;
     private final PlatformScheduler scheduler;
     private final PlatformTitleManager titleManager;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
-    private it.pintux.life.common.platform.PlatformAssetServer assetServer;
+    private AssetServer assetServer;
     private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
@@ -46,7 +46,7 @@ public class FormMenuUtil {
                        PlatformCommandExecutor commandExecutor,
                        PlatformSoundManager soundManager,
                        PlatformEconomyManager economyManager,
-                       PlatformFormSender formSender,
+                       FormSender formSender,
                        PlatformTitleManager titleManager,
                        PlatformPluginManager pluginManager,
                        PlatformPlayerManager playerManager,
@@ -1342,7 +1342,7 @@ public class FormMenuUtil {
         return button.getOnClick();
     }
 
-    public void setAssetServer(it.pintux.life.common.platform.PlatformAssetServer assetServer) {
+    public void setAssetServer(AssetServer assetServer) {
         this.assetServer = assetServer;
     }
 

@@ -18,26 +18,11 @@ public class PaperPlayerChecker implements PlatformPlayerChecker {
     }
 
     @Override
-    public boolean isJavaPlayer(UUID playerUuid) {
-        return !isBedrockPlayer(playerUuid);
-    }
-
-    @Override
     public boolean isFloodgateAvailable() {
         try {
             return FloodgateApi.getInstance() != null;
         } catch (Exception e) {
             return false;
         }
-    }
-
-    @Override
-    public String getPlayerPlatform(UUID playerUuid) {
-        if (isBedrockPlayer(playerUuid)) {
-            return "BEDROCK";
-        } else if (isJavaPlayer(playerUuid)) {
-            return "JAVA";
-        }
-        return "UNKNOWN";
     }
 }

@@ -3,6 +3,7 @@ import { useDesignerStore } from "../core/store";
 import { SortableContext, useSortable, verticalListSortingStrategy } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { BufferedInput, BufferedTextArea } from "../components/BufferedInput";
+import { getJavaMenuMaxSlot, isJavaSlotValid, supportsJavaMenuSize } from "../core/javaMenu";
 
 export function PropertiesPanel() {
   const {
@@ -305,12 +306,7 @@ export function PropertiesPanel() {
             value={java.title}
             onCommit={(v) => setJava({ ...java, title: v }, "Updated title")}
           />
-          {java.type === "CRAFTING" && (
-            <div className="text-xs text-brand-muted">
-              CRAFTING opens the player crafting table; items are ignored.
-            </div>
-          )}
-          {java.type === "CHEST" && (
+          {supportsJavaMenuSize(java.type) && (
             <div className="flex items-center gap-2">
               <label className="text-sm">Size</label>
               <select
@@ -318,7 +314,7 @@ export function PropertiesPanel() {
                 value={java.size ?? 27}
                 onChange={(e) => {
                   const size = Number(e.target.value);
-                  const items = java.items.filter((i) => i.slot < size);
+                  const items = java.items.filter((i) => i.slot < size && i.slot >= 0);
                   setJava({ ...java, size, items }, "Resized menu");
                 }}
               >
@@ -330,6 +326,9 @@ export function PropertiesPanel() {
               </select>
             </div>
           )}
+          <div className="text-xs text-brand-muted">
+            Slots range from 0 to {getJavaMenuMaxSlot(java.type, java.size)} for {java.type}.
+          </div>
           {java.type === "CHEST" && (
             <JavaFillsEditor java={java} onChange={setJava} />
           )}
@@ -339,17 +338,24 @@ export function PropertiesPanel() {
               type="number"
               placeholder="slot"
               value={selectedJavaSlot ?? ""}
-              onCommit={(v) =>
-                setSelectedJavaSlot(v === "" ? null : Number(v))
-              }
-              disabled={java.type === "CRAFTING"}
+              onCommit={(v) => {
+                if (v === "") {
+                  setSelectedJavaSlot(null);
+                  return;
+                }
+                const nextSlot = Number(v);
+                if (!Number.isFinite(nextSlot) || !isJavaSlotValid(java, nextSlot)) {
+                  setSelectedJavaSlot(null);
+                  return;
+                }
+                setSelectedJavaSlot(nextSlot);
+              }}
               min={0}
-              max={java.type === "ANVIL" ? 2 : java.type === "CHEST" ? (java.size ?? 27) - 1 : 0}
+              max={getJavaMenuMaxSlot(java.type, java.size)}
             />
             <button
               className="ui-btn-secondary px-2 py-1 text-xs"
               onClick={() => setSelectedJavaSlot(null)}
-              disabled={java.type === "CRAFTING"}
             >
               Clear
             </button>

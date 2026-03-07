@@ -11,16 +11,15 @@ import java.util.List;
 
 public class BungeePlayerManager implements PlatformPlayerManager {
     private final ProxyServer proxy;
-    public BungeePlayerManager(ProxyServer proxy) { this.proxy = proxy; }
+
+    public BungeePlayerManager(ProxyServer proxy) {
+        this.proxy = proxy;
+    }
 
     @Override
-    public Object getPlayer(String playerName) { return proxy.getPlayer(playerName); }
-
-    @Override
-    public Object getOfflinePlayer(String playerName) { return getPlayer(playerName); }
-
-    @Override
-    public boolean isPlayerOnline(String playerName) { return proxy.getPlayer(playerName) != null; }
+    public Object getPlayer(String playerName) {
+        return proxy.getPlayer(playerName);
+    }
 
     @Override
     public void sendMessage(String playerName, String message) {
@@ -34,24 +33,6 @@ public class BungeePlayerManager implements PlatformPlayerManager {
             ((ProxiedPlayer) player).sendMessage(net.md_5.bungee.api.chat.TextComponent.fromLegacyText(message));
         }
     }
-
-    @Override
-    public String getPlayerName(Object player) { return player instanceof ProxiedPlayer ? ((ProxiedPlayer) player).getName() : ""; }
-
-    @Override
-    public Object getPlayerWorld(Object player) { return null; }
-
-    @Override
-    public Object getPlayerLocation(Object player) { return null; }
-
-    @Override
-    public FormPlayer toFormPlayer(Object player) { return player instanceof ProxiedPlayer ? new BungeePlayer((ProxiedPlayer) player) : null; }
-
-    @Override
-    public Object fromFormPlayer(FormPlayer formPlayer) { return formPlayer instanceof BungeePlayer ? ((BungeePlayer) formPlayer).getPlayer() : null; }
-
-    @Override
-    public String getWorldName(Object world) { return ""; }
 
     @Override
     public void sendByteArray(FormPlayer player, String channel, byte[] data) {

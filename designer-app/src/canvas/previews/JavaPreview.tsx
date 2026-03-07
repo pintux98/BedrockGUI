@@ -5,6 +5,7 @@ import { useDesignerStore } from "../../core/store";
 import { MinecraftText } from "../../components/MinecraftText";
 import { stripMinecraftCodes } from "../../core/minecraftText";
 import { useJavaAssetsIndex } from "../../data/javaAssetsIndex";
+import { getJavaMenuGridColumns, getJavaMenuSlotCount } from "../../core/javaMenu";
 
 export function JavaPreview({ menu }: { menu: JavaMenu }) {
   const { selectedJavaSlot, setSelectedJavaSlot } = useDesignerStore();
@@ -18,18 +19,21 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
 
   if (!menu) return null;
 
+  const frameClassName = "mx-auto shadow-2xl bg-[#c6c6c6] text-[#404040]";
+  const frameStyle: React.CSSProperties = {
+    width: "min(520px, 100%)",
+    boxShadow: "inset -2px -2px 0px #555555, inset 2px 2px 0px #ffffff, 0 10px 20px rgba(0,0,0,0.5)",
+    border: "2px solid #000000"
+  };
+
   if (menu.type === "CHEST") {
     const rows = Math.ceil((menu.size ?? 9) / 9);
     const slots = Array.from({ length: rows * 9 }, (_, i) => i);
     const { itemsBySlot, fillSlots } = computeChestPreviewItems(menu, rows);
     return (
       <div
-        className="max-w-xl mx-auto shadow-2xl bg-[#c6c6c6] text-[#404040]"
-        style={{
-          width: "min(520px, 100%)",
-          boxShadow: "inset -2px -2px 0px #555555, inset 2px 2px 0px #ffffff, 0 10px 20px rgba(0,0,0,0.5)",
-          border: "2px solid #000000"
-        }}
+        className={`max-w-xl ${frameClassName}`}
+        style={frameStyle}
         onClick={(e) => {
           if (e.target !== e.currentTarget) return;
           setSelectedJavaSlot(null);
@@ -68,15 +72,12 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
       </div>
     );
   }
+
   if (menu.type === "ANVIL") {
     return (
       <div
-        className="max-w-md mx-auto shadow-2xl bg-[#c6c6c6] text-[#404040]"
-        style={{
-          width: "min(520px, 100%)",
-          boxShadow: "inset -2px -2px 0px #555555, inset 2px 2px 0px #ffffff, 0 10px 20px rgba(0,0,0,0.5)",
-          border: "2px solid #000000"
-        }}
+        className={`max-w-md ${frameClassName}`}
+        style={frameStyle}
         onClick={(e) => {
           if (e.target !== e.currentTarget) return;
           setSelectedJavaSlot(null);
@@ -121,29 +122,24 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
       </div>
     );
   }
-  
-  // CRAFTING and others
-  return (
-    <div
-      className="max-w-md mx-auto shadow-2xl bg-[#c6c6c6] text-[#404040]"
-      style={{
-        width: "min(520px, 100%)",
-        boxShadow: "inset -2px -2px 0px #555555, inset 2px 2px 0px #ffffff, 0 10px 20px rgba(0,0,0,0.5)",
-          border: "2px solid #000000"
-      }}
-      onClick={(e) => {
-        if (e.target !== e.currentTarget) return;
-        setSelectedJavaSlot(null);
-      }}
-    >
-      <div className="h-10 flex items-center justify-between px-3 text-[#404040]">
-        <div className="text-base truncate">{menu.title}</div>
-        <button className="text-[#404040] hover:text-red-500 font-bold" type="button" aria-label="Close preview">
-          ✕
-        </button>
-      </div>
-      <div className="p-3">
-        {menu.type === "CRAFTING" ? (
+
+  if (menu.type === "CRAFTING" || menu.type === "WORKBENCH") {
+    return (
+      <div
+        className={`max-w-md ${frameClassName}`}
+        style={frameStyle}
+        onClick={(e) => {
+          if (e.target !== e.currentTarget) return;
+          setSelectedJavaSlot(null);
+        }}
+      >
+        <div className="h-10 flex items-center justify-between px-3 text-[#404040]">
+          <div className="text-base truncate">{menu.title}</div>
+          <button className="text-[#404040] hover:text-red-500 font-bold" type="button" aria-label="Close preview">
+            ✕
+          </button>
+        </div>
+        <div className="p-3">
           <div className="flex items-center gap-4 justify-center bg-[#c6c6c6]">
             <div className="grid grid-cols-3 gap-0.5 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
               {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((slot) => {
@@ -167,33 +163,76 @@ export function JavaPreview({ menu }: { menu: JavaMenu }) {
               })}
             </div>
             <div className="text-[#404040] text-2xl">➔</div>
-             <div className="grid grid-cols-1 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
-               {(() => {
-                 const resultItem = menu.items.find((it) => it.slot === 0);
-                 const resultIcon = resultItem ? materialToIconUrl(resultItem.material, index) : undefined;
-                 const tooltipTitle = resultItem?.name ?? resultItem?.material ?? "Result";
-                 const tooltipLore = Array.isArray(resultItem?.lore) ? resultItem.lore : [];
-                 return (
-                   <JavaSlot
-                     slot={0}
-                     label={resultItem ? resultItem.material : "Result"}
-                     iconUrl={resultIcon}
-                     tall
-                     tooltipTitle={tooltipTitle}
-                     tooltipLore={tooltipLore}
-                     registerRef={(el) => {
-                       slotRefs.current[0] = el;
-                     }}
-                   />
-                 );
-               })()}
-             </div>
-           </div>
-        ) : (
-          <div className="text-center text-sm text-[#404040] p-4 border border-dashed border-[#8b8b8b]">
-            Unknown menu type: {menu.type}
+            <div className="grid grid-cols-1 bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
+              {(() => {
+                const resultItem = menu.items.find((it) => it.slot === 0);
+                const resultIcon = resultItem ? materialToIconUrl(resultItem.material, index) : undefined;
+                const tooltipTitle = resultItem?.name ?? resultItem?.material ?? "Result";
+                const tooltipLore = Array.isArray(resultItem?.lore) ? resultItem.lore : [];
+                return (
+                  <JavaSlot
+                    slot={0}
+                    label={resultItem ? resultItem.material : "Result"}
+                    iconUrl={resultIcon}
+                    tall
+                    tooltipTitle={tooltipTitle}
+                    tooltipLore={tooltipLore}
+                    registerRef={(el) => {
+                      slotRefs.current[0] = el;
+                    }}
+                  />
+                );
+              })()}
+            </div>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
+
+  const slotCount = getJavaMenuSlotCount(menu.type, menu.size);
+  const slots = Array.from({ length: slotCount }, (_, i) => i);
+  const columns = getJavaMenuGridColumns(menu.type, menu.size);
+
+  return (
+    <div
+      className={`max-w-xl ${frameClassName}`}
+      style={frameStyle}
+      onClick={(e) => {
+        if (e.target !== e.currentTarget) return;
+        setSelectedJavaSlot(null);
+      }}
+    >
+      <div className="h-10 flex items-center justify-between px-3 text-[#404040]">
+        <div className="text-base truncate">{menu.title}</div>
+        <button className="text-[#404040] hover:text-red-500 font-bold" type="button" aria-label="Close preview">
+          ✕
+        </button>
+      </div>
+      <div className="p-3">
+        <div className="bg-[#8b8b8b] p-1 border-b border-r border-white border-t-[#373737] border-l-[#373737]">
+          <div className="grid gap-0.5" style={{ gridTemplateColumns: `repeat(${columns}, minmax(0, 1fr))` }}>
+            {slots.map((slot) => {
+              const item = menu.items.find((it) => it.slot === slot);
+              const icon = item ? materialToIconUrl(item.material, index) : undefined;
+              const tooltipTitle = item?.name ?? item?.material ?? `Slot ${slot}`;
+              const tooltipLore = Array.isArray(item?.lore) ? item.lore : [];
+              return (
+                <JavaSlot
+                  key={slot}
+                  slot={slot}
+                  label={item ? item.material : String(slot)}
+                  iconUrl={icon}
+                  tooltipTitle={tooltipTitle}
+                  tooltipLore={tooltipLore}
+                  registerRef={(el) => {
+                    slotRefs.current[slot] = el;
+                  }}
+                />
+              );
+            })}
+          </div>
+        </div>
       </div>
     </div>
   );

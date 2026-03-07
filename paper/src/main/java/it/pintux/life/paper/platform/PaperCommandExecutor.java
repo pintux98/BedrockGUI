@@ -28,15 +28,4 @@ public class PaperCommandExecutor implements PlatformCommandExecutor {
             return false;
         }
     }
-
-    @Override
-    public boolean commandExists(String command) {
-        try {
-            String[] parts = command.split(" ");
-            String baseCommand = parts[0];
-            return Bukkit.getCommandMap().getCommand(baseCommand) != null;
-        } catch (Exception e) {
-            return false;
-        }
-    }
 }

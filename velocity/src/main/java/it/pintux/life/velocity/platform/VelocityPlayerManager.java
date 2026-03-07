@@ -27,16 +27,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
     }
 
     @Override
-    public Object getOfflinePlayer(String playerName) {
-        return getPlayer(playerName);
-    }
-
-    @Override
-    public boolean isPlayerOnline(String playerName) {
-        return server.getPlayer(playerName).isPresent();
-    }
-
-    @Override
     public void sendMessage(String playerName, String message) {
         server.getPlayer(playerName).ifPresent(player ->
                 player.sendMessage(net.kyori.adventure.text.Component.text(message))
@@ -48,51 +38,6 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
         if (player instanceof Player) {
             ((Player) player).sendMessage(net.kyori.adventure.text.Component.text(message));
         }
-    }
-
-    @Override
-    public String getPlayerName(Object player) {
-        if (player instanceof Player) {
-            return ((Player) player).getUsername();
-        }
-        return "";
-    }
-
-    @Override
-    public Object getPlayerWorld(Object player) {
-        if (player instanceof Player) {
-            return ((Player) player).getCurrentServer().orElse(null);
-        }
-        return null;
-    }
-
-    @Override
-    public Object getPlayerLocation(Object player) {
-        return null;
-    }
-
-    @Override
-    public FormPlayer toFormPlayer(Object player) {
-        if (player instanceof Player) {
-            return new VelocityPlayer((Player) player);
-        }
-        return null;
-    }
-
-    @Override
-    public Object fromFormPlayer(FormPlayer formPlayer) {
-        if (formPlayer instanceof VelocityPlayer) {
-            return ((VelocityPlayer) formPlayer).getPlayer();
-        }
-        return null;
-    }
-
-    @Override
-    public String getWorldName(Object world) {
-        if (world instanceof ServerConnection) {
-            return ((ServerConnection) world).getServerInfo().getName();
-        }
-        return "";
     }
 
     @Override

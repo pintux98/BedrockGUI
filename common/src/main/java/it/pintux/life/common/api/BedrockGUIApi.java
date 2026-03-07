@@ -25,10 +25,10 @@ public class BedrockGUIApi {
     private final FormMenuUtil formMenuUtil;
     private final ActionExecutor actionExecutor;
     private final ActionRegistry actionRegistry;
-    private final PlatformFormSender formSender;
+    private final FormSender formSender;
     private final MessageData messageData;
     private final PlatformTitleManager platformTitleManager;
-    private it.pintux.life.common.platform.PlatformAssetServer assetServer;
+    private AssetServer assetServer;
     private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
@@ -41,7 +41,7 @@ public class BedrockGUIApi {
                          PlatformCommandExecutor commandExecutor,
                          PlatformSoundManager soundManager,
                          PlatformEconomyManager economyManager,
-                         PlatformFormSender formSender,
+                         FormSender formSender,
                          PlatformTitleManager platformTitleManager,
                          PlatformPluginManager pluginManager,
                          PlatformPlayerManager playerManager,
@@ -85,11 +85,15 @@ public class BedrockGUIApi {
         return actionRegistry;
     }
 
-    public PlatformFormSender getFormSender() {
+    public FormSender getFormSender() {
         return formSender;
     }
 
-    public void setAssetServer(it.pintux.life.common.platform.PlatformAssetServer assetServer) {
+    public PlatformTitleManager getPlatformTitleManager() {
+        return platformTitleManager;
+    }
+
+    public void setAssetServer(AssetServer assetServer) {
         this.assetServer = assetServer;
         if (formMenuUtil != null) {
             formMenuUtil.setAssetServer(assetServer);
@@ -103,7 +107,7 @@ public class BedrockGUIApi {
         }
     }
 
-    public it.pintux.life.common.platform.PlatformAssetServer getAssetServer() {
+    public AssetServer getAssetServer() {
         return assetServer;
     }
 

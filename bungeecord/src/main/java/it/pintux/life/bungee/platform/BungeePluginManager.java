@@ -14,23 +14,4 @@ public class BungeePluginManager implements PlatformPluginManager {
     public boolean isPluginEnabled(String pluginName) {
         return proxy.getPluginManager().getPlugin(pluginName) != null;
     }
-
-    @Override
-    public Object getPlugin(String pluginName) {
-        return proxy.getPluginManager().getPlugin(pluginName);
-    }
-
-    @Override
-    public boolean hasClass(String className) {
-        try { Class.forName(className); return true; } catch (ClassNotFoundException e) { return false; }
-    }
-
-    @Override
-    public Class<?> getClass(String className) throws ClassNotFoundException { return Class.forName(className); }
-
-    @Override
-    public boolean hasServiceProvider(Class<?> serviceClass) { return false; }
-
-    @Override
-    public <T> T getServiceProvider(Class<T> serviceClass) { return null; }
 }

@@ -56,20 +56,17 @@ public class ActionExecutor {
             return ActionSystem.ActionResult.failure("Action cannot be null or empty");
         }
 
-        // Execute all actions in the definition
         List<ActionSystem.ActionResult> results = new ArrayList<>();
         for (String actionType : action.getActionTypes()) {
             Object actionValue = action.getAction(actionType);
             ActionSystem.ActionResult result = executeSingleAction(player, actionType, actionValue, context);
             results.add(result);
 
-            // Stop on first failure for now (can be made configurable later)
             if (result.isFailure()) {
                 return result;
             }
         }
 
-        // Return success if all actions succeeded
         return results.isEmpty() ? ActionSystem.ActionResult.success("No actions to execute") : results.get(results.size() - 1);
     }
 
@@ -150,7 +147,6 @@ public class ActionExecutor {
             ActionSystem.ActionResult result = executeAction(player, action.getActionDefinition(), context);
             results.add(result);
 
-            // Stop execution if action failed and is marked as critical
             if (result.isFailure() && action.isCritical()) {
                 logger.warn("Critical action failed, stopping execution chain");
                 break;
@@ -185,14 +181,11 @@ public class ActionExecutor {
 
         String trimmed = actionString.trim();
 
-        // Check for the new unified format first
         Matcher newFormatMatcher = NEW_FORMAT_PATTERN.matcher(trimmed);
         if (newFormatMatcher.matches()) {
             return parseNewFormat(trimmed);
         }
 
-        // Legacy format support for backward compatibility
-        // Handle simple "type: value" format
         if (trimmed.contains(":")) {
             String[] parts = trimmed.split(":", 2);
             if (parts.length == 2) {
@@ -205,7 +198,6 @@ public class ActionExecutor {
             }
         }
 
-        // Default to command if no type specified
         ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction("command", trimmed);
         return new ActionSystem.Action(actionDef);
@@ -222,7 +214,6 @@ public class ActionExecutor {
 
         String actionType = matcher.group(1).toLowerCase();
 
-        // Extract all values from the action string
         List<String> values = new ArrayList<>();
         Matcher valueMatcher = VALUE_PATTERN.matcher(actionString);
         while (valueMatcher.find()) {
@@ -234,8 +225,6 @@ public class ActionExecutor {
             return null;
         }
 
-        // Create ActionSystem.ActionDefinition with the entire action string
-        // The individual action handlers will parse the curly brace format themselves
         ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction(actionType, actionString);
 

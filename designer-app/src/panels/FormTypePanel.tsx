@@ -1,5 +1,7 @@
 import React from "react";
 import { useDesignerStore } from "../core/store";
+import { coerceJavaMenuType, JAVA_MENU_TYPE_OPTIONS } from "../core/javaMenu";
+import { JavaMenu, JavaMenuType } from "../core/types";
 
 export function FormTypePanel() {
   const { platform, bedrock, java, setBedrock, setJava, setPlatform } =
@@ -42,12 +44,14 @@ export function FormTypePanel() {
               className="ui-input w-full"
               value={java.type}
               onChange={(e) =>
-                setJava(coerceJavaType(java, e.target.value as any))
+                setJava(coerceJavaMenuType(java as JavaMenu, e.target.value as JavaMenuType))
               }
             >
-              <option value="CHEST">Chest</option>
-              <option value="ANVIL">Anvil</option>
-              <option value="CRAFTING">Crafting Table</option>
+              {JAVA_MENU_TYPE_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
             </select>
           </div>
         )}
@@ -86,14 +90,4 @@ function coerceBedrockType(prev: any, type: "SIMPLE" | "MODAL" | "CUSTOM") {
     title: prev.title ?? "Custom",
     components: Array.isArray(prev.components) ? prev.components : []
   };
-}
-
-function coerceJavaType(prev: any, type: "CHEST" | "ANVIL" | "CRAFTING") {
-  if (type === "CHEST") {
-    return { ...prev, type, size: prev.size ?? 27, items: prev.items ?? [] };
-  }
-  if (type === "ANVIL") {
-    return { ...prev, type, items: (prev.items ?? []).filter((i: any) => i.slot >= 0 && i.slot <= 2) };
-  }
-  return { ...prev, type, items: prev.items ?? [] };
 }

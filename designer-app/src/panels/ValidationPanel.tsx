@@ -1,6 +1,7 @@
 import React from "react";
 import { useDesignerStore } from "../core/store";
 import { ActionInstance } from "../core/types";
+import { getJavaMenuMaxSlot, getJavaMenuSlotCount, isJavaSlotValid, supportsJavaMenuSize } from "../core/javaMenu";
 
 type Issue = { level: "error" | "warning"; message: string };
 
@@ -121,20 +122,24 @@ function validateState(state: any): Issue[] {
 
   if (state.java) {
     const j = state.java;
-    if (j.type === "CHEST") {
+    const slotCount = getJavaMenuSlotCount(j.type, j.size);
+    const maxSlot = getJavaMenuMaxSlot(j.type, j.size);
+    if (supportsJavaMenuSize(j.type)) {
       const size = j.size ?? 27;
       if (size % 9 !== 0 || size < 9 || size > 54) {
         out.push({ level: "warning", message: "Java CHEST size should be 9..54 and multiple of 9." });
       }
-      for (const it of j.items ?? []) {
-        if (it.slot < 0 || it.slot >= size) {
-          out.push({ level: "warning", message: `Java item slot ${it.slot} is outside chest size ${size}.` });
-        }
-        out.push(...validateActionBlocks(`Java item slot ${it.slot} onClick`, it?.onClick));
+    }
+    for (const it of j.items ?? []) {
+      if (!isJavaSlotValid(j, it.slot)) {
+        out.push({ level: "warning", message: `Java item slot ${it.slot} is outside valid range 0..${maxSlot} for ${j.type}.` });
       }
+      out.push(...validateActionBlocks(`Java item slot ${it.slot} onClick`, it?.onClick));
+    }
+    if (j.type === "CHEST") {
       for (const f of j.fills ?? []) {
         if (!f.id) out.push({ level: "warning", message: "Java fill missing id." });
-        const rows = size / 9;
+        const rows = slotCount / 9;
         if ((f.type === "ROW" || f.type === "EMPTY") && f.row !== undefined && (f.row < 1 || f.row > rows)) {
           out.push({ level: "warning", message: `Java fill '${f.id}': row should be 1..${rows}.` });
         }
@@ -142,12 +147,6 @@ function validateState(state: any): Issue[] {
           out.push({ level: "warning", message: `Java fill '${f.id}': column should be 1..9.` });
         }
         out.push(...validateActionBlocks(`Java fill '${f.id}' item.onClick`, f.item?.onClick));
-      }
-    }
-    if (j.type === "ANVIL") {
-      for (const it of j.items ?? []) {
-        if (it.slot < 0 || it.slot > 2) out.push({ level: "warning", message: `ANVIL item slot ${it.slot} must be 0..2.` });
-        out.push(...validateActionBlocks(`Java anvil slot ${it.slot} onClick`, it?.onClick));
       }
     }
   }
