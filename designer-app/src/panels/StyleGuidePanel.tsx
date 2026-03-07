@@ -15,12 +15,16 @@ export function StyleGuidePanel() {
           <div className="grid grid-cols-2 gap-2">
             <Swatch label="bg" className="bg-brand-bg" />
             <Swatch label="surface" className="bg-brand-surface" />
+            <Swatch label="surface-raised" className="bg-brand-surface-raised" />
             <Swatch label="surface2" className="bg-brand-surface2" />
             <Swatch label="border" className="bg-brand-border" />
+            <Swatch label="border-strong" className="bg-brand-borderStrong" />
             <Swatch label="text" className="bg-brand-text" />
             <Swatch label="muted" className="bg-brand-muted" />
             <Swatch label="accent" className="bg-brand-accent" />
-            <Swatch label="focus" className="bg-brand-focus" />
+            <Swatch label="success" className="bg-brand-success" />
+            <Swatch label="warning" className="bg-brand-warning" />
+            <Swatch label="danger" className="bg-brand-danger" />
           </div>
         </Section>
 
@@ -29,6 +33,7 @@ export function StyleGuidePanel() {
             <button className="ui-btn-primary">Primary</button>
             <button className="ui-btn-secondary">Secondary</button>
             <button className="ui-btn-ghost">Ghost</button>
+            <button className="ui-btn-destructive">Delete</button>
             <button className="ui-btn-secondary" disabled>
               Disabled
             </button>

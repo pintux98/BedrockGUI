@@ -9,8 +9,7 @@ export function MobileWarning() {
 
   useEffect(() => {
     const check = () => {
-      // Check for mobile viewport width (standard breakdown: < 768px is usually mobile/tablet portrait)
-      if (window.innerWidth < 1024) {
+      if (window.innerWidth < 640) {
         setIsMobile(true);
       } else {
         setIsMobile(false);
@@ -30,24 +29,24 @@ export function MobileWarning() {
       onClose={() => setIgnored(true)}
       labelledBy={titleId}
       describedBy={descriptionId}
-      overlayClassName="bg-brand-bg/95 backdrop-blur-sm p-6 text-center"
-      className="bg-brand-surface border border-brand-border p-8 rounded-lg shadow-2xl max-w-md w-full"
+      overlayClassName="bg-brand-bg/92 p-4 text-center"
+      className="bg-brand-surface border border-brand-border p-6 rounded-lg shadow-lg max-w-md w-full"
     >
-        <div className="text-4xl mb-4">🖥️</div>
-        <h2 id={titleId} className="text-xl font-bold text-white mb-3">Desktop Recommended</h2>
+        <div className="text-3xl mb-3">�</div>
+        <h2 id={titleId} className="text-xl font-semibold text-white mb-2">Compact View Enabled</h2>
         <p id={descriptionId} className="text-brand-muted mb-6 text-sm leading-relaxed">
-          The BedrockGUI Designer is optimized for large screens. 
-          For the best experience, please use a desktop or laptop computer.
+          This screen size uses a simplified layout with tabbed navigation.
+          Rotate your device or expand the window for a wider workspace.
         </p>
         <button 
           onClick={() => setIgnored(true)}
           className="ui-btn ui-btn-primary w-full py-3 mb-3"
           type="button"
         >
-          Continue Anyway
+          Continue
         </button>
         <div className="text-xs text-brand-muted opacity-50">
-          Some features may not work correctly on touch devices.
+          Full multi-panel editing appears automatically on larger widths.
         </div>
     </Dialog>
   );

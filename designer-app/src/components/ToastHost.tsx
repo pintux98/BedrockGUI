@@ -2,8 +2,8 @@ import React from "react";
 import { useToastStore } from "../core/toast";
 
 function variantClasses(v: "success" | "error" | "info") {
-  if (v === "success") return "border-green-500/40 bg-green-900/20 text-green-200";
-  if (v === "error") return "border-red-500/40 bg-red-900/20 text-red-200";
+  if (v === "success") return "border-brand-success/70 bg-brand-success/10 text-brand-text";
+  if (v === "error") return "border-brand-danger/70 bg-brand-danger/10 text-brand-text";
   return "border-brand-border bg-brand-surface text-brand-text";
 }
 
@@ -17,7 +17,7 @@ export function ToastHost() {
           key={t.id}
           className={`pointer-events-auto ui-panel px-3 py-2 text-xs w-[320px] max-w-[calc(100vw-2rem)] ${variantClasses(t.variant)}`}
           role="status"
-          aria-live="polite"
+          aria-live={t.variant === "error" ? "assertive" : "polite"}
         >
           <div className="flex items-start justify-between gap-3">
             <div className="leading-snug break-words">{t.message}</div>

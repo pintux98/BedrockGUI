@@ -6,7 +6,6 @@ import { JavaPalette } from "../panels/JavaPalette";
 import { Canvas } from "../canvas/Canvas";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { TopBar } from "./TopBar";
-import { DocumentationPanel } from "../panels/DocumentationPanel";
 import { YamlEditorPanel } from "../panels/YamlEditorPanel";
 import { useDesignerStore } from "../core/store";
 import { DndHost } from "./DndHost";
@@ -17,13 +16,26 @@ import { ResizablePanel } from "../components/ResizablePanel";
 
 export function DesignerShell() {
   const { platform, isWizardOpen } = useDesignerStore();
-  const [isDesktop, setIsDesktop] = useState(true);
+  const [viewport, setViewport] = useState<"mobile" | "tablet" | "desktop">("desktop");
   const [yamlCollapsed, setYamlCollapsed] = useState(false);
   const [historyCollapsed, setHistoryCollapsed] = useState(false);
   const [mobileTab, setMobileTab] = useState<"tools" | "canvas" | "properties">("canvas");
+  const isMobile = viewport === "mobile";
+  const isTablet = viewport === "tablet";
+  const isDesktop = viewport === "desktop";
 
   useEffect(() => {
-    const check = () => setIsDesktop(window.innerWidth >= 1024);
+    const check = () => {
+      if (window.innerWidth < 768) {
+        setViewport("mobile");
+        return;
+      }
+      if (window.innerWidth < 1280) {
+        setViewport("tablet");
+        return;
+      }
+      setViewport("desktop");
+    };
     check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
@@ -36,12 +48,11 @@ export function DesignerShell() {
       <div className="flex-1 overflow-hidden relative flex flex-col min-h-0">
         <DndHost>
           <ErrorBoundary>
-            <div className="flex flex-col lg:flex-row flex-1 overflow-hidden min-h-0">
-            {/* Left Panel */}
-            {isDesktop ? (
+            <div className={`flex flex-1 overflow-hidden min-h-0 ${isMobile ? "flex-col" : "flex-row"}`}>
+            {!isMobile ? (
               <ResizablePanel 
-                initialSize={384} 
-                minSize={250} 
+                initialSize={isTablet ? 320 : 384} 
+                minSize={240} 
                 maxSize={500} 
                 side="left" 
                 persistenceKey="left_panel_width"
@@ -66,7 +77,6 @@ export function DesignerShell() {
                 </div>
               </ResizablePanel>
             ) : (
-              // Mobile View: Tools Tab
               <div className={`w-full flex-1 flex flex-col overflow-hidden ${mobileTab === "tools" ? "flex" : "hidden"}`}>
                 <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
                   <FormTypePanel />
@@ -76,8 +86,7 @@ export function DesignerShell() {
               </div>
             )}
 
-            {/* Center Canvas */}
-            <div className={`flex-1 flex flex-col min-w-0 min-h-0 relative bg-neutral-900/50 ${!isDesktop && mobileTab !== "canvas" ? "hidden" : "flex"}`}>
+            <div className={`flex-1 flex flex-col min-w-0 min-h-0 relative bg-brand-surface2/40 ${isMobile && mobileTab !== "canvas" ? "hidden" : "flex"}`}>
               <div className="flex-1 overflow-hidden relative">
                 <Canvas />
               </div>
@@ -86,7 +95,6 @@ export function DesignerShell() {
               </div>
             </div>
 
-            {/* Right Panel */}
             {isDesktop ? (
               <ResizablePanel 
                 initialSize={420} 
@@ -102,7 +110,7 @@ export function DesignerShell() {
                   </div>
                   <ResizablePanel
                     initialSize={250}
-                    minSize={32} // Collapsed header height
+                    minSize={32}
                     maxSize={600}
                     side="bottom"
                     persistenceKey="yaml_panel_height"
@@ -113,8 +121,16 @@ export function DesignerShell() {
                   </ResizablePanel>
                 </div>
               </ResizablePanel>
+            ) : isTablet ? (
+              <div className="w-[360px] max-w-[42vw] min-w-[300px] border-l border-brand-border h-full flex flex-col bg-brand-surface">
+                <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar min-h-0">
+                  <PropertiesPanel />
+                </div>
+                <div className="border-t border-brand-border shrink-0 h-[min(320px,35dvh)] overflow-hidden">
+                  <YamlEditorPanel defaultExpanded={true} />
+                </div>
+              </div>
             ) : (
-              // Mobile View: Properties Tab
               <div className={`w-full flex-1 flex flex-col overflow-hidden min-h-0 ${mobileTab === "properties" ? "flex" : "hidden"}`}>
                 <div className="flex-1 flex flex-col overflow-hidden min-h-0">
                   <div className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar min-h-0">
@@ -128,29 +144,34 @@ export function DesignerShell() {
             )}
           </div>
 
-          {/* Mobile Bottom Navigation */}
-          {!isDesktop && (
-            <div className="min-h-14 bg-[#2b2b2b] border-t border-brand-border shrink-0 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] z-50">
+          {isMobile && (
+            <div className="min-h-14 bg-brand-surface border-t border-brand-border shrink-0 flex items-center justify-around px-2 pb-[env(safe-area-inset-bottom)] z-50">
               <button 
                 onClick={() => setMobileTab("tools")}
-                className={`flex flex-col items-center justify-center w-20 py-1 rounded transition-colors ${mobileTab === "tools" ? "text-brand-accent bg-[#3a3a3a]" : "text-gray-400"}`}
+                className={`flex flex-col items-center justify-center min-h-11 w-24 py-1 rounded transition-colors ${mobileTab === "tools" ? "text-brand-accent bg-brand-surface-raised/40" : "text-brand-muted"}`}
+                aria-label="Open tools tab"
+                aria-pressed={mobileTab === "tools"}
               >
                 <span className="text-lg">🛠️</span>
-                <span className="text-[10px] font-bold mt-0.5">Tools</span>
+                <span className="text-[11px] font-medium mt-0.5">Tools</span>
               </button>
               <button 
                 onClick={() => setMobileTab("canvas")}
-                className={`flex flex-col items-center justify-center w-20 py-1 rounded transition-colors ${mobileTab === "canvas" ? "text-brand-accent bg-[#3a3a3a]" : "text-gray-400"}`}
+                className={`flex flex-col items-center justify-center min-h-11 w-24 py-1 rounded transition-colors ${mobileTab === "canvas" ? "text-brand-accent bg-brand-surface-raised/40" : "text-brand-muted"}`}
+                aria-label="Open canvas tab"
+                aria-pressed={mobileTab === "canvas"}
               >
                 <span className="text-lg">🎨</span>
-                <span className="text-[10px] font-bold mt-0.5">Canvas</span>
+                <span className="text-[11px] font-medium mt-0.5">Canvas</span>
               </button>
               <button 
                 onClick={() => setMobileTab("properties")}
-                className={`flex flex-col items-center justify-center w-20 py-1 rounded transition-colors ${mobileTab === "properties" ? "text-brand-accent bg-[#3a3a3a]" : "text-gray-400"}`}
+                className={`flex flex-col items-center justify-center min-h-11 w-24 py-1 rounded transition-colors ${mobileTab === "properties" ? "text-brand-accent bg-brand-surface-raised/40" : "text-brand-muted"}`}
+                aria-label="Open properties tab"
+                aria-pressed={mobileTab === "properties"}
               >
                 <span className="text-lg">⚙️</span>
-                <span className="text-[10px] font-bold mt-0.5">Props</span>
+                <span className="text-[11px] font-medium mt-0.5">Props</span>
               </button>
             </div>
           )}

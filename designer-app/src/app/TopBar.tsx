@@ -21,6 +21,9 @@ export function TopBar() {
     updateProjectList();
     const handleSave = () => saveProject();
     const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setShowProjects(false);
+      }
       if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target as Node)) {
         setShowMobileMenu(false);
       }
@@ -32,7 +35,7 @@ export function TopBar() {
       window.removeEventListener("save-project", handleSave);
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [menuName]); // Re-bind when menuName changes to capture current name
+  }, [menuName]);
 
   const updateProjectList = () => {
     const list: string[] = [];
@@ -88,18 +91,18 @@ export function TopBar() {
   };
 
   return (
-    <div className="relative min-h-14 flex flex-wrap items-center justify-between gap-2 px-4 py-2 pt-[calc(0.5rem+env(safe-area-inset-top))] bg-[#2b2b2b] border-b-4 border-[#1e1e1e] shadow-md z-10 shrink-0">
+    <div className="relative min-h-14 flex flex-wrap items-center justify-between gap-2 px-4 py-2 pt-[calc(0.5rem+env(safe-area-inset-top))] bg-brand-surface border-b border-brand-border z-10 shrink-0">
       <div className="flex flex-wrap md:flex-nowrap items-center gap-x-2 gap-y-2 min-w-0 flex-1">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-brand-accent border-2 border-white flex items-center justify-center text-white font-bold text-xl select-none">
+          <div className="w-8 h-8 bg-brand-accent border border-brand-border rounded flex items-center justify-center text-white font-semibold text-base select-none">
               B
           </div>
-          <div className="font-bold text-xl text-white tracking-widest drop-shadow-md hidden md:block">
+          <div className="font-minecraft font-bold text-xl text-white hidden md:block">
               BEDROCK<span className="text-brand-accent">GUI</span>
           </div>
         </div>
         
-        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2 hidden sm:block"></div>
+        <div className="h-8 w-px bg-brand-border mx-2 hidden sm:block"></div>
         
         <div className="flex items-center gap-2 shrink-0">
           <button 
@@ -120,28 +123,28 @@ export function TopBar() {
           </button>
         </div>
 
-        <div className="h-8 w-[2px] bg-[#3f3f3f] mx-2 hidden sm:block"></div>
+        <div className="h-8 w-px bg-brand-border mx-2 hidden sm:block"></div>
 
       {/* Project Management - List Based */}
       <div className="relative shrink-0" ref={dropdownRef}>
         <button
           type="button"
-          className={`flex items-center gap-2 px-3 py-1 rounded cursor-pointer border transition-colors max-w-[65vw] sm:max-w-none ${showProjects ? "bg-[#4a4a4a] border-brand-accent" : "bg-[#3a3a3a] border-[#555] hover:bg-[#4a4a4a]"}`}
+          className={`ui-btn ui-btn-secondary min-h-10 px-3 py-2 cursor-pointer max-w-[65vw] sm:max-w-none ${showProjects ? "border-brand-accent" : ""}`}
           onClick={() => setShowProjects(!showProjects)}
           aria-haspopup="menu"
           aria-expanded={showProjects}
           aria-controls={projectsMenuId}
         >
-          <div className="text-sm font-bold text-white truncate max-w-[45vw] sm:max-w-none">{menuName}</div>
-          <div className={`text-xs text-gray-400 transition-transform ${showProjects ? "rotate-180" : ""}`}>▼</div>
+          <div className="text-sm font-medium text-white truncate max-w-[45vw] sm:max-w-none">{menuName}</div>
+          <div className="text-xs text-brand-muted">▼</div>
         </button>
 
         {showProjects && (
-          <div id={projectsMenuId} role="menu" className="absolute top-full mt-2 w-72 max-w-[calc(100vw-2rem)] right-0 sm:left-0 sm:right-auto bg-[#2b2b2b] border border-[#555] shadow-xl rounded z-50 flex flex-col max-h-[80vh]">
-            <div className="p-3 border-b border-[#444] bg-[#252525]">
-               <div className="text-xs text-brand-muted uppercase font-bold mb-1">Current Project</div>
+          <div id={projectsMenuId} role="menu" className="absolute top-full mt-2 w-72 max-w-[calc(100vw-2rem)] right-0 sm:left-0 sm:right-auto bg-brand-surface border border-brand-border rounded-lg shadow-lg z-50 flex flex-col max-h-[80vh]">
+            <div className="p-3 border-b border-brand-border bg-brand-surface2">
+               <div className="text-xs text-brand-muted font-medium mb-2">Current Project</div>
                <input 
-                 className="w-full bg-[#1e1e1e] border border-[#555] px-2 py-1.5 text-sm text-white focus:border-brand-accent outline-none rounded"
+                 className="ui-input"
                  value={menuName}
                  onChange={(e) => setMenuName(e.target.value)}
                  placeholder="Project Name"
@@ -150,12 +153,12 @@ export function TopBar() {
             </div>
             
             <div className="flex-1 overflow-y-auto custom-scrollbar p-1">
-              <div className="text-xs text-gray-500 px-2 py-1 uppercase font-bold sticky top-0 bg-[#2b2b2b]">Saved Projects</div>
-              {projects.length === 0 && <div className="text-xs text-gray-500 px-4 py-4 italic text-center">No saved projects found</div>}
+              <div className="text-xs text-brand-muted px-2 py-1 font-medium sticky top-0 bg-brand-surface">Saved Projects</div>
+              {projects.length === 0 && <div className="text-xs text-brand-muted px-4 py-4 italic text-center">No saved projects found</div>}
               {projects.map(p => (
                 <div 
                   key={p} 
-                  className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer group transition-colors mb-0.5 ${p === menuName ? "bg-brand-accent/20 border border-brand-accent/50" : "hover:bg-[#3a3a3a] border border-transparent"}`}
+                  className={`flex items-center justify-between px-3 py-2 rounded cursor-pointer group transition-colors mb-0.5 ${p === menuName ? "bg-brand-accent/20 border border-brand-accent/50" : "hover:bg-brand-surface-raised/30 border border-transparent"}`}
                   onClick={(e) => {
                     if (p !== menuName) loadProject(p);
                   }}
@@ -168,13 +171,14 @@ export function TopBar() {
                   tabIndex={0}
                 >
                   <div className="flex items-center gap-2 overflow-hidden">
-                    <span className={`w-2 h-2 rounded-full ${p === menuName ? "bg-brand-accent" : "bg-transparent border border-gray-500"}`}></span>
-                    <span className={`text-sm truncate ${p === menuName ? "text-white font-medium" : "text-gray-300"}`}>{p}</span>
+                    <span className={`w-2 h-2 rounded-sm ${p === menuName ? "bg-brand-accent" : "bg-transparent border border-brand-border"}`}></span>
+                    <span className={`text-sm truncate ${p === menuName ? "text-white font-medium" : "text-brand-muted"}`}>{p}</span>
                   </div>
                   <button 
-                    className="text-gray-500 hover:text-red-400 opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded hover:bg-[#252525]"
+                    className="text-brand-muted hover:text-red-300 transition-colors px-1.5 py-0.5 rounded hover:bg-brand-surface2"
                     onClick={(e) => deleteProject(p, e)}
                     title="Delete Project"
+                    aria-label={`Delete ${p}`}
                   >
                     ✕
                   </button>
@@ -182,7 +186,7 @@ export function TopBar() {
               ))}
             </div>
 
-            <div className="p-3 border-t border-[#444] bg-[#252525] flex gap-2 shrink-0">
+            <div className="p-3 border-t border-brand-border bg-brand-surface2 flex gap-2 shrink-0">
               <button 
                 className="flex-1 ui-btn ui-btn-primary text-xs py-2 font-medium"
                 onClick={saveProject}
@@ -209,7 +213,7 @@ export function TopBar() {
             href="https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2"
             target="_blank"
             rel="noreferrer"
-            className="ui-btn-secondary px-3 py-1.5 text-brand-muted hover:text-white transition-colors relative group flex items-center gap-2"
+            className="ui-btn ui-btn-secondary px-3 py-1.5 text-brand-muted hover:text-white relative group"
             title="Documentation"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -219,13 +223,13 @@ export function TopBar() {
             <span className="text-xs font-medium hidden xl:inline">Docs</span>
           </a>
           
-          <div className="h-6 w-[1px] bg-[#3f3f3f] mx-1"></div>
+          <div className="h-6 w-px bg-brand-border mx-1"></div>
 
           <a
             href="https://modrinth.com/plugin/bedrockgui"
             target="_blank"
             rel="noreferrer"
-            className="ui-btn-secondary px-3 py-1.5 text-[#1bd96a] hover:text-[#4ffc92] transition-colors relative group flex items-center gap-2"
+            className="ui-btn ui-btn-secondary px-3 py-1.5 text-[#78d896] hover:text-[#abefbf] relative group"
             title="Modrinth"
           >
              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -238,7 +242,7 @@ export function TopBar() {
             href="https://github.com/pintux98/BedrockGUI"
             target="_blank"
             rel="noreferrer"
-            className="ui-btn-secondary px-3 py-1.5 text-white hover:text-gray-300 transition-colors relative group flex items-center gap-2"
+            className="ui-btn ui-btn-secondary px-3 py-1.5 text-white hover:text-gray-300 relative group"
             title="GitHub"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -251,7 +255,7 @@ export function TopBar() {
             href="https://ko-fi.com/pintux"
             target="_blank"
             rel="noreferrer"
-            className="ui-btn-secondary px-3 py-1.5 text-[#ff5e5b] hover:text-[#ff8f8d] transition-colors relative group flex items-center gap-2"
+            className="ui-btn ui-btn-secondary px-3 py-1.5 text-[#ff8b88] hover:text-[#ffb2b0] relative group"
             title="Ko-Fi"
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -263,12 +267,13 @@ export function TopBar() {
       </div>
 
       <div className="flex gap-2 shrink-0">
-        {/* Mobile Menu Toggle */}
         <button 
-          className="xl:hidden p-2 text-gray-400 hover:text-white"
+          className="xl:hidden ui-btn ui-btn-ghost min-h-11 min-w-11 text-brand-muted hover:text-white"
           onClick={() => setShowMobileMenu(!showMobileMenu)}
           type="button"
           aria-label="Open menu"
+          aria-expanded={showMobileMenu}
+          aria-controls="mobile-links-menu"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <line x1="3" y1="12" x2="21" y2="12"></line>
@@ -278,12 +283,12 @@ export function TopBar() {
         </button>
 
         <button
-          className="ui-btn ui-btn-primary px-4 py-1 text-sm uppercase tracking-wide hidden sm:block"
+          className="ui-btn ui-btn-primary px-4 py-2 text-sm hidden sm:block"
           onClick={() => exportYaml()}
         >
           Export
         </button>
-        <label className="ui-btn ui-btn-secondary px-4 py-1 text-sm uppercase tracking-wide cursor-pointer hidden sm:block">
+        <label className="ui-btn ui-btn-secondary px-4 py-2 text-sm cursor-pointer hidden sm:block">
           Import
           <input
             type="file"
@@ -299,17 +304,16 @@ export function TopBar() {
 
       {/* Mobile Menu Dropdown */}
       {showMobileMenu && (
-        <div ref={mobileMenuRef} className="absolute top-full right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-[#2b2b2b] border border-[#555] shadow-xl z-50 p-4 flex flex-col gap-4 xl:hidden">
-           {/* Mobile Import/Export if hidden on small screens */}
+        <div id="mobile-links-menu" ref={mobileMenuRef} className="absolute top-full right-0 mt-2 w-64 max-w-[calc(100vw-2rem)] bg-brand-surface border border-brand-border rounded-lg shadow-lg z-50 p-4 flex flex-col gap-4 xl:hidden">
            <div className="flex gap-2 sm:hidden">
               <button
-                className="flex-1 ui-btn ui-btn-primary px-4 py-2 text-sm uppercase tracking-wide"
+                className="flex-1 ui-btn ui-btn-primary px-4 py-2 text-sm"
                 onClick={() => { exportYaml(); setShowMobileMenu(false); }}
                 type="button"
               >
                 Export
               </button>
-              <label className="flex-1 ui-btn ui-btn-secondary px-4 py-2 text-sm uppercase tracking-wide cursor-pointer text-center">
+              <label className="flex-1 ui-btn ui-btn-secondary px-4 py-2 text-sm cursor-pointer text-center">
                 Import
                 <input
                   type="file"
@@ -326,23 +330,23 @@ export function TopBar() {
               </label>
            </div>
            
-           <div className="h-[1px] bg-[#3f3f3f] w-full sm:hidden"></div>
+           <div className="h-px bg-brand-border w-full sm:hidden"></div>
 
            <div className="flex flex-col gap-2">
-              <div className="text-xs text-gray-500 uppercase font-bold px-2">Links</div>
-              <a href="https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-gray-300 hover:bg-[#3a3a3a] rounded">
+              <div className="text-xs text-brand-muted font-medium px-2">Links</div>
+              <a href="https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-brand-text hover:bg-brand-surface-raised/20 rounded">
                 <span>📚</span> Documentation
               </a>
-              <a href="https://github.com/pintux98/BedrockGUI" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-gray-300 hover:bg-[#3a3a3a] rounded">
+              <a href="https://github.com/pintux98/BedrockGUI" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-brand-text hover:bg-brand-surface-raised/20 rounded">
                 <span>💻</span> GitHub
               </a>
-              <a href="https://www.spigotmc.org/resources/bedrockgui-spigot-and-bungeecord-support.119592/" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#ff9f43] hover:bg-[#3a3a3a] rounded">
+              <a href="https://www.spigotmc.org/resources/bedrockgui-spigot-and-bungeecord-support.119592/" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#ffc078] hover:bg-brand-surface-raised/20 rounded">
                 <span>🟧</span> SpigotMC
               </a>
-              <a href="https://modrinth.com/plugin/bedrockgui" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#1bd96a] hover:bg-[#3a3a3a] rounded">
+              <a href="https://modrinth.com/plugin/bedrockgui" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#78d896] hover:bg-brand-surface-raised/20 rounded">
                 <span>🟩</span> Modrinth
               </a>
-              <a href="https://ko-fi.com/pintux" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#ff5e5b] hover:bg-[#3a3a3a] rounded">
+              <a href="https://ko-fi.com/pintux" target="_blank" rel="noreferrer" className="flex items-center gap-3 px-2 py-2 text-[#ff9f9d] hover:bg-brand-surface-raised/20 rounded">
                 <span>☕</span> Ko-Fi
               </a>
            </div>
