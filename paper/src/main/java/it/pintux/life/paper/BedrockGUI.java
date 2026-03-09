@@ -103,9 +103,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         assetServer = new AssetServer(org.bukkit.Bukkit.getIp(),8191, getDataFolder() );
         assetServer.start();
 
-        this.getServer().getMessenger().registerOutgoingPluginChannel(this, "BungeeCord");
-        this.getServer().getMessenger().registerIncomingPluginChannel(this, "bedrockgui:cmd", new it.pintux.life.paper.platform.CommandBridgeListener());
-
         api = new BedrockGUIApi(new PaperConfig(getDataFolder(), getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
