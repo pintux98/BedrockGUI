@@ -27,7 +27,7 @@ public class PaperPlayerManager implements PlatformPlayerManager {
 
     @Override
     public void sendMessage(String playerName, String message) {
-        Player player = Bukkit.getPlayer(playerName);
+        Player player = Bukkit.getPlayerExact(playerName);
         if (player != null) {
             player.sendMessage(message);
         }
@@ -35,7 +35,7 @@ public class PaperPlayerManager implements PlatformPlayerManager {
 
     @Override
     public Object getPlayer(String playerName) {
-        return Bukkit.getPlayer(playerName);
+        return Bukkit.getPlayerExact(playerName);
     }
 
     @Override

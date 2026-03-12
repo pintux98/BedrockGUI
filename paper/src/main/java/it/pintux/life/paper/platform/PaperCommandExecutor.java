@@ -19,7 +19,7 @@ public class PaperCommandExecutor implements PlatformCommandExecutor {
     @Override
     public boolean executeAsPlayer(String playerName, String command) {
         try {
-            Player player = Bukkit.getPlayer(playerName);
+            Player player = Bukkit.getPlayerExact(playerName);
             if (player != null && player.isOnline()) {
                 return Bukkit.dispatchCommand(player, command);
             }

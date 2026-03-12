@@ -322,7 +322,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             String playerName = args[1];
             String menuName = args[2];
             String[] menuArgs = Arrays.copyOfRange(args, 3, args.length);
-            Player openPlayer = Bukkit.getPlayer(playerName);
+            Player openPlayer = Bukkit.getPlayerExact(playerName);
             if (openPlayer == null) {
                 sender.sendMessage(plugin.getMessageData().getValue(MessageData.PLAYER_NOT_FOUND, java.util.Map.of("player", playerName), null));
                 return true;
