@@ -284,6 +284,16 @@ public class ConfigValidator {
             String conditionType = parts[0].trim();
             String conditionValue = parts[1].trim();
 
+            if ("not".equalsIgnoreCase(conditionType)) {
+                if (ValidationUtils.isNullOrEmpty(conditionValue) || !conditionValue.contains(":")) {
+                    validationWarnings.add("Invalid negated condition format in menu '" + menuName + "' button " + buttonIndex +
+                                           ". Expected: not:<type>:<value>");
+                    return;
+                }
+                validateActionCondition(menuName, buttonIndex, conditionValue);
+                return;
+            }
+
 
             switch (conditionType.toLowerCase()) {
                 case "permission":

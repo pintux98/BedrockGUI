@@ -1,4 +1,5 @@
 prefix: "&8[&bBedrockGUI&8] &r"
+noPex: "You don't have permission for this!"
 menu:
   no_permission: "&4&lYou don't have permission to open this menu"
   noJava: "&4You are not a bedrock player. Please open this menu only from bedrock client"

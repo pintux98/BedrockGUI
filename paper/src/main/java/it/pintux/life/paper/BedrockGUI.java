@@ -120,7 +120,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         }
         getLogger().info("BedrockGUI loaded and enabled");
 
-        wrapKnownCommands();
+        //wrapKnownCommands();
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -253,7 +253,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onServerLoad(ServerLoadEvent event) {
-        wrapKnownCommands();
+        //wrapKnownCommands();
     }
 
     private java.util.Set<String> computeInterceptBaseLabels() {
@@ -285,7 +285,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
     @EventHandler(priority = EventPriority.MONITOR)
     public void onPluginEnable(PluginEnableEvent event) {
-        wrapKnownCommands();
+        //wrapKnownCommands();
     }
 
     private Player findTargetPlayerFromCommand(String commandLine) {

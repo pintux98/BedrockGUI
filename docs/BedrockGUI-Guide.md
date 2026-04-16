@@ -266,9 +266,58 @@
     ```
 
 ### Conditional Buttons (Simple/Modal)
-- Show/hide or change text/image/onClick based on conditions
-- Keys: `show_condition`, `alternative_text`, `alternative_image`, `alternative_onClick`, `conditions.*`
-- Evaluated when the form is built
+- Show/hide or change `text`/`image`/`onClick` based on conditions.
+- Keys: `show_condition`, `alternative_text`, `alternative_image`, `alternative_onClick`, `conditions.*`.
+- Condition format:
+  - `<type>:<value>` (example: `permission:ezcolors.color.lime`)
+  - `not:<type>:<value>` (example: `not:permission:ezcolors.color.lime`)
+- `conditions.*` now supports using the same condition for multiple properties on one button, such as both `text` and `onClick`.
+- Evaluated when the form is built.
+
+#### Conditional `SIMPLE` example (same condition for text and click)
+- Configuration
+  - ```yaml
+    forms:
+      chatcolor:
+        type: "SIMPLE"
+        title: "Chat Colors"
+        content: "Select a color to apply."
+        buttons:
+          green:
+            text: "&aGreen Chat"
+            conditions:
+              lime_text:
+                condition: "permission:ezcolors.color.lime"
+                property: "text"
+                value: "&aGreen Chat\n&#8EA4E7Permission: &aUnlocked"
+              non_lime_text:
+                condition: "not:permission:ezcolors.color.lime"
+                property: "text"
+                value: "&aGreen Chat\n&#8EA4E7Permission: &cLocked"
+              lime_click:
+                condition: "permission:ezcolors.color.lime"
+                property: "onClick"
+                value: |
+                  command {
+                    - "ezcolor lime"
+                  }
+              non_lime_click:
+                condition: "not:permission:ezcolors.color.lime"
+                property: "onClick"
+                value: |
+                  message {
+                    - "&cYou do not have permission to use this chat color!"
+                  }
+            onClick:
+              - |
+                message {
+                  - "&7Unavailable right now."
+                }
+    ```
+
+#### Notes
+- For `SIMPLE`, `show_condition` can be used to include/exclude entire buttons.
+- For `MODAL`, define exactly 2 buttons; conditional text/onClick works, but hiding modal buttons with `show_condition` is limited.
 
 ## Tips
 - Use placeholders to personalize messages and actions (e.g., `{player}`, `${vault_eco_balance}`)

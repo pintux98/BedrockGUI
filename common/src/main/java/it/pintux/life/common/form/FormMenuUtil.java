@@ -205,8 +205,10 @@ public class FormMenuUtil {
                 String alternativeText = cfg.getString(base + ".buttons." + button + ".alternative_text");
                 String alternativeImage = cfg.getString(base + ".buttons." + button + ".alternative_image");
                 String alternativeOnClick = cfg.getString(base + ".buttons." + button + ".alternative_onClick");
+                Set<String> conditionKeys = cfg.getKeys(base + ".buttons." + button + ".conditions");
+                boolean hasConditions = conditionKeys != null && !conditionKeys.isEmpty();
 
-                if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null) {
+                if (showCondition != null || alternativeText != null || alternativeImage != null || alternativeOnClick != null || hasConditions) {
                     ConditionalButton conditionalButton = new ConditionalButton(text, image, onClick, showCondition);
                     conditionalButton.setAlternativeText(alternativeText);
                     conditionalButton.setAlternativeImage(alternativeImage);
@@ -215,7 +217,7 @@ public class FormMenuUtil {
                         ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                         conditionalButton.setAction(actionDef);
                     }
-                    for (String condKey : cfg.getKeys(base + ".buttons." + button + ".conditions")) {
+                    for (String condKey : conditionKeys) {
                         String condition = cfg.getString(base + ".buttons." + button + ".conditions." + condKey + ".condition");
                         String property = cfg.getString(base + ".buttons." + button + ".conditions." + condKey + ".property");
                         String value = cfg.getString(base + ".buttons." + button + ".conditions." + condKey + ".value");
@@ -1166,8 +1168,8 @@ public class FormMenuUtil {
 
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
-                String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
+                String condition = property.getCondition() != null ? property.getCondition() : entry.getKey();
 
                 if ("text".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;
@@ -1192,8 +1194,8 @@ public class FormMenuUtil {
 
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
-                String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
+                String condition = property.getCondition() != null ? property.getCondition() : entry.getKey();
 
                 if ("image".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;
@@ -1325,8 +1327,8 @@ public class FormMenuUtil {
 
             String matchedCondition = null;
             for (Map.Entry<String, ConditionalButton.ConditionalProperty> entry : conditionalButton.getConditionalProperties().entrySet()) {
-                String condition = entry.getKey();
                 ConditionalButton.ConditionalProperty property = entry.getValue();
+                String condition = property.getCondition() != null ? property.getCondition() : entry.getKey();
 
                 if ("onClick".equals(property.getProperty()) && ConditionEvaluator.evaluateCondition(player, condition, context, messageData)) {
                     matchedCondition = condition;

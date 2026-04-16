@@ -95,7 +95,8 @@ public class ConditionalButton extends FormButton {
     }
 
     public void addConditionalProperty(String condition, String property, String value) {
-        conditionalProperties.put(condition, new ConditionalProperty(property, value));
+        String key = createConditionalPropertyKey(condition, property);
+        conditionalProperties.put(key, new ConditionalProperty(condition, property, value));
     }
 
 
@@ -156,7 +157,10 @@ public class ConditionalButton extends FormButton {
     public String getEffectiveText(String condition) {
 
         if (condition != null) {
-            ConditionalProperty property = conditionalProperties.get(condition);
+            ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "text"));
+            if (property == null) {
+                property = findConditionalProperty(condition, "text");
+            }
             if (property != null && "text".equals(property.getProperty())) {
                 return property.getValue();
             }
@@ -175,7 +179,10 @@ public class ConditionalButton extends FormButton {
     public String getEffectiveImage(String condition) {
 
         if (condition != null) {
-            ConditionalProperty property = conditionalProperties.get(condition);
+            ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "image"));
+            if (property == null) {
+                property = findConditionalProperty(condition, "image");
+            }
             if (property != null && "image".equals(property.getProperty())) {
                 return property.getValue();
             }
@@ -194,7 +201,10 @@ public class ConditionalButton extends FormButton {
     public String getEffectiveOnClick(String condition) {
 
         if (condition != null) {
-            ConditionalProperty property = conditionalProperties.get(condition);
+            ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "onClick"));
+            if (property == null) {
+                property = findConditionalProperty(condition, "onClick");
+            }
             if (property != null && "onClick".equals(property.getProperty())) {
                 return property.getValue();
             }
@@ -251,12 +261,18 @@ public class ConditionalButton extends FormButton {
 
 
     public static class ConditionalProperty {
+        private final String condition;
         private final String property;
         private final String value;
 
-        public ConditionalProperty(String property, String value) {
+        public ConditionalProperty(String condition, String property, String value) {
+            this.condition = condition;
             this.property = property;
             this.value = value;
+        }
+
+        public String getCondition() {
+            return condition;
         }
 
         public String getProperty() {
@@ -269,8 +285,21 @@ public class ConditionalButton extends FormButton {
 
         @Override
         public String toString() {
-            return property + "=" + value;
+            return condition + " -> " + property + "=" + value;
         }
+    }
+
+    private ConditionalProperty findConditionalProperty(String condition, String propertyName) {
+        for (ConditionalProperty property : conditionalProperties.values()) {
+            if (condition.equals(property.getCondition()) && propertyName.equals(property.getProperty())) {
+                return property;
+            }
+        }
+        return null;
+    }
+
+    private String createConditionalPropertyKey(String condition, String propertyName) {
+        return condition + "::" + propertyName;
     }
 
     @Override
