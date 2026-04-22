@@ -1,0 +1,214 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body {
+  height: 100%;
+  width: 100%;
+}
+
+#root {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
+body {
+  margin: 0;
+  overflow: hidden;
+  font-family: 'IBM Plex Sans', sans-serif;
+}
+
+img.image-rendering-pixelated {
+  image-rendering: pixelated;
+}
+
+:root {
+  --ui-bg: 47 48 48;
+  --ui-surface: 58 59 60;
+  --ui-surface-raised: 68 69 70;
+  --ui-surface-2: 31 31 31;
+  --ui-border: 126 126 126;
+  --ui-border-strong: 163 163 163;
+  --ui-text: 245 245 245;
+  --ui-muted: 181 181 181;
+  --ui-accent: 76 143 52;
+  --ui-accent-hover: 90 165 63;
+  --ui-accent-pressed: 63 119 44;
+  --ui-accent-text: 255 255 255;
+  --ui-focus: 240 240 240;
+  --ui-success: 97 185 93;
+  --ui-warning: 209 165 68;
+  --ui-danger: 196 86 86;
+}
+
+@layer utilities {
+  .font-minecraft {
+    font-family: 'Silkscreen', cursive, monospace;
+  }
+  .font-body {
+    font-family: 'IBM Plex Sans', sans-serif;
+  }
+  .font-mono-ui {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+  .font-smooth-none {
+    -webkit-font-smoothing: none;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .custom-scrollbar {
+    -webkit-overflow-scrolling: touch;
+  }
+}
+
+@layer base {
+  body {
+    background: rgb(var(--ui-bg));
+    color: rgb(var(--ui-text));
+  }
+  :focus-visible {
+    outline: 2px solid rgb(var(--ui-focus));
+    outline-offset: 2px;
+  }
+  /* Custom Scrollbar for Webkit */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #1e1e1e;
+    border: 1px solid #343434;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #8b8b8b;
+    border: 2px solid #1e1e1e;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a0a0a0;
+  }
+}
+
+@layer components {
+  .ui-panel {
+    @apply p-4 bg-brand-surface text-brand-text rounded-lg border border-brand-border;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+  }
+  
+  .ui-panel-title {
+    @apply text-base font-medium mb-3 text-brand-text;
+  }
+
+  .ui-input {
+    @apply w-full bg-brand-surface2 rounded px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted outline-none border border-brand-border;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+  
+  .ui-input:focus-visible {
+    @apply border-brand-focus;
+    box-shadow: 0 0 0 2px rgba(var(--ui-focus), 0.25);
+  }
+
+  .ui-textarea {
+    @apply w-full bg-brand-surface2 rounded px-3 py-2 text-sm text-brand-text placeholder:text-brand-muted outline-none border border-brand-border;
+    transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+  }
+
+  .ui-textarea:focus-visible {
+    @apply border-brand-focus;
+    box-shadow: 0 0 0 2px rgba(var(--ui-focus), 0.25);
+  }
+
+  .ui-btn {
+    @apply inline-flex min-h-8 items-center justify-center gap-2 rounded px-3 py-2 text-sm font-medium select-none border;
+    border-color: rgb(var(--ui-border));
+    transition: background-color 160ms ease, border-color 160ms ease, box-shadow 160ms ease, color 160ms ease, opacity 160ms ease;
+  }
+
+  .ui-btn:focus-visible {
+    outline: 2px solid rgb(var(--ui-focus));
+    outline-offset: 2px;
+  }
+
+  .ui-btn:disabled {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  .ui-btn-primary {
+    @apply ui-btn bg-brand-accent text-brand-accentText;
+    border-color: rgb(var(--ui-accent-pressed));
+  }
+  
+  .ui-btn-primary:hover {
+    background-color: rgb(var(--ui-accent-hover));
+  }
+
+  .ui-btn-primary:active {
+    background-color: rgb(var(--ui-accent-pressed));
+    box-shadow: inset 0 1px 0 rgba(0, 0, 0, 0.22);
+  }
+
+  .ui-btn-secondary {
+    @apply ui-btn bg-brand-surface-raised text-brand-text;
+    border-color: rgb(var(--ui-border));
+  }
+  
+  .ui-btn-secondary:hover {
+    background-color: rgba(var(--ui-surface-raised), 0.8);
+  }
+
+  .ui-btn-ghost {
+    @apply ui-btn bg-transparent text-brand-text;
+    border-color: transparent;
+  }
+  
+  .ui-btn-ghost:hover {
+    @apply bg-white/10 border-brand-border;
+  }
+
+  .ui-chip {
+    @apply inline-flex items-center rounded px-2 py-0.5 text-xs bg-brand-surface2 text-brand-muted border border-brand-border;
+  }
+
+  .ui-btn-destructive {
+    @apply ui-btn text-white;
+    background-color: rgb(var(--ui-danger));
+    border-color: rgb(var(--ui-danger));
+  }
+
+  .ui-btn-destructive:hover {
+    background-color: rgba(var(--ui-danger), 0.9);
+  }
+
+  .ui-table {
+    @apply w-full border-collapse text-sm;
+  }
+
+  .ui-table th {
+    @apply text-left font-medium text-brand-text px-3 py-2;
+    border-bottom: 1px solid rgb(var(--ui-border-strong));
+  }
+
+  .ui-table td {
+    @apply px-3 py-2 text-brand-text;
+    border-bottom: 1px solid rgba(var(--ui-border), 0.7);
+  }
+
+  .ui-table tr:hover td {
+    background-color: rgba(var(--ui-surface-raised), 0.2);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+    scroll-behavior: auto !important;
+  }
+}
