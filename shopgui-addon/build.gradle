@@ -1,0 +1,60 @@
+plugins {
+    id 'com.gradleup.shadow' version '9.4.1'
+    id 'java'
+}
+group = 'it.pintux.life'
+version = '1.0.0'
+
+repositories {
+    mavenCentral()
+    maven{ url = "https://repo.papermc.io/repository/maven-public/"}
+    maven{url = "https://repo.opencollab.dev/main/"}
+    maven{url = "https://jitpack.io"}
+}
+
+def bedrockGuiApiJar = file("${rootProject.projectDir}/common/build/libs/BedrockGUI-API.jar")
+
+dependencies {
+    compileOnly(files(bedrockGuiApiJar))
+    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
+    compileOnly("org.geysermc.floodgate:api:2.2.5-SNAPSHOT")
+    compileOnly("com.github.brcdev-minecraft:shopgui-api:3.2.0")
+}
+
+def targetJavaVersion = 21
+java {
+    def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (JavaVersion.current() < javaVersion) {
+        toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn(":common:jar")
+    options.encoding = 'UTF-8'
+    options.compilerArgs.addAll(['-Xlint:unchecked', '-Xdiags:verbose'])
+    if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+        options.release.set(targetJavaVersion)
+    }
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    archiveBaseName.set('BedrockGUI-ShopAddon')
+    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server/lobby/plugins"))
+}

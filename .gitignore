@@ -13,3 +13,5 @@
 /velocity/bin/
 /designer-app/dist/
 /designer-app/node_modules/
+/shopgui-addon/bin/
+/shopgui-addon/build/

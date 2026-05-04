@@ -1,0 +1,29 @@
+ui:
+  main-title: '&2Shop Categories'
+  main-content: '&7Choose a ShopGUI+ category adapted for Bedrock.'
+  shop-title: '&2%shop_name% &7(Page %page%/%max_page%)'
+  shop-content: '&7Economy: &f%economy%\n&7Category: &f%shop_name%'
+  item-title: '&2%item_name%'
+  item-content: '&7Type: &f%item_type%\n&7Material: &f%material%\n&7Buy: &a%buy_price%\n&7Sell: &c%sell_price%\n&7Details: &f%description%'
+  empty-shop-message: '&cNo categories are currently available.'
+  empty-page-message: '&eThis category page has no Bedrock-compatible entries.'
+  unavailable-item-message: '&cThis ShopGUI+ entry cannot be used from the Bedrock interface.'
+  previous-button: '&7Previous Page'
+  next-button: '&7Next Page'
+  back-button: '&7Back'
+  main-button: '&7Main Menu'
+  open-linked-button: '&bOpen Linked Shop'
+  buy-label: '&aBuy'
+  sell-label: '&cSell'
+  trade-label: '&bTrade'
+  decoration-label: '&7Decoration'
+  amount-presets: [1, 8, 16, 32, 64]
+messages:
+  no-bedrockgui: '&cBedrockGUI API is not available.'
+  shops-not-ready: '&eShopGUI+ shops are not loaded yet. Please try again in a moment.'
+  no-shop-access: '&cYou do not have permission to access this shop.'
+  transaction-success: '&aShop action completed successfully.'
+  transaction-failed: '&cShop action failed: %reason%'
+  unsupported-transaction: '&cThis ShopGUI+ server build does not expose a compatible Bedrock transaction bridge.'
+performance:
+  warn-threshold-ms: 5

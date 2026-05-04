@@ -1,0 +1,32 @@
+type: "SIMPLE"
+title: "§2§lShop Shortcuts"
+content: "§7Example direct shortcuts. Replace these ids with your real ShopGUI+ categories."
+buttons:
+  main_menu:
+    text: "§aAll Categories"
+    onClick:
+      - |
+        shopgui_main {
+          - "main"
+        }
+  tools:
+    text: "§6Tools Category"
+    onClick:
+      - |
+        shopgui_shop {
+          - "tools|1"
+        }
+  ores:
+    text: "§3Ores Category"
+    onClick:
+      - |
+        shopgui_shop {
+          - "ores|1"
+        }
+  spawners:
+    text: "§dSpawners Category"
+    onClick:
+      - |
+        shopgui_shop {
+          - "spawners|1"
+        }
