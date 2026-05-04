@@ -6,6 +6,7 @@ group = 'it.pintux.life'
 version = ''
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
     maven {
         url = uri("https://repo.opencollab.dev/main/")
@@ -13,9 +14,9 @@ repositories {
 }
 
 dependencies {
-    compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
-    compileOnly 'com.google.guava:guava:32.1.2-jre'
-    implementation 'org.yaml:snakeyaml:2.0'
+    compileOnly 'org.geysermc.floodgate:api:2.2.5-SNAPSHOT'
+    compileOnly 'com.google.guava:guava:33.6.0-jre'
+    implementation 'org.yaml:snakeyaml:2.3'
 }
 
 compileJava {

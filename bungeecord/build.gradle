@@ -1,5 +1,5 @@
 plugins {
-    id 'com.github.johnrengelman.shadow' version '8.1.1'
+    id 'com.gradleup.shadow' version '9.4.1'
     id 'java'
 }
 
@@ -7,6 +7,7 @@ group = 'it.pintux.life'
 version = '2.0.7'
 
 repositories {
+    gradlePluginPortal()
     mavenCentral()
     maven { url = "https://repo.papermc.io/repository/maven-public/" }
     maven { url = "https://repo.opencollab.dev/main/" }
@@ -18,7 +19,7 @@ repositories {
 dependencies {
     implementation project(':common')
     compileOnly 'net.md-5:bungeecord-api:1.20-R0.2'
-    compileOnly 'org.geysermc.floodgate:api:2.2.3-SNAPSHOT'
+    compileOnly 'org.geysermc.floodgate:api:2.2.5-SNAPSHOT'
 }
 
 sourceSets {
@@ -33,7 +34,7 @@ sourceSets {
     }
 }
 
-def targetJavaVersion = 17
+def targetJavaVersion = 21
 java {
     def javaVersion = JavaVersion.toVersion(targetJavaVersion)
     sourceCompatibility = javaVersion

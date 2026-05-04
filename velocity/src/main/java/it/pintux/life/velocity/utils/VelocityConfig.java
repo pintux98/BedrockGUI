@@ -36,7 +36,7 @@ public class VelocityConfig implements FormConfig {
         }
 
         try (InputStream inputStream = new FileInputStream(configFile)) {
-            config = yaml.load(inputStream);
+            config = normalizeRootMap(yaml.load(inputStream));
             if (config == null) {
                 config = new HashMap<>();
             }
@@ -121,12 +121,37 @@ public class VelocityConfig implements FormConfig {
         File formsDir = new File(dataFolder, "forms");
         File file = new File(formsDir, relativePath);
         try (InputStream in = new FileInputStream(file)) {
-            Object loaded = yaml.load(in);
-            Map<String, Object> root = loaded instanceof Map ? (Map<String, Object>) loaded : new HashMap<>();
+            Map<String, Object> root = normalizeRootMap(yaml.load(in));
             return new VelocityConfig(dataFolder, root);
         } catch (IOException e) {
             throw new RuntimeException("Failed to load form file: " + relativePath, e);
         }
+    }
+
+    private Map<String, Object> normalizeRootMap(Object loaded) {
+        Object normalized = normalizeValue(loaded);
+        if (normalized instanceof Map) {
+            return (Map<String, Object>) normalized;
+        }
+        return new HashMap<>();
+    }
+
+    private Object normalizeValue(Object value) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> normalized = new LinkedHashMap<>();
+            for (Map.Entry<?, ?> entry : map.entrySet()) {
+                normalized.put(String.valueOf(entry.getKey()), normalizeValue(entry.getValue()));
+            }
+            return normalized;
+        }
+        if (value instanceof List<?> list) {
+            List<Object> normalized = new ArrayList<>(list.size());
+            for (Object item : list) {
+                normalized.add(normalizeValue(item));
+            }
+            return normalized;
+        }
+        return value;
     }
 
     private Object getValue(String path) {
