@@ -7,6 +7,81 @@
 - YAML-driven menus plus programmatic builders for dynamic forms
 - Admin command to reload and open forms
 
+## Shop Addons
+- The `shopgui-addon` module adds Bedrock shop bridges for:
+  - `ShopGUIPlus`
+  - `EconomyShopGUI` / `EconomyShopGUI-Premium`
+- The addon exports example forms in the new per-file format under `plugins/BedrockGUI-ShopAddons/forms/`
+- Use these actions inside any form file:
+
+### ShopGUI+ Quick Snippets
+- Open main categories:
+  ```yaml
+  onClick:
+    - |
+      shopgui_main {
+        - "main"
+      }
+  ```
+- Open a category page:
+  ```yaml
+  onClick:
+    - |
+      shopgui_shop {
+        - "blocks|1"
+      }
+  ```
+- Open an item:
+  ```yaml
+  onClick:
+    - |
+      shopgui_item {
+        - "blocks|stone|1"
+      }
+  ```
+- Buy/sell/trade:
+  ```yaml
+  onClick:
+    - |
+      shopgui_transaction {
+        - "BUY|blocks|stone|16|1"
+      }
+  ```
+
+### EconomyShopGUI Quick Snippets
+- Open main sections:
+  ```yaml
+  onClick:
+    - |
+      economyshop_main {
+        - "main"
+      }
+  ```
+- Open a section page:
+  ```yaml
+  onClick:
+    - |
+      economyshop_shop {
+        - "blocks|1"
+      }
+  ```
+- Open an item:
+  ```yaml
+  onClick:
+    - |
+      economyshop_item {
+        - "blocks|pages.page1.items.item1|1"
+      }
+  ```
+- Buy or sell:
+  ```yaml
+  onClick:
+    - |
+      economyshop_transaction {
+        - "SELL|blocks|pages.page1.items.item1|16|1"
+      }
+  ```
+
 ## Action System
 - Syntax
   - Use: `action_type { - "value1" - "value2" }`

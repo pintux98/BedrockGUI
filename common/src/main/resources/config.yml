@@ -119,15 +119,6 @@ forms:
               - "say §a{player} is testing server commands!"
               - "broadcast §eServer command test completed!"
             }
-      teleport_test:
-        text: "§9§l🚀 Teleport Actions"
-        onClick:
-          - |
-            teleport {
-              - "spawn"
-              - "0 100 0"
-              - "spawn"
-            }
       actionbar_test:
         text: "§3§l📊 Action Bar Test"
         onClick:
@@ -146,15 +137,6 @@ forms:
               - "§a{player} is testing broadcasts!"
               - "§eThis is broadcast message 2"
               - "§cBroadcast test sequence complete!"
-            }
-      gamemode_test:
-        text: "§1§l🎮 Game Mode Test"
-        onClick:
-          - |
-            gamemode {
-              - "creative"
-              - "survival"
-              - "creative"
             }
       advanced_tests:
         text: "§4§l🚀 Advanced Tests"
@@ -423,10 +405,6 @@ forms:
           - |
             actionbar {
               - "§eStep 4: Server Command ✓"
-            }
-          - |
-            gamemode {
-              - "creative"
             }
           - |
             actionbar {

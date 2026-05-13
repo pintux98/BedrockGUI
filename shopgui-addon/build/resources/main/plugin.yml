@@ -1,10 +1,12 @@
-name: BedrockGUI-ShopGUIPlus
+name: BedrockGUI-ShopAddons
 version: '1.0.0'
 main: it.pintux.life.shopguiaddon.BedrockShopGuiAddonPlugin
 api-version: '1.19'
 author: 'pintux'
 depend:
   - BedrockGUI-Paper
-  - ShopGUIPlus
 softdepend:
   - floodgate
+  - ShopGUIPlus
+  - EconomyShopGUI
+  - EconomyShopGUI-Premium

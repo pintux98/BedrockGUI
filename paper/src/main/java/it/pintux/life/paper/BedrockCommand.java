@@ -57,27 +57,6 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
             type = "open";
         }
 
-        java.util.Set<String> supported = java.util.Set.of(
-            "command",
-            "open",
-            "message",
-            "server",
-            "broadcast",
-            "inventory",
-            "sound",
-            "economy",
-            "title",
-            "actionbar",
-            "bungee",
-            "delay",
-            "conditional",
-            "random"
-        );
-
-        if (!supported.contains(type)) {
-            return raw;
-        }
-
         if ("open".equals(type)) {
             java.util.List<String> tokens = tokenizeByWhitespace(value);
             if (tokens.isEmpty()) {

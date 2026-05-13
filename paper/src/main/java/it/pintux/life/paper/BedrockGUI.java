@@ -4,13 +4,7 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.AssetServer;
 import it.pintux.life.common.utils.FormSender;
 import it.pintux.life.paper.placeholders.BedrockGUIExpansion;
-import it.pintux.life.paper.platform.PaperPlayerChecker;
-import it.pintux.life.paper.platform.PaperCommandExecutor;
-import it.pintux.life.paper.platform.PaperEconomyManager;
-import it.pintux.life.paper.platform.PaperSoundManager;
-import it.pintux.life.paper.platform.PaperTitleManager;
-import it.pintux.life.paper.platform.PaperPluginManager;
-import it.pintux.life.paper.platform.PaperPlayerManager;
+import it.pintux.life.paper.platform.*;
 
 import it.pintux.life.common.form.FormMenuUtil;
 import it.pintux.life.common.utils.MessageConfig;
@@ -39,15 +33,14 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     private FormMenuUtil formMenuUtil;
     private MessageData messageData;
     private BedrockGUIApi api;
-    private java.util.Set<String> interceptBaseLabels = new java.util.HashSet<>();
     private AssetServer assetServer;
-
 
     @Override
     public void onEnable() {
         getCommand("bedrockgui").setExecutor(new BedrockCommand(this));
         getServer().getPluginManager().registerEvents(this, this);
         saveDefaultConfig();
+        this.saveResource("messages.yml", false);
         reloadData();
         new Metrics(this, 23364);
     }
@@ -57,33 +50,29 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         if (api != null) {
             try {
                 api.shutdown();
-                getLogger().info("BedrockGUI shutdown completed successfully");
+                getLogger().info("Shutdown completed successfully");
             } catch (Exception e) {
-                getLogger().severe("Error during BedrockGUI shutdown: " + e.getMessage());
-                e.printStackTrace();
+                getLogger().severe("Error during shutdown: " + e.getMessage());
             }
         }
         if (assetServer != null) {
             assetServer.shutdown();
             assetServer = null;
         }
-        getLogger().info("BedrockGUI disabled");
+        getLogger().info("Disabled");
     }
 
     public void reloadData() {
         reloadConfig();
-        this.saveResource("messages.yml", false);
 
         File dataFolder = getDataFolder();
         MessageConfig configHandler = new PaperMessageConfig(dataFolder, "messages.yml");
         messageData = new MessageData(configHandler);
 
         if (api != null) {
-            getLogger().info("Reloading BedrockGUI with fresh instances to avoid stale cache...");
             try {
                 api.shutdown();
-            } catch (Exception ex) {
-                getLogger().warning("Error shutting down API during reload: " + ex.getMessage());
+            } catch (Exception ignored) {
             }
         }
 
@@ -107,10 +96,9 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
-        it.pintux.life.paper.platform.PaperJavaMenuManager javaMenuManager = new it.pintux.life.paper.platform.PaperJavaMenuManager(this, messageData);
+        PaperJavaMenuManager javaMenuManager = new PaperJavaMenuManager(this, messageData);
         getServer().getPluginManager().registerEvents(javaMenuManager, this);
         formMenuUtil.setJavaMenuManager(javaMenuManager);
-        getLogger().info("Using FormMenuUtil from BedrockGUIApi");
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BedrockGUIExpansion(this).register();
@@ -118,9 +106,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         } else {
             getLogger().warning("PlaceholderAPI not found. Placeholder features disabled.");
         }
-        getLogger().info("BedrockGUI loaded and enabled");
-
-        //wrapKnownCommands();
+        getLogger().info("Loaded and enabled");
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
@@ -159,133 +145,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                 api.openMenu(paperPlayer, key, args);
             }
         });
-    }
-
-    private void wrapKnownCommands() {
-        try {
-            interceptBaseLabels = computeInterceptBaseLabels();
-            Object craftServer = Bukkit.getServer();
-            java.lang.reflect.Field mapField = craftServer.getClass().getDeclaredField("commandMap");
-            mapField.setAccessible(true);
-            org.bukkit.command.CommandMap commandMap = (org.bukkit.command.CommandMap) mapField.get(craftServer);
-
-            java.lang.reflect.Field knownField = org.bukkit.command.SimpleCommandMap.class.getDeclaredField("knownCommands");
-            knownField.setAccessible(true);
-            @SuppressWarnings("unchecked")
-            java.util.Map<String, org.bukkit.command.Command> known = (java.util.Map<String, org.bukkit.command.Command>) knownField.get(commandMap);
-
-            java.util.Set<String> excluded = new java.util.HashSet<>(java.util.Arrays.asList(
-                    "plugman", "help", "?", "ver", "version", "plugins",
-                    "bukkit:help", "bukkit:?", "bukkit:ver", "bukkit:version", "bukkit:plugins",
-                    "bedrockgui", "bgui"
-            ));
-
-            int wrapped = 0;
-            int unwrapped = 0;
-            java.util.Map<org.bukkit.command.Command, InterceptingCommand> created = new java.util.HashMap<>();
-            for (java.util.Map.Entry<String, org.bukkit.command.Command> e : new java.util.ArrayList<>(known.entrySet())) {
-                org.bukkit.command.Command cmd = e.getValue();
-                if (cmd == null) continue;
-                if (cmd instanceof InterceptingCommand) {
-                    InterceptingCommand ic = (InterceptingCommand) cmd;
-                    org.bukkit.command.Command orig = ic.getOriginal();
-                    String key = e.getKey();
-                    String name = orig.getName();
-                    String className = orig.getClass().getName();
-                    if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:")))
-                        continue;
-                    if (className.startsWith("org.bukkit.command.defaults")) continue;
-                    if (name != null && excluded.contains(name.toLowerCase())) continue;
-                    if (key != null && excluded.contains(key.toLowerCase())) continue;
-                    boolean match = false;
-                    if (name != null && interceptBaseLabels.contains(name.toLowerCase())) match = true;
-                    if (!match && key != null) {
-                        String k = key.toLowerCase();
-                        int idx = k.lastIndexOf(":");
-                        String tail = idx >= 0 ? k.substring(idx + 1) : k;
-                        if (interceptBaseLabels.contains(tail)) match = true;
-                    }
-                    if (!match) {
-                        known.put(e.getKey(), orig);
-                        unwrapped++;
-                    }
-                    continue;
-                }
-                String key = e.getKey();
-                String name = cmd.getName();
-                String className = cmd.getClass().getName();
-                if (key != null && (key.toLowerCase().startsWith("minecraft:") || key.toLowerCase().startsWith("bukkit:")))
-                    continue;
-                if (className.startsWith("org.bukkit.command.defaults")) continue;
-                if (name != null && excluded.contains(name.toLowerCase())) continue;
-                if (key != null && excluded.contains(key.toLowerCase())) continue;
-                if (cmd instanceof org.bukkit.command.PluginIdentifiableCommand) {
-                    org.bukkit.plugin.Plugin owner = ((org.bukkit.command.PluginIdentifiableCommand) cmd).getPlugin();
-                    if (owner == this) continue;
-                    if (owner != null && !owner.isEnabled()) continue;
-                }
-                boolean match = false;
-                if (name != null && interceptBaseLabels.contains(name.toLowerCase())) match = true;
-                if (!match && key != null) {
-                    String k = key.toLowerCase();
-                    int idx = k.lastIndexOf(":");
-                    String tail = idx >= 0 ? k.substring(idx + 1) : k;
-                    if (interceptBaseLabels.contains(tail)) match = true;
-                }
-                if (!match) continue;
-                InterceptingCommand wrapper = created.computeIfAbsent(cmd, o -> new InterceptingCommand(o, this));
-                known.put(e.getKey(), wrapper);
-                wrapped++;
-            }
-            if (wrapped > 0 || unwrapped > 0) {
-                getLogger().info("Command wrap refresh: wrapped=" + wrapped + ", unwrapped=" + unwrapped + " (labels=" + interceptBaseLabels.size() + ")");
-            } else {
-                if (interceptBaseLabels.isEmpty()) {
-                    getLogger().warning("No base labels derived from config; wildcard-only patterns won't be programmatically intercepted.");
-                } else {
-                    getLogger().fine("No new commands matched cached base labels at this stage");
-                }
-            }
-        } catch (Throwable t) {
-            getLogger().warning("Failed to wrap known commands for interception: " + t.getMessage());
-        }
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onServerLoad(ServerLoadEvent event) {
-        //wrapKnownCommands();
-    }
-
-    private java.util.Set<String> computeInterceptBaseLabels() {
-        java.util.Set<String> labels = new java.util.HashSet<>();
-        try {
-            FormMenuUtil fmu = getFormMenuUtil();
-            if (fmu != null) {
-                fmu.getFormMenus().forEach((key, formMenu) -> {
-                    String formCommand = formMenu.getFormCommand();
-                    if (formCommand != null && !formCommand.isEmpty()) {
-                        String[] parts = formCommand.trim().toLowerCase().split(" ");
-                        if (parts.length > 0) labels.add(parts[0]);
-                    }
-                    String intercept = formMenu.getCommandIntercept();
-                    if (intercept != null && !intercept.isEmpty()) {
-                        String p = intercept.trim().toLowerCase();
-                        if (!p.startsWith("%")) {
-                            String[] tokens = p.split(" ");
-                            if (tokens.length > 0) labels.add(tokens[0]);
-                        }
-                    }
-                });
-            }
-        } catch (Throwable t) {
-            getLogger().warning("Failed to compute intercept base labels: " + t.getMessage());
-        }
-        return labels;
-    }
-
-    @EventHandler(priority = EventPriority.MONITOR)
-    public void onPluginEnable(PluginEnableEvent event) {
-        //wrapKnownCommands();
     }
 
     private Player findTargetPlayerFromCommand(String commandLine) {

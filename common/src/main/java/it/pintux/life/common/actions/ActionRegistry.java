@@ -43,12 +43,8 @@ public class ActionRegistry {
 
         actionType = actionType.toLowerCase().trim();
 
-        if (handlers.containsKey(actionType)) {
-            logger.warn("Overriding existing action handler for type: " + actionType);
-        }
-
         handlers.put(actionType, handler);
-        logger.info("Registered action handler for type: " + actionType);
+        //logger.info("Registered action handler for type: " + actionType);
     }
 
 

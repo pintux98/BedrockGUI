@@ -54,7 +54,7 @@ public class BedrockGUIApi {
         this.actionRegistry = formMenuUtil.getActionRegistry();
 
         instance = this;
-        logger.info("BedrockGUIApi initialized with enhanced features");
+        logger.info("BedrockGUIApi initialized");
     }
 
 
