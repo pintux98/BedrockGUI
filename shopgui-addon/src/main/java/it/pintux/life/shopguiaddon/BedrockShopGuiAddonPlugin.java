@@ -58,7 +58,9 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
                 configuration.soundsEnabled(),
                 configuration.soundFormOpen(),
                 configuration.soundPurchaseSuccess(),
-                configuration.soundPurchaseFailed()
+                configuration.soundPurchaseFailed(),
+                configuration.soundVolume(),
+                configuration.soundPitch()
         );
         catalogService = new ShopGuiCatalogService(getLogger());
         shopGuiPlusHook = new ShopGuiPlusHook(this, catalogService);

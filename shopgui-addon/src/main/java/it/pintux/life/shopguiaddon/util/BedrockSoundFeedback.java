@@ -19,11 +19,13 @@ public final class BedrockSoundFeedback {
     private float defaultVolume = 1.0f;
     private float defaultPitch = 1.0f;
 
-    public void configure(boolean enabled, String formOpen, String purchaseSuccess, String purchaseFailed) {
+    public void configure(boolean enabled, String formOpen, String purchaseSuccess, String purchaseFailed, float volume, float pitch) {
         this.enabled = enabled;
         this.formOpenSound = parseSound(formOpen, Sound.UI_BUTTON_CLICK);
         this.purchaseSuccessSound = parseSound(purchaseSuccess, Sound.ENTITY_PLAYER_LEVELUP);
         this.purchaseFailedSound = parseSound(purchaseFailed, Sound.BLOCK_NOTE_BLOCK_PLING);
+        this.defaultVolume = volume;
+        this.defaultPitch = pitch;
     }
 
     public void setVolume(float volume) {

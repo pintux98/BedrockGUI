@@ -44,6 +44,8 @@ public final class ShopGuiAddonConfiguration {
     private final String soundFormOpen;
     private final String soundPurchaseSuccess;
     private final String soundPurchaseFailed;
+    private final float soundVolume;
+    private final float soundPitch;
     private final boolean requirePurchaseConfirmation;
 
     private ShopGuiAddonConfiguration(YamlConfiguration configuration) {
@@ -77,6 +79,8 @@ public final class ShopGuiAddonConfiguration {
         this.soundFormOpen = configuration.getString("sounds.form-open", "ui.button.click");
         this.soundPurchaseSuccess = configuration.getString("sounds.purchase-success", "entity.player.levelup");
         this.soundPurchaseFailed = configuration.getString("sounds.purchase-failed", "block.note_block.pling");
+        this.soundVolume = (float) configuration.getDouble("sounds.volume", 1.0);
+        this.soundPitch = (float) configuration.getDouble("sounds.pitch", 1.0);
         this.requirePurchaseConfirmation = configuration.getBoolean("ui.require-purchase-confirmation", true);
     }
 
@@ -152,5 +156,7 @@ public final class ShopGuiAddonConfiguration {
     public String soundFormOpen() { return soundFormOpen; }
     public String soundPurchaseSuccess() { return soundPurchaseSuccess; }
     public String soundPurchaseFailed() { return soundPurchaseFailed; }
+    public float soundVolume() { return soundVolume; }
+    public float soundPitch() { return soundPitch; }
     public boolean requirePurchaseConfirmation() { return requirePurchaseConfirmation; }
 }

@@ -10,8 +10,6 @@ import org.bukkit.Material;
  */
 public final class BedrockIconResolver {
 
-    private static final String DEFAULT_ICON = "textures/blocks/stone";
-
     private BedrockIconResolver() {}
 
     /**

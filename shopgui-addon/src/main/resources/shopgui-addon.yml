@@ -33,3 +33,5 @@ sounds:
   form-open: ui.button.click
   purchase-success: entity.player.levelup
   purchase-failed: block.note_block.pling
+  volume: 1.0
+  pitch: 1.0
