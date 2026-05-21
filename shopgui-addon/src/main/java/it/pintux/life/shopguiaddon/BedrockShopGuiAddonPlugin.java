@@ -26,6 +26,8 @@ import it.pintux.life.shopguiaddon.service.FloodgateBedrockPlayerDetector;
 import it.pintux.life.shopguiaddon.service.ReflectiveShopGuiTransactionGateway;
 import it.pintux.life.shopguiaddon.service.ShopGuiCatalogService;
 import it.pintux.life.shopguiaddon.service.ShopGuiPlusHook;
+import it.pintux.life.shopguiaddon.util.AddonFormLoader;
+import it.pintux.life.shopguiaddon.util.BedrockSoundFeedback;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
@@ -44,11 +46,20 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
     private EconomyShopGuiHook economyShopGuiHook;
     private BedrockEconomyShopService bedrockEconomyShopService;
     private ShopBackendRouter backendRouter;
+    private AddonFormLoader addonFormLoader;
+    private BedrockSoundFeedback soundFeedback;
 
     @Override
     public void onEnable() {
         configuration = ShopGuiAddonConfiguration.load(this);
         saveExampleForms();
+        soundFeedback = new BedrockSoundFeedback();
+        soundFeedback.configure(
+                configuration.soundsEnabled(),
+                configuration.soundFormOpen(),
+                configuration.soundPurchaseSuccess(),
+                configuration.soundPurchaseFailed()
+        );
         catalogService = new ShopGuiCatalogService(getLogger());
         shopGuiPlusHook = new ShopGuiPlusHook(this, catalogService);
         economyShopCatalogService = new EconomyShopCatalogService(getLogger());
@@ -58,7 +69,8 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
                 configuration,
                 catalogService,
                 new FloodgateBedrockPlayerDetector(),
-                new ReflectiveShopGuiTransactionGateway(getLogger())
+                new ReflectiveShopGuiTransactionGateway(getLogger()),
+                soundFeedback
         );
 
         PluginManager pluginManager = Bukkit.getPluginManager();
@@ -73,7 +85,8 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
                     getLogger(),
                     configuration,
                     economyShopCatalogService,
-                    new FloodgateBedrockPlayerDetector()
+                    new FloodgateBedrockPlayerDetector(),
+                    soundFeedback
             );
             backends.add(new EconomyShopGuiBackend(this, bedrockEconomyShopService));
             pluginManager.registerEvents(new EconomyShopLifecycleListener(economyShopGuiHook), this);
@@ -84,6 +97,9 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
         backendRouter = new ShopBackendRouter(backends);
         pluginManager.registerEvents(new ShopGuiCommandListener(backendRouter), this);
         pluginManager.registerEvents(new ShopGuiInventoryListener(backendRouter), this);
+
+        addonFormLoader = new AddonFormLoader(this);
+        addonFormLoader.loadAll();
 
         BedrockGUIApi api = BedrockGUIApi.getInstance();
         if (api != null) {
@@ -106,6 +122,14 @@ public final class BedrockShopGuiAddonPlugin extends JavaPlugin {
             Bukkit.getScheduler().runTask(this, economyShopGuiHook::bootstrapIfReady);
         }
         backendRouter.bootstrapAll();
+    }
+
+    public AddonFormLoader getAddonFormLoader() {
+        return addonFormLoader;
+    }
+
+    public BedrockSoundFeedback getSoundFeedback() {
+        return soundFeedback;
     }
 
     private boolean isEconomyShopApiAvailable(PluginManager pluginManager) {

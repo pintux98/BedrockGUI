@@ -2,12 +2,17 @@ package it.pintux.life.shopguiaddon.service;
 
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
+import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.shopguiaddon.config.ShopGuiAddonConfiguration;
 import it.pintux.life.shopguiaddon.model.ShopCatalogEntry;
 import it.pintux.life.shopguiaddon.model.ShopItemView;
+import it.pintux.life.shopguiaddon.util.BedrockIconResolver;
+import it.pintux.life.shopguiaddon.util.BedrockSoundFeedback;
 import it.pintux.life.shopguiaddon.util.BukkitFormPlayer;
+import it.pintux.life.shopguiaddon.util.FormPlayerResolver;
 import it.pintux.life.shopguiaddon.util.ShopGuiActionPayloads;
 import net.brcdev.shopgui.shop.item.ShopItem;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
@@ -26,15 +31,18 @@ public final class BedrockShopGuiService {
     private final ShopGuiCatalogService catalogService;
     private final BedrockPlayerDetector bedrockPlayerDetector;
     private final ShopGuiTransactionGateway transactionGateway;
+    private final BedrockSoundFeedback soundFeedback;
     private final DecimalFormat priceFormat = new DecimalFormat("0.00");
 
     public BedrockShopGuiService(Logger logger, ShopGuiAddonConfiguration configuration, ShopGuiCatalogService catalogService,
-                                 BedrockPlayerDetector bedrockPlayerDetector, ShopGuiTransactionGateway transactionGateway) {
+                                  BedrockPlayerDetector bedrockPlayerDetector, ShopGuiTransactionGateway transactionGateway,
+                                  BedrockSoundFeedback soundFeedback) {
         this.logger = logger;
         this.configuration = configuration;
         this.catalogService = catalogService;
         this.bedrockPlayerDetector = bedrockPlayerDetector;
         this.transactionGateway = transactionGateway;
+        this.soundFeedback = soundFeedback;
     }
 
     public boolean shouldHandle(Player player) {
@@ -79,6 +87,7 @@ public final class BedrockShopGuiService {
             ));
         }
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
         warnIfSlow("openMainMenu", startedAt);
     }
 
@@ -117,11 +126,20 @@ public final class BedrockShopGuiService {
         } else {
             for (ShopItemView itemView : items) {
                 String buttonText = itemView.getDisplayName() + "\n" + ChatColor.GREEN + priceLine(player, shopId, itemView.getId());
-                form.button(buttonText, formPlayer -> api.executeActionString(
-                        formPlayer,
-                        "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
-                        context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
-                ));
+                String icon = BedrockIconResolver.resolveTexturePath(itemView.getMaterial());
+                if (icon != null) {
+                    form.button(buttonText, icon, formPlayer -> api.executeActionString(
+                            formPlayer,
+                            "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
+                            context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
+                    ));
+                } else {
+                    form.button(buttonText, formPlayer -> api.executeActionString(
+                            formPlayer,
+                            "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
+                            context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
+                    ));
+                }
             }
         }
 
@@ -144,6 +162,7 @@ public final class BedrockShopGuiService {
         }
 
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
         warnIfSlow("openShop", startedAt);
     }
 
@@ -190,17 +209,9 @@ public final class BedrockShopGuiService {
                 if (price < 0) {
                     continue;
                 }
-                form.button(label + " x" + amount + "\n" + ChatColor.GREEN + formatPrice(price), formPlayer -> api.executeActionString(
-                        formPlayer,
-                        "shopgui_transaction:" + ShopGuiActionPayloads.encodeTransaction(
-                                usesTradeLabel(itemView) ? BedrockShopAction.TRADE : BedrockShopAction.BUY,
-                                shopId,
-                                itemId,
-                                amount,
-                                page
-                        ),
-                        context("shopgui-buy", Map.of("shopId", shopId, "itemId", itemId))
-                ));
+                BedrockShopAction buyAction = usesTradeLabel(itemView) ? BedrockShopAction.TRADE : BedrockShopAction.BUY;
+                form.button(label + " x" + amount + "\n" + ChatColor.GREEN + formatPrice(price),
+                        formPlayer -> handleTransactionClick(formPlayer, shopId, itemId, amount, page, buyAction, label, price));
             }
         }
 
@@ -211,11 +222,9 @@ public final class BedrockShopGuiService {
                 if (price < 0) {
                     continue;
                 }
-                form.button(configuration.sellLabel() + " x" + amount + "\n" + ChatColor.RED + formatPrice(price), formPlayer -> api.executeActionString(
-                        formPlayer,
-                        "shopgui_transaction:" + ShopGuiActionPayloads.encodeTransaction(BedrockShopAction.SELL, shopId, itemId, amount, page),
-                        context("shopgui-sell", Map.of("shopId", shopId, "itemId", itemId))
-                ));
+                form.button(configuration.sellLabel() + " x" + amount + "\n" + ChatColor.RED + formatPrice(price),
+                        formPlayer -> handleTransactionClick(formPlayer, shopId, itemId, amount, page,
+                                BedrockShopAction.SELL, configuration.sellLabel(), price));
             }
         }
 
@@ -224,6 +233,7 @@ public final class BedrockShopGuiService {
         }
         form.button(configuration.backButton(), ignored -> openShop(player, shopId, page));
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
     }
 
     public ShopGuiTransactionGateway.TransactionExecutionResult executeTransaction(Player player, BedrockShopAction action,
@@ -238,13 +248,24 @@ public final class BedrockShopGuiService {
         }
 
         long startedAt = System.nanoTime();
-        ShopGuiTransactionGateway.TransactionExecutionResult result = transactionGateway.execute(player, optionalLiveItem.get(), action, Math.max(1, amount));
+        ShopItem liveItem = optionalLiveItem.get();
+        if (action == BedrockShopAction.BUY || action == BedrockShopAction.TRADE) {
+            double price = liveItem.getBuyPriceForAmount(player, Math.max(1, amount));
+            if (price > 0 && !hasBalance(player, price)) {
+                player.sendMessage(configuration.transactionFailed().replace("%reason%", "Insufficient balance"));
+                soundFeedback.playPurchaseFailed(player);
+                return ShopGuiTransactionGateway.TransactionExecutionResult.failure("Insufficient balance");
+            }
+        }
+        ShopGuiTransactionGateway.TransactionExecutionResult result = transactionGateway.execute(player, liveItem, action, Math.max(1, amount));
         if (result.success()) {
             player.sendMessage(configuration.transactionSuccess());
+            soundFeedback.playPurchaseSuccess(player);
             openShop(player, shopId, page);
         } else {
             String reason = result.message() == null || result.message().isBlank() ? configuration.unsupportedTransaction() : result.message();
             player.sendMessage(configuration.transactionFailed().replace("%reason%", reason));
+            soundFeedback.playPurchaseFailed(player);
         }
         warnIfSlow("executeTransaction", startedAt);
         return result;
@@ -332,5 +353,51 @@ public final class BedrockShopGuiService {
         if (elapsedMs > configuration.warnThresholdMs()) {
             logger.warning(operation + " exceeded " + configuration.warnThresholdMs() + "ms: " + elapsedMs + "ms");
         }
+    }
+
+    private boolean hasBalance(Player player, double required) {
+        try {
+            Class<?> vaultClass = Class.forName("net.milkbowl.vault.economy.Economy");
+            Object vault = Bukkit.getServicesManager().getRegistration(vaultClass).getProvider();
+            Object economy = vault;
+            java.lang.reflect.Method getBalance = economy.getClass().getMethod("getBalance", org.bukkit.OfflinePlayer.class);
+            double balance = ((Number) getBalance.invoke(economy, player)).doubleValue();
+            return balance >= required;
+        } catch (Exception e) {
+            return true;
+        }
+    }
+
+    private void handleTransactionClick(FormPlayer formPlayer, String shopId, String itemId, int amount, int page,
+                                         BedrockShopAction action, String actionLabel, double price) {
+        if (configuration.requirePurchaseConfirmation()) {
+            showTransactionConfirmation(formPlayer, shopId, itemId, amount, page, action, actionLabel, price);
+        } else {
+            Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+            if (bukkitPlayer == null) return;
+            executeTransaction(bukkitPlayer, action, shopId, itemId, amount, page);
+        }
+    }
+
+    private void showTransactionConfirmation(FormPlayer formPlayer, String shopId, String itemId, int amount, int page,
+                                              BedrockShopAction action, String actionLabel, double price) {
+        BedrockGUIApi api = BedrockGUIApi.getInstance();
+        if (api == null) return;
+        Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+        if (bukkitPlayer == null) return;
+
+        String confirmTitle = configuration.render(configuration.itemTitle(), Map.of("item_name", actionLabel + " x" + amount));
+        String confirmContent = ChatColor.YELLOW + "Confirm " + actionLabel + " x" + amount + "\n" +
+                ChatColor.GREEN + "Price: " + formatPrice(price) + "\n\n" +
+                ChatColor.GRAY + "Select Confirm to proceed or Cancel to return.";
+
+        api.createModalForm(confirmTitle)
+                .button1(ChatColor.GREEN + "Confirm", confirmedPlayer ->
+                        api.executeActionString(confirmedPlayer,
+                                "shopgui_transaction:" + ShopGuiActionPayloads.encodeTransaction(action, shopId, itemId, amount, page),
+                                context("shopgui-confirm", Map.of("shopId", shopId, "itemId", itemId))))
+                .button2(ChatColor.RED + "Cancel", cancelledPlayer -> openItemMenu(bukkitPlayer, shopId, itemId, page))
+                .content(confirmContent)
+                .send(formPlayer);
     }
 }

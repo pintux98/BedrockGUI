@@ -40,6 +40,11 @@ public final class ShopGuiAddonConfiguration {
     private final String unsupportedTransaction;
     private final List<Integer> amountPresets;
     private final int warnThresholdMs;
+    private final boolean soundsEnabled;
+    private final String soundFormOpen;
+    private final String soundPurchaseSuccess;
+    private final String soundPurchaseFailed;
+    private final boolean requirePurchaseConfirmation;
 
     private ShopGuiAddonConfiguration(YamlConfiguration configuration) {
         this.mainTitle = color(configuration.getString("ui.main-title", "&2Shop Categories"));
@@ -68,6 +73,11 @@ public final class ShopGuiAddonConfiguration {
         this.unsupportedTransaction = color(configuration.getString("messages.unsupported-transaction", "&cThis ShopGUI+ server build does not expose a compatible Bedrock transaction bridge."));
         this.amountPresets = normalizePresets(configuration.getIntegerList("ui.amount-presets"));
         this.warnThresholdMs = Math.max(1, configuration.getInt("performance.warn-threshold-ms", 5));
+        this.soundsEnabled = configuration.getBoolean("sounds.enabled", true);
+        this.soundFormOpen = configuration.getString("sounds.form-open", "ui.button.click");
+        this.soundPurchaseSuccess = configuration.getString("sounds.purchase-success", "entity.player.levelup");
+        this.soundPurchaseFailed = configuration.getString("sounds.purchase-failed", "block.note_block.pling");
+        this.requirePurchaseConfirmation = configuration.getBoolean("ui.require-purchase-confirmation", true);
     }
 
     public static ShopGuiAddonConfiguration load(JavaPlugin plugin) {
@@ -138,4 +148,9 @@ public final class ShopGuiAddonConfiguration {
     public String unsupportedTransaction() { return unsupportedTransaction; }
     public List<Integer> amountPresets() { return amountPresets; }
     public int warnThresholdMs() { return warnThresholdMs; }
+    public boolean soundsEnabled() { return soundsEnabled; }
+    public String soundFormOpen() { return soundFormOpen; }
+    public String soundPurchaseSuccess() { return soundPurchaseSuccess; }
+    public String soundPurchaseFailed() { return soundPurchaseFailed; }
+    public boolean requirePurchaseConfirmation() { return requirePurchaseConfirmation; }
 }

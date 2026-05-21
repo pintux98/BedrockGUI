@@ -18,6 +18,7 @@ ui:
   trade-label: '&bTrade'
   decoration-label: '&7Decoration'
   amount-presets: [1, 8, 16, 32, 64]
+  require-purchase-confirmation: true
 messages:
   no-bedrockgui: '&cBedrockGUI API is not available.'
   shops-not-ready: '&eThe shop backend is not loaded yet. Please try again in a moment.'
@@ -27,3 +28,8 @@ messages:
   unsupported-transaction: '&cThis shop backend does not expose a compatible Bedrock transaction bridge.'
 performance:
   warn-threshold-ms: 5
+sounds:
+  enabled: true
+  form-open: ui.button.click
+  purchase-success: entity.player.levelup
+  purchase-failed: block.note_block.pling

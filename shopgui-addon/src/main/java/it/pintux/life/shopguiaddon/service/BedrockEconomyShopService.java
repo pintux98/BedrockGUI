@@ -2,10 +2,14 @@ package it.pintux.life.shopguiaddon.service;
 
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
+import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.shopguiaddon.config.ShopGuiAddonConfiguration;
 import it.pintux.life.shopguiaddon.model.EconomyShopCatalogEntry;
 import it.pintux.life.shopguiaddon.model.ShopItemView;
+import it.pintux.life.shopguiaddon.util.BedrockIconResolver;
+import it.pintux.life.shopguiaddon.util.BedrockSoundFeedback;
 import it.pintux.life.shopguiaddon.util.BukkitFormPlayer;
+import it.pintux.life.shopguiaddon.util.FormPlayerResolver;
 import it.pintux.life.shopguiaddon.util.ShopGuiActionPayloads;
 import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
 import me.gypopo.economyshopgui.api.events.PostTransactionEvent;
@@ -38,15 +42,18 @@ public final class BedrockEconomyShopService {
     private final ShopGuiAddonConfiguration configuration;
     private final EconomyShopCatalogService catalogService;
     private final BedrockPlayerDetector bedrockPlayerDetector;
+    private final BedrockSoundFeedback soundFeedback;
     private final Map<UUID, NavigationState> navigationState = new ConcurrentHashMap<>();
 
     public BedrockEconomyShopService(Logger logger, ShopGuiAddonConfiguration configuration,
-                                     EconomyShopCatalogService catalogService,
-                                     BedrockPlayerDetector bedrockPlayerDetector) {
+                                      EconomyShopCatalogService catalogService,
+                                      BedrockPlayerDetector bedrockPlayerDetector,
+                                      BedrockSoundFeedback soundFeedback) {
         this.logger = logger;
         this.configuration = configuration;
         this.catalogService = catalogService;
         this.bedrockPlayerDetector = bedrockPlayerDetector;
+        this.soundFeedback = soundFeedback;
     }
 
     public boolean shouldHandle(Player player) {
@@ -99,6 +106,7 @@ public final class BedrockEconomyShopService {
                     ));
         }
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
     }
 
     public void openShop(Player player, String sectionId, int requestedPage) {
@@ -135,12 +143,23 @@ public final class BedrockEconomyShopService {
             form.button(configuration.emptyPageMessage(), ignored -> { });
         } else {
             for (ShopItemView itemView : items) {
-                form.button(itemView.getDisplayName() + "\n" + priceLine(player, sectionId, itemView.getId()), formPlayer ->
-                        api.executeActionString(
-                                formPlayer,
-                                "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
-                                context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
-                        ));
+                String buttonText = itemView.getDisplayName() + "\n" + priceLine(player, sectionId, itemView.getId());
+                String icon = BedrockIconResolver.resolveTexturePath(itemView.getMaterial());
+                if (icon != null) {
+                    form.button(buttonText, icon, formPlayer ->
+                            api.executeActionString(
+                                    formPlayer,
+                                    "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
+                                    context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
+                            ));
+                } else {
+                    form.button(buttonText, formPlayer ->
+                            api.executeActionString(
+                                    formPlayer,
+                                    "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
+                                    context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
+                            ));
+                }
             }
         }
 
@@ -164,6 +183,7 @@ public final class BedrockEconomyShopService {
                     ));
         }
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
     }
 
     public void openItemMenu(Player player, String sectionId, String itemId, int page) {
@@ -211,12 +231,10 @@ public final class BedrockEconomyShopService {
                 if (amountPrice.isEmpty()) {
                     continue;
                 }
-                form.button(configuration.buyLabel() + " x" + amount + "\n" + ChatColor.GREEN + formatPrices(amountPrice.get().getPrices()), formPlayer ->
-                        api.executeActionString(
-                                formPlayer,
-                                "economyshop_transaction:" + ShopGuiActionPayloads.encodeTransaction(BedrockShopAction.BUY, sectionId, itemId, amount, page),
-                                context("economyshop-buy", Map.of("shopId", sectionId, "itemId", itemId))
-                        ));
+                String priceText = formatPrices(amountPrice.get().getPrices());
+                form.button(configuration.buyLabel() + " x" + amount + "\n" + ChatColor.GREEN + priceText,
+                        formPlayer -> handleTransactionClick(formPlayer, sectionId, itemId, amount, page,
+                                BedrockShopAction.BUY, configuration.buyLabel(), priceText));
             }
         }
 
@@ -227,12 +245,10 @@ public final class BedrockEconomyShopService {
                 if (amountPrice.isEmpty()) {
                     continue;
                 }
-                form.button(configuration.sellLabel() + " x" + amount + "\n" + ChatColor.RED + formatPrices(amountPrice.get().getPrices()), formPlayer ->
-                        api.executeActionString(
-                                formPlayer,
-                                "economyshop_transaction:" + ShopGuiActionPayloads.encodeTransaction(BedrockShopAction.SELL, sectionId, itemId, amount, page),
-                                context("economyshop-sell", Map.of("shopId", sectionId, "itemId", itemId))
-                        ));
+                String priceText = formatPrices(amountPrice.get().getPrices());
+                form.button(configuration.sellLabel() + " x" + amount + "\n" + ChatColor.RED + priceText,
+                        formPlayer -> handleTransactionClick(formPlayer, sectionId, itemId, amount, page,
+                                BedrockShopAction.SELL, configuration.sellLabel(), priceText));
             }
         }
 
@@ -241,6 +257,7 @@ public final class BedrockEconomyShopService {
         }
         form.button(configuration.backButton(), ignored -> openShop(player, sectionId, page));
         form.send(new BukkitFormPlayer(player));
+        soundFeedback.playFormOpen(player);
     }
 
     public TransactionResult executeTransaction(Player player, BedrockShopAction action,
@@ -261,9 +278,11 @@ public final class BedrockEconomyShopService {
 
         if (result.success()) {
             player.sendMessage(configuration.transactionSuccess());
+            soundFeedback.playPurchaseSuccess(player);
             openShop(player, sectionId, page);
         } else {
             player.sendMessage(configuration.transactionFailed().replace("%reason%", result.message()));
+            soundFeedback.playPurchaseFailed(player);
         }
         return result;
     }
@@ -547,4 +566,37 @@ public final class BedrockEconomyShopService {
     }
 
     private record NavigationState(String sectionId, int page) { }
+
+    private void handleTransactionClick(FormPlayer formPlayer, String sectionId, String itemId, int amount, int page,
+                                         BedrockShopAction action, String actionLabel, String priceText) {
+        if (configuration.requirePurchaseConfirmation()) {
+            showTransactionConfirmation(formPlayer, sectionId, itemId, amount, page, action, actionLabel, priceText);
+        } else {
+            Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+            if (bukkitPlayer == null) return;
+            executeTransaction(bukkitPlayer, action, sectionId, itemId, amount, page);
+        }
+    }
+
+    private void showTransactionConfirmation(FormPlayer formPlayer, String sectionId, String itemId, int amount, int page,
+                                              BedrockShopAction action, String actionLabel, String priceText) {
+        BedrockGUIApi api = BedrockGUIApi.getInstance();
+        if (api == null) return;
+        Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+        if (bukkitPlayer == null) return;
+
+        String confirmTitle = configuration.render(configuration.itemTitle(), Map.of("item_name", actionLabel + " x" + amount));
+        String confirmContent = ChatColor.YELLOW + "Confirm " + actionLabel + " x" + amount + "\n" +
+                ChatColor.GREEN + "Price: " + priceText + "\n\n" +
+                ChatColor.GRAY + "Select Confirm to proceed or Cancel to return.";
+
+        api.createModalForm(confirmTitle)
+                .button1(ChatColor.GREEN + "Confirm", confirmedPlayer ->
+                        api.executeActionString(confirmedPlayer,
+                                "economyshop_transaction:" + ShopGuiActionPayloads.encodeTransaction(action, sectionId, itemId, amount, page),
+                                context("economyshop-confirm", Map.of("shopId", sectionId, "itemId", itemId))))
+                .button2(ChatColor.RED + "Cancel", cancelledPlayer -> openItemMenu(bukkitPlayer, sectionId, itemId, page))
+                .content(confirmContent)
+                .send(formPlayer);
+    }
 }
