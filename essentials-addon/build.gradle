@@ -1,0 +1,39 @@
+version = essentialsAddonVersion
+
+def bedrockGuiApiJar = file("${rootProject.projectDir}/common/build/libs/BedrockGUI-API.jar")
+
+dependencies {
+    compileOnly(files(bedrockGuiApiJar))
+    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
+    compileOnly "net.essentialsx:EssentialsX:${essentialsXVersion}"
+    compileOnly "com.github.Zrips:CMI-API:${cmiApiVersion}"
+    compileOnly("com.github.brcdev-minecraft:shopgui-api:${shopguiApiVersion}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+    }
+    compileOnly("com.github.Gypopo:EconomyShopGUI-API:${economyShopGuiApiVersion}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn(":common:jar")
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    archiveBaseName.set('BedrockGUI-EssentialsAddon')
+    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server/lobby/plugins"))
+}

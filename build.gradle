@@ -1,48 +1,79 @@
 plugins {
-    id 'com.gradleup.shadow' version '9.4.1'
+    id 'com.gradleup.shadow' version "$shadowPluginVersion" apply false
     id 'java'
 }
 
 allprojects {
-    group = 'it.pintux.life'
-    version = '2.0.8'
-    repositories {
-        mavenCentral()
-    }
+    group = projectGroup
+    version = projectVersion
 }
 
 subprojects {
     apply plugin: 'java'
+    apply plugin: 'com.gradleup.shadow'
+
+    repositories {
+        mavenCentral()
+        gradlePluginPortal()
+        maven { url = "https://repo.papermc.io/repository/maven-public/" }
+        maven { url = "https://repo.opencollab.dev/main/" }
+        maven { url = "https://repo.essentialsx.net/releases/" }
+        maven { url = "https://repo.essentialsx.net/snapshots/" }
+        maven { url = "https://repo.extendedclip.com/content/repositories/placeholderapi/" }
+        maven { url = "https://repo.codemc.org/repository/maven-public" }
+        maven { url = "https://repo.codemc.io/repository/creatorfromhell/" }
+        maven { url = "https://repo.md-5.net/content/repositories/snapshots/" }
+        maven { url = "https://repo.md-5.net/content/groups/public/" }
+        maven { url = "https://jitpack.io" }
+        maven { url = "https://repo.william278.net/releases" }
+        maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
+        maven { url = "https://nexus.velocitypowered.com/repository/maven-public/" }
+    }
 
     dependencies {
+        compileOnly "org.geysermc.floodgate:api:${floodgateVersion}"
+    }
 
+    def targetJavaVersion = project.findProperty('targetJavaVersion') as Integer ?: 21
+
+    java {
+        def javaVersion = JavaVersion.toVersion(targetJavaVersion)
+        sourceCompatibility = javaVersion
+        targetCompatibility = javaVersion
+        if (JavaVersion.current() < javaVersion) {
+            toolchain.languageVersion = JavaLanguageVersion.of(targetJavaVersion)
+        }
+    }
+
+    tasks.withType(JavaCompile).configureEach {
+        options.encoding = 'UTF-8'
+        options.compilerArgs.addAll(['-Xlint:unchecked', '-Xdiags:verbose'])
+        if (targetJavaVersion >= 10 || JavaVersion.current().isJava10Compatible()) {
+            options.release.set(targetJavaVersion)
+        }
     }
 }
 
 // Task to build only Velocity
 task buildVelocity {
     dependsOn ':velocity:shadowJar'
-    
     description = 'Builds only the Velocity module'
 }
 
 // Task to build only Bungeecord
 task buildBungeecord {
     dependsOn ':bungeecord:shadowJar'
-    
     description = 'Builds only the Bungeecord module'
 }
 
 // Task to build only Paper
 task buildPaper {
     dependsOn ':paper:shadowJar'
-    
     description = 'Builds only the Paper module'
 }
 
-// Task to build only the ShopGUI+ Bedrock addon
-task buildShopGuiAddon {
-    dependsOn ':shopgui-addon:jar'
-
-    description = 'Builds only the ShopGUI+ addon module'
+// Task to build only the Essentials Bedrock addon
+task buildEssentialsAddon {
+    dependsOn ':essentials-addon:jar'
+    description = 'Builds only the Essentials addon module'
 }

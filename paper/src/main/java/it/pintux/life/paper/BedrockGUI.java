@@ -13,6 +13,8 @@ import it.pintux.life.paper.utils.PaperConfig;
 import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.paper.utils.PaperMessageConfig;
 import org.bukkit.Bukkit;
+import org.bukkit.command.CommandSender;
+import org.bukkit.command.PluginCommand;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -23,6 +25,7 @@ import org.bukkit.event.server.ServerCommandEvent;
 import org.bukkit.event.server.ServerLoadEvent;
 import org.bukkit.event.server.PluginEnableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.jetbrains.annotations.NotNull;
 
 import java.io.File;
 import java.util.Arrays;
@@ -34,10 +37,14 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     private MessageData messageData;
     private BedrockGUIApi api;
     private AssetServer assetServer;
+    private PaperPlayerChecker playerChecker;
 
     @Override
     public void onEnable() {
-        getCommand("bedrockgui").setExecutor(new BedrockCommand(this));
+        PluginCommand cmd = getCommand("bedrockgui");
+        BedrockCommand executor = new BedrockCommand(this);
+        cmd.setExecutor(executor);
+        cmd.setTabCompleter(executor);
         getServer().getPluginManager().registerEvents(this, this);
         saveDefaultConfig();
         this.saveResource("messages.yml", false);
@@ -99,6 +106,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperJavaMenuManager javaMenuManager = new PaperJavaMenuManager(this, messageData);
         getServer().getPluginManager().registerEvents(javaMenuManager, this);
         formMenuUtil.setJavaMenuManager(javaMenuManager);
+        playerChecker = new PaperPlayerChecker();
 
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BedrockGUIExpansion(this).register();
@@ -107,12 +115,34 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             getLogger().warning("PlaceholderAPI not found. Placeholder features disabled.");
         }
         getLogger().info("Loaded and enabled");
+
+        try {
+            org.bukkit.command.SimpleCommandMap commandMap = (org.bukkit.command.SimpleCommandMap)
+                    org.bukkit.Bukkit.getServer().getClass().getMethod("getCommandMap").invoke(org.bukkit.Bukkit.getServer());
+            if (commandMap == null) return;
+
+            formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
+                String formCmd = formMenu.getFormCommand();
+                if (formCmd != null && !formCmd.isEmpty()) {
+                    String base = formCmd.trim().split("\\s+")[0].toLowerCase();
+                    org.bukkit.command.Command formCommand = new org.bukkit.command.Command(base) {
+                        @Override
+                        public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
+                            return true;
+                        }
+                    };
+                    formCommand.setPermission("bedrockgui.form." + key);
+                    commandMap.register("bedrockgui-form", formCommand);
+                }
+            });
+        } catch (Exception e) {
+            getLogger().warning("Failed to auto-register form commands: " + e.getMessage());
+        }
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
     public void onCmd(ServerCommandEvent event) {
         String command = event.getCommand();
-        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
 
         Player senderPlayer = event.getSender() instanceof Player ? (Player) event.getSender() : null;
         Player targetPlayer = senderPlayer != null ? senderPlayer : findTargetPlayerFromCommand(command);
@@ -161,7 +191,6 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
     public void onPlayerPreprocessCommand(PlayerCommandPreprocessEvent event) {
         Player player = event.getPlayer();
 
-        PaperPlayerChecker playerChecker = new PaperPlayerChecker();
         if (!playerChecker.isBedrockPlayer(player.getUniqueId())) {
             return;
         }

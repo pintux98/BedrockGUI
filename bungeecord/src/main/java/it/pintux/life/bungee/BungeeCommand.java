@@ -6,19 +6,81 @@ import it.pintux.life.bungee.utils.BungeePlayer;
 import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
+import net.md_5.bungee.api.plugin.TabExecutor;
 import net.md_5.bungee.api.chat.TextComponent;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
-public class BungeeCommand extends Command {
+public class BungeeCommand extends Command implements TabExecutor {
     private final BedrockGUI plugin;
     public BungeeCommand(BedrockGUI plugin) { super("bedrockgui", "bedrockgui.admin", new String[]{"bgui"}); this.plugin = plugin; }
+
+    @Override
+    public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
+        List<String> suggestions = new ArrayList<>();
+
+        if (args.length == 1) {
+            String prefix = args[0].toLowerCase();
+            List<String> subCommands = new ArrayList<>();
+            subCommands.add("open");
+            if (sender.hasPermission("bedrockgui.admin")) {
+                subCommands.add("reload");
+                subCommands.add("openfor");
+                subCommands.add("convert");
+            }
+            for (String cmd : subCommands) {
+                if (cmd.startsWith(prefix)) {
+                    suggestions.add(cmd);
+                }
+            }
+            return suggestions;
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("open")) {
+            String prefix = args[1].toLowerCase();
+            if (plugin.getFormMenuUtil() != null) {
+                for (String menuName : plugin.getFormMenuUtil().getFormMenus().keySet()) {
+                    if (menuName.toLowerCase().startsWith(prefix)) {
+                        suggestions.add(menuName);
+                    }
+                }
+            }
+            return suggestions;
+        }
+
+        if (args.length == 2 && args[0].equalsIgnoreCase("openfor")) {
+            String prefix = args[1].toLowerCase();
+            for (net.md_5.bungee.api.connection.ProxiedPlayer p : plugin.getProxy().getPlayers()) {
+                if (p.getName().toLowerCase().startsWith(prefix)) {
+                    suggestions.add(p.getName());
+                }
+            }
+            return suggestions;
+        }
+
+        if (args.length == 3 && args[0].equalsIgnoreCase("openfor")) {
+            String prefix = args[2].toLowerCase();
+            if (plugin.getFormMenuUtil() != null) {
+                for (String menuName : plugin.getFormMenuUtil().getFormMenus().keySet()) {
+                    if (menuName.toLowerCase().startsWith(prefix)) {
+                        suggestions.add(menuName);
+                    }
+                }
+            }
+            return suggestions;
+        }
+
+        return suggestions;
+    }
 
     @Override
     public void execute(CommandSender sender, String[] args) {
         ProxiedPlayer player = sender instanceof ProxiedPlayer ? (ProxiedPlayer) sender : null;
         if (args.length == 0) {
-            if(player.hasPermission("bedrockgui.admin")) {
+            if (player != null && player.hasPermission("bedrockgui.admin")) {
                 sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null)));
                 sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
                 sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null)));

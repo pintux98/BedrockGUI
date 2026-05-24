@@ -1,0 +1,20 @@
+name: BedrockGUI-EssentialsAddon
+version: '${version}'
+main: it.pintux.life.essentialsaddon.BedrockEssentialsAddonPlugin
+api-version: '1.19'
+author: 'pintux'
+depend:
+  - BedrockGUI-Paper
+  - Essentials
+softdepend:
+  - floodgate
+  - CMI
+  - ShopGUIPlus
+  - EconomyShopGUI
+  - EconomyShopGUI-Premium
+  - HuskHomes
+commands:
+  essentialsaddon:
+    description: Reload EssentialsAddon configuration
+    usage: /essentialsaddon reload
+    permission: essentialsaddon.reload

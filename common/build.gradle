@@ -1,26 +1,6 @@
-plugins {
-    id 'java'
-}
-
-group = 'it.pintux.life'
-version = ''
-
-repositories {
-    gradlePluginPortal()
-    mavenCentral()
-    maven {
-        url = uri("https://repo.opencollab.dev/main/")
-    }
-}
-
 dependencies {
-    compileOnly 'org.geysermc.floodgate:api:2.2.5-SNAPSHOT'
     compileOnly 'com.google.guava:guava:33.6.0-jre'
-    implementation 'org.yaml:snakeyaml:2.3'
-}
-
-compileJava {
-    options.compilerArgs += ["-Xlint:unchecked", "-Xdiags:verbose"]
+    implementation "org.yaml:snakeyaml:${snakeyamlVersion}"
 }
 
 sourceSets {

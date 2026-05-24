@@ -1,0 +1,143 @@
+# ─────────────────────────────────────────────
+# BedrockGUI Essentials Addon — config.yml
+# ─────────────────────────────────────────────
+# Each module is DISABLED by default.
+# Set to true, then run /essentialsaddon reload
+# to activate only the features you need.
+
+# DO NOT CHANGE THIS VALUE — managed by the plugin.
+config-version: 1
+
+modules:
+  warps: false
+  kits: false
+  homes: false
+  tpa: false
+  shopgui-plus: false
+  economyshop-gui: false
+
+# ─────────────────────────────────────────────
+# Hub — unified main menu shown to Bedrock players
+# Buttons are generated dynamically from enabled modules.
+# ─────────────────────────────────────────────
+hub:
+  title: '&6&lEssentials Menu'
+  content: '&7Select a feature to use.'
+  # Per-module button labels (shown in the hub)
+  button-warps: '&b&lWarps'
+  button-kits: '&6&lKits'
+  button-homes: '&a&lHomes'
+  button-tpa: '&e&lTeleport'
+  button-shopgui-plus: '&2&lShopGUI+'
+  button-economyshop-gui: '&2&lEconomyShop'
+
+# ─────────────────────────────────────────────
+# UI — all in-game form strings
+# ─────────────────────────────────────────────
+ui:
+  # --- Warps ---
+  warp-title: '&bWarps'
+  warp-content: '&7Select a warp to teleport to.'
+  warp-button: '&e%warp_name%'
+  no-warps-message: '&cNo warps are currently available.'
+  no-warp-access: '&cYou do not have permission to use this warp.'
+  teleport-success: '&aTeleported to %warp_name%.'
+  teleport-failed: '&cTeleport failed: %reason%'
+
+  # --- Kits ---
+  kit-title: '&6Kits'
+  kit-content: '&7Select a kit to claim.'
+  kit-button: '&e%kit_name%'
+  no-kits-message: '&cNo kits are currently available.'
+  no-kit-access: '&cYou do not have permission to use this kit.'
+  kit-claim-success: '&aKit claimed successfully!'
+  kit-claim-failed: '&cKit claim failed: %reason%'
+  kit-on-cooldown: '&cThis kit is on cooldown. Available in %time%.'
+
+  # --- Navigation (shared) ---
+  back-button: '&7Back'
+  main-button: '&7Main Menu'
+  previous-button: '&7Previous Page'
+  next-button: '&7Next Page'
+
+  # --- Homes ---
+  home-title: '&bHomes'
+  home-content: '&7Select a home to teleport to.'
+  home-button: '&e%home_name%'
+  home-limit-text: ' (%count%/%max%)'
+  no-homes-message: '&cYou do not have any homes set.'
+  home-not-found: '&cHome not found: %home_name%'
+  home-teleport-success: '&aTeleported to %home_name%!'
+  home-teleport-failed: '&cFailed to teleport to %home_name%'
+  home-limit-reached: '&cYou have reached your home limit (%count%/%max%)'
+  home-set-success: '&aHome ''%home_name%'' set!'
+  home-set-failed: '&cFailed to set home.'
+  home-set-invalid: '&cInvalid home name.'
+  home-delete-prompt: '&c%home_name%'
+  home-delete-success: '&aHome ''%home_name%'' deleted!'
+  home-no-delete: '&cYou do not have any homes to delete.'
+  home-delete-failed: '&cFailed to delete home.'
+  home-provider-unavailable: '&cHome provider is not available.'
+
+  # --- TPA ---
+  tpa-title: '&bTeleport Requests'
+  tpa-content: '&7Manage your teleport requests.'
+  tpa-pending-content: '&7Pending from: &f%players%'
+  tpa-accept-button: '&aAccept Request'
+  tpa-deny-button: '&cDeny Request'
+  tpa-send-button: '&eSend TPA'
+  tpa-here-button: '&6Send TPAHere'
+  tpa-cancel-button: '&7Cancel Request'
+  tpa-no-pending: '&cNo pending requests.'
+  tpa-send-failed: '&cFailed to send request.'
+  tpa-title-send: '&eTPA - Select Player'
+  tpa-title-here: '&6TPAHere - Select Player'
+  tpa-send-content: '&7Select a player to request teleport.'
+  tpa-player-input-text: '&7Enter player name:'
+  tpa-player-input-placeholder: 'PlayerName'
+  tpa-provider-unavailable: '&cTPA provider is not available.'
+
+  # --- Shop UI ---
+  shop-main-title: '&2Shop Categories'
+  shop-main-content: '&7Choose a supported shop category adapted for Bedrock.'
+  shop-shop-title: '&2%shop_name% &7(Page %page%/%max_page%)'
+  shop-shop-content: '&7Economy: &f%economy%'
+  shop-item-title: '&2%item_name%'
+  shop-item-content: '&7Type: &f%item_type%'
+  shop-empty-shop-message: '&cNo categories are currently available.'
+  shop-empty-page-message: '&eThis category page has no Bedrock-compatible entries.'
+  shop-unavailable-item-message: '&cThis shop entry cannot be used from the Bedrock interface.'
+  shop-open-linked-button: '&bOpen Linked Shop'
+  shop-buy-label: '&aBuy'
+  shop-sell-label: '&cSell'
+  shop-trade-label: '&bTrade'
+  shop-decoration-label: '&7Decoration'
+  shop-amount-presets: [1, 8, 16, 32, 64]
+  shop-require-purchase-confirmation: true
+
+# ─────────────────────────────────────────────
+# Messages — system-level feedback
+# ─────────────────────────────────────────────
+messages:
+  no-bedrockgui: '&cBedrockGUI API is not available.'
+  essentials-not-ready: '&eThe Essentials backend is not loaded yet. Please try again in a moment.'
+  provider-unavailable: '&cNo compatible Essentials/CMI provider is available.'
+  shop-shops-not-ready: '&eThe shop backend is not loaded yet.'
+  shop-no-shop-access: '&cYou do not have permission to access this shop.'
+  shop-transaction-success: '&aShop action completed successfully.'
+  shop-transaction-failed: '&cShop action failed: %reason%'
+  shop-unsupported-transaction: '&cThis shop backend does not expose a compatible Bedrock transaction bridge.'
+
+# ─────────────────────────────────────────────
+# Sounds
+# ─────────────────────────────────────────────
+sounds:
+  enabled: true
+  form-open: ui.button.click
+  teleport-success: entity.enderman.teleport
+  kit-claim-success: entity.player.levelup
+  action-failed: block.note_block.pling
+  shop-purchase-success: entity.player.levelup
+  shop-purchase-failed: block.note_block.pling
+  volume: 1.0
+  pitch: 1.0

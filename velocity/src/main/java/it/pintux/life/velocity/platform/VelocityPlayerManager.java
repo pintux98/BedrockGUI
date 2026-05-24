@@ -7,6 +7,8 @@ import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.velocity.utils.VelocityPlayer;
 
+import com.velocitypowered.api.proxy.messages.MinecraftChannelIdentifier;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +46,7 @@ public class VelocityPlayerManager implements PlatformPlayerManager {
     public void sendByteArray(FormPlayer player, String channel, byte[] data) {
         if (player instanceof VelocityPlayer) {
             ((VelocityPlayer) player).getPlayer().getCurrentServer().ifPresent(server -> {
-                server.sendPluginMessage(new com.velocitypowered.api.proxy.messages.LegacyChannelIdentifier(channel), data);
+                server.sendPluginMessage(MinecraftChannelIdentifier.from(channel), data);
             });
         }
     }

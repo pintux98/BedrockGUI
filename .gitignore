@@ -16,3 +16,5 @@
 /shopgui-addon/bin/
 /shopgui-addon/build/
 /.omo/
+/essentials-addon/build/
+/.opencode/

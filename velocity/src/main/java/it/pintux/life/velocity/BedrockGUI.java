@@ -26,17 +26,20 @@ public class BedrockGUI {
     private final ProxyServer server;
     private final Logger logger;
     private final Path dataDirectory;
+    private final Metrics.Factory metricsFactory;
 
     private FormMenuUtil formMenuUtil;
     private MessageData messageData;
     private BedrockGUIApi api;
     private VelocityConfig config;
+    private AssetServer assetServer;
 
     @Inject
-    public BedrockGUI(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory) {
+    public BedrockGUI(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory, Metrics.Factory metricsFactory) {
         this.server = server;
         this.logger = logger;
         this.dataDirectory = dataDirectory;
+        this.metricsFactory = metricsFactory;
     }
 
     @Subscribe
@@ -49,7 +52,9 @@ public class BedrockGUI {
 
         reloadData();
 
-        server.getCommandManager().register("bedrockgui", new VelocityCommandExecutor(this));
+        metricsFactory.make(this, 23364);
+
+        server.getCommandManager().register("bedrockgui", new BedrockCommand(this));
 
         logger.info("BedrockGUI for Velocity enabled successfully!");
     }
@@ -65,6 +70,11 @@ public class BedrockGUI {
             } catch (Exception e) {
                 logger.error("Error during BedrockGUI shutdown: " + e.getMessage(), e);
             }
+        }
+
+        if (assetServer != null) {
+            assetServer.shutdown();
+            assetServer = null;
         }
 
         logger.info("BedrockGUI for Velocity disabled");
@@ -95,7 +105,10 @@ public class BedrockGUI {
         VelocityTitleManager titleManager = new VelocityTitleManager();
         VelocityPluginManager pluginManager = new VelocityPluginManager(server);
         VelocityPlayerManager playerManager = new VelocityPlayerManager(server);
-        AssetServer assetServer = new AssetServer(server.getBoundAddress().getHostString(), 8192, dataFolder);
+        if (assetServer != null) {
+            assetServer.shutdown();
+        }
+        assetServer = new AssetServer(server.getBoundAddress().getHostString(), 8192, dataFolder);
         assetServer.start();
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,

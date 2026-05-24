@@ -28,6 +28,7 @@ public class BedrockGUI extends Plugin {
         }
         reloadData();
         ProxyServer.getInstance().getPluginManager().registerCommand(this, new BungeeCommand(this));
+        new Metrics(this, 23364);
     }
 
     @Override
@@ -70,6 +71,17 @@ public class BedrockGUI extends Plugin {
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
+
+        try {
+            formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
+                String formCmd = formMenu.getFormCommand();
+                if (formCmd != null && !formCmd.isEmpty()) {
+                    String base = formCmd.trim().split("\\s+")[0];
+                    getProxy().getPluginManager().registerCommand(this, new BungeeFormCommand(this, key, "bedrockgui.form." + key));
+                }
+            });
+        } catch (Exception ignored) {
+        }
     }
 
     public FormMenuUtil getFormMenuUtil() {
