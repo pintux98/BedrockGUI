@@ -26,21 +26,31 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
+      - name: Read version from gradle.properties
+        id: version
+        run: echo "VERSION=$(grep '^projectVersion=' gradle.properties | cut -d'=' -f2)" >> "$GITHUB_OUTPUT"
+
       - name: Build all JARs
         run: ./gradlew :common:jar :bungeecord:shadowJar :paper:shadowJar :velocity:shadowJar :essentials-addon:shadowJar
+
+      - name: Collect JARs
+        run: |
+          mkdir -p release-artifacts
+          cp common/build/libs/BedrockGUI-API.jar release-artifacts/
+          cp bungeecord/build/libs/BedrockGUI-Bungee-*.jar release-artifacts/
+          cp paper/build/libs/BedrockGUI-Paper-*.jar release-artifacts/
+          cp velocity/build/libs/BedrockGUI-Velocity-*.jar release-artifacts/
+          cp essentials-addon/build/libs/BedrockGUI-EssentialsAddon-*.jar release-artifacts/
+          ls -la release-artifacts/
 
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          tag: ${{ github.ref_name }}
-          name: Release ${{ github.ref_name }}
+          tag: "v${{ steps.version.outputs.VERSION }}"
+          name: "BedrockGUI v${{ steps.version.outputs.VERSION }}"
+          commit: ${{ github.sha }}
+          allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
-          allowUpdates: true
-          artifacts: |
-            common/build/libs/BedrockGUI-API.jar
-            bungeecord/build/libs/BedrockGUI-Bungee-*.jar
-            paper/build/libs/BedrockGUI-Paper-*.jar
-            velocity/build/libs/BedrockGUI-Velocity-*.jar
-            essentials-addon/build/libs/BedrockGUI-EssentialsAddon-*.jar
+          artifacts: "release-artifacts/*"
