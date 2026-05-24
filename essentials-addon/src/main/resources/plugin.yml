@@ -4,10 +4,9 @@ main: it.pintux.life.essentialsaddon.BedrockEssentialsAddonPlugin
 api-version: '1.19'
 author: 'pintux'
 depend:
-  - BedrockGUI-Paper
-  - Essentials
+  - BedrockGUI
 softdepend:
-  - floodgate
+  - Essentials
   - CMI
   - ShopGUIPlus
   - EconomyShopGUI

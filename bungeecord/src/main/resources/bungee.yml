@@ -1,4 +1,4 @@
-name: BedrockGUI-Bungee
+name: BedrockGUI
 main: it.pintux.life.bungee.BedrockGUI
 version: ${version}
 author: pintux

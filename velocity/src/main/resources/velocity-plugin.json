@@ -1,6 +1,6 @@
 {
-  "id": "bedrockgui-velocity",
-  "name": "BedrockGUI-Velocity",
+  "id": "bedrockgui",
+  "name": "BedrockGUI",
   "version": "${version}",
   "description": "BedrockGUI plugin for Velocity proxy",
   "url": "https://github.com/pintux/life",

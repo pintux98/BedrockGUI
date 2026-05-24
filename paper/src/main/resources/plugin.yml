@@ -1,4 +1,4 @@
-name: BedrockGUI-Paper
+name: BedrockGUI
 version: '${version}'
 main: it.pintux.life.paper.BedrockGUI
 api-version: '1.19'

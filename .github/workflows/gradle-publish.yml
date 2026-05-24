@@ -1,74 +1,46 @@
-name: Release projects
+name: Build & Release
 
 on:
   push:
-    branches:
-    - master
+    branches: [master]
+  workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  build:
+  build-and-release:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up JDK 17
-      uses: actions/setup-java@v3
-      with:
-        distribution: 'temurin'
-        java-version: '17'
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+          cache: gradle
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
 
-    - name: Build Bungee and Paper JARs
-      run: ./gradlew :bungeecord:shadowJar :paper:shadowJar
+      - name: Build all JARs
+        run: ./gradlew :common:jar :bungeecord:shadowJar :paper:shadowJar :velocity:shadowJar :essentials-addon:shadowJar
 
-    - name: Upload Bungee JAR as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: BedrockGUI-Bungee
-        path: bungeecord/build/libs/BedrockGUI-Bungee-*.jar
-
-    - name: Upload Paper JAR as artifact
-      uses: actions/upload-artifact@v3
-      with:
-        name: BedrockGUI-Paper
-        path: paper/build/libs/BedrockGUI-Paper-*.jar
-
-  release:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-    - name: Download build artifacts
-      uses: actions/download-artifact@v3
-      with:
-        name: BedrockGUI-Bungee
-        path: .
-
-    - name: Download Paper JAR
-      uses: actions/download-artifact@v3
-      with:
-        name: BedrockGUI-Paper
-        path: .
-
-    - name: Download Velocity JAR
-      uses: actions/download-artifact@v3
-      with:
-        name: BedrockGUI-Velocity
-        path: .
-
-    - name: Create Release
-      uses: ncipollo/release-action@v1
-      with:
-        token: ${{ secrets.GITHUB_TOKEN }}
-        tag: ${{ github.ref_name }}
-        name: Release ${{ github.ref_name }}
-        files: |
-          ./BedrockGUI-Bungee-*.jar
-          ./BedrockGUI-Paper-*.jar
-          ./BedrockGUI-Velocity-*.jar
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          allowUpdates: true
+          artifacts: |
+            common/build/libs/BedrockGUI-API.jar
+            bungeecord/build/libs/BedrockGUI-Bungee-*.jar
+            paper/build/libs/BedrockGUI-Paper-*.jar
+            velocity/build/libs/BedrockGUI-Velocity-*.jar
+            essentials-addon/build/libs/BedrockGUI-EssentialsAddon-*.jar
