@@ -36,5 +36,7 @@ shadowJar {
     minimize()
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-Velocity')
-    destinationDirectory.set(file("${System.getProperty('user.home')}/Desktop/Server/Java-Bedrock-Server/proxy/plugins"))
+    if (localOutputDir) {
+        destinationDirectory.set(file("${localOutputDir}/proxy/plugins"))
+    }
 }

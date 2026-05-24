@@ -3,6 +3,14 @@ plugins {
     id 'java'
 }
 
+// Load local.properties if it exists (never committed to git)
+def localPropsFile = file('local.properties')
+if (localPropsFile.exists()) {
+    def props = new Properties()
+    localPropsFile.withInputStream { props.load(it) }
+    props.each { key, value -> ext[key] = value }
+}
+
 allprojects {
     group = projectGroup
     version = projectVersion
