@@ -16,6 +16,15 @@ modules:
   shopgui-plus: false
   economyshop-gui: false
 
+# Register actions without internal forms (requires module: false).
+actions-only:
+  warps: false
+  kits: false
+  homes: false
+  tpa: false
+  shopgui-plus: false
+  economyshop-gui: false
+
 # ─────────────────────────────────────────────
 # Hub — unified main menu shown to Bedrock players
 # Buttons are generated dynamically from enabled modules.

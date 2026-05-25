@@ -22,6 +22,14 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleShopGuiPlus;
     private final boolean moduleEconomyShopGui;
 
+    // Actions-only (register actions without internal forms)
+    private final boolean actionsWarps;
+    private final boolean actionsKits;
+    private final boolean actionsHomes;
+    private final boolean actionsTpa;
+    private final boolean actionsShopGuiPlus;
+    private final boolean actionsEconomyShopGui;
+
     // Hub
     private final String hubTitle;
     private final String hubContent;
@@ -132,6 +140,13 @@ public final class EssentialsAddonConfiguration {
         this.moduleTpa = configuration.getBoolean("modules.tpa", false);
         this.moduleShopGuiPlus = configuration.getBoolean("modules.shopgui-plus", false);
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
+
+        this.actionsWarps = configuration.getBoolean("actions-only.warps", false);
+        this.actionsKits = configuration.getBoolean("actions-only.kits", false);
+        this.actionsHomes = configuration.getBoolean("actions-only.homes", false);
+        this.actionsTpa = configuration.getBoolean("actions-only.tpa", false);
+        this.actionsShopGuiPlus = configuration.getBoolean("actions-only.shopgui-plus", false);
+        this.actionsEconomyShopGui = configuration.getBoolean("actions-only.economyshop-gui", false);
 
         this.hubTitle = color(configuration.getString("hub.title", "&6&lEssentials Menu"));
         this.hubContent = color(configuration.getString("hub.content", "&7Select a feature to use."));
@@ -368,6 +383,14 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleTpa() { return moduleTpa; }
     public boolean moduleShopGuiPlus() { return moduleShopGuiPlus; }
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
+
+    // Actions-only
+    public boolean actionsWarps() { return actionsWarps && !moduleWarps; }
+    public boolean actionsKits() { return actionsKits && !moduleKits; }
+    public boolean actionsHomes() { return actionsHomes && !moduleHomes; }
+    public boolean actionsTpa() { return actionsTpa && !moduleTpa; }
+    public boolean actionsShopGuiPlus() { return actionsShopGuiPlus && !moduleShopGuiPlus; }
+    public boolean actionsEconomyShopGui() { return actionsEconomyShopGui && !moduleEconomyShopGui; }
 
     // Hub
     public String hubTitle() { return hubTitle; }

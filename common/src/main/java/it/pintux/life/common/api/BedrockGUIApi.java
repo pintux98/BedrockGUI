@@ -482,8 +482,9 @@ public class BedrockGUIApi {
                 FormButtonData buttonData = buttonBuilder.build();
 
                 if (buttonData.image != null) {
-                    FormImage.Type type = buttonData.image.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
-                    builder.button(buttonData.text, type, buttonData.image);
+                    String resolved = it.pintux.life.common.utils.IconResolver.resolveImage(buttonData.image);
+                    FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    builder.button(buttonData.text, type, resolved);
                 } else {
                     builder.button(buttonData.text);
                 }
@@ -527,8 +528,9 @@ public class BedrockGUIApi {
             for (FormButtonBuilder buttonBuilder : buttons) {
                 FormButtonData buttonData = buttonBuilder.build();
                 if (buttonData.image != null) {
-                    FormImage.Type type = buttonData.image.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
-                    builder.button(buttonData.text, type, buttonData.image);
+                    String resolved = it.pintux.life.common.utils.IconResolver.resolveImage(buttonData.image);
+                    FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    builder.button(buttonData.text, type, resolved);
                 } else {
                     builder.button(buttonData.text);
                 }

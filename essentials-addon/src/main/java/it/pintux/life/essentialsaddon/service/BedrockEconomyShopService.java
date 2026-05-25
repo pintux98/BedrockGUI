@@ -1,4 +1,5 @@
 package it.pintux.life.essentialsaddon.service;
+import it.pintux.life.common.utils.IconResolver;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 
 import it.pintux.life.common.actions.ActionSystem;
@@ -7,7 +8,6 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.EconomyShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
-import it.pintux.life.essentialsaddon.util.BedrockIconResolver;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
@@ -145,22 +145,12 @@ public final class BedrockEconomyShopService {
         } else {
             for (ShopItemView itemView : items) {
                 String buttonText = itemView.getDisplayName() + "\n" + priceLine(player, sectionId, itemView.getId());
-                String icon = BedrockIconResolver.resolveTexturePath(itemView.getMaterial());
-                if (icon != null) {
-                    form.button(buttonText, icon, formPlayer ->
-                            api.executeActionString(
-                                    formPlayer,
-                                    "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
-                                    context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
-                            ));
-                } else {
-                    form.button(buttonText, formPlayer ->
-                            api.executeActionString(
-                                    formPlayer,
-                                    "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
-                                    context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
-                            ));
-                }
+                form.button(buttonText, itemView.getMaterial(), formPlayer ->
+                        api.executeActionString(
+                                formPlayer,
+                                "economyshop_item:" + ShopGuiActionPayloads.encodeItem(sectionId, itemView.getId(), page),
+                                context("economyshop-shop", Map.of("shopId", sectionId, "itemId", itemView.getId()))
+                        ));
             }
         }
 
@@ -201,6 +191,12 @@ public final class BedrockEconomyShopService {
 
         ShopItemView itemView = optionalItemView.get();
         ShopItem liveItem = optionalLiveItem.get();
+
+        if (itemView.getLinkedShopId() != null && !itemView.getLinkedShopId().isBlank()) {
+            openShop(player, itemView.getLinkedShopId(), 1);
+            return;
+        }
+
         Optional<BuyPrice> buyPrice = catalogService.resolveBuyPrice(player, liveItem, 1);
         Optional<SellPrice> sellPrice = catalogService.resolveSellPrice(player, liveItem, 1);
 
@@ -215,15 +211,6 @@ public final class BedrockEconomyShopService {
         )));
 
         boolean hasAction = false;
-        if (itemView.getLinkedShopId() != null && !itemView.getLinkedShopId().isBlank()) {
-            hasAction = true;
-            form.button(configuration.shopOpenLinkedButton(), formPlayer ->
-                    api.executeActionString(
-                            formPlayer,
-                            "economyshop_shop:" + ShopGuiActionPayloads.encodeShop(itemView.getLinkedShopId(), 1),
-                            context("economyshop-link", Map.of("shopId", itemView.getLinkedShopId()))
-                    ));
-        }
 
         if (buyPrice.isPresent()) {
             hasAction = true;

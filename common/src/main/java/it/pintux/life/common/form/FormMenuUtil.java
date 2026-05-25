@@ -1447,15 +1447,26 @@ public class FormMenuUtil {
             }
         }
 
-        boolean isUrl = trimmed.startsWith("http://") || trimmed.startsWith("https://");
-        boolean isTexture = trimmed.startsWith("textures/");
-        boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$") && !isUrl && !isTexture;
+        String candidate = trimmed;
+        if (candidate.startsWith("textures/")) {
+            String bare = candidate.substring("textures/".length());
+            int slash = bare.indexOf('/');
+            if (slash > 0) bare = bare.substring(slash + 1);
+            String resolved = it.pintux.life.common.utils.IconResolver.resolve(bare);
+            if (resolved != null) return resolved;
+        } else {
+            String resolved = it.pintux.life.common.utils.IconResolver.resolve(candidate);
+            if (resolved != null) return resolved;
+        }
 
+        if (trimmed.startsWith("textures/")) return trimmed;
+
+        boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$");
         if (isLocal && assetServer != null && assetServer.isAvailable()) {
             return assetServer.getAssetUrl(trimmed);
         }
 
-        if (!isUrl && !isTexture && !isLocal && trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
+        if (trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
             return "https://mc-heads.net/head/" + trimmed + "/64";
         }
 

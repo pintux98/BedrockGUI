@@ -7,7 +7,6 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.ShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
-import it.pintux.life.essentialsaddon.util.BedrockIconResolver;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
@@ -123,20 +122,11 @@ public final class BedrockShopGuiService {
         } else {
             for (ShopItemView itemView : items) {
                 String buttonText = itemView.getDisplayName() + "\n" + ChatColor.GREEN + priceLine(player, shopId, itemView.getId());
-                String icon = BedrockIconResolver.resolveTexturePath(itemView.getMaterial());
-                if (icon != null) {
-                    form.button(buttonText, icon, formPlayer -> api.executeActionString(
-                            formPlayer,
-                            "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
-                            context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
-                    ));
-                } else {
-                    form.button(buttonText, formPlayer -> api.executeActionString(
-                            formPlayer,
-                            "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
-                            context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
-                    ));
-                }
+                form.button(buttonText, itemView.getMaterial(), formPlayer -> api.executeActionString(
+                        formPlayer,
+                        "shopgui_item:" + ShopGuiActionPayloads.encodeItem(shopId, itemView.getId(), page),
+                        context("shopgui-shop", Map.of("shopId", shopId, "itemId", itemView.getId()))
+                ));
             }
         }
 

@@ -4,34 +4,15 @@ import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.logging.Logger;
 
-/**
- * Migrates an existing datafolder config to match the bundled config structure.
- *
- * Strategy:
- * 1. Read bundled config (resource) to get the current schema + version.
- * 2. Read datafolder config (user file).
- * 3. If versions match → no migration needed.
- * 4. If versions differ → copy every key from bundled into user config,
- *    preserving user values for keys that already exist.
- *    Keys present in user but removed from bundled are deleted.
- * 5. Write updated version to user config and save.
- */
 public final class ConfigMigrator {
 
     private static final String VERSION_KEY = "config-version";
-    private static final String VERSION_COMMENT = "# DO NOT CHANGE THIS VALUE — managed by the plugin.";
 
     private final JavaPlugin plugin;
     private final Logger logger;
@@ -43,32 +24,29 @@ public final class ConfigMigrator {
         this.fileName = fileName;
     }
 
-    /**
-     * Runs migration if needed. Returns the YamlConfiguration ready for use.
-     */
     public YamlConfiguration migrate() {
         File dataFile = new File(plugin.getDataFolder(), fileName);
 
-        // Ensure the datafolder file exists (first-run: just copy bundled)
         if (!dataFile.exists()) {
             plugin.saveResource(fileName, false);
             return YamlConfiguration.loadConfiguration(dataFile);
         }
 
-        // Load bundled config from resources
-        YamlConfiguration bundled = loadBundledConfig();
-        if (bundled == null) {
+        InputStream bundledStream = plugin.getResource(fileName);
+        if (bundledStream == null) {
             logger.warning("Bundled " + fileName + " not found in resources. Skipping migration.");
             return YamlConfiguration.loadConfiguration(dataFile);
         }
 
+        String bundledText = readStream(bundledStream);
+        YamlConfiguration bundled = YamlConfiguration.loadConfiguration(
+                new StringReader(bundledText));
         YamlConfiguration userConfig = YamlConfiguration.loadConfiguration(dataFile);
 
         int bundledVersion = bundled.getInt(VERSION_KEY, 1);
         int userVersion = userConfig.getInt(VERSION_KEY, 0);
 
         if (userVersion == bundledVersion) {
-            // Up to date
             return userConfig;
         }
 
@@ -76,18 +54,11 @@ public final class ConfigMigrator {
 
         List<String> added = new ArrayList<>();
         List<String> removed = new ArrayList<>();
+        mergeKeys(bundled, userConfig, "", added, removed);
 
-        // Add missing keys from bundled → user
-        mergeSection(bundled, userConfig, "", added);
-
-        // Remove keys from user that no longer exist in bundled
-        removeObsoleteKeys(bundled, userConfig, "", removed);
-
-        // Update version
         userConfig.set(VERSION_KEY, bundledVersion);
 
-        // Save and rewrite with comments
-        saveWithComments(dataFile, userConfig, bundled);
+        mergeWithComments(bundledText, userConfig, dataFile);
 
         if (!added.isEmpty()) {
             logger.info("  Added " + added.size() + " new config key(s).");
@@ -99,89 +70,140 @@ public final class ConfigMigrator {
         return YamlConfiguration.loadConfiguration(dataFile);
     }
 
-    private YamlConfiguration loadBundledConfig() {
-        try (InputStream in = plugin.getResource(fileName)) {
-            if (in == null) return null;
-            return YamlConfiguration.loadConfiguration(new InputStreamReader(in, StandardCharsets.UTF_8));
+    private String readStream(InputStream in) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                sb.append(line).append("\n");
+            }
+            return sb.toString();
         } catch (IOException e) {
             logger.warning("Failed to read bundled " + fileName + ": " + e.getMessage());
-            return null;
+            return "";
         }
     }
 
-    /**
-     * Recursively copy keys from source into target if they don't already exist.
-     */
-    private void mergeSection(ConfigurationSection source, ConfigurationSection target, String path, List<String> added) {
-        for (String key : source.getKeys(false)) {
+    private void mergeKeys(ConfigurationSection bundled, ConfigurationSection userConfig,
+                           String path, List<String> added, List<String> removed) {
+        for (String key : bundled.getKeys(false)) {
             String fullPath = path.isEmpty() ? key : path + "." + key;
-
-            if (source.isConfigurationSection(key)) {
-                ConfigurationSection childSource = source.getConfigurationSection(key);
-                ConfigurationSection childTarget = target.isConfigurationSection(key)
-                        ? target.getConfigurationSection(key)
-                        : target.createSection(key);
-                mergeSection(childSource, childTarget, fullPath, added);
-            } else if (!target.contains(key)) {
-                // New key — copy default value
-                target.set(key, source.get(key));
+            if (bundled.isConfigurationSection(key)) {
+                if (!userConfig.isConfigurationSection(key)) {
+                    userConfig.createSection(key);
+                }
+                mergeKeys(
+                        bundled.getConfigurationSection(key),
+                        userConfig.getConfigurationSection(key),
+                        fullPath, added, removed
+                );
+            } else if (!userConfig.contains(key)) {
+                userConfig.set(key, bundled.get(key));
                 added.add(fullPath);
             }
-            // If target already has the key → preserve user value, do nothing
         }
-    }
-
-    /**
-     * Recursively remove keys from target that no longer exist in source.
-     */
-    private void removeObsoleteKeys(ConfigurationSection source, ConfigurationSection target, String path, List<String> removed) {
-        List<String> obsoleteKeys = new ArrayList<>();
-        for (String key : target.getKeys(false)) {
-            if (!source.contains(key)) {
-                obsoleteKeys.add(key);
-            } else if (source.isConfigurationSection(key) && target.isConfigurationSection(key)) {
-                // Recurse into sub-sections
-                removeObsoleteKeys(
-                        source.getConfigurationSection(key),
-                        target.getConfigurationSection(key),
-                        path.isEmpty() ? key : path + "." + key,
-                        removed
-                );
+        for (String key : userConfig.getKeys(false)) {
+            if (!bundled.contains(key)) {
+                userConfig.set(key, null);
+                String fullPath = path.isEmpty() ? key : path + "." + key;
+                removed.add(fullPath);
             }
         }
-        for (String key : obsoleteKeys) {
-            target.set(key, null);
-            String fullPath = path.isEmpty() ? key : path + "." + key;
-            removed.add(fullPath);
-        }
     }
 
-    /**
-     * Saves the config while preserving the "DO NOT CHANGE" comment on config-version.
-     * Bukkit's YamlConfiguration doesn't support comments natively, so we
-     * post-process the file to inject the comment.
-     */
-    private void saveWithComments(File dataFile, YamlConfiguration userConfig, YamlConfiguration bundled) {
+    private void mergeWithComments(String bundledText, YamlConfiguration userConfig, File dataFile) {
         try {
-            // Save normally first
-            userConfig.save(dataFile);
-
-            // Read lines and inject comment before config-version
-            List<String> lines = Files.readAllLines(dataFile.toPath(), StandardCharsets.UTF_8);
+            List<String> templateLines = Arrays.asList(bundledText.split("\n"));
             List<String> output = new ArrayList<>();
-            boolean versionCommented = false;
-
-            for (String line : lines) {
-                if (!versionCommented && line.startsWith("config-version:")) {
-                    output.add(VERSION_COMMENT);
-                    versionCommented = true;
-                }
-                output.add(line);
-            }
-
+            mergeLines(templateLines, userConfig, output, "", 0);
             Files.write(dataFile.toPath(), output, StandardCharsets.UTF_8);
         } catch (IOException e) {
-            logger.warning("Failed to save migrated " + fileName + ": " + e.getMessage());
+            logger.warning("Failed to merge config with comments: " + e.getMessage());
         }
+    }
+
+    private int mergeLines(List<String> templateLines, YamlConfiguration userConfig,
+                           List<String> output, String currentPath, int startIdx) {
+        int i = startIdx;
+        while (i < templateLines.size()) {
+            String line = templateLines.get(i);
+            String trimmed = line.trim();
+
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                output.add(line);
+                i++;
+                continue;
+            }
+
+            String key = extractKey(trimmed);
+            if (key == null) {
+                output.add(line);
+                i++;
+                continue;
+            }
+
+            String fullPath = currentPath.isEmpty() ? key : currentPath + "." + key;
+            int indent = getIndent(line);
+
+            if (userConfig.contains(fullPath)) {
+                Object value = userConfig.get(fullPath);
+                if (userConfig.isConfigurationSection(fullPath)) {
+                    output.add(line);
+                    i = mergeLines(templateLines, userConfig, output, fullPath, i + 1);
+                } else {
+                    output.add(spaces(indent) + key + ": " + formatValue(value));
+                    i++;
+                }
+            } else {
+                output.add(line);
+                i++;
+            }
+        }
+        return i;
+    }
+
+    private String extractKey(String line) {
+        int colon = line.indexOf(':');
+        if (colon <= 0) return null;
+        String candidate = line.substring(0, colon).trim();
+        if (candidate.isEmpty() || candidate.contains(" ") || candidate.contains("\t")) return null;
+        return candidate;
+    }
+
+    private int getIndent(String line) {
+        int count = 0;
+        for (int i = 0; i < line.length(); i++) {
+            if (line.charAt(i) == ' ') count++;
+            else if (line.charAt(i) == '\t') count += 4;
+            else break;
+        }
+        return count;
+    }
+
+    private String spaces(int n) {
+        return " ".repeat(n);
+    }
+
+    private String formatValue(Object value) {
+        if (value == null) return "null";
+        if (value instanceof String) {
+            String s = (String) value;
+            if (s.contains("'") || s.contains("\n") || s.contains("#") ||
+                    s.startsWith(":") || s.isEmpty()) {
+                return "'" + s.replace("'", "''") + "'";
+            }
+            return s;
+        }
+        if (value instanceof List) {
+            List<?> list = (List<?>) value;
+            if (list.isEmpty()) return "[]";
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < list.size(); i++) {
+                if (i > 0) sb.append(", ");
+                sb.append(formatValue(list.get(i)));
+            }
+            return "[" + sb + "]";
+        }
+        return value.toString();
     }
 }

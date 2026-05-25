@@ -114,10 +114,13 @@ public final class EconomyShopCatalogService {
             return List.of();
         }
         List<ShopItemView> source = optionalEntry.get().getItemsByPage().getOrDefault(page, List.of());
+        logger.fine("[EShop] getAccessibleItems section=" + sectionId + " page=" + page + " source=" + source.size());
         List<ShopItemView> accessible = new ArrayList<>();
         for (ShopItemView view : source) {
             ShopItem liveItem = optionalEntry.get().getLiveItemsById().get(view.getId());
-            if (liveItem != null && isAccessible(player, liveItem, sectionId)) {
+            boolean ok = liveItem != null && isAccessible(player, liveItem, sectionId);
+            logger.fine("[EShop]   item='" + view.getId() + "' accessible=" + ok);
+            if (ok) {
                 accessible.add(view);
             }
         }
@@ -179,25 +182,33 @@ public final class EconomyShopCatalogService {
 
     private boolean isAccessible(Player player, ShopItem shopItem, String sectionId) {
         if (shopItem.hasItemError() || shopItem.isHidden()) {
+            logger.fine("[EShop] isAccessible: item has error or hidden, itemPath=" + shopItem.getItemPath());
             return false;
         }
         if (shopItem.isLinked()) {
-            return shopItem.getSubSection() != null && getShop(shopItem.getSubSection()).isPresent();
+            boolean hasSub = shopItem.getSubSection() != null && getShop(shopItem.getSubSection()).isPresent();
+            logger.fine("[EShop] isAccessible: linked item, subSection=" + shopItem.getSubSection() + " hasSub=" + hasSub);
+            return hasSub;
         }
         if (!hasShopAccess(player, getShop(sectionId).orElse(null))) {
+            logger.fine("[EShop] isAccessible: no shop access for player");
             return false;
         }
-        return resolveBuyPrice(player, shopItem, 1).isPresent() || resolveSellPrice(player, shopItem, 1).isPresent();
+        Optional<BuyPrice> buy = resolveBuyPrice(player, shopItem, 1);
+        Optional<SellPrice> sell = resolveSellPrice(player, shopItem, 1);
+        logger.fine("[EShop] isAccessible: buy=" + buy.isPresent() + " sell=" + sell.isPresent() + " for item=" + shopItem.getItemPath());
+        return buy.isPresent() || sell.isPresent();
     }
 
     private EconomyShopCatalogEntry snapshot(ShopSection section) {
         NavigableMap<Integer, List<ShopItemView>> itemsByPage = new TreeMap<>();
         Map<String, ShopItemView> itemsById = new HashMap<>();
         Map<String, ShopItem> liveItemsById = new HashMap<>();
-        Map<String, ShopItem> byLoc = new HashMap<>();
+        Map<String, ShopItem> byPath = new HashMap<>();
+        String sectionName = section.getSection();
         for (ShopItem shopItem : section.getShopItems()) {
-            if (shopItem != null) {
-                byLoc.put(shopItem.itemLoc, shopItem);
+            if (shopItem != null && shopItem.getItemPath() != null && !shopItem.getItemPath().isEmpty()) {
+                byPath.put(shopItem.getItemPath(), shopItem);
             }
         }
 
@@ -210,7 +221,8 @@ public final class EconomyShopCatalogService {
             List<ShopItemView> views = new ArrayList<>();
             for (Integer slot : pageItems.getItems().keySet()) {
                 String itemLoc = pageItems.getItem(slot);
-                ShopItem shopItem = byLoc.get(itemLoc);
+                String fullPath = sectionName + "." + itemLoc;
+                ShopItem shopItem = byPath.get(fullPath);
                 if (shopItem == null) {
                     continue;
                 }

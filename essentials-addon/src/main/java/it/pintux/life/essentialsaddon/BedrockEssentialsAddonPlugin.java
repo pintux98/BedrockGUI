@@ -76,7 +76,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         boolean anyModule = configuration.moduleWarps() || configuration.moduleKits()
                 || configuration.moduleHomes() || configuration.moduleTpa()
-                || configuration.moduleShopGuiPlus() || configuration.moduleEconomyShopGui();
+                || configuration.moduleShopGuiPlus() || configuration.moduleEconomyShopGui()
+                || configuration.actionsWarps() || configuration.actionsKits()
+                || configuration.actionsHomes() || configuration.actionsTpa()
+                || configuration.actionsShopGuiPlus() || configuration.actionsEconomyShopGui();
 
         if (!anyModule) {
             getLogger().info("All modules disabled. Enable one in config.yml then run /essentialsaddon reload.");
@@ -87,20 +90,25 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         PluginManager pluginManager = Bukkit.getPluginManager();
 
-        if (configuration.moduleWarps() || configuration.moduleKits()) {
+        if (configuration.moduleWarps() || configuration.moduleKits()
+                || configuration.actionsWarps() || configuration.actionsKits()) {
             initWarpsAndKits(pluginManager);
         }
-        if (configuration.moduleHomes()) {
+        if (configuration.moduleHomes() || configuration.actionsHomes()) {
             initHomes(pluginManager);
         }
-        if (configuration.moduleTpa()) {
+        if (configuration.moduleTpa() || configuration.actionsTpa()) {
             initTpa(pluginManager);
         }
-        if (configuration.moduleShopGuiPlus()) {
+        if (configuration.moduleShopGuiPlus() || configuration.actionsShopGuiPlus()) {
             initShopGuiPlus(pluginManager);
         }
-        if (configuration.moduleEconomyShopGui()) {
+        if (configuration.moduleEconomyShopGui() || configuration.actionsEconomyShopGui()) {
             initEconomyShopGui(pluginManager);
+        }
+
+        if (backendRouter != null) {
+            registerShopListeners(pluginManager);
         }
 
         getCommand("essentialsaddon").setExecutor(new EssentialsAddonCommand(this));
@@ -153,7 +161,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         EssentialsCommandListener commandListener = new EssentialsCommandListener(bedrockEssentialsService);
         if (bedrockHomeService != null) commandListener.setHomeService(bedrockHomeService);
         if (bedrockTpaService != null) commandListener.setTpaService(bedrockTpaService);
-        pluginManager.registerEvents(commandListener, this);
+        if (configuration.moduleWarps() || configuration.moduleKits()) {
+            pluginManager.registerEvents(commandListener, this);
+        }
     }
 
     private void initHomes(PluginManager pluginManager) {
@@ -196,13 +206,20 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         List<ShopBackend> backends = new ArrayList<>();
         backends.add(new ShopGuiPlusBackend(this, bedrockShopGuiService));
-        pluginManager.registerEvents(new ShopGuiLifecycleListener(shopGuiPlusHook), this);
+
+        if (configuration.moduleShopGuiPlus()) {
+            pluginManager.registerEvents(new ShopGuiLifecycleListener(shopGuiPlusHook), this);
+        }
 
         if (backendRouter == null) backendRouter = new ShopBackendRouter(backends);
         else backendRouter.addBackends(backends);
+    }
 
-        pluginManager.registerEvents(new ShopGuiCommandListener(backendRouter), this);
-        pluginManager.registerEvents(new ShopGuiInventoryListener(backendRouter), this);
+    private void registerShopListeners(PluginManager pluginManager) {
+        if (backendRouter != null) {
+            pluginManager.registerEvents(new ShopGuiCommandListener(backendRouter), this);
+            pluginManager.registerEvents(new ShopGuiInventoryListener(backendRouter), this);
+        }
     }
 
     private void initEconomyShopGui(PluginManager pluginManager) {
@@ -219,7 +236,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         List<ShopBackend> backends = new ArrayList<>();
         backends.add(new EconomyShopGuiBackend(this, bedrockEconomyShopService));
-        pluginManager.registerEvents(new EconomyShopLifecycleListener(economyShopGuiHook), this);
+
+        if (configuration.moduleEconomyShopGui()) {
+            pluginManager.registerEvents(new EconomyShopLifecycleListener(economyShopGuiHook), this);
+        }
 
         if (backendRouter == null) backendRouter = new ShopBackendRouter(backends);
         else backendRouter.addBackends(backends);
@@ -272,36 +292,36 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new OpenEssentialsHubAction(hubService));
         }
 
-        if (configuration.moduleWarps() && bedrockEssentialsService != null
+        if ((configuration.moduleWarps() || configuration.actionsWarps()) && bedrockEssentialsService != null
                 && warpCatalogService != null && warpCatalogService.getProvider() != null) {
             api.registerActionHandler(new HubWarpAction(bedrockEssentialsService));
             api.registerActionHandler(new OpenWarpMainAction(bedrockEssentialsService));
             api.registerActionHandler(new WarpTeleportAction(bedrockEssentialsService));
         }
-        if (configuration.moduleKits() && bedrockEssentialsService != null
+        if ((configuration.moduleKits() || configuration.actionsKits()) && bedrockEssentialsService != null
                 && kitCatalogService != null && kitCatalogService.getProvider() != null) {
             api.registerActionHandler(new HubKitAction(bedrockEssentialsService));
             api.registerActionHandler(new OpenKitMainAction(bedrockEssentialsService));
             api.registerActionHandler(new KitClaimAction(bedrockEssentialsService));
         }
-        if (configuration.moduleHomes() && bedrockHomeService != null) {
+        if ((configuration.moduleHomes() || configuration.actionsHomes()) && bedrockHomeService != null) {
             api.registerActionHandler(new HubHomeAction(bedrockHomeService));
             api.registerActionHandler(new OpenHomeMainAction(bedrockHomeService));
             api.registerActionHandler(new HomeTeleportAction(bedrockHomeService));
             api.registerActionHandler(new HomeSetAction(bedrockHomeService));
             api.registerActionHandler(new HomeDeleteAction(bedrockHomeService));
         }
-        if (configuration.moduleTpa() && bedrockTpaService != null) {
+        if ((configuration.moduleTpa() || configuration.actionsTpa()) && bedrockTpaService != null) {
             api.registerActionHandler(new HubTpaAction(bedrockTpaService));
             api.registerActionHandler(new OpenTpaMainAction(bedrockTpaService));
         }
-        if (configuration.moduleShopGuiPlus() && bedrockShopGuiService != null) {
+        if ((configuration.moduleShopGuiPlus() || configuration.actionsShopGuiPlus()) && bedrockShopGuiService != null) {
             api.registerActionHandler(new OpenShopGuiMainAction(bedrockShopGuiService));
             api.registerActionHandler(new OpenShopGuiShopAction(bedrockShopGuiService));
             api.registerActionHandler(new OpenShopGuiItemAction(bedrockShopGuiService));
             api.registerActionHandler(new ExecuteShopGuiTransactionAction(bedrockShopGuiService));
         }
-        if (configuration.moduleEconomyShopGui() && bedrockEconomyShopService != null) {
+        if ((configuration.moduleEconomyShopGui() || configuration.actionsEconomyShopGui()) && bedrockEconomyShopService != null) {
             api.registerActionHandler(new OpenEconomyShopMainAction(bedrockEconomyShopService));
             api.registerActionHandler(new OpenEconomyShopShopAction(bedrockEconomyShopService));
             api.registerActionHandler(new OpenEconomyShopItemAction(bedrockEconomyShopService));

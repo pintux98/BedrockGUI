@@ -1,9 +1,7 @@
 version = essentialsAddonVersion
 
-def bedrockGuiApiJar = file("${rootProject.projectDir}/common/build/libs/BedrockGUI-API.jar")
-
 dependencies {
-    compileOnly(files(bedrockGuiApiJar))
+    compileOnly project(':common')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly "net.essentialsx:EssentialsX:${essentialsXVersion}"
     compileOnly "com.github.Zrips:CMI-API:${cmiApiVersion}"
