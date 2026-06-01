@@ -1,0 +1,96 @@
+package it.pintux.life.bedwarsaddon;
+
+import it.pintux.life.bedwarsaddon.action.OpenShopCategoryAction;
+import it.pintux.life.bedwarsaddon.action.OpenShopMainAction;
+import it.pintux.life.bedwarsaddon.action.ShopBuyAction;
+import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
+import it.pintux.life.bedwarsaddon.command.BedwarsAddonCommand;
+import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
+import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023ShopProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
+import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
+import it.pintux.life.bedwarsaddon.service.BedrockShopService;
+import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
+import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
+import it.pintux.life.common.api.BedrockGUIApi;
+import org.bukkit.Bukkit;
+import org.bukkit.plugin.PluginManager;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
+    private BedwarsAddonConfiguration configuration;
+    private BedrockPlayerDetector detector;
+    private BedrockSoundFeedback soundFeedback;
+    private BedWarsApiAccess apiAccess;
+    private ShopCatalogService shopCatalogService;
+    private BedrockShopService bedrockShopService;
+
+    @Override
+    public void onEnable() {
+        configuration = BedwarsAddonConfiguration.load(this);
+        if (!configuration.moduleShop()) {
+            getLogger().info("All modules disabled. Enable one in config.yml then /bedwarsaddon reload.");
+            return;
+        }
+
+        detector = new FloodgateBedrockPlayerDetector();
+        soundFeedback = new BedrockSoundFeedback();
+        soundFeedback.configure(configuration.soundsEnabled(), configuration.soundFormOpen(),
+                configuration.soundPurchaseSuccess(), configuration.soundPurchaseFailed(),
+                configuration.soundVolume(), configuration.soundPitch());
+
+        apiAccess = new BedWarsApiAccess();
+        shopCatalogService = new ShopCatalogService(getLogger());
+
+        if (Bukkit.getPluginManager().getPlugin("BedWars2023") != null) {
+            shopCatalogService.setProvider(new BedWars2023ShopProvider(getLogger(), apiAccess));
+            getLogger().info("Shop provider: BedWars2023");
+        } else {
+            getLogger().warning("BedWars2023 not found; shop module inactive.");
+        }
+
+        bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
+
+        PluginManager pm = Bukkit.getPluginManager();
+        pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+
+        getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
+        getCommand("bedwarsaddon").setTabCompleter(new BedwarsAddonCommand(this));
+
+        BedrockGUIApi api = getApiSafely();
+        if (api != null) {
+            api.registerActionHandler(new OpenShopMainAction(bedrockShopService));
+            api.registerActionHandler(new OpenShopCategoryAction(bedrockShopService));
+            api.registerActionHandler(new ShopBuyAction(bedrockShopService));
+            getLogger().info("Registered bedwars addon shop actions with BedrockGUI API");
+        }
+    }
+
+    @Override
+    public void onDisable() {
+        shopCatalogService = null;
+        bedrockShopService = null;
+    }
+
+    public void reloadConfiguration() {
+        configuration = BedwarsAddonConfiguration.load(this);
+        if (soundFeedback != null) {
+            soundFeedback.configure(configuration.soundsEnabled(), configuration.soundFormOpen(),
+                    configuration.soundPurchaseSuccess(), configuration.soundPurchaseFailed(),
+                    configuration.soundVolume(), configuration.soundPitch());
+        }
+        if (shopCatalogService != null) {
+            bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
+        }
+    }
+
+    private BedrockGUIApi getApiSafely() {
+        try {
+            return BedrockGUIApi.getInstance();
+        } catch (IllegalStateException e) {
+            getLogger().warning("BedrockGUI-Paper not found. Shop actions unavailable until it loads.");
+            return null;
+        }
+    }
+}
