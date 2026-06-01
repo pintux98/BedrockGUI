@@ -1,14 +1,21 @@
 version = bedwarsAddonVersion
 
+// Drop the inherited repo list: the shared nexus.velocitypowered.com repo is down (HTTP 522)
+// and Gradle aborts resolution on a 5xx instead of trying the next repo. This module only
+// needs the repos below.
+repositories.clear()
 repositories {
-    maven { url = "https://jitpack.io" }
+    mavenCentral()
+    maven { url = "https://repo.papermc.io/repository/maven-public/" }
+    maven { url = "https://repo.opencollab.dev/main/" }
+    maven { url = "https://repo.tomkeuper.com/repository/releases/" }
 }
 
 dependencies {
     compileOnly project(':common')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
-    // BedWars2023 API (jitpack). Exact module path verified in Plan-1 Task 11.
-    compileOnly("com.github.tomkeuper.BedWars2023:BedWars2023-API:${bedWars2023Version}") {
+    // BedWars2023 API (official repo.tomkeuper.com; jitpack builds fail).
+    compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
         exclude group: "org.spigotmc", module: "spigot-api"
         exclude group: "io.papermc.paper", module: "paper-api"
     }
@@ -16,6 +23,8 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    // compileOnly deps don't propagate to the test classpath; tests need Bukkit types.
+    testImplementation "io.papermc.paper:paper-api:${paperApiVersion}"
 }
 
 test {
