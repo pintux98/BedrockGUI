@@ -1,0 +1,48 @@
+version = bedwarsAddonVersion
+
+repositories {
+    maven { url = "https://jitpack.io" }
+}
+
+dependencies {
+    compileOnly project(':common')
+    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
+    // BedWars2023 API (jitpack). Exact module path verified in Plan-1 Task 11.
+    compileOnly("com.github.tomkeuper.BedWars2023:BedWars2023-API:${bedWars2023Version}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+        exclude group: "io.papermc.paper", module: "paper-api"
+    }
+
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn(":common:jar")
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    archiveBaseName.set('BedrockGUI-BedwarsAddon')
+    if (localOutputDir) {
+        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
+    }
+}
