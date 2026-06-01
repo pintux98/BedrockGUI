@@ -1,0 +1,26 @@
+# BedrockGUI Bedwars Addon
+modules:
+  shop: true
+
+shop:
+  title: "&8Shop"
+  content: "Select a category"
+  # category button: {category} replaced with the category name
+  category-button: "&a{category}"
+  # item button: {item}, {cost}, {currency}, {tier} placeholders
+  item-button: "&f{item}\n&7{cost} {currency}"
+  item-button-unaffordable: "&c{item}\n&7{cost} {currency}"
+  back-button: "&7Back"
+  close-button: "&cClose"
+  purchase-success: "&aPurchased {item}."
+  purchase-failed: "&cCould not purchase {item}: {reason}"
+  not-in-game: "&cYou must be in a game to use the shop."
+  provider-unavailable: "&cThe shop is currently unavailable."
+
+sounds:
+  enabled: true
+  form-open: "UI_BUTTON_CLICK"
+  purchase-success: "ENTITY_PLAYER_LEVELUP"
+  purchase-failed: "BLOCK_NOTE_BLOCK_PLING"
+  volume: 1.0
+  pitch: 1.0
