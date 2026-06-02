@@ -11,6 +11,8 @@ public final class BedwarsAddonConfiguration {
     public static final String FILE_NAME = "config.yml";
 
     private final boolean moduleShop;
+    private final boolean moduleUpgrades;
+    private final boolean moduleArena;
     private final String shopTitle;
     private final String shopContent;
     private final String shopCategoryButton;
@@ -23,6 +25,20 @@ public final class BedwarsAddonConfiguration {
     private final String shopNotInGame;
     private final String shopProviderUnavailable;
 
+    private final String upgradeTitle;
+    private final String upgradeContent;
+    private final String upgradeButton;
+    private final String upgradeCloseButton;
+    private final String upgradeProviderUnavailable;
+
+    private final String arenaTitle;
+    private final String arenaContent;
+    private final String arenaButton;
+    private final String arenaCloseButton;
+    private final String arenaNoArenas;
+    private final String arenaJoinFailed;
+    private final String arenaProviderUnavailable;
+
     private final boolean soundsEnabled;
     private final String soundFormOpen;
     private final String soundPurchaseSuccess;
@@ -32,6 +48,8 @@ public final class BedwarsAddonConfiguration {
 
     private BedwarsAddonConfiguration(YamlConfiguration c) {
         this.moduleShop = c.getBoolean("modules.shop", true);
+        this.moduleUpgrades = c.getBoolean("modules.upgrades", true);
+        this.moduleArena = c.getBoolean("modules.arena", true);
         this.shopTitle = color(c.getString("shop.title", "&8Shop"));
         this.shopContent = color(c.getString("shop.content", "Select a category"));
         this.shopCategoryButton = c.getString("shop.category-button", "&a{category}");
@@ -43,6 +61,20 @@ public final class BedwarsAddonConfiguration {
         this.shopPurchaseFailed = c.getString("shop.purchase-failed", "&cCould not purchase {item}: {reason}");
         this.shopNotInGame = color(c.getString("shop.not-in-game", "&cYou must be in a game to use the shop."));
         this.shopProviderUnavailable = color(c.getString("shop.provider-unavailable", "&cThe shop is currently unavailable."));
+
+        this.upgradeTitle = color(c.getString("upgrades.title", "&8Team Upgrades"));
+        this.upgradeContent = color(c.getString("upgrades.content", "Buy upgrades for your team"));
+        this.upgradeButton = c.getString("upgrades.upgrade-button", "&a{upgrade}");
+        this.upgradeCloseButton = color(c.getString("upgrades.close-button", "&cClose"));
+        this.upgradeProviderUnavailable = color(c.getString("upgrades.provider-unavailable", "&cUpgrades are currently unavailable."));
+
+        this.arenaTitle = color(c.getString("arena.title", "&8Play BedWars"));
+        this.arenaContent = color(c.getString("arena.content", "Select an arena"));
+        this.arenaButton = c.getString("arena.arena-button", "&a{arena}\n&7{state} &8| &7{players}/{max}");
+        this.arenaCloseButton = color(c.getString("arena.close-button", "&cClose"));
+        this.arenaNoArenas = color(c.getString("arena.no-arenas", "&cNo arenas are available right now."));
+        this.arenaJoinFailed = c.getString("arena.join-failed", "&cCould not join {arena}.");
+        this.arenaProviderUnavailable = color(c.getString("arena.provider-unavailable", "&cArena joining is currently unavailable."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
@@ -73,6 +105,20 @@ public final class BedwarsAddonConfiguration {
     }
 
     public boolean moduleShop() { return moduleShop; }
+    public boolean moduleUpgrades() { return moduleUpgrades; }
+    public boolean moduleArena() { return moduleArena; }
+    public String upgradeTitle() { return upgradeTitle; }
+    public String upgradeContent() { return upgradeContent; }
+    public String upgradeButton() { return upgradeButton; }
+    public String upgradeCloseButton() { return upgradeCloseButton; }
+    public String upgradeProviderUnavailable() { return upgradeProviderUnavailable; }
+    public String arenaTitle() { return arenaTitle; }
+    public String arenaContent() { return arenaContent; }
+    public String arenaButton() { return arenaButton; }
+    public String arenaCloseButton() { return arenaCloseButton; }
+    public String arenaNoArenas() { return arenaNoArenas; }
+    public String arenaJoinFailed() { return arenaJoinFailed; }
+    public String arenaProviderUnavailable() { return arenaProviderUnavailable; }
     public String shopTitle() { return shopTitle; }
     public String shopContent() { return shopContent; }
     public String shopCategoryButton() { return shopCategoryButton; }

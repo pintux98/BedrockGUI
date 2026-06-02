@@ -1,6 +1,8 @@
 # BedrockGUI Bedwars Addon
 modules:
   shop: true
+  upgrades: true
+  arena: true
 
 shop:
   title: "&8Shop"
@@ -16,6 +18,24 @@ shop:
   purchase-failed: "&cCould not purchase {item}: {reason}"
   not-in-game: "&cYou must be in a game to use the shop."
   provider-unavailable: "&cThe shop is currently unavailable."
+
+upgrades:
+  title: "&8Team Upgrades"
+  content: "Buy upgrades for your team"
+  # {upgrade} replaced with the upgrade display name
+  upgrade-button: "&a{upgrade}"
+  close-button: "&cClose"
+  provider-unavailable: "&cUpgrades are currently unavailable."
+
+arena:
+  title: "&8Play BedWars"
+  content: "Select an arena"
+  # {arena}, {state}, {players}, {max}, {group} placeholders
+  arena-button: "&a{arena}\n&7{state} &8| &7{players}/{max}"
+  close-button: "&cClose"
+  no-arenas: "&cNo arenas are available right now."
+  join-failed: "&cCould not join {arena}."
+  provider-unavailable: "&cArena joining is currently unavailable."
 
 sounds:
   enabled: true
