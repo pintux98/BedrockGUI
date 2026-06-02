@@ -21,10 +21,13 @@ import it.pintux.life.bedwarsaddon.command.BedwarsAddonCommand;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
+import it.pintux.life.bedwarsaddon.listener.ShopOpenListener1058;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ArenaProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars1058ApiAccess;
 import it.pintux.life.bedwarsaddon.provider.BedWars1058ArenaProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars1058PartyProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058ShopProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars1058SpectatorProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars1058StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023PartyProvider;
@@ -106,11 +109,14 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             shopCatalogService = new ShopCatalogService(getLogger());
             if (bw2023) {
                 shopCatalogService.setProvider(new BedWars2023ShopProvider(getLogger(), apiAccess));
+            } else if (bw1058) {
+                shopCatalogService.setProvider(new BedWars1058ShopProvider(getLogger(), apiAccess1058));
             }
-            // BedWars1058 shop is reflection-based and wired separately.
             bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
             if (bw2023) {
                 pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+            } else if (bw1058) {
+                pm.registerEvents(new ShopOpenListener1058(this, bedrockShopService), this);
             }
         }
 
@@ -118,6 +124,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             upgradeCatalogService = new UpgradeCatalogService(getLogger());
             if (bw2023) {
                 upgradeCatalogService.setProvider(new BedWars2023UpgradeProvider(getLogger(), apiAccess));
+            } else if (bw1058) {
+                upgradeCatalogService.setProvider(new BedWars1058UpgradeProvider(getLogger(), apiAccess1058));
             }
             bedrockUpgradeService = new BedrockUpgradeService(configuration, upgradeCatalogService, detector, soundFeedback);
         }
