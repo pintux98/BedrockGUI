@@ -37,11 +37,18 @@ public final class MenuInterceptListener implements Listener {
             return;
         }
 
-        if (upgradeService != null && upgradeService.shouldHandle(player)
-                && upgradeService.isWatching(player)) {
-            event.setCancelled(true);
-            upgradeService.stopWatching(player); // clear native state we just cancelled
-            plugin.getServer().getScheduler().runTask(plugin, () -> upgradeService.openMain(player));
+        // The upgrades menu sets its "watching" flag AFTER calling openInventory (and uses a null
+        // inventory holder), so it cannot be detected during this event. Re-check next tick: if the
+        // player is now flagged, the inventory that just opened was the upgrades/traps menu -> close
+        // it and show the Cumulus form instead.
+        if (upgradeService != null && upgradeService.shouldHandle(player)) {
+            plugin.getServer().getScheduler().runTask(plugin, () -> {
+                if (upgradeService.isWatching(player)) {
+                    upgradeService.stopWatching(player);
+                    player.closeInventory();
+                    upgradeService.openMain(player);
+                }
+            });
         }
     }
 }
