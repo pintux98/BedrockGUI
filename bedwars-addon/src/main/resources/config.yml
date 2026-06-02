@@ -83,6 +83,13 @@ party:
   kicked: "&aKicked {player}."
   provider-unavailable: "&cParties are currently unavailable."
 
+command:
+  no-permission: "&cNo permission."
+  reloaded: "&aBedwarsAddon configuration reloaded."
+  players-only: "&cPlayers only."
+  usage: "&7Usage: /bedwarsaddon <reload|party>"
+  party-disabled: "&cParty module is disabled."
+
 sounds:
   enabled: true
   form-open: "UI_BUTTON_CLICK"

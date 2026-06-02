@@ -209,8 +209,12 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         if (bedrockPartyService != null) {
             bedrockPartyService.openMain(player);
         } else {
-            player.sendMessage("Party module is disabled.");
+            player.sendMessage(configuration.commandPartyDisabled());
         }
+    }
+
+    public BedwarsAddonConfiguration getConfiguration() {
+        return configuration;
     }
 
     public void reloadConfiguration() {

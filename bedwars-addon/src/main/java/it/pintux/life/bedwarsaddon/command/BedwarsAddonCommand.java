@@ -18,22 +18,22 @@ public final class BedwarsAddonCommand implements CommandExecutor, TabCompleter 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("bedwarsaddon.admin")) {
-                sender.sendMessage("No permission.");
+                sender.sendMessage(plugin.getConfiguration().commandNoPermission());
                 return true;
             }
             plugin.reloadConfiguration();
-            sender.sendMessage("BedwarsAddon configuration reloaded.");
+            sender.sendMessage(plugin.getConfiguration().commandReloaded());
             return true;
         }
         if (args.length == 1 && args[0].equalsIgnoreCase("party")) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage("Players only.");
+                sender.sendMessage(plugin.getConfiguration().commandPlayersOnly());
                 return true;
             }
             plugin.openParty(player);
             return true;
         }
-        sender.sendMessage("Usage: /bedwarsaddon <reload|party>");
+        sender.sendMessage(plugin.getConfiguration().commandUsage());
         return true;
     }
 

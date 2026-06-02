@@ -76,6 +76,12 @@ public final class BedwarsAddonConfiguration {
     private final String partyKicked;
     private final String partyProviderUnavailable;
 
+    private final String commandNoPermission;
+    private final String commandReloaded;
+    private final String commandPlayersOnly;
+    private final String commandUsage;
+    private final String commandPartyDisabled;
+
     private final boolean soundsEnabled;
     private final String soundFormOpen;
     private final String soundPurchaseSuccess;
@@ -152,6 +158,12 @@ public final class BedwarsAddonConfiguration {
         this.partyPlayerNotFound = c.getString("party.player-not-found", "&cPlayer {player} not found.");
         this.partyKicked = c.getString("party.kicked", "&aKicked {player}.");
         this.partyProviderUnavailable = color(c.getString("party.provider-unavailable", "&cParties are currently unavailable."));
+
+        this.commandNoPermission = color(c.getString("command.no-permission", "&cNo permission."));
+        this.commandReloaded = color(c.getString("command.reloaded", "&aBedwarsAddon configuration reloaded."));
+        this.commandPlayersOnly = color(c.getString("command.players-only", "&cPlayers only."));
+        this.commandUsage = color(c.getString("command.usage", "&7Usage: /bedwarsaddon <reload|party>"));
+        this.commandPartyDisabled = color(c.getString("command.party-disabled", "&cParty module is disabled."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
@@ -241,6 +253,11 @@ public final class BedwarsAddonConfiguration {
     public String shopPurchaseFailed() { return shopPurchaseFailed; }
     public String shopNotInGame() { return shopNotInGame; }
     public String shopProviderUnavailable() { return shopProviderUnavailable; }
+    public String commandNoPermission() { return commandNoPermission; }
+    public String commandReloaded() { return commandReloaded; }
+    public String commandPlayersOnly() { return commandPlayersOnly; }
+    public String commandUsage() { return commandUsage; }
+    public String commandPartyDisabled() { return commandPartyDisabled; }
     public boolean soundsEnabled() { return soundsEnabled; }
     public String soundFormOpen() { return soundFormOpen; }
     public String soundPurchaseSuccess() { return soundPurchaseSuccess; }
