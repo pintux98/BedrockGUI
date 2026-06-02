@@ -22,6 +22,11 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ArenaProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058ApiAccess;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058ArenaProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058PartyProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058SpectatorProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars1058StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023PartyProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ShopProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023SpectatorProvider;
@@ -67,11 +72,13 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private BedrockSpectatorService bedrockSpectatorService;
     private PartyCatalogService partyCatalogService;
     private BedrockPartyService bedrockPartyService;
+    private BedWars1058ApiAccess apiAccess1058;
 
     @Override
     public void onEnable() {
         configuration = BedwarsAddonConfiguration.load(this);
-        if (!configuration.moduleShop() && !configuration.moduleUpgrades() && !configuration.moduleArena()) {
+        if (!configuration.moduleShop() && !configuration.moduleUpgrades() && !configuration.moduleArena()
+                && !configuration.moduleStats() && !configuration.moduleSpectator() && !configuration.moduleParty()) {
             getLogger().info("All modules disabled. Enable one in config.yml then /bedwarsaddon reload.");
             return;
         }
@@ -83,64 +90,74 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 configuration.soundVolume(), configuration.soundPitch());
 
         apiAccess = new BedWarsApiAccess();
-        boolean bedwarsPresent = Bukkit.getPluginManager().getPlugin("BedWars2023") != null;
-        if (!bedwarsPresent) {
-            getLogger().warning("BedWars2023 not found; modules inactive until it is installed.");
-        }
-
+        apiAccess1058 = new BedWars1058ApiAccess();
         PluginManager pm = Bukkit.getPluginManager();
+
+        String backend = detectBackend(pm);
+        if (backend == null) {
+            getLogger().warning("No supported Bedwars plugin found (BedWars2023/BedWars1058); modules inactive until one is installed.");
+        } else {
+            getLogger().info("Detected Bedwars backend: " + backend);
+        }
+        boolean bw2023 = "BedWars2023".equals(backend);
+        boolean bw1058 = "BedWars1058".equals(backend);
 
         if (configuration.moduleShop()) {
             shopCatalogService = new ShopCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 shopCatalogService.setProvider(new BedWars2023ShopProvider(getLogger(), apiAccess));
-                getLogger().info("Shop provider: BedWars2023");
             }
+            // BedWars1058 shop is reflection-based and wired separately.
             bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
-            pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+            if (bw2023) {
+                pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+            }
         }
 
         if (configuration.moduleUpgrades()) {
             upgradeCatalogService = new UpgradeCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 upgradeCatalogService.setProvider(new BedWars2023UpgradeProvider(getLogger(), apiAccess));
-                getLogger().info("Upgrade provider: BedWars2023");
             }
             bedrockUpgradeService = new BedrockUpgradeService(configuration, upgradeCatalogService, detector, soundFeedback);
         }
 
         if (configuration.moduleArena()) {
             arenaCatalogService = new ArenaCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 arenaCatalogService.setProvider(new BedWars2023ArenaProvider(getLogger(), apiAccess));
-                getLogger().info("Arena provider: BedWars2023");
+            } else if (bw1058) {
+                arenaCatalogService.setProvider(new BedWars1058ArenaProvider(getLogger(), apiAccess1058));
             }
             bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
         }
 
         if (configuration.moduleStats()) {
             statsCatalogService = new StatsCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 statsCatalogService.setProvider(new BedWars2023StatsProvider(apiAccess));
-                getLogger().info("Stats provider: BedWars2023");
+            } else if (bw1058) {
+                statsCatalogService.setProvider(new BedWars1058StatsProvider(apiAccess1058));
             }
             bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
         }
 
         if (configuration.moduleSpectator()) {
             spectatorCatalogService = new SpectatorCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 spectatorCatalogService.setProvider(new BedWars2023SpectatorProvider(getLogger(), apiAccess));
-                getLogger().info("Spectator provider: BedWars2023");
+            } else if (bw1058) {
+                spectatorCatalogService.setProvider(new BedWars1058SpectatorProvider(getLogger(), apiAccess1058));
             }
             bedrockSpectatorService = new BedrockSpectatorService(configuration, spectatorCatalogService, detector, soundFeedback);
         }
 
         if (configuration.moduleParty()) {
             partyCatalogService = new PartyCatalogService(getLogger());
-            if (bedwarsPresent) {
+            if (bw2023) {
                 partyCatalogService.setProvider(new BedWars2023PartyProvider(apiAccess));
-                getLogger().info("Party provider: BedWars2023");
+            } else if (bw1058) {
+                partyCatalogService.setProvider(new BedWars1058PartyProvider(apiAccess1058));
             }
             bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
         }
@@ -215,6 +232,13 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
     public BedwarsAddonConfiguration getConfiguration() {
         return configuration;
+    }
+
+    /** Detects which supported Bedwars plugin is installed. */
+    private String detectBackend(PluginManager pm) {
+        if (pm.getPlugin("BedWars2023") != null) return "BedWars2023";
+        if (pm.getPlugin("BedWars1058") != null) return "BedWars1058";
+        return null;
     }
 
     public void reloadConfiguration() {

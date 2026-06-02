@@ -9,6 +9,8 @@ repositories {
     maven { url = "https://repo.papermc.io/repository/maven-public/" }
     maven { url = "https://repo.opencollab.dev/main/" }
     maven { url = "https://repo.tomkeuper.com/repository/releases/" }
+    maven { url = "https://repo.codemc.io/repository/maven-public/" }
+    maven { url = "https://jitpack.io" }
 }
 
 dependencies {
@@ -18,6 +20,12 @@ dependencies {
     compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
         exclude group: "org.spigotmc", module: "spigot-api"
         exclude group: "io.papermc.paper", module: "paper-api"
+    }
+    // BedWars1058 API (andrei1058) — fork-parent of BedWars2023; from codemc.
+    // Non-transitive: we only need the API classes to compile against; its transitive deps
+    // (spigot, sidebar) are not on our repos and are provided at runtime by the server.
+    compileOnly("com.andrei1058.bedwars:bedwars-api:${bedWars1058Version}") {
+        transitive = false
     }
 
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
@@ -52,6 +60,6 @@ shadowJar {
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-BedwarsAddon')
     if (localOutputDir) {
-        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
+        destinationDirectory.set(file("${localOutputDir}/lobby2/plugins"))
     }
 }
