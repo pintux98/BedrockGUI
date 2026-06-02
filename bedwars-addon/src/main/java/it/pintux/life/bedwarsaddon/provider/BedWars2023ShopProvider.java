@@ -10,6 +10,7 @@ import it.pintux.life.bedwarsaddon.api.ShopProvider;
 import it.pintux.life.bedwarsaddon.model.PurchaseResult;
 import it.pintux.life.bedwarsaddon.model.ShopCategory;
 import it.pintux.life.bedwarsaddon.model.ShopContent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -57,8 +58,8 @@ public final class BedWars2023ShopProvider implements ShopProvider {
         if (index == null) return List.of();
         List<ShopCategory> out = new ArrayList<>();
         for (IShopCategory cat : index.getCategoryList()) {
-            // The category name is its stable identifier in BedWars2023.
-            out.add(new ShopCategory(cat.getName(), ChatColor.stripColor(color(cat.getName())), cat.getSlot()));
+            // id = internal name (stable, used for lookups); display name = the icon's display name.
+            out.add(new ShopCategory(cat.getName(), categoryDisplayName(cat, player), cat.getSlot()));
         }
         return out;
     }
@@ -103,14 +104,22 @@ public final class BedWars2023ShopProvider implements ShopProvider {
         for (IShopCategory category : index.getCategoryList()) {
             ICategoryContent content = category.getCategoryContent(contentId, index);
             if (content != null) {
+                // execute() does the full buy (money check, takeMoney, giveItems, BedWars' own
+                // messages/sounds, tier upgrade) and returns false on denial. BUT it also writes the
+                // bought item into player.getOpenInventory().getTopInventory().setItem(slot, ...).
+                // We cancelled the chest, so without a backing inventory of adequate size that throws
+                // AIOOBE *after* takeMoney (charge with no item). Open a throwaway 54-slot inventory so
+                // the GUI write lands harmlessly; the Bedrock player only ever sees the Cumulus form.
+                Inventory backing = Bukkit.createInventory(player, 54);
                 try {
-                    // execute() runs the affordability check, deduction and item grant; the int is the
-                    // UI slot (used only for ShopBuyEvent). Returns false on denial/insufficient funds.
+                    player.openInventory(backing);
                     boolean ok = content.execute(player, cache, content.getSlot());
                     return ok ? PurchaseResult.ok() : PurchaseResult.fail("denied");
                 } catch (Exception e) {
                     logger.warning("Purchase failed for " + contentId + ": " + e.getClass().getSimpleName());
                     return PurchaseResult.fail("error");
+                } finally {
+                    player.closeInventory();
                 }
             }
         }
@@ -142,6 +151,17 @@ public final class BedWars2023ShopProvider implements ShopProvider {
             return tiers.get(0);
         }
         return tiers.get(currentTier);
+    }
+
+    private String categoryDisplayName(IShopCategory cat, Player player) {
+        try {
+            ItemStack icon = cat.getItemStack(player);
+            if (icon != null && icon.hasItemMeta() && icon.getItemMeta().hasDisplayName()) {
+                return ChatColor.stripColor(icon.getItemMeta().getDisplayName());
+            }
+        } catch (Exception ignored) {
+        }
+        return cat.getName();
     }
 
     private String displayName(ICategoryContent content, Player player) {

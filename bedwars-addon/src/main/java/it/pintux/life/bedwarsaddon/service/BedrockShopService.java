@@ -4,7 +4,6 @@ import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.ShopMenuModel;
-import it.pintux.life.bedwarsaddon.model.PurchaseResult;
 import it.pintux.life.bedwarsaddon.model.ShopContent;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
@@ -13,7 +12,9 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
 public final class BedrockShopService {
     private final BedwarsAddonConfiguration config;
@@ -21,6 +22,8 @@ public final class BedrockShopService {
     private final ShopMenuModel menuModel;
     private final BedrockPlayerDetector detector;
     private final BedrockSoundFeedback sound;
+    /** Last category each player was browsing, so a purchase re-opens the same list. */
+    private final ConcurrentMap<UUID, String> lastCategory = new ConcurrentHashMap<>();
 
     public BedrockShopService(BedwarsAddonConfiguration config, ShopCatalogService catalog,
                               BedrockPlayerDetector detector, BedrockSoundFeedback sound) {
@@ -56,6 +59,7 @@ public final class BedrockShopService {
         if (api == null) return;
         if (!catalog.isReady()) { player.sendMessage(config.shopProviderUnavailable()); return; }
 
+        lastCategory.put(player.getUniqueId(), categoryId);
         List<ShopContent> contents = catalog.getCategoryContents(player, categoryId);
         List<MenuButton> buttons = menuModel.contentButtons(contents);
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(config.shopTitle());
@@ -69,15 +73,15 @@ public final class BedrockShopService {
 
     public void buy(Player player, String contentId) {
         if (!catalog.isReady()) { player.sendMessage(config.shopProviderUnavailable()); return; }
-        String itemName = contentId;
-        PurchaseResult result = catalog.purchase(player, contentId);
-        if (result.success()) {
-            player.sendMessage(config.render(config.shopPurchaseSuccess(), Map.of("item", itemName)));
-            sound.playPurchaseSuccess(player);
+        // BedWars' execute() performs the buy and sends its OWN messages/sounds (purchased,
+        // insufficient funds, etc.) — we deliberately do not send any of our own here.
+        catalog.purchase(player, contentId);
+        // Re-open the category the player was browsing so the list reflects new money/tier state.
+        String last = lastCategory.get(player.getUniqueId());
+        if (last != null) {
+            openCategory(player, last);
         } else {
-            player.sendMessage(config.render(config.shopPurchaseFailed(),
-                    Map.of("item", itemName, "reason", result.reason() == null ? "" : result.reason())));
-            sound.playPurchaseFailed(player);
+            openMain(player);
         }
     }
 

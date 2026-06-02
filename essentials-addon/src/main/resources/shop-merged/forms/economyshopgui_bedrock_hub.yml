@@ -1,0 +1,34 @@
+type: "SIMPLE"
+title: "§2§lEconomyShopGUI"
+content: "§7Open the Bedrock EconomyShopGUI bridge or jump into a featured section."
+buttons:
+  open_main:
+    text: "§aOpen Shop Sections"
+    onClick:
+      - |
+        economyshop_main {
+          - "main"
+        }
+  featured_blocks:
+    text: "§bFeatured: Blocks"
+    onClick:
+      - |
+        economyshop_shop {
+          - "blocks|1"
+        }
+  featured_farming:
+    text: "§eFeatured: Farming"
+    onClick:
+      - |
+        economyshop_shop {
+          - "farming|1"
+        }
+  info:
+    text: "§7About This Bridge"
+    onClick:
+      - |
+        message {
+          - "§aThis is a starter BedrockGUI entry form for the EconomyShopGUI bridge."
+          - "§7Section pages, items, prices, and buy or sell actions are generated dynamically from EconomyShopGUI."
+          - "§7Replace the sample section ids in this file with your real EconomyShopGUI section ids."
+        }

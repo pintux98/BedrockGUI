@@ -1,0 +1,34 @@
+type: "SIMPLE"
+title: "§2§lShopGUI+ Bedrock"
+content: "§7Open the Bedrock ShopGUI+ bridge or jump into a featured category."
+buttons:
+  open_main:
+    text: "§aOpen Shop Categories"
+    onClick:
+      - |
+        shopgui_main {
+          - "main"
+        }
+  featured_blocks:
+    text: "§bFeatured: Blocks"
+    onClick:
+      - |
+        shopgui_shop {
+          - "blocks|1"
+        }
+  featured_farming:
+    text: "§eFeatured: Farming"
+    onClick:
+      - |
+        shopgui_shop {
+          - "farming|1"
+        }
+  info:
+    text: "§7About This Bridge"
+    onClick:
+      - |
+        message {
+          - "§aThis is a starter BedrockGUI entry form for the ShopGUI+ addon."
+          - "§7Category pages, items, prices, and buy or sell actions are generated dynamically from ShopGUI+."
+          - "§7Replace the sample shop ids in this file with your real ShopGUI+ shop ids."
+        }

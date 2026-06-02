@@ -1,0 +1,11 @@
+name: BedrockGUI-BedwarsAddon
+version: '1.0.0'
+main: it.pintux.life.bedwarsaddon.BedrockBedwarsAddonPlugin
+api-version: '1.20'
+author: pintux
+softdepend: [BedWars2023, floodgate, BedrockGUI-Paper]
+commands:
+  bedwarsaddon:
+    description: Bedwars addon admin command
+    usage: /bedwarsaddon reload
+    aliases: [bwaddon]
