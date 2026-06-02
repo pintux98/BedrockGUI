@@ -1,17 +1,28 @@
 package it.pintux.life.bedwarsaddon;
 
+import it.pintux.life.bedwarsaddon.action.ArenaJoinAction;
+import it.pintux.life.bedwarsaddon.action.OpenArenaMainAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopCategoryAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopMainAction;
+import it.pintux.life.bedwarsaddon.action.OpenUpgradeMainAction;
 import it.pintux.life.bedwarsaddon.action.ShopBuyAction;
+import it.pintux.life.bedwarsaddon.action.UpgradeBuyAction;
 import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.command.BedwarsAddonCommand;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
+import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023ArenaProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ShopProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
 import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
+import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
+import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.BedrockShopService;
+import it.pintux.life.bedwarsaddon.service.BedrockUpgradeService;
 import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
+import it.pintux.life.bedwarsaddon.service.UpgradeCatalogService;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.Bukkit;
@@ -25,11 +36,15 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private BedWarsApiAccess apiAccess;
     private ShopCatalogService shopCatalogService;
     private BedrockShopService bedrockShopService;
+    private UpgradeCatalogService upgradeCatalogService;
+    private BedrockUpgradeService bedrockUpgradeService;
+    private ArenaCatalogService arenaCatalogService;
+    private BedrockArenaService bedrockArenaService;
 
     @Override
     public void onEnable() {
         configuration = BedwarsAddonConfiguration.load(this);
-        if (!configuration.moduleShop()) {
+        if (!configuration.moduleShop() && !configuration.moduleUpgrades() && !configuration.moduleArena()) {
             getLogger().info("All modules disabled. Enable one in config.yml then /bedwarsaddon reload.");
             return;
         }
@@ -41,29 +56,64 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 configuration.soundVolume(), configuration.soundPitch());
 
         apiAccess = new BedWarsApiAccess();
-        shopCatalogService = new ShopCatalogService(getLogger());
-
-        if (Bukkit.getPluginManager().getPlugin("BedWars2023") != null) {
-            shopCatalogService.setProvider(new BedWars2023ShopProvider(getLogger(), apiAccess));
-            getLogger().info("Shop provider: BedWars2023");
-        } else {
-            getLogger().warning("BedWars2023 not found; shop module inactive.");
+        boolean bedwarsPresent = Bukkit.getPluginManager().getPlugin("BedWars2023") != null;
+        if (!bedwarsPresent) {
+            getLogger().warning("BedWars2023 not found; modules inactive until it is installed.");
         }
 
-        bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
-
         PluginManager pm = Bukkit.getPluginManager();
-        pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+
+        if (configuration.moduleShop()) {
+            shopCatalogService = new ShopCatalogService(getLogger());
+            if (bedwarsPresent) {
+                shopCatalogService.setProvider(new BedWars2023ShopProvider(getLogger(), apiAccess));
+                getLogger().info("Shop provider: BedWars2023");
+            }
+            bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
+            pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+        }
+
+        if (configuration.moduleUpgrades()) {
+            upgradeCatalogService = new UpgradeCatalogService(getLogger());
+            if (bedwarsPresent) {
+                upgradeCatalogService.setProvider(new BedWars2023UpgradeProvider(getLogger(), apiAccess));
+                getLogger().info("Upgrade provider: BedWars2023");
+            }
+            bedrockUpgradeService = new BedrockUpgradeService(configuration, upgradeCatalogService, detector, soundFeedback);
+        }
+
+        if (configuration.moduleArena()) {
+            arenaCatalogService = new ArenaCatalogService(getLogger());
+            if (bedwarsPresent) {
+                arenaCatalogService.setProvider(new BedWars2023ArenaProvider(getLogger(), apiAccess));
+                getLogger().info("Arena provider: BedWars2023");
+            }
+            bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
+        }
+
+        if (bedrockArenaService != null || bedrockUpgradeService != null) {
+            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService), this);
+        }
 
         getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
         getCommand("bedwarsaddon").setTabCompleter(new BedwarsAddonCommand(this));
 
         BedrockGUIApi api = getApiSafely();
         if (api != null) {
-            api.registerActionHandler(new OpenShopMainAction(bedrockShopService));
-            api.registerActionHandler(new OpenShopCategoryAction(bedrockShopService));
-            api.registerActionHandler(new ShopBuyAction(bedrockShopService));
-            getLogger().info("Registered bedwars addon shop actions with BedrockGUI API");
+            if (bedrockShopService != null) {
+                api.registerActionHandler(new OpenShopMainAction(bedrockShopService));
+                api.registerActionHandler(new OpenShopCategoryAction(bedrockShopService));
+                api.registerActionHandler(new ShopBuyAction(bedrockShopService));
+            }
+            if (bedrockUpgradeService != null) {
+                api.registerActionHandler(new OpenUpgradeMainAction(bedrockUpgradeService));
+                api.registerActionHandler(new UpgradeBuyAction(bedrockUpgradeService));
+            }
+            if (bedrockArenaService != null) {
+                api.registerActionHandler(new OpenArenaMainAction(bedrockArenaService));
+                api.registerActionHandler(new ArenaJoinAction(bedrockArenaService));
+            }
+            getLogger().info("Registered bedwars addon actions with BedrockGUI API");
         }
     }
 
@@ -71,6 +121,10 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     public void onDisable() {
         shopCatalogService = null;
         bedrockShopService = null;
+        upgradeCatalogService = null;
+        bedrockUpgradeService = null;
+        arenaCatalogService = null;
+        bedrockArenaService = null;
     }
 
     public void reloadConfiguration() {
@@ -82,6 +136,12 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
         if (shopCatalogService != null) {
             bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
+        }
+        if (upgradeCatalogService != null) {
+            bedrockUpgradeService = new BedrockUpgradeService(configuration, upgradeCatalogService, detector, soundFeedback);
+        }
+        if (arenaCatalogService != null) {
+            bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
         }
     }
 
