@@ -4,6 +4,8 @@ modules:
   upgrades: true
   arena: true
   stats: true
+  spectator: true
+  party: true
 
 shop:
   title: "&8Shop"
@@ -48,6 +50,38 @@ stats:
   close-button: "&cClose"
   refresh-button: "&aRefresh"
   provider-unavailable: "&cStats are currently unavailable."
+
+spectator:
+  title: "&8Teleporter"
+  content: "Teleport to a player"
+  # case-insensitive substring used to recognize the native teleporter chest by its title
+  gui-title-contains: "teleport"
+  # {player} replaced with the target's name
+  target-button: "&a{player}"
+  close-button: "&cClose"
+  no-targets: "&cNo players to teleport to."
+  provider-unavailable: "&cThe teleporter is currently unavailable."
+
+party:
+  title: "&8Party"
+  # {owner} {size} placeholders
+  content: "Owner: {owner}\nMembers: {size}"
+  member-button: "&f{player}"
+  add-button: "&aAdd Player"
+  leave-button: "&eLeave Party"
+  disband-button: "&cDisband Party"
+  kick-button: "&cKick a Player"
+  kick-entry-button: "&c{player}"
+  back-button: "&7Back"
+  close-button: "&cClose"
+  add-input-title: "&8Add Player"
+  add-input-label: "Player name"
+  no-party: "&cYou are not in a party."
+  not-owner: "&cOnly the party owner can do that."
+  added: "&aAdded {player} to the party."
+  player-not-found: "&cPlayer {player} not found."
+  kicked: "&aKicked {player}."
+  provider-unavailable: "&cParties are currently unavailable."
 
 sounds:
   enabled: true

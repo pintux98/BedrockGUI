@@ -14,6 +14,8 @@ public final class BedwarsAddonConfiguration {
     private final boolean moduleUpgrades;
     private final boolean moduleArena;
     private final boolean moduleStats;
+    private final boolean moduleSpectator;
+    private final boolean moduleParty;
     private final String shopTitle;
     private final String shopContent;
     private final String shopCategoryButton;
@@ -47,6 +49,33 @@ public final class BedwarsAddonConfiguration {
     private final String statsRefreshButton;
     private final String statsProviderUnavailable;
 
+    private final String spectatorTitle;
+    private final String spectatorContent;
+    private final String spectatorGuiTitleContains;
+    private final String spectatorTargetButton;
+    private final String spectatorCloseButton;
+    private final String spectatorNoTargets;
+    private final String spectatorProviderUnavailable;
+
+    private final String partyTitle;
+    private final String partyContent;
+    private final String partyMemberButton;
+    private final String partyAddButton;
+    private final String partyLeaveButton;
+    private final String partyDisbandButton;
+    private final String partyKickButton;
+    private final String partyKickEntryButton;
+    private final String partyBackButton;
+    private final String partyCloseButton;
+    private final String partyAddInputTitle;
+    private final String partyAddInputLabel;
+    private final String partyNoParty;
+    private final String partyNotOwner;
+    private final String partyAdded;
+    private final String partyPlayerNotFound;
+    private final String partyKicked;
+    private final String partyProviderUnavailable;
+
     private final boolean soundsEnabled;
     private final String soundFormOpen;
     private final String soundPurchaseSuccess;
@@ -59,6 +88,8 @@ public final class BedwarsAddonConfiguration {
         this.moduleUpgrades = c.getBoolean("modules.upgrades", true);
         this.moduleArena = c.getBoolean("modules.arena", true);
         this.moduleStats = c.getBoolean("modules.stats", true);
+        this.moduleSpectator = c.getBoolean("modules.spectator", true);
+        this.moduleParty = c.getBoolean("modules.party", true);
         this.shopTitle = color(c.getString("shop.title", "&8Shop"));
         this.shopContent = color(c.getString("shop.content", "Select a category"));
         this.shopCategoryButton = c.getString("shop.category-button", "&a{category}");
@@ -94,6 +125,33 @@ public final class BedwarsAddonConfiguration {
         this.statsCloseButton = color(c.getString("stats.close-button", "&cClose"));
         this.statsRefreshButton = color(c.getString("stats.refresh-button", "&aRefresh"));
         this.statsProviderUnavailable = color(c.getString("stats.provider-unavailable", "&cStats are currently unavailable."));
+
+        this.spectatorTitle = color(c.getString("spectator.title", "&8Teleporter"));
+        this.spectatorContent = color(c.getString("spectator.content", "Teleport to a player"));
+        this.spectatorGuiTitleContains = c.getString("spectator.gui-title-contains", "teleport");
+        this.spectatorTargetButton = c.getString("spectator.target-button", "&a{player}");
+        this.spectatorCloseButton = color(c.getString("spectator.close-button", "&cClose"));
+        this.spectatorNoTargets = color(c.getString("spectator.no-targets", "&cNo players to teleport to."));
+        this.spectatorProviderUnavailable = color(c.getString("spectator.provider-unavailable", "&cThe teleporter is currently unavailable."));
+
+        this.partyTitle = color(c.getString("party.title", "&8Party"));
+        this.partyContent = c.getString("party.content", "Owner: {owner}\nMembers: {size}");
+        this.partyMemberButton = c.getString("party.member-button", "&f{player}");
+        this.partyAddButton = color(c.getString("party.add-button", "&aAdd Player"));
+        this.partyLeaveButton = color(c.getString("party.leave-button", "&eLeave Party"));
+        this.partyDisbandButton = color(c.getString("party.disband-button", "&cDisband Party"));
+        this.partyKickButton = color(c.getString("party.kick-button", "&cKick a Player"));
+        this.partyKickEntryButton = c.getString("party.kick-entry-button", "&c{player}");
+        this.partyBackButton = color(c.getString("party.back-button", "&7Back"));
+        this.partyCloseButton = color(c.getString("party.close-button", "&cClose"));
+        this.partyAddInputTitle = color(c.getString("party.add-input-title", "&8Add Player"));
+        this.partyAddInputLabel = color(c.getString("party.add-input-label", "Player name"));
+        this.partyNoParty = color(c.getString("party.no-party", "&cYou are not in a party."));
+        this.partyNotOwner = color(c.getString("party.not-owner", "&cOnly the party owner can do that."));
+        this.partyAdded = c.getString("party.added", "&aAdded {player} to the party.");
+        this.partyPlayerNotFound = c.getString("party.player-not-found", "&cPlayer {player} not found.");
+        this.partyKicked = c.getString("party.kicked", "&aKicked {player}.");
+        this.partyProviderUnavailable = color(c.getString("party.provider-unavailable", "&cParties are currently unavailable."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
@@ -133,6 +191,33 @@ public final class BedwarsAddonConfiguration {
     public String statsCloseButton() { return statsCloseButton; }
     public String statsRefreshButton() { return statsRefreshButton; }
     public String statsProviderUnavailable() { return statsProviderUnavailable; }
+    public boolean moduleSpectator() { return moduleSpectator; }
+    public boolean moduleParty() { return moduleParty; }
+    public String spectatorTitle() { return spectatorTitle; }
+    public String spectatorContent() { return spectatorContent; }
+    public String spectatorGuiTitleContains() { return spectatorGuiTitleContains; }
+    public String spectatorTargetButton() { return spectatorTargetButton; }
+    public String spectatorCloseButton() { return spectatorCloseButton; }
+    public String spectatorNoTargets() { return spectatorNoTargets; }
+    public String spectatorProviderUnavailable() { return spectatorProviderUnavailable; }
+    public String partyTitle() { return partyTitle; }
+    public String partyContent() { return partyContent; }
+    public String partyMemberButton() { return partyMemberButton; }
+    public String partyAddButton() { return partyAddButton; }
+    public String partyLeaveButton() { return partyLeaveButton; }
+    public String partyDisbandButton() { return partyDisbandButton; }
+    public String partyKickButton() { return partyKickButton; }
+    public String partyKickEntryButton() { return partyKickEntryButton; }
+    public String partyBackButton() { return partyBackButton; }
+    public String partyCloseButton() { return partyCloseButton; }
+    public String partyAddInputTitle() { return partyAddInputTitle; }
+    public String partyAddInputLabel() { return partyAddInputLabel; }
+    public String partyNoParty() { return partyNoParty; }
+    public String partyNotOwner() { return partyNotOwner; }
+    public String partyAdded() { return partyAdded; }
+    public String partyPlayerNotFound() { return partyPlayerNotFound; }
+    public String partyKicked() { return partyKicked; }
+    public String partyProviderUnavailable() { return partyProviderUnavailable; }
     public String upgradeTitle() { return upgradeTitle; }
     public String upgradeContent() { return upgradeContent; }
     public String upgradeButton() { return upgradeButton; }

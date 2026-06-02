@@ -2,6 +2,14 @@ package it.pintux.life.bedwarsaddon;
 
 import it.pintux.life.bedwarsaddon.action.ArenaJoinAction;
 import it.pintux.life.bedwarsaddon.action.OpenArenaMainAction;
+import it.pintux.life.bedwarsaddon.action.OpenPartyMainAction;
+import it.pintux.life.bedwarsaddon.action.OpenSpectatorAction;
+import it.pintux.life.bedwarsaddon.action.PartyAddAction;
+import it.pintux.life.bedwarsaddon.action.PartyDisbandAction;
+import it.pintux.life.bedwarsaddon.action.PartyKickAction;
+import it.pintux.life.bedwarsaddon.action.PartyKickDoAction;
+import it.pintux.life.bedwarsaddon.action.PartyLeaveAction;
+import it.pintux.life.bedwarsaddon.action.SpectatorTeleportAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopCategoryAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopMainAction;
 import it.pintux.life.bedwarsaddon.action.OpenStatsAction;
@@ -14,22 +22,31 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ArenaProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023PartyProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ShopProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023SpectatorProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
 import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
+import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
+import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
+import it.pintux.life.bedwarsaddon.service.BedrockPartyService;
 import it.pintux.life.bedwarsaddon.service.BedrockShopService;
+import it.pintux.life.bedwarsaddon.service.BedrockSpectatorService;
 import it.pintux.life.bedwarsaddon.service.BedrockStatsService;
 import it.pintux.life.bedwarsaddon.service.BedrockUpgradeService;
+import it.pintux.life.bedwarsaddon.service.PartyCatalogService;
 import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
+import it.pintux.life.bedwarsaddon.service.SpectatorCatalogService;
 import it.pintux.life.bedwarsaddon.service.StatsCatalogService;
 import it.pintux.life.bedwarsaddon.service.UpgradeCatalogService;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -46,6 +63,10 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private BedrockArenaService bedrockArenaService;
     private StatsCatalogService statsCatalogService;
     private BedrockStatsService bedrockStatsService;
+    private SpectatorCatalogService spectatorCatalogService;
+    private BedrockSpectatorService bedrockSpectatorService;
+    private PartyCatalogService partyCatalogService;
+    private BedrockPartyService bedrockPartyService;
 
     @Override
     public void onEnable() {
@@ -106,8 +127,28 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
         }
 
-        if (bedrockArenaService != null || bedrockUpgradeService != null || bedrockStatsService != null) {
-            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService, bedrockStatsService), this);
+        if (configuration.moduleSpectator()) {
+            spectatorCatalogService = new SpectatorCatalogService(getLogger());
+            if (bedwarsPresent) {
+                spectatorCatalogService.setProvider(new BedWars2023SpectatorProvider(getLogger(), apiAccess));
+                getLogger().info("Spectator provider: BedWars2023");
+            }
+            bedrockSpectatorService = new BedrockSpectatorService(configuration, spectatorCatalogService, detector, soundFeedback);
+        }
+
+        if (configuration.moduleParty()) {
+            partyCatalogService = new PartyCatalogService(getLogger());
+            if (bedwarsPresent) {
+                partyCatalogService.setProvider(new BedWars2023PartyProvider(apiAccess));
+                getLogger().info("Party provider: BedWars2023");
+            }
+            bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
+        }
+
+        if (bedrockArenaService != null || bedrockUpgradeService != null
+                || bedrockStatsService != null || bedrockSpectatorService != null) {
+            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService,
+                    bedrockStatsService, bedrockSpectatorService), this);
         }
 
         getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
@@ -131,6 +172,18 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             if (bedrockStatsService != null) {
                 api.registerActionHandler(new OpenStatsAction(bedrockStatsService));
             }
+            if (bedrockSpectatorService != null) {
+                api.registerActionHandler(new OpenSpectatorAction(bedrockSpectatorService));
+                api.registerActionHandler(new SpectatorTeleportAction(bedrockSpectatorService));
+            }
+            if (bedrockPartyService != null) {
+                api.registerActionHandler(new OpenPartyMainAction(bedrockPartyService));
+                api.registerActionHandler(new PartyAddAction(bedrockPartyService));
+                api.registerActionHandler(new PartyLeaveAction(bedrockPartyService));
+                api.registerActionHandler(new PartyDisbandAction(bedrockPartyService));
+                api.registerActionHandler(new PartyKickAction(bedrockPartyService));
+                api.registerActionHandler(new PartyKickDoAction(bedrockPartyService));
+            }
             getLogger().info("Registered bedwars addon actions with BedrockGUI API");
         }
     }
@@ -145,6 +198,19 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         bedrockArenaService = null;
         statsCatalogService = null;
         bedrockStatsService = null;
+        spectatorCatalogService = null;
+        bedrockSpectatorService = null;
+        partyCatalogService = null;
+        bedrockPartyService = null;
+    }
+
+    /** Opens the Bedrock party form (used by /bedwarsaddon party). */
+    public void openParty(Player player) {
+        if (bedrockPartyService != null) {
+            bedrockPartyService.openMain(player);
+        } else {
+            player.sendMessage("Party module is disabled.");
+        }
     }
 
     public void reloadConfiguration() {
@@ -165,6 +231,12 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
         if (statsCatalogService != null) {
             bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
+        }
+        if (spectatorCatalogService != null) {
+            bedrockSpectatorService = new BedrockSpectatorService(configuration, spectatorCatalogService, detector, soundFeedback);
+        }
+        if (partyCatalogService != null) {
+            bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
         }
     }
 
