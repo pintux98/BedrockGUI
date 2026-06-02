@@ -4,6 +4,7 @@ import it.pintux.life.bedwarsaddon.action.ArenaJoinAction;
 import it.pintux.life.bedwarsaddon.action.OpenArenaMainAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopCategoryAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopMainAction;
+import it.pintux.life.bedwarsaddon.action.OpenStatsAction;
 import it.pintux.life.bedwarsaddon.action.OpenUpgradeMainAction;
 import it.pintux.life.bedwarsaddon.action.ShopBuyAction;
 import it.pintux.life.bedwarsaddon.action.UpgradeBuyAction;
@@ -14,14 +15,17 @@ import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ArenaProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023ShopProvider;
+import it.pintux.life.bedwarsaddon.provider.BedWars2023StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
 import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.BedrockShopService;
+import it.pintux.life.bedwarsaddon.service.BedrockStatsService;
 import it.pintux.life.bedwarsaddon.service.BedrockUpgradeService;
 import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
+import it.pintux.life.bedwarsaddon.service.StatsCatalogService;
 import it.pintux.life.bedwarsaddon.service.UpgradeCatalogService;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
@@ -40,6 +44,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private BedrockUpgradeService bedrockUpgradeService;
     private ArenaCatalogService arenaCatalogService;
     private BedrockArenaService bedrockArenaService;
+    private StatsCatalogService statsCatalogService;
+    private BedrockStatsService bedrockStatsService;
 
     @Override
     public void onEnable() {
@@ -91,8 +97,17 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
         }
 
-        if (bedrockArenaService != null || bedrockUpgradeService != null) {
-            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService), this);
+        if (configuration.moduleStats()) {
+            statsCatalogService = new StatsCatalogService(getLogger());
+            if (bedwarsPresent) {
+                statsCatalogService.setProvider(new BedWars2023StatsProvider(apiAccess));
+                getLogger().info("Stats provider: BedWars2023");
+            }
+            bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
+        }
+
+        if (bedrockArenaService != null || bedrockUpgradeService != null || bedrockStatsService != null) {
+            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService, bedrockStatsService), this);
         }
 
         getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
@@ -113,6 +128,9 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 api.registerActionHandler(new OpenArenaMainAction(bedrockArenaService));
                 api.registerActionHandler(new ArenaJoinAction(bedrockArenaService));
             }
+            if (bedrockStatsService != null) {
+                api.registerActionHandler(new OpenStatsAction(bedrockStatsService));
+            }
             getLogger().info("Registered bedwars addon actions with BedrockGUI API");
         }
     }
@@ -125,6 +143,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         bedrockUpgradeService = null;
         arenaCatalogService = null;
         bedrockArenaService = null;
+        statsCatalogService = null;
+        bedrockStatsService = null;
     }
 
     public void reloadConfiguration() {
@@ -142,6 +162,9 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
         if (arenaCatalogService != null) {
             bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
+        }
+        if (statsCatalogService != null) {
+            bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
         }
     }
 

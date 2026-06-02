@@ -13,6 +13,7 @@ public final class BedwarsAddonConfiguration {
     private final boolean moduleShop;
     private final boolean moduleUpgrades;
     private final boolean moduleArena;
+    private final boolean moduleStats;
     private final String shopTitle;
     private final String shopContent;
     private final String shopCategoryButton;
@@ -39,6 +40,12 @@ public final class BedwarsAddonConfiguration {
     private final String arenaJoinFailed;
     private final String arenaProviderUnavailable;
 
+    private final String statsTitle;
+    private final String statsGuiTitleContains;
+    private final String statsContent;
+    private final String statsCloseButton;
+    private final String statsProviderUnavailable;
+
     private final boolean soundsEnabled;
     private final String soundFormOpen;
     private final String soundPurchaseSuccess;
@@ -50,6 +57,7 @@ public final class BedwarsAddonConfiguration {
         this.moduleShop = c.getBoolean("modules.shop", true);
         this.moduleUpgrades = c.getBoolean("modules.upgrades", true);
         this.moduleArena = c.getBoolean("modules.arena", true);
+        this.moduleStats = c.getBoolean("modules.stats", true);
         this.shopTitle = color(c.getString("shop.title", "&8Shop"));
         this.shopContent = color(c.getString("shop.content", "Select a category"));
         this.shopCategoryButton = c.getString("shop.category-button", "&a{category}");
@@ -75,6 +83,12 @@ public final class BedwarsAddonConfiguration {
         this.arenaNoArenas = color(c.getString("arena.no-arenas", "&cNo arenas are available right now."));
         this.arenaJoinFailed = c.getString("arena.join-failed", "&cCould not join {arena}.");
         this.arenaProviderUnavailable = color(c.getString("arena.provider-unavailable", "&cArena joining is currently unavailable."));
+
+        this.statsTitle = color(c.getString("stats.title", "&8Your Stats"));
+        this.statsGuiTitleContains = c.getString("stats.gui-title-contains", "stat");
+        this.statsContent = c.getString("stats.content", "Wins: {wins}");
+        this.statsCloseButton = color(c.getString("stats.close-button", "&cClose"));
+        this.statsProviderUnavailable = color(c.getString("stats.provider-unavailable", "&cStats are currently unavailable."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
@@ -107,6 +121,12 @@ public final class BedwarsAddonConfiguration {
     public boolean moduleShop() { return moduleShop; }
     public boolean moduleUpgrades() { return moduleUpgrades; }
     public boolean moduleArena() { return moduleArena; }
+    public boolean moduleStats() { return moduleStats; }
+    public String statsTitle() { return statsTitle; }
+    public String statsGuiTitleContains() { return statsGuiTitleContains; }
+    public String statsContent() { return statsContent; }
+    public String statsCloseButton() { return statsCloseButton; }
+    public String statsProviderUnavailable() { return statsProviderUnavailable; }
     public String upgradeTitle() { return upgradeTitle; }
     public String upgradeContent() { return upgradeContent; }
     public String upgradeButton() { return upgradeButton; }

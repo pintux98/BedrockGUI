@@ -3,6 +3,7 @@ modules:
   shop: true
   upgrades: true
   arena: true
+  stats: true
 
 shop:
   title: "&8Shop"
@@ -36,6 +37,16 @@ arena:
   no-arenas: "&cNo arenas are available right now."
   join-failed: "&cCould not join {arena}."
   provider-unavailable: "&cArena joining is currently unavailable."
+
+stats:
+  title: "&8Your Stats"
+  # case-insensitive substring used to recognize the native stats chest GUI by its title
+  gui-title-contains: "stat"
+  # placeholders: {name} {wins} {losses} {kills} {final_kills} {deaths}
+  #               {final_deaths} {beds} {games} {total_kills} {kd} {wl}
+  content: "&aWins: &f{wins}  &cLosses: &f{losses}\n&aKills: &f{kills}  &aFinal Kills: &f{final_kills}\n&cDeaths: &f{deaths}  &cFinal Deaths: &f{final_deaths}\n&eBeds Broken: &f{beds}\n&7Games Played: &f{games}\n&7K/D: &f{kd}  &7W/L: &f{wl}"
+  close-button: "&cClose"
+  provider-unavailable: "&cStats are currently unavailable."
 
 sounds:
   enabled: true

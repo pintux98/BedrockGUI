@@ -1,6 +1,7 @@
 package it.pintux.life.bedwarsaddon.listener;
 
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
+import it.pintux.life.bedwarsaddon.service.BedrockStatsService;
 import it.pintux.life.bedwarsaddon.service.BedrockUpgradeService;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -19,11 +20,14 @@ public final class MenuInterceptListener implements Listener {
     private final Plugin plugin;
     private final BedrockArenaService arenaService;     // nullable (module disabled)
     private final BedrockUpgradeService upgradeService; // nullable (module disabled)
+    private final BedrockStatsService statsService;     // nullable (module disabled)
 
-    public MenuInterceptListener(Plugin plugin, BedrockArenaService arenaService, BedrockUpgradeService upgradeService) {
+    public MenuInterceptListener(Plugin plugin, BedrockArenaService arenaService,
+                                 BedrockUpgradeService upgradeService, BedrockStatsService statsService) {
         this.plugin = plugin;
         this.arenaService = arenaService;
         this.upgradeService = upgradeService;
+        this.statsService = statsService;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -34,6 +38,15 @@ public final class MenuInterceptListener implements Listener {
                 && arenaService.ownsInventory(event.getInventory())) {
             event.setCancelled(true);
             plugin.getServer().getScheduler().runTask(plugin, () -> arenaService.openMain(player));
+            return;
+        }
+
+        // Stats GUI: null holder, no flag — identified by its (config-matched) title, which is
+        // available now, so we can cancel directly and avoid any chest flash.
+        if (statsService != null && statsService.shouldHandle(player)
+                && statsService.matchesTitle(event.getView().getTitle())) {
+            event.setCancelled(true);
+            plugin.getServer().getScheduler().runTask(plugin, () -> statsService.openStats(player));
             return;
         }
 
