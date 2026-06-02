@@ -46,6 +46,7 @@ stats:
   #               {final_deaths} {beds} {games} {total_kills} {kd} {wl}
   content: "&aWins: &f{wins}  &cLosses: &f{losses}\n&aKills: &f{kills}  &aFinal Kills: &f{final_kills}\n&cDeaths: &f{deaths}  &cFinal Deaths: &f{final_deaths}\n&eBeds Broken: &f{beds}\n&7Games Played: &f{games}\n&7K/D: &f{kd}  &7W/L: &f{wl}"
   close-button: "&cClose"
+  refresh-button: "&aRefresh"
   provider-unavailable: "&cStats are currently unavailable."
 
 sounds:

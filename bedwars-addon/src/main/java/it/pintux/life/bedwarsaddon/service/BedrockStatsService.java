@@ -47,9 +47,10 @@ public final class BedrockStatsService {
         PlayerStatsInfo stats = catalog.getStats(player);
         if (stats == null) { player.sendMessage(config.statsProviderUnavailable()); return; }
 
-        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(config.statsTitle());
-        form.content(menuModel.content(stats));
-        form.button(config.statsCloseButton(), fp -> { /* no-op: closes the form */ });
+        // Modal form: the stats text is shown prominently in the body, with Close / Refresh buttons.
+        BedrockGUIApi.ModalFormBuilder form = api.createModalForm(config.statsTitle(), menuModel.content(stats));
+        form.button1(config.statsCloseButton(), fp -> { /* no-op: dismisses */ });
+        form.button2(config.statsRefreshButton(), fp -> openStats(player));
         sound.playFormOpen(player);
         form.send(new BukkitFormPlayer(player));
     }

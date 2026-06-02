@@ -44,6 +44,7 @@ public final class BedwarsAddonConfiguration {
     private final String statsGuiTitleContains;
     private final String statsContent;
     private final String statsCloseButton;
+    private final String statsRefreshButton;
     private final String statsProviderUnavailable;
 
     private final boolean soundsEnabled;
@@ -86,8 +87,12 @@ public final class BedwarsAddonConfiguration {
 
         this.statsTitle = color(c.getString("stats.title", "&8Your Stats"));
         this.statsGuiTitleContains = c.getString("stats.gui-title-contains", "stat");
-        this.statsContent = c.getString("stats.content", "Wins: {wins}");
+        this.statsContent = c.getString("stats.content",
+                "&aWins: &f{wins}  &cLosses: &f{losses}\n&aKills: &f{kills}  &aFinal Kills: &f{final_kills}\n"
+                        + "&cDeaths: &f{deaths}  &cFinal Deaths: &f{final_deaths}\n&eBeds Broken: &f{beds}\n"
+                        + "&7Games Played: &f{games}\n&7K/D: &f{kd}  &7W/L: &f{wl}");
         this.statsCloseButton = color(c.getString("stats.close-button", "&cClose"));
+        this.statsRefreshButton = color(c.getString("stats.refresh-button", "&aRefresh"));
         this.statsProviderUnavailable = color(c.getString("stats.provider-unavailable", "&cStats are currently unavailable."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
@@ -126,6 +131,7 @@ public final class BedwarsAddonConfiguration {
     public String statsGuiTitleContains() { return statsGuiTitleContains; }
     public String statsContent() { return statsContent; }
     public String statsCloseButton() { return statsCloseButton; }
+    public String statsRefreshButton() { return statsRefreshButton; }
     public String statsProviderUnavailable() { return statsProviderUnavailable; }
     public String upgradeTitle() { return upgradeTitle; }
     public String upgradeContent() { return upgradeContent; }
