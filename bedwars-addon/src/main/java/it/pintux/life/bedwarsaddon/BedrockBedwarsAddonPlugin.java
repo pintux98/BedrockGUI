@@ -37,6 +37,10 @@ import it.pintux.life.bedwarsaddon.provider.BedWars2023StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
 import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
+import it.pintux.life.bedwarsaddon.provider.SbwApiAccess;
+import it.pintux.life.bedwarsaddon.provider.SbwArenaProvider;
+import it.pintux.life.bedwarsaddon.provider.SbwSpectatorProvider;
+import it.pintux.life.bedwarsaddon.provider.SbwStatsProvider;
 import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
@@ -76,6 +80,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private PartyCatalogService partyCatalogService;
     private BedrockPartyService bedrockPartyService;
     private BedWars1058ApiAccess apiAccess1058;
+    private SbwApiAccess sbwAccess;
 
     @Override
     public void onEnable() {
@@ -94,16 +99,18 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
         apiAccess = new BedWarsApiAccess();
         apiAccess1058 = new BedWars1058ApiAccess();
+        sbwAccess = new SbwApiAccess();
         PluginManager pm = Bukkit.getPluginManager();
 
         String backend = detectBackend(pm);
         if (backend == null) {
-            getLogger().warning("No supported Bedwars plugin found (BedWars2023/BedWars1058); modules inactive until one is installed.");
+            getLogger().warning("No supported Bedwars plugin found (BedWars2023/BedWars1058/ScreamingBedWars); modules inactive until one is installed.");
         } else {
             getLogger().info("Detected Bedwars backend: " + backend);
         }
         boolean bw2023 = "BedWars2023".equals(backend);
         boolean bw1058 = "BedWars1058".equals(backend);
+        boolean sbw = "ScreamingBedWars".equals(backend);
 
         if (configuration.moduleShop()) {
             shopCatalogService = new ShopCatalogService(getLogger());
@@ -136,6 +143,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 arenaCatalogService.setProvider(new BedWars2023ArenaProvider(getLogger(), apiAccess));
             } else if (bw1058) {
                 arenaCatalogService.setProvider(new BedWars1058ArenaProvider(getLogger(), apiAccess1058));
+            } else if (sbw) {
+                arenaCatalogService.setProvider(new SbwArenaProvider(getLogger(), sbwAccess));
             }
             bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
         }
@@ -146,6 +155,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 statsCatalogService.setProvider(new BedWars2023StatsProvider(apiAccess));
             } else if (bw1058) {
                 statsCatalogService.setProvider(new BedWars1058StatsProvider(apiAccess1058));
+            } else if (sbw) {
+                statsCatalogService.setProvider(new SbwStatsProvider(sbwAccess));
             }
             bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
         }
@@ -156,6 +167,8 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 spectatorCatalogService.setProvider(new BedWars2023SpectatorProvider(getLogger(), apiAccess));
             } else if (bw1058) {
                 spectatorCatalogService.setProvider(new BedWars1058SpectatorProvider(getLogger(), apiAccess1058));
+            } else if (sbw) {
+                spectatorCatalogService.setProvider(new SbwSpectatorProvider(getLogger(), sbwAccess));
             }
             bedrockSpectatorService = new BedrockSpectatorService(configuration, spectatorCatalogService, detector, soundFeedback);
         }
@@ -238,6 +251,33 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
     }
 
+    /** /bedwarsaddon arena — opens the arena selector form. */
+    public void openArena(Player player) {
+        if (bedrockArenaService != null) {
+            bedrockArenaService.openMain(player);
+        } else {
+            player.sendMessage(configuration.commandModuleDisabled());
+        }
+    }
+
+    /** /bedwarsaddon stats — opens the stats form. */
+    public void openStats(Player player) {
+        if (bedrockStatsService != null) {
+            bedrockStatsService.openStats(player);
+        } else {
+            player.sendMessage(configuration.commandModuleDisabled());
+        }
+    }
+
+    /** /bedwarsaddon spectator — opens the spectator teleporter form. */
+    public void openSpectator(Player player) {
+        if (bedrockSpectatorService != null) {
+            bedrockSpectatorService.openTeleporter(player);
+        } else {
+            player.sendMessage(configuration.commandModuleDisabled());
+        }
+    }
+
     public BedwarsAddonConfiguration getConfiguration() {
         return configuration;
     }
@@ -246,6 +286,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private String detectBackend(PluginManager pm) {
         if (pm.getPlugin("BedWars2023") != null) return "BedWars2023";
         if (pm.getPlugin("BedWars1058") != null) return "BedWars1058";
+        if (pm.getPlugin("BedWars") != null) return "ScreamingBedWars";
         return null;
     }
 

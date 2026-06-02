@@ -25,12 +25,17 @@ public final class BedwarsAddonCommand implements CommandExecutor, TabCompleter 
             sender.sendMessage(plugin.getConfiguration().commandReloaded());
             return true;
         }
-        if (args.length == 1 && args[0].equalsIgnoreCase("party")) {
+        if (args.length == 1 && isPlayerForm(args[0])) {
             if (!(sender instanceof Player player)) {
                 sender.sendMessage(plugin.getConfiguration().commandPlayersOnly());
                 return true;
             }
-            plugin.openParty(player);
+            switch (args[0].toLowerCase()) {
+                case "party" -> plugin.openParty(player);
+                case "arena" -> plugin.openArena(player);
+                case "stats" -> plugin.openStats(player);
+                case "spectator" -> plugin.openSpectator(player);
+            }
             return true;
         }
         sender.sendMessage(plugin.getConfiguration().commandUsage());
@@ -39,7 +44,12 @@ public final class BedwarsAddonCommand implements CommandExecutor, TabCompleter 
 
     @Override
     public List<String> onTabComplete(CommandSender sender, Command command, String alias, String[] args) {
-        if (args.length == 1) return List.of("reload", "party");
+        if (args.length == 1) return List.of("reload", "party", "arena", "stats", "spectator");
         return List.of();
+    }
+
+    private static boolean isPlayerForm(String arg) {
+        return arg.equalsIgnoreCase("party") || arg.equalsIgnoreCase("arena")
+                || arg.equalsIgnoreCase("stats") || arg.equalsIgnoreCase("spectator");
     }
 }

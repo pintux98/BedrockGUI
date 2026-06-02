@@ -10,6 +10,7 @@ repositories {
     maven { url = "https://repo.opencollab.dev/main/" }
     maven { url = "https://repo.tomkeuper.com/repository/releases/" }
     maven { url = "https://repo.codemc.io/repository/maven-public/" }
+    maven { url = "https://repo.screamingsandals.org/public/" }
     maven { url = "https://jitpack.io" }
 }
 
@@ -25,6 +26,10 @@ dependencies {
     // Non-transitive: we only need the API classes to compile against; its transitive deps
     // (spigot, sidebar) are not on our repos and are provided at runtime by the server.
     compileOnly("com.andrei1058.bedwars:bedwars-api:${bedWars1058Version}") {
+        transitive = false
+    }
+    // ScreamingBedWars API — different codebase (org.screamingsandals.bedwars).
+    compileOnly("org.screamingsandals.bedwars:BedWars-API:${screamingBedWarsVersion}") {
         transitive = false
     }
 

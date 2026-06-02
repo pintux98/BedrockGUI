@@ -81,6 +81,7 @@ public final class BedwarsAddonConfiguration {
     private final String commandPlayersOnly;
     private final String commandUsage;
     private final String commandPartyDisabled;
+    private final String commandModuleDisabled;
 
     private final boolean soundsEnabled;
     private final String soundFormOpen;
@@ -162,8 +163,9 @@ public final class BedwarsAddonConfiguration {
         this.commandNoPermission = color(c.getString("command.no-permission", "&cNo permission."));
         this.commandReloaded = color(c.getString("command.reloaded", "&aBedwarsAddon configuration reloaded."));
         this.commandPlayersOnly = color(c.getString("command.players-only", "&cPlayers only."));
-        this.commandUsage = color(c.getString("command.usage", "&7Usage: /bedwarsaddon <reload|party>"));
+        this.commandUsage = color(c.getString("command.usage", "&7Usage: /bedwarsaddon <reload|party|arena|stats|spectator>"));
         this.commandPartyDisabled = color(c.getString("command.party-disabled", "&cParty module is disabled."));
+        this.commandModuleDisabled = color(c.getString("command.module-disabled", "&cThat module is disabled."));
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
@@ -258,6 +260,7 @@ public final class BedwarsAddonConfiguration {
     public String commandPlayersOnly() { return commandPlayersOnly; }
     public String commandUsage() { return commandUsage; }
     public String commandPartyDisabled() { return commandPartyDisabled; }
+    public String commandModuleDisabled() { return commandModuleDisabled; }
     public boolean soundsEnabled() { return soundsEnabled; }
     public String soundFormOpen() { return soundFormOpen; }
     public String soundPurchaseSuccess() { return soundPurchaseSuccess; }
