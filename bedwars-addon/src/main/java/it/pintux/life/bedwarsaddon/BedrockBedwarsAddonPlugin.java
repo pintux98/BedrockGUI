@@ -13,6 +13,7 @@ import it.pintux.life.bedwarsaddon.action.SpectatorTeleportAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopCategoryAction;
 import it.pintux.life.bedwarsaddon.action.OpenShopMainAction;
 import it.pintux.life.bedwarsaddon.action.OpenStatsAction;
+import it.pintux.life.bedwarsaddon.action.NoOpAction;
 import it.pintux.life.bedwarsaddon.action.OpenUpgradeMainAction;
 import it.pintux.life.bedwarsaddon.action.ShopBuyAction;
 import it.pintux.life.bedwarsaddon.action.UpgradeBuyAction;
@@ -121,9 +122,11 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             }
             bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
             if (bw2023) {
-                pm.registerEvents(new ShopOpenListener(this, bedrockShopService), this);
+                registerListenerIfEventPresent(pm, "com.tomkeuper.bedwars.api.events.shop.ShopOpenEvent",
+                        new ShopOpenListener(this, bedrockShopService));
             } else if (bw1058) {
-                pm.registerEvents(new ShopOpenListener1058(this, bedrockShopService), this);
+                registerListenerIfEventPresent(pm, "com.andrei1058.bedwars.api.events.shop.ShopOpenEvent",
+                        new ShopOpenListener1058(this, bedrockShopService));
             }
         }
 
@@ -222,6 +225,11 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 api.registerActionHandler(new PartyKickAction(bedrockPartyService));
                 api.registerActionHandler(new PartyKickDoAction(bedrockPartyService));
             }
+            // No-op handlers for close buttons so they don't log "invalid action type".
+            for (String closeType : new String[]{"bw_shop_close", "bw_upgrade_close", "bw_arena_close",
+                    "bw_spec_close", "bw_party_close"}) {
+                api.registerActionHandler(new NoOpAction(closeType));
+            }
             getLogger().info("Registered bedwars addon actions with BedrockGUI API");
         }
     }
@@ -280,6 +288,17 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
     public BedwarsAddonConfiguration getConfiguration() {
         return configuration;
+    }
+
+    /** Registers a listener only if its event class is present at runtime (version-safe). */
+    private void registerListenerIfEventPresent(PluginManager pm, String eventClass, org.bukkit.event.Listener listener) {
+        try {
+            Class.forName(eventClass);
+            pm.registerEvents(listener, this);
+        } catch (Throwable t) {
+            getLogger().warning("Shop interception disabled: event '" + eventClass
+                    + "' is not present in the installed Bedwars version (" + t.getClass().getSimpleName() + ").");
+        }
     }
 
     /** Detects which supported Bedwars plugin is installed. */

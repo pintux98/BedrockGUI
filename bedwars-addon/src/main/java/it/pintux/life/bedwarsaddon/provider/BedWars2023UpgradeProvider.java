@@ -65,9 +65,9 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         ITeam team = arena.getTeam(player);
 
         List<UpgradeContent> out = new ArrayList<>();
-        // Ordered by slot so the form mirrors the chest layout.
-        for (Map.Entry<Integer, MenuContent> entry : new TreeMap<>(index.getMenuContentBySlot()).entrySet()) {
-            MenuContent mc = entry.getValue();
+        // Flatten categories (e.g. the "Traps" category opens a sub-menu) so their children become
+        // direct buyable entries in the flat form. Ordered by slot to mirror the chest layout.
+        for (MenuContent mc : flatten(new TreeMap<>(index.getMenuContentBySlot()).values())) {
             ItemStack icon = safeDisplay(mc, player, team);
             if (!isBuyable(icon)) continue; // skip separators / decorative fillers
             out.add(new UpgradeContent(mc.getName(), displayName(icon, mc.getName())));
@@ -86,7 +86,7 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         ITeam team = arena.getTeam(player);
 
         MenuContent target = null;
-        for (MenuContent mc : index.getMenuContentBySlot().values()) {
+        for (MenuContent mc : flatten(index.getMenuContentBySlot().values())) {
             if (mc.getName().equals(upgradeId)) { target = mc; break; }
         }
         if (target == null) return PurchaseResult.fail("not found");
@@ -99,6 +99,45 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
             logger.warning("Upgrade purchase failed for " + upgradeId + ": " + e.getClass().getSimpleName());
             return PurchaseResult.fail("error");
         }
+    }
+
+    /**
+     * Flattens MenuContent categories into their leaf children. A category (e.g. "Traps") stores its
+     * children in a private {@code menuContentBySlot} map and opens a sub-chest on click; we read that
+     * map reflectively so the children show as direct buyable entries. Leaves are returned as-is.
+     */
+    private List<MenuContent> flatten(java.util.Collection<MenuContent> top) {
+        List<MenuContent> out = new ArrayList<>();
+        for (MenuContent mc : top) {
+            List<MenuContent> children = childrenOf(mc);
+            if (children != null && !children.isEmpty()) {
+                out.addAll(flatten(children)); // category -> recurse into its children
+            } else {
+                out.add(mc); // leaf (a real upgrade/trap)
+            }
+        }
+        return out;
+    }
+
+    /** Reads a category's private menuContentBySlot via reflection; null if this is not a category. */
+    private List<MenuContent> childrenOf(MenuContent mc) {
+        try {
+            java.lang.reflect.Field f = mc.getClass().getDeclaredField("menuContentBySlot");
+            f.setAccessible(true);
+            Object map = f.get(mc);
+            if (map instanceof Map<?, ?> m) {
+                List<MenuContent> out = new ArrayList<>();
+                for (Object v : m.values()) {
+                    if (v instanceof MenuContent child) out.add(child);
+                }
+                return out;
+            }
+        } catch (NoSuchFieldException notACategory) {
+            return null;
+        } catch (Throwable t) {
+            logger.warning("Upgrade category flatten failed: " + t.getClass().getSimpleName());
+        }
+        return null;
     }
 
     private ItemStack safeDisplay(MenuContent mc, Player player, ITeam team) {

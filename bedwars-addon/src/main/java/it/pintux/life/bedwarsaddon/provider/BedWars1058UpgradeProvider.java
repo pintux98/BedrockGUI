@@ -68,8 +68,8 @@ public final class BedWars1058UpgradeProvider implements UpgradeProvider {
         ITeam team = arena.getTeam(player);
 
         List<UpgradeContent> out = new ArrayList<>();
-        for (Map.Entry<Integer, MenuContent> entry : new TreeMap<>(index.getMenuContentBySlot()).entrySet()) {
-            MenuContent mc = entry.getValue();
+        // Flatten categories (e.g. "Traps") into their leaf children so they show as direct entries.
+        for (MenuContent mc : flatten(new TreeMap<>(index.getMenuContentBySlot()).values())) {
             ItemStack icon = safeDisplay(mc, player, team);
             if (!isBuyable(icon)) continue;
             out.add(new UpgradeContent(mc.getName(), displayName(icon, mc.getName())));
@@ -87,7 +87,7 @@ public final class BedWars1058UpgradeProvider implements UpgradeProvider {
         if (index == null) return PurchaseResult.fail("provider unavailable");
         ITeam team = arena.getTeam(player);
 
-        for (MenuContent mc : index.getMenuContentBySlot().values()) {
+        for (MenuContent mc : flatten(index.getMenuContentBySlot().values())) {
             if (mc.getName().equals(upgradeId)) {
                 try {
                     mc.onClick(player, ClickType.LEFT, team); // BedWars handles money/messages
@@ -99,6 +99,40 @@ public final class BedWars1058UpgradeProvider implements UpgradeProvider {
             }
         }
         return PurchaseResult.fail("not found");
+    }
+
+    private List<MenuContent> flatten(java.util.Collection<MenuContent> top) {
+        List<MenuContent> out = new ArrayList<>();
+        for (MenuContent mc : top) {
+            List<MenuContent> children = childrenOf(mc);
+            if (children != null && !children.isEmpty()) {
+                out.addAll(flatten(children));
+            } else {
+                out.add(mc);
+            }
+        }
+        return out;
+    }
+
+    /** Reads a category's private menuContentBySlot via reflection; null if not a category. */
+    private List<MenuContent> childrenOf(MenuContent mc) {
+        try {
+            java.lang.reflect.Field f = mc.getClass().getDeclaredField("menuContentBySlot");
+            f.setAccessible(true);
+            Object map = f.get(mc);
+            if (map instanceof Map<?, ?> m) {
+                List<MenuContent> out = new ArrayList<>();
+                for (Object v : m.values()) {
+                    if (v instanceof MenuContent child) out.add(child);
+                }
+                return out;
+            }
+        } catch (NoSuchFieldException notACategory) {
+            return null;
+        } catch (Throwable t) {
+            logger.warning("BW1058 upgrade category flatten failed: " + t.getClass().getSimpleName());
+        }
+        return null;
     }
 
     /** Reflectively call UpgradesManager.getMenuForArena (not exposed on the public API). */
