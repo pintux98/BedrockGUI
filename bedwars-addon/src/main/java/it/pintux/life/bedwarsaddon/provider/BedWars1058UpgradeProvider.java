@@ -193,7 +193,10 @@ public final class BedWars1058UpgradeProvider implements UpgradeProvider {
     }
 
     private Cost upgradeCost(BedWars api, Player player, ITeam team, MenuContent mc) {
-        if (team == null || !mc.getClass().getSimpleName().equals("MenuUpgrade")) return Cost.plain();
+        if (team == null) return Cost.plain();
+        String cls = mc.getClass().getSimpleName();
+        if (cls.equals("MenuBaseTrap")) return trapCost(api, player, team, mc);
+        if (!cls.equals("MenuUpgrade")) return Cost.plain();
         try {
             Field f = mc.getClass().getDeclaredField("tiers");
             f.setAccessible(true);
@@ -221,6 +224,52 @@ public final class BedWars1058UpgradeProvider implements UpgradeProvider {
             return new Cost(cost, currencyName(currency), affordable, false);
         } catch (Throwable t) {
             return Cost.plain();
+        }
+    }
+
+    /** Trap price: fixed cost/currency fields when set, otherwise trap-start-price + activeTraps * increment. */
+    private Cost trapCost(BedWars api, Player player, ITeam team, MenuContent mc) {
+        try {
+            Field costField = mc.getClass().getDeclaredField("cost");
+            costField.setAccessible(true);
+            int cost = costField.getInt(mc);
+            Field currencyField = mc.getClass().getDeclaredField("currency");
+            currencyField.setAccessible(true);
+            Material currency = currencyField.get(mc) instanceof Material m ? m : null;
+
+            String group = team.getArena() != null && team.getArena().getGroup() != null
+                    ? team.getArena().getGroup().toLowerCase() : "default";
+            Object yml = upgradesYml("com.andrei1058.bedwars.BedWars");
+            if (yml instanceof org.bukkit.configuration.ConfigurationSection cfg) {
+                if (cost == 0) {
+                    int start = cfg.getInt(group + "-upgrades-settings.trap-start-price");
+                    int increment = cfg.getInt(group + "-upgrades-settings.trap-increment-price");
+                    int active = team.getActiveTraps() != null ? team.getActiveTraps().size() : 0;
+                    cost = start + active * increment;
+                }
+                if (currency == null) {
+                    String currencyName = cfg.getString(group + "-upgrades-settings.trap-currency");
+                    if (currencyName != null) currency = api.getShopUtil().getCurrency(currencyName);
+                }
+            }
+            if (cost <= 0) return Cost.plain();
+            if (currency == null || currency == Material.AIR) return new Cost(cost, "", true, false);
+            boolean affordable = api.getShopUtil().calculateMoney(player, currency) >= cost;
+            return new Cost(cost, currencyName(currency), affordable, false);
+        } catch (Throwable t) {
+            return Cost.plain();
+        }
+    }
+
+    /** Reflectively reads the internal upgrades YamlConfiguration: BedWars.getUpgradeManager().getConfiguration().getYml(). */
+    private Object upgradesYml(String mainClass) {
+        try {
+            Class<?> main = Class.forName(mainClass);
+            Object manager = main.getMethod("getUpgradeManager").invoke(null);
+            Object configuration = manager.getClass().getMethod("getConfiguration").invoke(manager);
+            return configuration.getClass().getMethod("getYml").invoke(configuration);
+        } catch (Throwable t) {
+            return null;
         }
     }
 
