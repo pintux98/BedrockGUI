@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="it.pintux.life.bedwarsaddon.SanityTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-06-01T19:36:29.492Z" hostname="PINTUX" time="0.031">
-  <properties/>
-  <testcase name="junitIsWired()" classname="it.pintux.life.bedwarsaddon.SanityTest" time="0.015"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

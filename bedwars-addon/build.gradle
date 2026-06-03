@@ -1,8 +1,5 @@
 version = bedwarsAddonVersion
 
-// Drop the inherited repo list: the shared nexus.velocitypowered.com repo is down (HTTP 522)
-// and Gradle aborts resolution on a 5xx instead of trying the next repo. This module only
-// needs the repos below.
 repositories.clear()
 repositories {
     mavenCentral()
@@ -17,27 +14,16 @@ repositories {
 dependencies {
     compileOnly project(':common')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
-    // BedWars2023 API (official repo.tomkeuper.com; jitpack builds fail).
     compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
         exclude group: "org.spigotmc", module: "spigot-api"
         exclude group: "io.papermc.paper", module: "paper-api"
     }
-    // BedWars1058 API (andrei1058) — fork-parent of BedWars2023; from codemc.
-    // Non-transitive: we only need the API classes to compile against; its transitive deps
-    // (spigot, sidebar) are not on our repos and are provided at runtime by the server.
     compileOnly("com.andrei1058.bedwars:bedwars-api:${bedWars1058Version}") {
         transitive = false
     }
-    // ScreamingBedWars API — different codebase (org.screamingsandals.bedwars).
     compileOnly("org.screamingsandals.bedwars:BedWars-API:${screamingBedWarsVersion}") {
         transitive = false
     }
-
-    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
-    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
-    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
-    // compileOnly deps don't propagate to the test classpath; tests need Bukkit types.
-    testImplementation "io.papermc.paper:paper-api:${paperApiVersion}"
 }
 
 test {
