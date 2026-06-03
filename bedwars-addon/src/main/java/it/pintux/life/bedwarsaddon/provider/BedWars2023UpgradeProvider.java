@@ -9,11 +9,14 @@ import it.pintux.life.bedwarsaddon.api.UpgradeProvider;
 import it.pintux.life.bedwarsaddon.model.PurchaseResult;
 import it.pintux.life.bedwarsaddon.model.UpgradeContent;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.inventory.ItemStack;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,10 +25,16 @@ import java.util.logging.Logger;
 /**
  * BedWars2023 implementation of {@link UpgradeProvider}. The ONLY upgrade class touching com.tomkeuper.*.
  * <p>
- * Purchasing calls {@code MenuContent.onClick(player, LEFT, team, forFree=false, announce=true,
- * announceUnlocked=true, openInv=false)}. The plugin takes money, applies the upgrade and sends its
- * own messages; openInv=false skips the chest-GUI refresh (which would otherwise index the open
- * inventory and throw, since the Bedrock player only has the Cumulus form).
+ * Buyable leaves are MenuUpgrade entries (top level) and MenuUpgrade/MenuBaseTrap entries nested inside
+ * categories (e.g. the "Traps" category); category children are read from the private
+ * {@code menuContentBySlot} map via reflection. Decorative entries (trap-queue slots, separators,
+ * back arrows inside sub-menus) are excluded.
+ * <p>
+ * Cost of the NEXT tier comes from MenuUpgrade's private {@code tiers} list
+ * (mirroring its onClick: {@code tiers.get(team.getTeamUpgradeTiers().get(name) + 1)}), with
+ * affordability via {@code ShopUtil.calculateMoney}. Purchasing calls
+ * {@code onClick(player, LEFT, team, forFree=false, announce=true, announceUnlocked=true, openInv=false)}
+ * — openInv=false skips the chest refresh that would otherwise throw with no chest open.
  */
 public final class BedWars2023UpgradeProvider implements UpgradeProvider {
     private final Logger logger;
@@ -64,13 +73,15 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         if (index == null) return List.of();
         ITeam team = arena.getTeam(player);
 
+        List<MenuContent> leaves = buyableLeaves(index);
         List<UpgradeContent> out = new ArrayList<>();
-        // Flatten categories (e.g. the "Traps" category opens a sub-menu) so their children become
-        // direct buyable entries in the flat form. Ordered by slot to mirror the chest layout.
-        for (MenuContent mc : flatten(new TreeMap<>(index.getMenuContentBySlot()).values())) {
-            ItemStack icon = safeDisplay(mc, player, team);
-            if (!isBuyable(icon)) continue; // skip separators / decorative fillers
-            out.add(new UpgradeContent(mc.getName(), displayName(icon, mc.getName())));
+        for (int i = 0; i < leaves.size(); i++) {
+            MenuContent mc = leaves.get(i);
+            String display = displayName(safeDisplay(mc, player, team), mc.getName());
+            Cost cost = upgradeCost(api, player, team, mc);
+            // index-qualified id: survives duplicate names across flattened categories
+            out.add(new UpgradeContent(i + "|" + mc.getName(), display,
+                    cost.cost, cost.currency, cost.affordable, cost.maxed));
         }
         return out;
     }
@@ -85,10 +96,7 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         if (index == null) return PurchaseResult.fail("provider unavailable");
         ITeam team = arena.getTeam(player);
 
-        MenuContent target = null;
-        for (MenuContent mc : flatten(index.getMenuContentBySlot().values())) {
-            if (mc.getName().equals(upgradeId)) { target = mc; break; }
-        }
+        MenuContent target = resolve(index, upgradeId);
         if (target == null) return PurchaseResult.fail("not found");
 
         try {
@@ -101,36 +109,46 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         }
     }
 
-    /**
-     * Flattens MenuContent categories into their leaf children. A category (e.g. "Traps") stores its
-     * children in a private {@code menuContentBySlot} map and opens a sub-chest on click; we read that
-     * map reflectively so the children show as direct buyable entries. Leaves are returned as-is.
-     */
-    private List<MenuContent> flatten(java.util.Collection<MenuContent> top) {
+    // --- leaf enumeration ---------------------------------------------------
+
+    /** Buyable leaves in deterministic slot order (top level, categories flattened). */
+    private List<MenuContent> buyableLeaves(UpgradesIndex index) {
         List<MenuContent> out = new ArrayList<>();
-        for (MenuContent mc : top) {
-            List<MenuContent> children = childrenOf(mc);
-            if (children != null && !children.isEmpty()) {
-                out.addAll(flatten(children)); // category -> recurse into its children
-            } else {
-                out.add(mc); // leaf (a real upgrade/trap)
-            }
-        }
+        collect(new TreeMap<>(index.getMenuContentBySlot()).values(), false, out);
         return out;
     }
 
-    /** Reads a category's private menuContentBySlot via reflection; null if this is not a category. */
+    private void collect(Collection<MenuContent> contents, boolean fromCategory, List<MenuContent> out) {
+        for (MenuContent mc : contents) {
+            List<MenuContent> children = childrenOf(mc);
+            if (children != null && !children.isEmpty()) {
+                collect(children, true, out); // category -> recurse into its children
+                continue;
+            }
+            String cls = mc.getClass().getSimpleName();
+            if (cls.equals("MenuUpgrade") || cls.equals("MenuBaseTrap")) {
+                out.add(mc);
+            } else if (!fromCategory && !cls.equals("MenuTrapSlot") && !cls.equals("MenuSeparator")) {
+                out.add(mc); // unknown custom top-level content: keep
+            }
+            // unknown CATEGORY children (back arrows, fillers) are skipped
+        }
+    }
+
+    /** Reads a category's private menuContentBySlot via reflection (slot-sorted); null if not a category. */
     private List<MenuContent> childrenOf(MenuContent mc) {
         try {
-            java.lang.reflect.Field f = mc.getClass().getDeclaredField("menuContentBySlot");
+            Field f = mc.getClass().getDeclaredField("menuContentBySlot");
             f.setAccessible(true);
             Object map = f.get(mc);
             if (map instanceof Map<?, ?> m) {
-                List<MenuContent> out = new ArrayList<>();
-                for (Object v : m.values()) {
-                    if (v instanceof MenuContent child) out.add(child);
+                TreeMap<Integer, MenuContent> sorted = new TreeMap<>();
+                for (Map.Entry<?, ?> e : m.entrySet()) {
+                    if (e.getKey() instanceof Integer slot && e.getValue() instanceof MenuContent child) {
+                        sorted.put(slot, child);
+                    }
                 }
-                return out;
+                return new ArrayList<>(sorted.values());
             }
         } catch (NoSuchFieldException notACategory) {
             return null;
@@ -140,18 +158,81 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         return null;
     }
 
+    /** Resolve an index-qualified id ("i|name"), falling back to a name search. */
+    private MenuContent resolve(UpgradesIndex index, String id) {
+        List<MenuContent> leaves = buyableLeaves(index);
+        int sep = id.indexOf('|');
+        if (sep > 0) {
+            try {
+                int idx = Integer.parseInt(id.substring(0, sep));
+                String name = id.substring(sep + 1);
+                if (idx >= 0 && idx < leaves.size() && leaves.get(idx).getName().equals(name)) {
+                    return leaves.get(idx);
+                }
+                for (MenuContent mc : leaves) {
+                    if (mc.getName().equals(name)) return mc;
+                }
+                return null;
+            } catch (NumberFormatException ignored) {
+            }
+        }
+        for (MenuContent mc : leaves) {
+            if (mc.getName().equals(id)) return mc;
+        }
+        return null;
+    }
+
+    // --- cost ----------------------------------------------------------------
+
+    private record Cost(int cost, String currency, boolean affordable, boolean maxed) {
+        static Cost plain() { return new Cost(0, "", true, false); }
+        static Cost maxedOut() { return new Cost(0, "", true, true); }
+    }
+
+    /**
+     * Next-tier cost for MenuUpgrade entries, mirroring MenuUpgrade.onClick: the team's current tier
+     * comes from {@code team.getTeamUpgradeTiers()}, the next tier from the private {@code tiers} list.
+     */
+    private Cost upgradeCost(BedWars api, Player player, ITeam team, MenuContent mc) {
+        if (team == null || !mc.getClass().getSimpleName().equals("MenuUpgrade")) return Cost.plain();
+        try {
+            Field f = mc.getClass().getDeclaredField("tiers");
+            f.setAccessible(true);
+            List<?> tiers = (List<?>) f.get(mc);
+            if (tiers == null || tiers.isEmpty()) return Cost.plain();
+
+            int tier = -1;
+            Map<String, Integer> teamTiers = team.getTeamUpgradeTiers();
+            if (teamTiers != null && teamTiers.containsKey(mc.getName())) {
+                tier = teamTiers.get(mc.getName());
+            }
+            if (tier + 1 >= tiers.size()) return Cost.maxedOut();
+
+            Object next = tiers.get(tier + 1);
+            var costMethod = next.getClass().getDeclaredMethod("getCost");
+            costMethod.setAccessible(true);
+            int cost = (int) costMethod.invoke(next);
+            var currencyMethod = next.getClass().getDeclaredMethod("getCurrency");
+            currencyMethod.setAccessible(true);
+            Object cur = currencyMethod.invoke(next);
+            if (!(cur instanceof Material currency) || currency == Material.AIR) {
+                return new Cost(cost, "", true, false); // vault/unknown currency: show cost, no afford check
+            }
+            boolean affordable = api.getShopUtil().calculateMoney(player, currency) >= cost;
+            return new Cost(cost, currencyName(currency), affordable, false);
+        } catch (Throwable t) {
+            return Cost.plain();
+        }
+    }
+
+    // --- display helpers -------------------------------------------------------
+
     private ItemStack safeDisplay(MenuContent mc, Player player, ITeam team) {
         try {
             return mc.getDisplayItem(player, team);
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private boolean isBuyable(ItemStack icon) {
-        if (icon == null || icon.getType().isAir()) return false;
-        if (icon.getType().name().endsWith("GLASS_PANE")) return false; // separators
-        return icon.hasItemMeta() && icon.getItemMeta().hasDisplayName();
     }
 
     private String displayName(ItemStack icon, String fallback) {
@@ -162,5 +243,18 @@ public final class BedWars2023UpgradeProvider implements UpgradeProvider {
         } catch (Exception ignored) {
         }
         return fallback;
+    }
+
+    private static String currencyName(Material currency) {
+        if (currency == null) return "";
+        switch (currency) {
+            case IRON_INGOT: return "Iron";
+            case GOLD_INGOT: return "Gold";
+            case DIAMOND: return "Diamond";
+            case EMERALD: return "Emerald";
+            default:
+                String n = currency.name().toLowerCase().replace('_', ' ');
+                return Character.toUpperCase(n.charAt(0)) + n.substring(1);
+        }
     }
 }

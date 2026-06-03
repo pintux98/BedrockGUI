@@ -19,7 +19,18 @@ public final class UpgradeMenuModel {
     public List<MenuButton> upgradeButtons(List<UpgradeContent> upgrades) {
         List<MenuButton> buttons = new ArrayList<>();
         for (UpgradeContent upgrade : upgrades) {
-            String label = config.render(config.upgradeButton(), Map.of("upgrade", upgrade.name()));
+            String template;
+            if (upgrade.maxed()) {
+                template = config.upgradeButtonMaxed();
+            } else if (upgrade.cost() > 0) {
+                template = upgrade.affordable() ? config.upgradeButton() : config.upgradeButtonUnaffordable();
+            } else {
+                template = config.upgradeButtonNoCost();
+            }
+            String label = config.render(template, Map.of(
+                    "upgrade", upgrade.name(),
+                    "cost", String.valueOf(upgrade.cost()),
+                    "currency", upgrade.currency() == null ? "" : upgrade.currency()));
             buttons.add(new MenuButton(label, "bw_upgrade_buy:" + BedwarsActionPayloads.encode(upgrade.id())));
         }
         buttons.add(new MenuButton(config.upgradeCloseButton(), "bw_upgrade_close:"));

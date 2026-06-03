@@ -31,6 +31,9 @@ public final class BedwarsAddonConfiguration {
     private final String upgradeTitle;
     private final String upgradeContent;
     private final String upgradeButton;
+    private final String upgradeButtonUnaffordable;
+    private final String upgradeButtonMaxed;
+    private final String upgradeButtonNoCost;
     private final String upgradeCloseButton;
     private final String upgradeProviderUnavailable;
 
@@ -111,7 +114,10 @@ public final class BedwarsAddonConfiguration {
 
         this.upgradeTitle = color(c.getString("upgrades.title", "&8Team Upgrades"));
         this.upgradeContent = color(c.getString("upgrades.content", "Buy upgrades for your team"));
-        this.upgradeButton = c.getString("upgrades.upgrade-button", "&a{upgrade}");
+        this.upgradeButton = c.getString("upgrades.upgrade-button", "&a{upgrade}\n&7{cost} {currency}");
+        this.upgradeButtonUnaffordable = c.getString("upgrades.upgrade-button-unaffordable", "&c{upgrade}\n&7{cost} {currency}");
+        this.upgradeButtonMaxed = c.getString("upgrades.upgrade-button-maxed", "&7{upgrade} &8(Maxed)");
+        this.upgradeButtonNoCost = c.getString("upgrades.upgrade-button-nocost", "&a{upgrade}");
         this.upgradeCloseButton = color(c.getString("upgrades.close-button", "&cClose"));
         this.upgradeProviderUnavailable = color(c.getString("upgrades.provider-unavailable", "&cUpgrades are currently unavailable."));
 
@@ -235,6 +241,9 @@ public final class BedwarsAddonConfiguration {
     public String upgradeTitle() { return upgradeTitle; }
     public String upgradeContent() { return upgradeContent; }
     public String upgradeButton() { return upgradeButton; }
+    public String upgradeButtonUnaffordable() { return upgradeButtonUnaffordable; }
+    public String upgradeButtonMaxed() { return upgradeButtonMaxed; }
+    public String upgradeButtonNoCost() { return upgradeButtonNoCost; }
     public String upgradeCloseButton() { return upgradeCloseButton; }
     public String upgradeProviderUnavailable() { return upgradeProviderUnavailable; }
     public String arenaTitle() { return arenaTitle; }

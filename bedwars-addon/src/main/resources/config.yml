@@ -25,8 +25,11 @@ shop:
 upgrades:
   title: "&8Team Upgrades"
   content: "Buy upgrades for your team"
-  # {upgrade} replaced with the upgrade display name
-  upgrade-button: "&a{upgrade}"
+  # {upgrade} {cost} {currency} placeholders
+  upgrade-button: "&a{upgrade}\n&7{cost} {currency}"
+  upgrade-button-unaffordable: "&c{upgrade}\n&7{cost} {currency}"
+  upgrade-button-maxed: "&7{upgrade} &8(Maxed)"
+  upgrade-button-nocost: "&a{upgrade}"
   close-button: "&cClose"
   provider-unavailable: "&cUpgrades are currently unavailable."
 
