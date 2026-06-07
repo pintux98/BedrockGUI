@@ -1,0 +1,56 @@
+version = bedwarsAddonVersion
+
+repositories.clear()
+repositories {
+    mavenCentral()
+    maven { url = "https://repo.papermc.io/repository/maven-public/" }
+    maven { url = "https://repo.opencollab.dev/main/" }
+    maven { url = "https://repo.tomkeuper.com/repository/releases/" }
+    maven { url = "https://repo.codemc.io/repository/maven-public/" }
+    maven { url = "https://repo.screamingsandals.org/public/" }
+    maven { url = "https://jitpack.io" }
+}
+
+dependencies {
+    compileOnly project(':common')
+    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
+    compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+        exclude group: "io.papermc.paper", module: "paper-api"
+    }
+    compileOnly("com.andrei1058.bedwars:bedwars-api:${bedWars1058Version}") {
+        transitive = false
+    }
+    compileOnly("org.screamingsandals.bedwars:BedWars-API:${screamingBedWarsVersion}") {
+        transitive = false
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn(":common:jar")
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    archiveBaseName.set('BedrockGUI-BedwarsAddon')
+    if (localOutputDir) {
+        destinationDirectory.set(file("${localOutputDir}/lobby2/plugins"))
+    }
+}

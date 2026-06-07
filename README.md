@@ -32,6 +32,7 @@ Execute complex logic using a modern curly-brace syntax. Chain actions together 
 - **Floodgate**: Native support for Bedrock player detection.
 - **PlaceholderAPI**: Use any PAPI placeholder in your titles, button text, or action values.
 - **ShopGUI+ & EconomyShopGUI**: Dedicated shop bridge actions (see `essentials-addon` module).
+- **Bedwars**: Native forms for **BedWars2023**, **BedWars1058**, and **ScreamingBedWars** — in-game shop, team upgrades, arena selector, stats, spectator, and party menus, auto-detecting the installed plugin (see `bedwars-addon` module).
 - **YAML Configuration**: No need to recompile; edit your menus in real-time.
 
 ### 🧩 Multi-Platform Architecture
@@ -42,6 +43,7 @@ Execute complex logic using a modern curly-brace syntax. Chain actions together 
 | `velocity` | Velocity proxy | `BedrockGUI-Velocity.jar` |
 | `bungeecord` | BungeeCord / Waterfall | `BedrockGUI-Bungee.jar` |
 | `essentials-addon` | Paper shop addons | `BedrockGUI-EssentialsAddon.jar` |
+| `bedwars-addon` | Paper Bedwars addons | `BedrockGUI-BedwarsAddon.jar` |
 
 ---
 
@@ -72,13 +74,10 @@ Execute complex logic using a modern curly-brace syntax. Chain actions together 
 ./gradlew buildVelocity
 ./gradlew buildBungeecord
 ./gradlew buildEssentialsAddon
+./gradlew buildBedwarsAddon
 ```
 
-Built JARs are automatically placed in your server directories:
-- **BungeeCord** → `~/Desktop/Server/Java-Bedrock-Server/`
-- **Paper** → `~/Desktop/Server/Java-Bedrock-Server/lobby/plugins/`
-- **Velocity** → `~/Desktop/Server/Java-Bedrock-Server/proxy/plugins/`
-- **EssentialsAddon** → `~/Desktop/Server/Java-Bedrock-Server/lobby/plugins/`
+Built JARs are written to each module's `build/libs/` directory.
 
 ### Updating Dependencies
 All versions are centralized in [`gradle.properties`](gradle.properties). To update any dependency, change the version in that single file — no need to edit individual module builds.
@@ -122,10 +121,20 @@ BedrockGUI/
 ├── velocity/            # Velocity proxy platform
 ├── bungeecord/          # BungeeCord/Waterfall platform
 ├── essentials-addon/    # ShopGUI+ & EconomyShopGUI bridges
-├── docs/                # API reference and user guide
+├── bedwars-addon/       # BedWars2023 / BedWars1058 / ScreamingBedWars forms
+├── docs/                # API reference, user guide, addon development guide
 ├── gradle.properties    # Centralized dependency versions
 └── build.gradle         # Root build config
 ```
+
+---
+
+## 🧑‍💻 Developers
+
+Building your own addon? See the **[Addon Development Guide](docs/Addon-Development-Guide.md)** — it
+covers the BedrockGUI API surface, the provider-based addon architecture, form and action patterns,
+GUI-interception strategies, multi-plugin support, and testing, so you don't have to read through the
+core code each time. The `essentials-addon` and `bedwars-addon` modules are complete worked examples.
 
 ---
 

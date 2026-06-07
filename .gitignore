@@ -15,7 +15,8 @@
 /designer-app/node_modules/
 /shopgui-addon/bin/
 /shopgui-addon/build/
-/.omo/
 /essentials-addon/build/
 /.opencode/
 /local.properties
+/bedwars-addon/build/
+/.claude/

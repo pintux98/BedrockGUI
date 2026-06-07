@@ -85,3 +85,9 @@ task buildEssentialsAddon {
     dependsOn ':essentials-addon:jar'
     description = 'Builds only the Essentials addon module'
 }
+
+// Task to build only the Bedwars Bedrock addon
+task buildBedwarsAddon {
+    dependsOn ':bedwars-addon:jar'
+    description = 'Builds only the Bedwars addon module'
+}
