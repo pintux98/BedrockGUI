@@ -41,6 +41,7 @@ jobs:
           cp paper/build/libs/BedrockGUI-Paper-*.jar release-artifacts/
           cp velocity/build/libs/BedrockGUI-Velocity-*.jar release-artifacts/
           cp essentials-addon/build/libs/BedrockGUI-EssentialsAddon-*.jar release-artifacts/
+          cp bedwars-addon/build/libs/BedrockGUI-BedwarsAddon-*.jar release-artifacts/
           ls -la release-artifacts/
 
       - name: Create Release
