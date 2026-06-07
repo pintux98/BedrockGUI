@@ -26,10 +26,6 @@ dependencies {
     }
 }
 
-test {
-    useJUnitPlatform()
-}
-
 tasks.withType(JavaCompile).configureEach {
     dependsOn(":common:jar")
 }
@@ -51,6 +47,6 @@ shadowJar {
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-BedwarsAddon')
     if (localOutputDir) {
-        destinationDirectory.set(file("${localOutputDir}/lobby2/plugins"))
+        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
     }
 }
