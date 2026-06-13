@@ -17,18 +17,35 @@ public final class PetCommandListener implements Listener {
 
     @EventHandler
     public void onCommand(PlayerCommandPreprocessEvent event) {
-        if (!service.shouldHandle(event.getPlayer())) {
-            return;
-        }
         String message = event.getMessage();
         if (message == null) {
             return;
         }
-        String lower = message.toLowerCase(Locale.ROOT).trim();
-        String first = lower.split("\\s+")[0];
+        String[] parts = message.trim().split("\\s+");
+        if (parts.length == 0) {
+            return;
+        }
+        String first = parts[0].toLowerCase(Locale.ROOT);
+        boolean bedrock = service.shouldHandle(event.getPlayer());
 
-        // /pet (+ alias /pets) is the addon's own command, handled by the PetCommand executor.
-        // Here we only intercept MyPet's own commands (/petshop, /pcst) for Bedrock players.
+        // /pet (+ alias /pets) is handled here instead of via a registered command, so it keeps
+        // working after a PlugMan-style reload (a registered PluginCommand would point at the old,
+        // now-disabled plugin instance and throw "plugin is disabled"). Bedrock opens the form;
+        // Java is forwarded to MyPet's own /petlist.
+        if (first.equals("/pet") || first.equals("/pets")) {
+            event.setCancelled(true);
+            if (bedrock) {
+                service.openPetList(event.getPlayer());
+            } else {
+                event.getPlayer().performCommand(joinArgs("petlist", parts));
+            }
+            return;
+        }
+
+        if (!bedrock) {
+            return;
+        }
+        // MyPet's own commands, intercepted only for Bedrock players (Java passes through to MyPet).
         if (first.equals("/petshop")) {
             event.setCancelled(true);
             service.openPetShop(event.getPlayer());
@@ -36,5 +53,13 @@ public final class PetCommandListener implements Listener {
             event.setCancelled(true);
             service.openSkilltreeForm(event.getPlayer());
         }
+    }
+
+    private String joinArgs(String base, String[] parts) {
+        StringBuilder builder = new StringBuilder(base);
+        for (int i = 1; i < parts.length; i++) {
+            builder.append(' ').append(parts[i]);
+        }
+        return builder.toString();
     }
 }

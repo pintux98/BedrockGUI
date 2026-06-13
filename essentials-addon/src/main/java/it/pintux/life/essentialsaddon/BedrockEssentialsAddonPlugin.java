@@ -86,9 +86,6 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         getCommand("essentialsaddon").setExecutor(new EssentialsAddonCommand(this));
         getCommand("essentialsaddon").setTabCompleter(new EssentialsAddonCommand(this));
-        if (getCommand("pet") != null) {
-            getCommand("pet").setExecutor(new it.pintux.life.essentialsaddon.command.PetCommand(this));
-        }
 
         setupModules();
     }
