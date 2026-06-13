@@ -21,6 +21,7 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleTpa;
     private final boolean moduleShopGuiPlus;
     private final boolean moduleEconomyShopGui;
+    private final boolean moduleMyPet;
 
     // Actions-only (register actions without internal forms)
     private final boolean actionsWarps;
@@ -29,6 +30,7 @@ public final class EssentialsAddonConfiguration {
     private final boolean actionsTpa;
     private final boolean actionsShopGuiPlus;
     private final boolean actionsEconomyShopGui;
+    private final boolean actionsMyPet;
 
     // Hub
     private final String hubTitle;
@@ -39,6 +41,7 @@ public final class EssentialsAddonConfiguration {
     private final String hubButtonTpa;
     private final String hubButtonShopGuiPlus;
     private final String hubButtonEconomyShopGui;
+    private final String hubButtonMyPet;
 
     private final String warpTitle;
     private final String warpContent;
@@ -121,6 +124,39 @@ public final class EssentialsAddonConfiguration {
     private final String soundShopPurchaseSuccess;
     private final String soundShopPurchaseFailed;
 
+    private final String petShopTitle;
+    private final String petShopContent;
+    private final String petShopButton;
+    private final String petShopOwnedSuffix;
+    private final String petBuyConfirmTitle;
+    private final String petBuyConfirmContent;
+    private final String petBuyConfirmYes;
+    private final String petBuyConfirmNo;
+    private final String petListTitle;
+    private final String petListContent;
+    private final String petListButton;
+    private final String petActiveSuffix;
+    private final String petInfoTitle;
+    private final String petInfoContent;
+    private final String petCallButton;
+    private final String petPutAwayButton;
+    private final String petSkilltreeButton;
+    private final String petSkilltreeTitle;
+    private final String petSkilltreeContent;
+    private final String petSkilltreeOption;
+    private final String petSkilltreeCurrentSuffix;
+    private final String petNoPets;
+    private final String petNoActivePet;
+    private final String petNotReady;
+    private final String petBuySuccess;
+    private final String petBuyFailed;
+    private final String petCannotAfford;
+    private final String petCallSuccess;
+    private final String petCallFailed;
+    private final String petPutAwaySuccess;
+    private final String petSkilltreeSetSuccess;
+    private final String petSkilltreeSetFailed;
+
     private final String noBedrockGui;
     private final String essentialsNotReady;
     private final String providerUnavailable;
@@ -140,6 +176,7 @@ public final class EssentialsAddonConfiguration {
         this.moduleTpa = configuration.getBoolean("modules.tpa", false);
         this.moduleShopGuiPlus = configuration.getBoolean("modules.shopgui-plus", false);
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
+        this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
 
         this.actionsWarps = configuration.getBoolean("actions-only.warps", false);
         this.actionsKits = configuration.getBoolean("actions-only.kits", false);
@@ -147,6 +184,7 @@ public final class EssentialsAddonConfiguration {
         this.actionsTpa = configuration.getBoolean("actions-only.tpa", false);
         this.actionsShopGuiPlus = configuration.getBoolean("actions-only.shopgui-plus", false);
         this.actionsEconomyShopGui = configuration.getBoolean("actions-only.economyshop-gui", false);
+        this.actionsMyPet = configuration.getBoolean("actions-only.mypet", false);
 
         this.hubTitle = color(configuration.getString("hub.title", "&6&lEssentials Menu"));
         this.hubContent = color(configuration.getString("hub.content", "&7Select a feature to use."));
@@ -156,6 +194,7 @@ public final class EssentialsAddonConfiguration {
         this.hubButtonTpa = color(configuration.getString("hub.button-tpa", "&e&lTeleport"));
         this.hubButtonShopGuiPlus = color(configuration.getString("hub.button-shopgui-plus", "&2&lShopGUI+"));
         this.hubButtonEconomyShopGui = color(configuration.getString("hub.button-economyshop-gui", "&2&lEconomyShop"));
+        this.hubButtonMyPet = color(configuration.getString("hub.button-mypet", "&d&lPets"));
 
         this.warpTitle = color(configuration.getString("ui.warp-title", "&bWarps"));
         this.warpContent = color(configuration.getString("ui.warp-content", "&7Select a warp to teleport to."));
@@ -237,6 +276,40 @@ public final class EssentialsAddonConfiguration {
         this.shopRequirePurchaseConfirmation = configuration.getBoolean("ui.shop-require-purchase-confirmation", true);
         this.soundShopPurchaseSuccess = configuration.getString("sounds.shop-purchase-success", "entity.player.levelup");
         this.soundShopPurchaseFailed = configuration.getString("sounds.shop-purchase-failed", "block.note_block.pling");
+
+        this.petShopTitle = color(configuration.getString("ui.pet-shop-title", "&dPet Shop"));
+        this.petShopContent = color(configuration.getString("ui.pet-shop-content", "&7Buy a pet."));
+        this.petShopButton = color(configuration.getString("ui.pet-shop-button", "&e%pet_name% &7- &a%price%"));
+        this.petShopOwnedSuffix = color(configuration.getString("ui.pet-shop-owned-suffix", " &8(Owned)"));
+        this.petBuyConfirmTitle = color(configuration.getString("ui.pet-buy-confirm-title", "&dBuy Pet"));
+        this.petBuyConfirmContent = color(configuration.getString("ui.pet-buy-confirm-content", "&7Buy &f%pet_name% &7for &a%price%&7?"));
+        this.petBuyConfirmYes = color(configuration.getString("ui.pet-buy-confirm-yes", "&aBuy"));
+        this.petBuyConfirmNo = color(configuration.getString("ui.pet-buy-confirm-no", "&cCancel"));
+        this.petListTitle = color(configuration.getString("ui.pet-list-title", "&dYour Pets"));
+        this.petListContent = color(configuration.getString("ui.pet-list-content", "&7Select a pet."));
+        this.petListButton = color(configuration.getString("ui.pet-list-button", "&e%pet_name% &7(%pet_type%)"));
+        this.petActiveSuffix = color(configuration.getString("ui.pet-active-suffix", " &a(Active)"));
+        this.petInfoTitle = color(configuration.getString("ui.pet-info-title", "&d%pet_name%"));
+        this.petInfoContent = color(configuration.getString("ui.pet-info-content",
+                "&7Type: &f%pet_type%\n&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%\n&7Hunger: &f%hunger%\n&7Skilltree: &f%skilltree%"));
+        this.petCallButton = color(configuration.getString("ui.pet-call-button", "&aCall Pet"));
+        this.petPutAwayButton = color(configuration.getString("ui.pet-put-away-button", "&6Put Away"));
+        this.petSkilltreeButton = color(configuration.getString("ui.pet-skilltree-button", "&bSkilltree"));
+        this.petSkilltreeTitle = color(configuration.getString("ui.pet-skilltree-title", "&bSkilltrees"));
+        this.petSkilltreeContent = color(configuration.getString("ui.pet-skilltree-content", "&7Choose a skilltree."));
+        this.petSkilltreeOption = color(configuration.getString("ui.pet-skilltree-option", "&e%skilltree%"));
+        this.petSkilltreeCurrentSuffix = color(configuration.getString("ui.pet-skilltree-current-suffix", " &a(Current)"));
+        this.petNoPets = color(configuration.getString("messages.pet-no-pets", "&cYou have no pets."));
+        this.petNoActivePet = color(configuration.getString("messages.pet-no-active-pet", "&cYou need an active pet first."));
+        this.petNotReady = color(configuration.getString("messages.pet-not-ready", "&eMyPet is not loaded yet."));
+        this.petBuySuccess = color(configuration.getString("messages.pet-buy-success", "&aPet purchased!"));
+        this.petBuyFailed = color(configuration.getString("messages.pet-buy-failed", "&cPurchase failed: %reason%"));
+        this.petCannotAfford = color(configuration.getString("messages.pet-cannot-afford", "&cYou cannot afford this pet."));
+        this.petCallSuccess = color(configuration.getString("messages.pet-call-success", "&aPet called!"));
+        this.petCallFailed = color(configuration.getString("messages.pet-call-failed", "&cCould not call that pet."));
+        this.petPutAwaySuccess = color(configuration.getString("messages.pet-put-away-success", "&aPet put away."));
+        this.petSkilltreeSetSuccess = color(configuration.getString("messages.pet-skilltree-set-success", "&aSkilltree changed!"));
+        this.petSkilltreeSetFailed = color(configuration.getString("messages.pet-skilltree-set-failed", "&cCould not change skilltree."));
 
         this.noBedrockGui = color(configuration.getString("messages.no-bedrockgui", "&cBedrockGUI API is not available."));
         this.essentialsNotReady = color(configuration.getString("messages.essentials-not-ready", "&eThe Essentials backend is not loaded yet."));
@@ -383,6 +456,7 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleTpa() { return moduleTpa; }
     public boolean moduleShopGuiPlus() { return moduleShopGuiPlus; }
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
+    public boolean moduleMyPet() { return moduleMyPet; }
 
     // Actions-only
     public boolean actionsWarps() { return actionsWarps && !moduleWarps; }
@@ -391,6 +465,7 @@ public final class EssentialsAddonConfiguration {
     public boolean actionsTpa() { return actionsTpa && !moduleTpa; }
     public boolean actionsShopGuiPlus() { return actionsShopGuiPlus && !moduleShopGuiPlus; }
     public boolean actionsEconomyShopGui() { return actionsEconomyShopGui && !moduleEconomyShopGui; }
+    public boolean actionsMyPet() { return actionsMyPet && !moduleMyPet; }
 
     // Hub
     public String hubTitle() { return hubTitle; }
@@ -401,4 +476,38 @@ public final class EssentialsAddonConfiguration {
     public String hubButtonTpa() { return hubButtonTpa; }
     public String hubButtonShopGuiPlus() { return hubButtonShopGuiPlus; }
     public String hubButtonEconomyShopGui() { return hubButtonEconomyShopGui; }
+    public String hubButtonMyPet() { return hubButtonMyPet; }
+
+    public String petShopTitle() { return petShopTitle; }
+    public String petShopContent() { return petShopContent; }
+    public String petShopButton() { return petShopButton; }
+    public String petShopOwnedSuffix() { return petShopOwnedSuffix; }
+    public String petBuyConfirmTitle() { return petBuyConfirmTitle; }
+    public String petBuyConfirmContent() { return petBuyConfirmContent; }
+    public String petBuyConfirmYes() { return petBuyConfirmYes; }
+    public String petBuyConfirmNo() { return petBuyConfirmNo; }
+    public String petListTitle() { return petListTitle; }
+    public String petListContent() { return petListContent; }
+    public String petListButton() { return petListButton; }
+    public String petActiveSuffix() { return petActiveSuffix; }
+    public String petInfoTitle() { return petInfoTitle; }
+    public String petInfoContent() { return petInfoContent; }
+    public String petCallButton() { return petCallButton; }
+    public String petPutAwayButton() { return petPutAwayButton; }
+    public String petSkilltreeButton() { return petSkilltreeButton; }
+    public String petSkilltreeTitle() { return petSkilltreeTitle; }
+    public String petSkilltreeContent() { return petSkilltreeContent; }
+    public String petSkilltreeOption() { return petSkilltreeOption; }
+    public String petSkilltreeCurrentSuffix() { return petSkilltreeCurrentSuffix; }
+    public String petNoPets() { return petNoPets; }
+    public String petNoActivePet() { return petNoActivePet; }
+    public String petNotReady() { return petNotReady; }
+    public String petBuySuccess() { return petBuySuccess; }
+    public String petBuyFailed() { return petBuyFailed; }
+    public String petCannotAfford() { return petCannotAfford; }
+    public String petCallSuccess() { return petCallSuccess; }
+    public String petCallFailed() { return petCallFailed; }
+    public String petPutAwaySuccess() { return petPutAwaySuccess; }
+    public String petSkilltreeSetSuccess() { return petSkilltreeSetSuccess; }
+    public String petSkilltreeSetFailed() { return petSkilltreeSetFailed; }
 }
