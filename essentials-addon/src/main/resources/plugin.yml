@@ -12,8 +12,13 @@ softdepend:
   - EconomyShopGUI
   - EconomyShopGUI-Premium
   - HuskHomes
+  - MyPet
 commands:
   essentialsaddon:
     description: Reload EssentialsAddon configuration
     usage: /essentialsaddon reload
     permission: essentialsaddon.reload
+  pet:
+    description: Open the Bedrock pet menu
+    usage: /pet
+    aliases: [pets]

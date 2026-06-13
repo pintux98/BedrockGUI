@@ -40,6 +40,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     private BedrockSoundFeedback soundFeedback;
     private BedrockHubService hubService;
     private BedrockPlayerDetector detector;
+    private PetCatalogService petCatalogService;
+    private BedrockPetService bedrockPetService;
 
     @Override
     public void onDisable() {
@@ -58,6 +60,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         bedrockEconomyShopService = null;
         backendRouter = null;
         hubService = null;
+        petCatalogService = null;
+        bedrockPetService = null;
     }
 
     @Override
@@ -79,7 +83,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                 || configuration.moduleShopGuiPlus() || configuration.moduleEconomyShopGui()
                 || configuration.actionsWarps() || configuration.actionsKits()
                 || configuration.actionsHomes() || configuration.actionsTpa()
-                || configuration.actionsShopGuiPlus() || configuration.actionsEconomyShopGui();
+                || configuration.actionsShopGuiPlus() || configuration.actionsEconomyShopGui()
+                || configuration.moduleMyPet() || configuration.actionsMyPet();
 
         if (!anyModule) {
             getLogger().info("All modules disabled. Enable one in config.yml then run /essentialsaddon reload.");
@@ -105,6 +110,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
         if (configuration.moduleEconomyShopGui() || configuration.actionsEconomyShopGui()) {
             initEconomyShopGui(pluginManager);
+        }
+        if (configuration.moduleMyPet() || configuration.actionsMyPet()) {
+            initMyPet(pluginManager);
         }
 
         if (backendRouter != null) {
@@ -245,6 +253,21 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         else backendRouter.addBackends(backends);
     }
 
+    private void initMyPet(PluginManager pluginManager) {
+        if (!MyPetProvider.isAvailable(this)) {
+            getLogger().info("MyPet module enabled but the MyPet API is not present. Skipping.");
+            return;
+        }
+        petCatalogService = new PetCatalogService(this, getLogger());
+        petCatalogService.setProvider(new MyPetProvider(this));
+        bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
+        getLogger().info("Pet provider: mypet");
+
+        if (configuration.moduleMyPet()) {
+            pluginManager.registerEvents(new PetCommandListener(bedrockPetService), this);
+        }
+    }
+
     private <T> void registerProvider(Map<String, Supplier<T>> factories, String pluginName, Supplier<T> factory) {
         if (Bukkit.getPluginManager().getPlugin(pluginName) != null) {
             factories.put(pluginName, factory);
@@ -327,6 +350,18 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new OpenEconomyShopItemAction(bedrockEconomyShopService));
             api.registerActionHandler(new ExecuteEconomyShopTransactionAction(bedrockEconomyShopService));
         }
+        if ((configuration.moduleMyPet() || configuration.actionsMyPet()) && bedrockPetService != null
+                && petCatalogService != null && petCatalogService.getProvider() != null) {
+            api.registerActionHandler(new HubPetAction(bedrockPetService));
+            api.registerActionHandler(new OpenPetListAction(bedrockPetService));
+            api.registerActionHandler(new OpenPetShopAction(bedrockPetService));
+            api.registerActionHandler(new PetInfoAction(bedrockPetService));
+            api.registerActionHandler(new PetCallAction(bedrockPetService));
+            api.registerActionHandler(new PetSendAwayAction(bedrockPetService));
+            api.registerActionHandler(new OpenPetSkilltreeAction(bedrockPetService));
+            api.registerActionHandler(new PetSetSkilltreeAction(bedrockPetService));
+            api.registerActionHandler(new OpenNativePetShopAction(bedrockPetService));
+        }
         getLogger().info("Registered essentials addon actions with BedrockGUI API");
     }
 
@@ -366,6 +401,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
         if (hubService != null) {
             hubService = new BedrockHubService(configuration, detector, soundFeedback);
+        }
+        if (bedrockPetService != null) {
+            bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
         }
     }
 

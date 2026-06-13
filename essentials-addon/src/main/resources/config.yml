@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 1
+config-version: 2
 
 modules:
   warps: false
@@ -15,6 +15,7 @@ modules:
   tpa: false
   shopgui-plus: false
   economyshop-gui: false
+  mypet: false
 
 # Register actions without internal forms (requires module: false).
 actions-only:
@@ -24,6 +25,7 @@ actions-only:
   tpa: false
   shopgui-plus: false
   economyshop-gui: false
+  mypet: false
 
 # ─────────────────────────────────────────────
 # Hub — unified main menu shown to Bedrock players
@@ -39,6 +41,7 @@ hub:
   button-tpa: '&e&lTeleport'
   button-shopgui-plus: '&2&lShopGUI+'
   button-economyshop-gui: '&2&lEconomyShop'
+  button-mypet: '&d&lPets'
 
 # ─────────────────────────────────────────────
 # UI — all in-game form strings
@@ -124,6 +127,29 @@ ui:
   shop-amount-presets: [1, 8, 16, 32, 64]
   shop-require-purchase-confirmation: true
 
+  # --- MyPet ---
+  pet-shop-title: '&dPet Shop'
+  pet-shop-content: '&7Buy a pet.'
+  pet-shop-button: '&e%pet_name% &7- &a%price%'
+  pet-shop-owned-suffix: ' &8(Owned)'
+  pet-buy-confirm-title: '&dBuy Pet'
+  pet-buy-confirm-content: '&7Buy &f%pet_name% &7for &a%price%&7?'
+  pet-buy-confirm-yes: '&aBuy'
+  pet-buy-confirm-no: '&cCancel'
+  pet-list-title: '&dYour Pets'
+  pet-list-content: '&7Select a pet.'
+  pet-list-button: '&e%pet_name% &7(%pet_type%)'
+  pet-active-suffix: ' &a(Active)'
+  pet-info-title: '&d%pet_name%'
+  pet-info-content: "&7Type: &f%pet_type%\n&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%\n&7Hunger: &f%hunger%\n&7Skilltree: &f%skilltree%"
+  pet-call-button: '&aCall Pet'
+  pet-put-away-button: '&6Put Away'
+  pet-skilltree-button: '&bSkilltree'
+  pet-skilltree-title: '&bSkilltrees'
+  pet-skilltree-content: '&7Choose a skilltree.'
+  pet-skilltree-option: '&e%skilltree%'
+  pet-skilltree-current-suffix: ' &a(Current)'
+
 # ─────────────────────────────────────────────
 # Messages — system-level feedback
 # ─────────────────────────────────────────────
@@ -136,6 +162,18 @@ messages:
   shop-transaction-success: '&aShop action completed successfully.'
   shop-transaction-failed: '&cShop action failed: %reason%'
   shop-unsupported-transaction: '&cThis shop backend does not expose a compatible Bedrock transaction bridge.'
+  pet-no-pets: '&cYou have no pets.'
+  pet-no-active-pet: '&cYou need an active pet first.'
+  pet-not-ready: '&eMyPet is not loaded yet.'
+  pet-buy-success: '&aPet purchased!'
+  pet-buy-failed: '&cPurchase failed: %reason%'
+  pet-cannot-afford: '&cYou cannot afford this pet.'
+  pet-call-success: '&aPet called!'
+  pet-call-failed: '&cCould not call that pet.'
+  pet-put-away-success: '&aPet put away.'
+  pet-put-away-failed: '&cCould not put that pet away.'
+  pet-skilltree-set-success: '&aSkilltree changed!'
+  pet-skilltree-set-failed: '&cCould not change skilltree.'
 
 # ─────────────────────────────────────────────
 # Sounds
