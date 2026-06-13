@@ -113,6 +113,24 @@ final class MyPetShopBridge {
             return PetBuyResult.fail("storage not allowed");
         }
 
+        // Build the pet to grant BEFORE charging, so a failure here never takes the player's money.
+        // getInactiveMyPetFromMyPet does `new InactiveMyPet(template.getOwner())`, so the template
+        // MUST have an owner set first (this is what MyPet's own shop does).
+        template.setOwner(owner);
+        final StoredMyPet clonedPet;
+        try {
+            clonedPet = MyPetApi.getMyPetManager().getInactiveMyPetFromMyPet(template);
+        } catch (Throwable t) {
+            logger.warning("MyPet failed to clone shop pet '" + petId + "': " + t.getMessage());
+            return PetBuyResult.fail("could not create pet");
+        }
+        if (clonedPet == null) {
+            return PetBuyResult.fail("could not create pet");
+        }
+        clonedPet.setOwner(owner);
+        clonedPet.setWorldGroup(WorldGroup.getGroupByWorld(player.getWorld()).getName());
+        clonedPet.setUUID(null);
+
         double price = petSection.getDouble("Price", 0D);
         if (price > 0) {
             EconomyHook economy = MyPetApi.getHookHelper().getEconomy();
@@ -131,11 +149,6 @@ final class MyPetShopBridge {
         }
 
         final double paidPrice = price;
-        final StoredMyPet clonedPet = MyPetApi.getMyPetManager().getInactiveMyPetFromMyPet(template);
-        clonedPet.setOwner(owner);
-        clonedPet.setWorldGroup(WorldGroup.getGroupByWorld(player.getWorld()).getName());
-        clonedPet.setUUID(null);
-
         MyPetApi.getRepository().addMyPet(clonedPet, new RepositoryCallback<Boolean>() {
             @Override
             public void callback(Boolean value) {
