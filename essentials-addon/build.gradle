@@ -11,6 +11,9 @@ dependencies {
     compileOnly("com.github.Gypopo:EconomyShopGUI-API:${economyShopGuiApiVersion}") {
         exclude group: "org.spigotmc", module: "spigot-api"
     }
+    compileOnly("de.keyle:mypet:${myPetVersion}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+    }
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"

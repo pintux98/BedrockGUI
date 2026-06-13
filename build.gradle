@@ -33,6 +33,7 @@ subprojects {
         maven { url = "https://repo.md-5.net/content/repositories/snapshots/" }
         maven { url = "https://repo.md-5.net/content/groups/public/" }
         maven { url = "https://jitpack.io" }
+        maven { url = "https://repo.mypet-plugin.de/" }
         maven { url = "https://repo.william278.net/releases" }
         maven { url = "https://oss.sonatype.org/content/repositories/snapshots/" }
         maven { url = "https://nexus.velocitypowered.com/repository/maven-public/" }
