@@ -171,6 +171,7 @@ messages:
   pet-call-success: '&aPet called!'
   pet-call-failed: '&cCould not call that pet.'
   pet-put-away-success: '&aPet put away.'
+  pet-put-away-failed: '&cCould not put that pet away.'
   pet-skilltree-set-success: '&aSkilltree changed!'
   pet-skilltree-set-failed: '&cCould not change skilltree.'
 

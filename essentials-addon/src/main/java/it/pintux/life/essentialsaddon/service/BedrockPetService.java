@@ -120,12 +120,12 @@ public final class BedrockPetService {
     }
 
     public void putAwayPet(Player player, UUID petUuid) {
-        boolean ok = petCatalog.putAway(player);
+        boolean ok = petCatalog.putAway(player, petUuid);
         if (ok) {
             player.sendMessage(configuration.petPutAwaySuccess());
             playSound(player, configuration.soundFormOpen());
         } else {
-            player.sendMessage(configuration.petCallFailed());
+            player.sendMessage(configuration.petPutAwayFailed());
             playSound(player, configuration.soundActionFailed());
         }
     }

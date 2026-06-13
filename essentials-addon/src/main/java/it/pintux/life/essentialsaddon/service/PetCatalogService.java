@@ -5,7 +5,9 @@ import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -23,10 +25,12 @@ import java.util.logging.Logger;
  */
 public final class PetCatalogService {
 
+    private final JavaPlugin plugin;
     private final Logger logger;
     private PetProvider provider;
 
-    public PetCatalogService(Logger logger) {
+    public PetCatalogService(JavaPlugin plugin, Logger logger) {
+        this.plugin = plugin;
         this.logger = logger;
     }
 
@@ -58,8 +62,8 @@ public final class PetCatalogService {
         provider.call(player, petUuid, callback);
     }
 
-    public boolean putAway(Player player) {
-        return provider != null && provider.putAway(player);
+    public boolean putAway(Player player, java.util.UUID petUuid) {
+        return provider != null && provider.putAway(player, petUuid);
     }
 
     public List<SkilltreeView> listSkilltrees(Player player) {
@@ -80,13 +84,15 @@ public final class PetCatalogService {
             for (PetView pet : owned) {
                 ownedTypes.add(pet.petType().toUpperCase(Locale.ROOT));
             }
-            List<ShopPetView> entries = new ArrayList<>();
-            try {
-                entries.addAll(MyPetShopBridge.readShop(shopId, ownedTypes, logger));
-            } catch (Throwable t) {
-                logger.warning("MyPet shop read failed: " + t.getMessage());
-            }
-            callback.accept(entries);
+            Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
+                List<ShopPetView> entries = new ArrayList<>();
+                try {
+                    entries.addAll(MyPetShopBridge.readShop(shopId, ownedTypes, logger));
+                } catch (Throwable t) {
+                    logger.warning("MyPet shop read failed: " + t.getMessage());
+                }
+                Bukkit.getScheduler().runTask(plugin, () -> callback.accept(entries));
+            });
         });
     }
 

@@ -28,7 +28,7 @@ public interface PetProvider {
     void call(Player player, UUID petUuid, Consumer<Boolean> callback);
 
     /** Despawn the player's active pet (keeps it active, just not in the world). */
-    boolean putAway(Player player);
+    boolean putAway(Player player, java.util.UUID petUuid);
 
     /** Skilltrees selectable for the player's active pet (current one flagged). */
     List<SkilltreeView> listSkilltrees(Player player);
@@ -41,7 +41,4 @@ public interface PetProvider {
 
     /** Charge the player and grant the shop pet. Runs on the main thread. */
     PetBuyResult buyShopEntry(Player player, String shopId, String petId);
-
-    /** True if the player already owns at least one pet of the given MyPet type. */
-    boolean ownsType(Player player, String petType);
 }

@@ -258,7 +258,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             getLogger().info("MyPet module enabled but the MyPet API is not present. Skipping.");
             return;
         }
-        petCatalogService = new PetCatalogService(getLogger());
+        petCatalogService = new PetCatalogService(this, getLogger());
         petCatalogService.setProvider(new MyPetProvider(this));
         bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
         getLogger().info("Pet provider: mypet");

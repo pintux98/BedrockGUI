@@ -154,6 +154,7 @@ public final class EssentialsAddonConfiguration {
     private final String petCallSuccess;
     private final String petCallFailed;
     private final String petPutAwaySuccess;
+    private final String petPutAwayFailed;
     private final String petSkilltreeSetSuccess;
     private final String petSkilltreeSetFailed;
 
@@ -308,6 +309,7 @@ public final class EssentialsAddonConfiguration {
         this.petCallSuccess = color(configuration.getString("messages.pet-call-success", "&aPet called!"));
         this.petCallFailed = color(configuration.getString("messages.pet-call-failed", "&cCould not call that pet."));
         this.petPutAwaySuccess = color(configuration.getString("messages.pet-put-away-success", "&aPet put away."));
+        this.petPutAwayFailed = color(configuration.getString("messages.pet-put-away-failed", "&cCould not put that pet away."));
         this.petSkilltreeSetSuccess = color(configuration.getString("messages.pet-skilltree-set-success", "&aSkilltree changed!"));
         this.petSkilltreeSetFailed = color(configuration.getString("messages.pet-skilltree-set-failed", "&cCould not change skilltree."));
 
@@ -508,6 +510,7 @@ public final class EssentialsAddonConfiguration {
     public String petCallSuccess() { return petCallSuccess; }
     public String petCallFailed() { return petCallFailed; }
     public String petPutAwaySuccess() { return petPutAwaySuccess; }
+    public String petPutAwayFailed() { return petPutAwayFailed; }
     public String petSkilltreeSetSuccess() { return petSkilltreeSetSuccess; }
     public String petSkilltreeSetFailed() { return petSkilltreeSetFailed; }
 }

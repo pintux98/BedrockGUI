@@ -179,9 +179,12 @@ public final class MyPetProvider implements PetProvider {
     }
 
     @Override
-    public boolean putAway(Player player) {
+    public boolean putAway(Player player, java.util.UUID petUuid) {
         MyPet active = activePet(player);
         if (active == null) {
+            return false;
+        }
+        if (petUuid != null && !petUuid.equals(active.getUUID())) {
             return false;
         }
         try {
@@ -242,17 +245,6 @@ public final class MyPetProvider implements PetProvider {
             logger.warning("MyPet setSkilltree failed: " + t.getMessage());
             return false;
         }
-    }
-
-    @Override
-    public boolean ownsType(Player player, String petType) {
-        MyPet active = activePet(player);
-        if (active != null && active.getPetType() != null && active.getPetType().name().equalsIgnoreCase(petType)) {
-            return true;
-        }
-        // Stored pets need an async lookup; BedrockPetService computes the full owned-set
-        // from the async pet list when building the shop form. This sync check covers the active pet.
-        return false;
     }
 
     @Override
