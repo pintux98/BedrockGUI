@@ -11,6 +11,7 @@ import it.pintux.life.essentialsaddon.provider.*;
 import it.pintux.life.essentialsaddon.service.*;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import org.bukkit.Bukkit;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -45,6 +46,11 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        resetModuleState();
+    }
+
+    /** Nulls all per-module wiring so it can be rebuilt by {@link #setupModules()}. */
+    private void resetModuleState() {
         warpCatalogService = null;
         kitCatalogService = null;
         homeCatalogService = null;
@@ -78,6 +84,19 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                 configuration.soundPitch()
         );
 
+        getCommand("essentialsaddon").setExecutor(new EssentialsAddonCommand(this));
+        getCommand("essentialsaddon").setTabCompleter(new EssentialsAddonCommand(this));
+
+        setupModules();
+    }
+
+    /**
+     * Builds (or rebuilds) all enabled modules: services, command listeners, action
+     * handlers and initial data refreshes. Called from {@link #onEnable()} and from
+     * {@link #reloadConfiguration()} (after old listeners are unregistered), so enabling
+     * a module in config.yml and running /essentialsaddon reload activates it without a restart.
+     */
+    private void setupModules() {
         boolean anyModule = configuration.moduleWarps() || configuration.moduleKits()
                 || configuration.moduleHomes() || configuration.moduleTpa()
                 || configuration.moduleShopGuiPlus() || configuration.moduleEconomyShopGui()
@@ -118,9 +137,6 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         if (backendRouter != null) {
             registerShopListeners(pluginManager);
         }
-
-        getCommand("essentialsaddon").setExecutor(new EssentialsAddonCommand(this));
-        getCommand("essentialsaddon").setTabCompleter(new EssentialsAddonCommand(this));
 
         BedrockGUIApi api = getApiSafely();
         if (api != null) {
@@ -366,6 +382,14 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     }
 
     public void reloadConfiguration() {
+        // Tear down the existing module graph: drop every listener this plugin registered
+        // (they hold references to the old service instances) and null the wiring fields.
+        HandlerList.unregisterAll(this);
+        resetModuleState();
+
+        // Reload config + sounds, then rebuild every enabled module from scratch. This makes
+        // enabling/disabling a module in config.yml take effect on /essentialsaddon reload, and
+        // ensures listeners + action handlers reference services built with the fresh config.
         configuration = EssentialsAddonConfiguration.load(this);
         if (soundFeedback != null) {
             soundFeedback.configure(
@@ -377,34 +401,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                     configuration.soundPitch()
             );
         }
-        if (bedrockEssentialsService != null) {
-            bedrockEssentialsService = new BedrockEssentialsService(
-                    getLogger(), configuration, warpCatalogService, kitCatalogService, detector
-            );
-        }
-        if (bedrockHomeService != null) {
-            bedrockHomeService = new BedrockHomeService(configuration, homeCatalogService, detector);
-        }
-        if (bedrockTpaService != null) {
-            bedrockTpaService = new BedrockTpaService(configuration, tpaCatalogService, detector);
-        }
-        if (bedrockShopGuiService != null) {
-            bedrockShopGuiService = new BedrockShopGuiService(
-                    getLogger(), configuration, shopCatalogService, detector,
-                    new ReflectiveShopGuiTransactionGateway(getLogger()), soundFeedback
-            );
-        }
-        if (bedrockEconomyShopService != null) {
-            bedrockEconomyShopService = new BedrockEconomyShopService(
-                    getLogger(), configuration, economyShopCatalogService, detector, soundFeedback
-            );
-        }
-        if (hubService != null) {
-            hubService = new BedrockHubService(configuration, detector, soundFeedback);
-        }
-        if (bedrockPetService != null) {
-            bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
-        }
+
+        setupModules();
     }
 
     public WarpCatalogService getWarpCatalogService() { return warpCatalogService; }
