@@ -11,34 +11,11 @@ import org.bukkit.potion.PotionData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 import java.util.Objects;
 
 public final class ShopGuiReflectionSupport {
-
-    // Maps abbreviated Bukkit PotionType names to their Minecraft display names.
-    private static final Map<String, String> POTION_EFFECT_NAMES = new HashMap<>();
-
-    static {
-        POTION_EFFECT_NAMES.put("REGEN", "Regeneration");
-        POTION_EFFECT_NAMES.put("SPEED", "Speed");
-        POTION_EFFECT_NAMES.put("FIRE_RESISTANCE", "Fire Resistance");
-        POTION_EFFECT_NAMES.put("INSTANT_HEAL", "Instant Heal");
-        POTION_EFFECT_NAMES.put("NIGHT_VISION", "Night Vision");
-        POTION_EFFECT_NAMES.put("WEAKNESS", "Weakness");
-        POTION_EFFECT_NAMES.put("STRENGTH", "Strength");
-        POTION_EFFECT_NAMES.put("SLOWNESS", "Slowness");
-        POTION_EFFECT_NAMES.put("JUMP", "Leaping");
-        POTION_EFFECT_NAMES.put("INSTANT_DAMAGE", "Instant Damage");
-        POTION_EFFECT_NAMES.put("WATER_BREATHING", "Water Breathing");
-        POTION_EFFECT_NAMES.put("INVISIBILITY", "Invisibility");
-        POTION_EFFECT_NAMES.put("DECAY", "Decay");
-        POTION_EFFECT_NAMES.put("TURTLE_MASTER", "Turtle Master");
-        POTION_EFFECT_NAMES.put("SLOW_FALLING", "Slow Falling");
-    }
 
     private ShopGuiReflectionSupport() {
     }
@@ -131,8 +108,7 @@ public final class ShopGuiReflectionSupport {
         if (potionTypeName == null || isBasePotion(potionTypeName)) {
             return prefix;
         }
-        String effectLabel = POTION_EFFECT_NAMES.getOrDefault(potionTypeName, prettify(potionTypeName));
-        StringBuilder builder = new StringBuilder(prefix).append(" of ").append(effectLabel);
+        StringBuilder builder = new StringBuilder(prefix).append(" of ").append(prettify(potionTypeName));
         if (upgraded) {
             builder.append(" II");
         }

@@ -20,7 +20,7 @@ class ShopGuiReflectionSupportTest {
 
     @Test
     void lingeringExtended() {
-        assertEquals("Lingering Potion of Regeneration (Extended)",
+        assertEquals("Lingering Potion of Regen (Extended)",
                 ShopGuiReflectionSupport.composePotionName("LINGERING_POTION", "REGEN", false, true));
     }
 
