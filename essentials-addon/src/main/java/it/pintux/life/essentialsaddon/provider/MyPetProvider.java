@@ -118,13 +118,20 @@ public final class MyPetProvider implements PetProvider {
     }
 
     private PetView toView(StoredMyPet pet, UUID activeUuid, MyPet active) {
-        boolean isActive = activeUuid != null && activeUuid.equals(pet.getUUID());
+        boolean isActivePet = activeUuid != null && activeUuid.equals(pet.getUUID());
         int level = -1;
         double maxHealth = -1;
-        if (isActive && active != null) {
+        boolean spawned = false;
+        if (isActivePet && active != null) {
             try {
                 level = active.getExperience().getLevel();
                 maxHealth = active.getMaxHealth();
+            } catch (Throwable ignored) {
+            }
+            try {
+                // "Here" = currently spawned in the world. A put-away (despawned) pet is still
+                // the active pet, so drive the Call/Put-Away button off spawn state, not activeness.
+                spawned = active.getStatus() == MyPet.PetState.Here;
             } catch (Throwable ignored) {
             }
         }
@@ -138,7 +145,7 @@ public final class MyPetProvider implements PetProvider {
                 maxHealth,
                 pet.getSaturation(),
                 skilltree,
-                isActive
+                spawned
         );
     }
 
@@ -147,6 +154,20 @@ public final class MyPetProvider implements PetProvider {
         MyPetPlayer owner = myPetPlayer(player);
         if (owner == null) {
             runMain(() -> callback.accept(false));
+            return;
+        }
+        // Already the active pet but despawned (put away) → just re-spawn it, like /petcall.
+        MyPet active = activePet(player);
+        if (active != null && active.getUUID().equals(petUuid)) {
+            runMain(() -> {
+                try {
+                    active.createEntity();
+                    callback.accept(true);
+                } catch (Throwable t) {
+                    logger.warning("MyPet createEntity failed: " + t.getMessage());
+                    callback.accept(false);
+                }
+            });
             return;
         }
         try {
