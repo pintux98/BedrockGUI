@@ -27,12 +27,11 @@ public final class PetCommandListener implements Listener {
         String lower = message.toLowerCase(Locale.ROOT).trim();
         String first = lower.split("\\s+")[0];
 
+        // /pet (+ alias /pets) is the addon's own command, handled by the PetCommand executor.
+        // Here we only intercept MyPet's own commands (/petshop, /pcst) for Bedrock players.
         if (first.equals("/petshop")) {
             event.setCancelled(true);
             service.openPetShop(event.getPlayer());
-        } else if (first.equals("/pet") || first.equals("/pets")) {
-            event.setCancelled(true);
-            service.openPetList(event.getPlayer());
         } else if (first.equals("/pcst")) {
             event.setCancelled(true);
             service.openSkilltreeForm(event.getPlayer());

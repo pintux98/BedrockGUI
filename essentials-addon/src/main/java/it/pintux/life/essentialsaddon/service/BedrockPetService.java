@@ -8,6 +8,7 @@ import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
+import it.pintux.life.essentialsaddon.util.MyPetMessages;
 import it.pintux.life.essentialsaddon.util.PetActionPayloads;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -136,16 +137,21 @@ public final class BedrockPetService {
         if (api == null) return;
         if (!ensureReady(player)) return;
 
-        List<SkilltreeView> trees = petCatalog.listSkilltrees(player);
-        if (trees.isEmpty()) {
-            player.sendMessage(configuration.petNoActivePet());
+        // Text comes from MyPet's own localized messages, not the addon config.
+        String petName = petCatalog.activePetName(player);
+        if (petName == null) {
+            player.sendMessage(MyPetMessages.get("Message.No.HasPet", player));
             return;
         }
-        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.petSkilltreeTitle());
-        form.content(configuration.petSkilltreeContent());
+        List<SkilltreeView> trees = petCatalog.listSkilltrees(player);
+        if (trees.isEmpty()) {
+            player.sendMessage(MyPetMessages.format("Message.Command.ChooseSkilltree.NoneAvailable", player, petName));
+            return;
+        }
+        String title = MyPetMessages.format("Message.Skilltree.Available", player, petName);
+        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(title);
         for (SkilltreeView tree : trees) {
-            String label = configuration.render(configuration.petSkilltreeOption(),
-                    Map.of("skilltree", safe(tree.displayName())));
+            String label = MyPetMessages.colorize(tree.displayName());
             if (tree.current()) {
                 label = label + configuration.petSkilltreeCurrentSuffix();
             }
@@ -158,14 +164,10 @@ public final class BedrockPetService {
     }
 
     public void setSkilltree(Player player, String skilltreeName) {
+        // The provider applies MyPet's level checks/fee and sends MyPet's localized
+        // feedback messages; here we only add the matching sound.
         boolean ok = petCatalog.setSkilltree(player, skilltreeName);
-        if (ok) {
-            player.sendMessage(configuration.petSkilltreeSetSuccess());
-            playSound(player, configuration.soundFormOpen());
-        } else {
-            player.sendMessage(configuration.petSkilltreeSetFailed());
-            playSound(player, configuration.soundActionFailed());
-        }
+        playSound(player, ok ? configuration.soundFormOpen() : configuration.soundActionFailed());
     }
 
     // ---------------- Shop ----------------
@@ -193,23 +195,32 @@ public final class BedrockPetService {
                     label = label + configuration.petShopOwnedSuffix();
                 }
                 final ShopPetView fixed = entry;
-                form.button(label, fp -> api.executeActionString(fp,
-                        "essentials_pet_shop_open:" + (fixed.shopId() == null ? "" : fixed.shopId()),
-                        context("pet-shop", fixed.petId())));
+                form.button(label, fp -> openBuyConfirm(player, api, fixed));
             }
             form.send(new BukkitFormPlayer(player));
             playSound(player, configuration.soundFormOpen());
         });
     }
 
-    public void openNativeShop(Player player, String shopId) {
-        petCatalog.openNativeShop(player, shopId, ok -> {
-            if (!ok) {
-                player.sendMessage(configuration.petNotReady());
-                playSound(player, configuration.soundActionFailed());
-            }
-            // on success MyPet's native shop GUI opens (Geyser renders it for Bedrock) — no message needed
-        });
+    private void openBuyConfirm(Player player, BedrockGUIApi api, ShopPetView entry) {
+        String content = configuration.render(configuration.petBuyConfirmContent(),
+                Map.of("pet_name", safe(entry.displayName()), "price", trim(entry.price())));
+        api.createModalForm(configuration.petBuyConfirmTitle())
+                .button1(configuration.petBuyConfirmYes(), fp -> api.executeActionString(fp,
+                        "essentials_pet_buy:" + PetActionPayloads.encodeShop(entry.shopId(), entry.petId()),
+                        context("pet-buy", entry.petId())))
+                .button2(configuration.petBuyConfirmNo(), fp -> openPetShop(player, entry.shopId()))
+                .content(content)
+                .send(new BukkitFormPlayer(player));
+    }
+
+    public void buyPet(Player player, String shopId, String petId) {
+        // The purchase runs fully in-process and sends MyPet's own localized messages
+        // (success/stored/no-money); here we only add the matching sound.
+        petCatalog.buyShopEntry(player, shopId, petId, result ->
+                playSound(player, result.success()
+                        ? configuration.soundShopPurchaseSuccess()
+                        : configuration.soundShopPurchaseFailed()));
     }
 
     // ---------------- helpers ----------------

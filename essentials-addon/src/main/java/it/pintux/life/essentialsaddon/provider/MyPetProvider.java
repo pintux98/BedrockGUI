@@ -1,12 +1,16 @@
 package it.pintux.life.essentialsaddon.provider;
 
 import de.Keyle.MyPet.MyPetApi;
+import de.Keyle.MyPet.api.Configuration;
+import de.Keyle.MyPet.api.Util;
 import de.Keyle.MyPet.api.entity.MyPet;
 import de.Keyle.MyPet.api.entity.StoredMyPet;
 import de.Keyle.MyPet.api.event.MyPetSelectSkilltreeEvent;
 import de.Keyle.MyPet.api.player.MyPetPlayer;
 import de.Keyle.MyPet.api.repository.RepositoryCallback;
 import de.Keyle.MyPet.api.skill.skilltree.Skilltree;
+import de.Keyle.MyPet.api.util.Colorizer;
+import de.Keyle.MyPet.api.util.locale.Translation;
 import it.pintux.life.essentialsaddon.api.PetProvider;
 import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
@@ -197,6 +201,12 @@ public final class MyPetProvider implements PetProvider {
     }
 
     @Override
+    public String activePetName(Player player) {
+        MyPet active = activePet(player);
+        return active == null ? null : active.getPetName();
+    }
+
+    @Override
     public List<SkilltreeView> listSkilltrees(Player player) {
         MyPet active = activePet(player);
         if (active == null) {
@@ -226,24 +236,79 @@ public final class MyPetProvider implements PetProvider {
         return result;
     }
 
+    /**
+     * Switches the active pet's skilltree, mirroring MyPet's own /petchooseskilltree command:
+     * level gate, the switch fee, and MyPet's localized feedback messages (sent directly to the
+     * player). Returns true only on a successful switch so the caller can pick a sound.
+     */
     @Override
     public boolean setSkilltree(Player player, String skilltreeName) {
         MyPet active = activePet(player);
         if (active == null) {
+            player.sendMessage(Translation.getString("Message.No.HasPet", player));
             return false;
         }
         try {
             if (!MyPetApi.getSkilltreeManager().hasSkilltree(skilltreeName)) {
+                player.sendMessage(Util.formatText(
+                        Translation.getString("Message.Command.Skilltree.CantFindSkilltree", player), skilltreeName));
                 return false;
             }
             Skilltree tree = MyPetApi.getSkilltreeManager().getSkilltree(skilltreeName);
             if (tree == null || !tree.getMobTypes().contains(active.getPetType()) || !tree.checkRequirements(active)) {
+                player.sendMessage(Util.formatText(
+                        Translation.getString("Message.Command.Skilltree.CantFindSkilltree", player), skilltreeName));
                 return false;
             }
-            return active.setSkilltree(tree, MyPetSelectSkilltreeEvent.Source.PlayerCommand);
+
+            MyPetPlayer owner = active.getOwner();
+            int requiredLevel = tree.getRequiredLevel();
+            int maxLevel = tree.getMaxLevel();
+            int level = active.getExperience().getLevel();
+            if (requiredLevel > 1 && level < requiredLevel) {
+                owner.sendMessage(Util.formatText(
+                        Translation.getString("Message.Skilltree.RequiresLevel.Message", player),
+                        active.getPetName(), requiredLevel));
+                return false;
+            }
+            if (level > maxLevel) {
+                owner.sendMessage(Util.formatText(
+                        Translation.getString("Message.Skilltree.MaxLevel.Message", player),
+                        active.getPetName(), maxLevel));
+                return false;
+            }
+
+            if (!active.setSkilltree(tree, MyPetSelectSkilltreeEvent.Source.PlayerCommand)) {
+                owner.sendMessage(Translation.getString("Message.Skilltree.NotSwitched", player));
+                return false;
+            }
+
+            owner.sendMessage(Util.formatText(
+                    Translation.getString("Message.Skilltree.SwitchedTo", player),
+                    Colorizer.setColors(tree.getDisplayName())));
+            applySwitchFee(active, owner, requiredLevel);
+            return true;
         } catch (Throwable t) {
             logger.warning("MyPet setSkilltree failed: " + t.getMessage());
             return false;
+        }
+    }
+
+    /** Deducts the configured skilltree switch fee (mirrors MyPet's /petchooseskilltree). */
+    private void applySwitchFee(MyPet active, MyPetPlayer owner, int requiredLevel) {
+        if (owner.isMyPetAdmin() && !Configuration.Skilltree.SWITCH_FEE_ADMIN) {
+            return;
+        }
+        double penalty = Configuration.Skilltree.SWITCH_FEE_FIXED
+                + active.getExperience().getExp() * Configuration.Skilltree.SWITCH_FEE_PERCENT / 100.;
+        if (requiredLevel > 1) {
+            double minExp = active.getExperience().getExpByLevel(requiredLevel);
+            penalty = active.getExp() - penalty < minExp ? active.getExp() - minExp : penalty;
+        }
+        if (Configuration.LevelSystem.Experience.ALLOW_LEVEL_DOWNGRADE) {
+            active.getExperience().removeExp(penalty);
+        } else {
+            active.getExperience().removeCurrentExp(penalty);
         }
     }
 

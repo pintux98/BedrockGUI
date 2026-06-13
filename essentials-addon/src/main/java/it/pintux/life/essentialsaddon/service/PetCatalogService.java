@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.api.PetProvider;
+import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
@@ -73,6 +74,11 @@ public final class PetCatalogService {
         return provider != null && provider.setSkilltree(player, skilltreeName);
     }
 
+    /** Display name of the player's active pet, or null if none. */
+    public String activePetName(Player player) {
+        return provider == null ? null : provider.activePetName(player);
+    }
+
     /**
      * Read MyPet's shop listing from pet-shops.yml and flag entries the player already
      * owns (owns a pet of that type). Owned-set comes from the async pet list, so this is async.
@@ -95,17 +101,21 @@ public final class PetCatalogService {
         });
     }
 
-    /** Open MyPet's native shop GUI (Geyser-translated for Bedrock) on the main thread. */
-    public void openNativeShop(Player player, String shopId, Consumer<Boolean> callback) {
+    /**
+     * Fully integrated purchase (no native GUI): runs MyPet's buy flow on the main thread and
+     * reports whether it started, so the caller can pick a sound. Player-facing text comes from
+     * MyPet's own localized messages.
+     */
+    public void buyShopEntry(Player player, String shopId, String petId, Consumer<PetBuyResult> callback) {
         Bukkit.getScheduler().runTask(plugin, () -> {
-            boolean ok;
+            PetBuyResult result;
             try {
-                ok = MyPetShopBridge.openNativeShop(player, shopId);
+                result = MyPetShopBridge.buy(player, shopId, petId, logger);
             } catch (Throwable t) {
-                logger.warning("MyPet open shop failed: " + t.getMessage());
-                ok = false;
+                logger.warning("MyPet buy failed: " + t.getMessage());
+                result = PetBuyResult.fail("internal error");
             }
-            callback.accept(ok);
+            callback.accept(result);
         });
     }
 }

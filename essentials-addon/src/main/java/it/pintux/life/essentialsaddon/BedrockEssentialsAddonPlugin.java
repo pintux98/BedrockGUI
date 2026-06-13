@@ -86,6 +86,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         getCommand("essentialsaddon").setExecutor(new EssentialsAddonCommand(this));
         getCommand("essentialsaddon").setTabCompleter(new EssentialsAddonCommand(this));
+        if (getCommand("pet") != null) {
+            getCommand("pet").setExecutor(new it.pintux.life.essentialsaddon.command.PetCommand(this));
+        }
 
         setupModules();
     }
@@ -376,7 +379,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new PetSendAwayAction(bedrockPetService));
             api.registerActionHandler(new OpenPetSkilltreeAction(bedrockPetService));
             api.registerActionHandler(new PetSetSkilltreeAction(bedrockPetService));
-            api.registerActionHandler(new OpenNativePetShopAction(bedrockPetService));
+            api.registerActionHandler(new BuyPetShopAction(bedrockPetService));
         }
         getLogger().info("Registered essentials addon actions with BedrockGUI API");
     }
@@ -410,4 +413,5 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     public HomeCatalogService getHomeCatalogService() { return homeCatalogService; }
     public TpaCatalogService getTpaCatalogService() { return tpaCatalogService; }
     public BedrockHubService getHubService() { return hubService; }
+    public BedrockPetService getBedrockPetService() { return bedrockPetService; }
 }

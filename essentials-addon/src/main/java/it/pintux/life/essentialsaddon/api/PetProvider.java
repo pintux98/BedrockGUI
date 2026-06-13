@@ -30,6 +30,9 @@ public interface PetProvider {
     /** Despawn the player's active pet (keeps it active, just not in the world). */
     boolean putAway(Player player, java.util.UUID petUuid);
 
+    /** Display name of the player's active pet, or {@code null} if there is none. */
+    String activePetName(Player player);
+
     /** Skilltrees selectable for the player's active pet (current one flagged). */
     List<SkilltreeView> listSkilltrees(Player player);
 
