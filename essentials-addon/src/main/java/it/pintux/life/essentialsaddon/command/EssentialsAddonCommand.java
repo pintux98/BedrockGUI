@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.command;
 import it.pintux.life.essentialsaddon.BedrockEssentialsAddonPlugin;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.*;
+import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -22,13 +23,13 @@ public final class EssentialsAddonCommand implements CommandExecutor, TabComplet
     @Override
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 0) {
-            sender.sendMessage("&cUsage: /essentialsaddon reload");
+            send(sender, "&cUsage: /essentialsaddon reload");
             return true;
         }
 
         if (args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("essentialsaddon.reload")) {
-                sender.sendMessage("&cYou don't have permission to reload.");
+                send(sender, "&cYou don't have permission to reload.");
                 return true;
             }
 
@@ -39,13 +40,17 @@ public final class EssentialsAddonCommand implements CommandExecutor, TabComplet
             if (plugin.getHomeCatalogService() != null) plugin.getHomeCatalogService().refresh();
             if (plugin.getTpaCatalogService() != null) plugin.getTpaCatalogService().refresh();
 
-            sender.sendMessage("&aEssentialsAddon configuration reloaded!");
+            send(sender, "&aEssentialsAddon configuration reloaded!");
             return true;
         }
 
-        sender.sendMessage("&cUnknown subcommand: " + args[0]);
-        sender.sendMessage("&cUsage: /essentialsaddon reload");
+        send(sender, "&cUnknown subcommand: " + args[0]);
+        send(sender, "&cUsage: /essentialsaddon reload");
         return true;
+    }
+
+    private void send(CommandSender sender, String message) {
+        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
     }
 
     @Override
