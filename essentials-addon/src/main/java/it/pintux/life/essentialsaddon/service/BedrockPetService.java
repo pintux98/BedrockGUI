@@ -4,7 +4,6 @@ import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
-import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
@@ -194,34 +193,23 @@ public final class BedrockPetService {
                     label = label + configuration.petShopOwnedSuffix();
                 }
                 final ShopPetView fixed = entry;
-                form.button(label, fp -> openBuyConfirm(player, api, fixed));
+                form.button(label, fp -> api.executeActionString(fp,
+                        "essentials_pet_shop_open:" + (fixed.shopId() == null ? "" : fixed.shopId()),
+                        context("pet-shop", fixed.petId())));
             }
             form.send(new BukkitFormPlayer(player));
             playSound(player, configuration.soundFormOpen());
         });
     }
 
-    private void openBuyConfirm(Player player, BedrockGUIApi api, ShopPetView entry) {
-        String content = configuration.render(configuration.petBuyConfirmContent(),
-                Map.of("pet_name", safe(entry.displayName()), "price", trim(entry.price())));
-        api.createModalForm(configuration.petBuyConfirmTitle())
-                .button1(configuration.petBuyConfirmYes(), fp -> api.executeActionString(fp,
-                        "essentials_pet_buy:" + PetActionPayloads.encodeShop(entry.shopId(), entry.petId()),
-                        context("pet-buy", entry.petId())))
-                .button2(configuration.petBuyConfirmNo(), fp -> openPetShop(player, entry.shopId()))
-                .content(content)
-                .send(new BukkitFormPlayer(player));
-    }
-
-    public void buyPet(Player player, String shopId, String petId) {
-        PetBuyResult result = petCatalog.buyShopEntry(player, shopId, petId);
-        if (result.success()) {
-            player.sendMessage(configuration.petBuySuccess());
-            playSound(player, configuration.soundShopPurchaseSuccess());
-        } else {
-            player.sendMessage(configuration.render(configuration.petBuyFailed(), Map.of("reason", result.reason())));
-            playSound(player, configuration.soundShopPurchaseFailed());
-        }
+    public void openNativeShop(Player player, String shopId) {
+        petCatalog.openNativeShop(player, shopId, ok -> {
+            if (!ok) {
+                player.sendMessage(configuration.petNotReady());
+                playSound(player, configuration.soundActionFailed());
+            }
+            // on success MyPet's native shop GUI opens (Geyser renders it for Bedrock) — no message needed
+        });
     }
 
     // ---------------- helpers ----------------

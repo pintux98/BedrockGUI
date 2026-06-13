@@ -1,7 +1,6 @@
 package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.api.PetProvider;
-import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
@@ -96,12 +95,17 @@ public final class PetCatalogService {
         });
     }
 
-    public PetBuyResult buyShopEntry(Player player, String shopId, String petId) {
-        try {
-            return MyPetShopBridge.buy(player, shopId, petId, logger);
-        } catch (Throwable t) {
-            logger.warning("MyPet shop buy failed: " + t.getMessage());
-            return PetBuyResult.fail("internal error");
-        }
+    /** Open MyPet's native shop GUI (Geyser-translated for Bedrock) on the main thread. */
+    public void openNativeShop(Player player, String shopId, Consumer<Boolean> callback) {
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            boolean ok;
+            try {
+                ok = MyPetShopBridge.openNativeShop(player, shopId);
+            } catch (Throwable t) {
+                logger.warning("MyPet open shop failed: " + t.getMessage());
+                ok = false;
+            }
+            callback.accept(ok);
+        });
     }
 }

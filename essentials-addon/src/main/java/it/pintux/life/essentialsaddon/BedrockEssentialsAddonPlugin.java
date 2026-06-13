@@ -360,7 +360,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new PetSendAwayAction(bedrockPetService));
             api.registerActionHandler(new OpenPetSkilltreeAction(bedrockPetService));
             api.registerActionHandler(new PetSetSkilltreeAction(bedrockPetService));
-            api.registerActionHandler(new BuyPetShopAction(bedrockPetService));
+            api.registerActionHandler(new OpenNativePetShopAction(bedrockPetService));
         }
         getLogger().info("Registered essentials addon actions with BedrockGUI API");
     }
