@@ -31,7 +31,7 @@ jobs:
         run: echo "VERSION=$(grep '^projectVersion=' gradle.properties | cut -d'=' -f2)" >> "$GITHUB_OUTPUT"
 
       - name: Build all JARs
-        run: ./gradlew -PlocalOutputDir= :common:jar :bungeecord:shadowJar :paper:shadowJar :velocity:shadowJar :essentials-addon:shadowJar :bedwars-addon:shadowJar
+        run: ./gradlew -PlocalOutputDir= :common:jar :bungeecord:shadowJar :paper:shadowJar :velocity:shadowJar :essentials-addon:shadowJar :bedwars-addon:shadowJar :homestead-addon:shadowJar
 
       - name: Collect JARs
         run: |
@@ -42,6 +42,7 @@ jobs:
           cp velocity/build/libs/BedrockGUI-Velocity-*.jar release-artifacts/
           cp essentials-addon/build/libs/BedrockGUI-EssentialsAddon-*.jar release-artifacts/
           cp bedwars-addon/build/libs/BedrockGUI-BedwarsAddon-*.jar release-artifacts/
+          cp homestead-addon/build/libs/BedrockGUI-HomesteadAddon-*.jar release-artifacts/
           ls -la release-artifacts/
 
       - name: Create Release

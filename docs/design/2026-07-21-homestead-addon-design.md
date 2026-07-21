@@ -20,7 +20,7 @@ Homestead (SpigotMC resource 121873, `tfagaming/projects/minecraft/homestead`) i
 - Jar: `BedrockGUI-HomesteadAddon.jar`. Package root: `it.pintux.life.homesteadaddon`.
 - Version property `homesteadAddonVersion=1.0.0` and `homesteadVersion=5.2.0.0` in `gradle.properties`.
 - Dependencies (all `compileOnly`): `:common`, Paper API, Floodgate (inherited), **Homestead**.
-- **Homestead dependency strategy:** `compileOnly files('lib/homestead.jar')` — the (unshaded, non-premium) Homestead jar placed in `homestead-addon/lib/`. `lib/` is gitignored; the jar must be present to build. The gateway calls the Homestead API with **direct typed calls** (no reflection), so every signature is compile-checked against the real jar.
+- **Homestead dependency strategy:** `compileOnly files('lib/homestead.jar')` — the (unshaded, non-premium) Homestead jar committed under `homestead-addon/lib/` so CI can compile it. The gateway calls the Homestead API with **direct typed calls** (no reflection), so every signature is compile-checked against the real jar.
 - `plugin.yml`: `depend: [BedrockGUI]`, `softdepend: [Homestead]` (addon loads but disables its features with a warning if Homestead is absent). Registers command `homesteadaddon`.
 
 ## 3. Bedrock Adaptation Rules
