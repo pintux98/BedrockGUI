@@ -1,0 +1,119 @@
+# ============================================================================
+#  BedrockGUI — SIMPLE menu example: conditions + show_condition
+# ----------------------------------------------------------------------------
+#  show_condition : if it evaluates FALSE the whole button is HIDDEN.
+#  conditions     : SWAP a button property (text / image / onClick) when a
+#                   condition matches; otherwise the alternative_* / base value
+#                   is used.
+#
+#  Both now accept COMPOUND expressions with logical operators:
+#     &&  AND        ||  OR        ( )  grouping
+#  (&& binds tighter than ||, same as the "conditional" action's check:)
+#
+#  Atom syntax (single check):
+#     permission:<node>
+#     not:<type>:<value>                        e.g. not:permission:group.banned
+#     placeholder:<value>:<operator>:<expected> e.g. placeholder:%player_level%:>=:10
+#     plugin:<PluginName>
+#  Operators: == != contains starts_with ends_with > >= < <= regex empty not_empty
+#
+#  NOTE: placeholder atoms in show_condition / conditions are resolved through
+#  PlaceholderAPI, so use the %papi% form (e.g. %vault_eco_balance%), NOT the
+#  {brace} form. The {brace}/${..} forms still work in display text and in the
+#  conditional action's check:.
+# ============================================================================
+
+forms:
+  conditions_demo:
+    command: "conddemo"
+    type: "SIMPLE"
+    title: "§b§lConditions Demo"
+    content: "§7Buttons appear/change based on your permissions, balance and level."
+
+    buttons:
+
+      # 1) SINGLE check — classic single condition (unchanged behaviour).
+      #    Button only shows if the player has the permission.
+      vip_area:
+        text: "§6Enter VIP Area"
+        image: "https://mc-heads.net/head/MHF_ChestFront/64"
+        show_condition: "permission:server.vip"
+        onClick:
+          - |
+            command {
+              - "warp vip"
+            }
+
+      # 2) AND — every atom must be true.
+      #    Needs the permission AND at least $1000.
+      buy_rank:
+        text: "§aBuy MVP Rank §7($1000)"
+        image: "diamond"                       # bare material -> Bedrock texture
+        show_condition: "permission:shop.use && placeholder:%vault_eco_balance%:>=:1000"
+        onClick:
+          - |
+            conditional {
+              check: "placeholder:{vault_eco_balance} >= 1000"
+              true:
+                - |
+                  economy { - "remove:1000" }
+                - |
+                  command { - "lp user {player} parent add mvp" }
+              false:
+                - |
+                  actionbar { - "§cNot enough money" }
+            }
+
+      # 3) OR — any atom true is enough.
+      #    Staff shortcut visible to admins OR moderators.
+      staff_panel:
+        text: "§cStaff Panel"
+        image: "https://mc-heads.net/head/MHF_Command/64"
+        show_condition: "permission:group.admin || permission:group.mod"
+        onClick:
+          - |
+            open { - "staff_menu" }
+
+      # 4) PARENTHESES + mixed AND/OR + not:
+      #    Show if (high level OR rich) AND allowed AND not banned.
+      elite_reward:
+        text: "§d§lClaim Elite Reward"
+        image: "https://mc-heads.net/head/MHF_Present1/64"
+        show_condition: "(placeholder:%player_level%:>=:50 || placeholder:%vault_eco_balance%:>=:5000) && permission:reward.elite && not:permission:group.banned"
+        onClick:
+          - |
+            command { - "reward claim elite" }
+
+      # 5) plugin: atom — only show when a plugin is installed.
+      warps_button:
+        text: "§eOpen Warps"
+        image: "compass"
+        show_condition: "plugin:Essentials || plugin:CMI"
+        onClick:
+          - |
+            command { - "warps" }
+
+      # 6) conditions: block — SWAP a property instead of hiding.
+      #    Compound conditions work here too. First matching condition wins;
+      #    alternative_* is the fallback when none match.
+      balance_status:
+        text: "§7Balance: checking..."
+        image: "gold_ingot"
+        alternative_text: "§7Balance: §c§lLOW"      # shown when no condition matches
+        alternative_image: "https://mc-heads.net/head/MHF_TNT/64"
+        conditions:
+          rich:
+            condition: "placeholder:%vault_eco_balance%:>=:10000 && permission:shop.use"
+            property: "text"
+            value: "§a§lBalance: RICH (${vault_eco_balance})"
+          rich_icon:
+            condition: "placeholder:%vault_eco_balance%:>=:10000"
+            property: "image"
+            value: "https://mc-heads.net/head/MHF_Cake/64"
+          mid:
+            condition: "placeholder:%vault_eco_balance%:>=:1000 || permission:group.vip"
+            property: "text"
+            value: "§e§lBalance: OK (${vault_eco_balance})"
+        onClick:
+          - |
+            command { - "balance" }

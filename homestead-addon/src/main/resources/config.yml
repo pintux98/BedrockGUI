@@ -1,0 +1,315 @@
+# ============================================================
+#  BedrockGUI - Homestead Addon
+#  Serves native Bedrock forms to Bedrock (Geyser/Floodgate)
+#  players in place of Homestead's chest GUIs. Java players are
+#  untouched. All text supports & colour codes and %placeholders%.
+# ============================================================
+config-version: 1
+
+# Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
+# Homestead GUI commands (/region, /rg, /hs, /homestead, /homesteadadmin) for
+# Bedrock players. Turn this OFF if you want to build your own forms and only use
+# the hs_* actions below (no command hijacking, no built-in menus on intercept).
+integrated-gui: true
+
+# Register the hs_* action handlers with BedrockGUI so any form (including your
+# own custom menus) can open Homestead screens or run Homestead actions.
+# Always active while integrated-gui is true (the built-in menus need them).
+register-actions: true
+
+general:
+  # Buttons per page for long lists (regions, members, chunks, ...).
+  items-per-page: 18
+
+sounds:
+  enabled: true
+  form-open: "ui.button.click"
+  action-success: "random.orb"
+  action-failed: "note.bass"
+  volume: 1.0
+  pitch: 1.0
+
+messages:
+  homestead-unavailable: "&cHomestead is not available right now."
+  region-not-found: "&cThat region no longer exists."
+  no-permission: "&cYou don't have permission to do that."
+  member-not-found: "&cThat player is not a member."
+  sub-area-not-found: "&cThat sub-area no longer exists."
+  action-failed: "&cSomething went wrong. Try again."
+  no-regions: "&eYou don't have any regions yet."
+  teleport-success: "&aTeleported to &f%name%&a."
+  teleport-failed: "&cCouldn't teleport to that region."
+  left-region: "&aYou left &f%name%&a."
+  cannot-leave: "&cYou can't leave that region."
+  invite-success: "&aInvited &f%player%&a."
+  invite-failed: "&cCouldn't invite that player."
+  invite-invalid: "&cEnter a player name."
+  ban-success: "&c%player% &7has been banned."
+  ban-failed: "&cCouldn't ban that player."
+  unban-success: "&a%player% &7has been unbanned."
+  kick-success: "&a%player% &7was removed from the region."
+  revoke-success: "&aInvite revoked."
+  flags-updated: "&aFlags updated."
+
+common:
+  back-button: "&8« Back"
+  regions-button: "&8» My Regions"
+  previous-button: "&e« Previous"
+  next-button: "&eNext »"
+
+region:
+  list:
+    title: "&2Your Regions"
+    all-title: "&2All Regions"
+    content: "&7Select a region to manage."
+    empty: "&7You have no regions."
+    button: "&a%name%\n&7%owner% &8| &6$%bank%"
+    show-all-on: "&aView: all regions (tap to switch)"
+    show-all-off: "&7View: your regions (tap to switch)"
+    button-top: "&6Top Regions"
+    button-welcome: "&bVisit (Welcome Signs)"
+  menu:
+    title: "&2%name%"
+    content: "&7Owner: &f%owner%\n&7Bank: &6$%bank% &8| &7Rank: &f#%rank%\n&7Members: &f%members% &8| &7Chunks: &f%chunks% &8| &7Sub-areas: &f%subareas%\n"
+    button-players: "&bPlayers Management"
+    button-flags: "&bFlags"
+    button-subareas: "&bSub-Areas"
+    button-chunks: "&bClaimed Chunks"
+    button-weather: "&bWeather / Time"
+    button-levels: "&bLevels"
+    button-rewards: "&bRewards"
+    button-logs: "&bLogs"
+    button-misc: "&bMiscellaneous Settings"
+    button-info: "&bRegion Info"
+    button-teleport: "&aTeleport"
+    button-leave: "&cLeave Region"
+    leave-title: "&cLeave %name%?"
+    leave-content: "&7You will lose access to this region."
+    leave-yes: "&cLeave"
+    leave-no: "&7Cancel"
+  info:
+    title: "&2%name% — Info"
+    content: "&7Name: &f%name%\n&7Owner: &f%owner%\n&7Bank: &6$%bank%\n&7Members: &f%members%\n&7Chunks: &f%chunks%\n&7Sub-areas: &f%subareas%\n&7Public: &f%public%\n&7Global rank: &f#%rank%\n&7Weather: &f%weather% &8| &7Time: &f%time%\n"
+    button-rate: "&eRate this Region"
+
+# ---- Players management (members / invites / bans) ----
+players:
+  hub-title: "&2%name% — Players"
+  hub-content: "&7Manage members, invites and bans.\n"
+  button-members: "&bMembers (%count%)"
+  button-invited: "&bPending Invites (%count%)"
+  button-banned: "&bBanned Players (%count%)"
+  button-invite: "&aInvite Player"
+  no-access: "&cYou can't manage this region's players."
+
+  members-title: "&2%name% — Members"
+  members-empty: "&7This region has no members yet."
+  member-button: "&a%player%\n&7Joined: %joined%"
+
+  invited-title: "&2%name% — Invites"
+  invited-empty: "&7No pending invites."
+  invite-entry-button: "&e%player%\n&7Invited: %invited%"
+
+  banned-title: "&2%name% — Bans"
+  banned-empty: "&7No banned players."
+  ban-entry-button: "&c%player%\n&7%reason%"
+  button-ban: "&cBan a Player"
+
+  info-title: "&2%player%"
+  info-content: "&7Player: &f%player%\n&7Joined: &f%joined%"
+  button-member-flags: "&bMember Flags"
+  button-control-flags: "&bControl Flags"
+  button-kick: "&cKick from region"
+  kick-title: "&cKick %player%?"
+  kick-content: "&7Remove this member from the region."
+
+  invite-input-title: "&aInvite Player"
+  invite-input-label: "&7Player name"
+  invite-input-placeholder: "PlayerName"
+
+  ban-input-title: "&cBan Player"
+  ban-input-name-label: "&7Player name"
+  ban-input-name-placeholder: "PlayerName"
+  ban-input-reason-label: "&7Reason (optional)"
+
+  revoke-title: "&cRevoke invite?"
+  revoke-content: "&7Revoke the pending invite for &f%player%&7?"
+  button-revoke: "&cRevoke invite"
+
+  unban-title: "&aUnban %player%?"
+  unban-content: "&7They will be able to join the region again."
+  button-unban: "&aUnban"
+
+  confirm-yes: "&aConfirm"
+  confirm-no: "&7Cancel"
+
+# ---- Flags (world / global player / member / control) ----
+flags:
+  # Toggle label per flag. %flag% is the prettified flag name.
+  label: "%flag%"
+  chooser-title: "&2%name% — Flags"
+  chooser-content: "&7Choose which flags to edit.\n"
+  button-global: "&bGlobal Player Flags"
+  button-world: "&bWorld Flags"
+  world-title: "&2%name% — World Flags"
+  global-title: "&2%name% — Player Flags"
+  member-title: "&2%player% — Member Flags"
+  control-title: "&2%player% — Control Flags"
+  subarea-title: "&2%name% — Sub-Area Flags"
+  subarea-member-title: "&2%player% — Sub-Area Member Flags"
+
+# ---- Sub-areas ----
+subareas:
+  list-title: "&2%name% — Sub-Areas"
+  list-content: "&7Select a sub-area to manage."
+  list-empty: "&7This region has no sub-areas."
+  entry-button: "&a%name%\n&7Volume: %volume% &8| &7%created%"
+  menu-title: "&2Sub-Area: %name%"
+  menu-content: "&7Name: &f%name%\n&7Volume: &f%volume% &8| &7Members: &f%members%\n"
+  button-members: "&bMembers"
+  button-flags: "&bFlags"
+  button-rename: "&eRename"
+  button-end-rent: "&6End Rent"
+  button-delete: "&cDelete Sub-Area"
+  rename-title: "&eRename Sub-Area"
+  rename-label: "&7New name"
+  rename-placeholder: "name"
+  rename-invalid: "&cEnter a valid name."
+  rename-success: "&aRenamed to &f%name%&a."
+  end-rent-success: "&aRent ended."
+  delete-title: "&cDelete %name%?"
+  delete-content: "&7This permanently removes the sub-area."
+  delete-success: "&a%name% deleted."
+  members-title: "&2%name% — Members"
+  members-empty: "&7This sub-area has no members."
+  member-button: "&a%player%"
+  button-add-member: "&aAdd Member"
+  member-actions-title: "&2%player%"
+  member-actions-content: "&7Manage this sub-area member."
+  button-member-flags: "&bMember Flags"
+  button-remove-member: "&cRemove from sub-area"
+  add-member-title: "&aAdd Sub-Area Member"
+  add-member-label: "&7Player name"
+  add-member-placeholder: "PlayerName"
+  add-member-success: "&aAdded &f%player%&a."
+  add-member-failed: "&cCouldn't add that player."
+  remove-member-title: "&cRemove %player%?"
+  remove-member-content: "&7Remove this member from the sub-area."
+  remove-member-success: "&a%player% removed."
+  confirm-no: "&7Cancel"
+
+# ---- Levels (read-only progress) ----
+levels:
+  title: "&2%name% — Levels"
+  content: "&7Level: &f%level%\n&7XP: &f%xp% &7/ &f%xp_next%\n&7Progress: &f%progress%%\n&7Total XP: &f%total_xp%\n&7Rank: &f#%rank%\n"
+  no-data: "&7No level data for this region yet."
+
+# ---- Rewards (read-only) ----
+rewards:
+  title: "&2%name% — Rewards"
+  content: "&7Chunks per member: &f%chunks_per_member%\n&7Sub-areas per member: &f%subareas_per_member%\n&7Chunks by playtime: &f%chunks_playtime%\n&7Sub-areas by playtime: &f%subareas_playtime%\n"
+
+# ---- Logs ----
+logs:
+  title: "&2%name% — Logs"
+  empty: "&7No logs yet."
+  line: "&8%date% &7%author%&8: &f%message%"
+  button-mark-read: "&aMark All Read"
+  button-clear: "&cClear Logs"
+  marked-read: "&aAll logs marked read."
+  cleared: "&aLogs cleared."
+  clear-title: "&cClear %name% logs?"
+  clear-content: "&7This permanently deletes all log entries."
+  confirm-no: "&7Cancel"
+
+# ---- Miscellaneous settings ----
+misc:
+  title: "&2%name% — Settings"
+  content: "&7Manage this region's settings.\n"
+  button-rename: "&eRename Region"
+  button-displayname: "&eSet Display Name"
+  button-description: "&eSet Description"
+  button-set-spawn: "&aSet Spawn (here)"
+  button-transfer: "&6Transfer Ownership"
+  button-map-color: "&dMap Color"
+  button-map-icon: "&dMap Icon"
+  button-delete: "&cDelete Region"
+  rename-title: "&eRename Region"
+  rename-label: "&7New name"
+  rename-success: "&aRenamed to &f%name%&a."
+  displayname-title: "&eDisplay Name"
+  displayname-label: "&7Display name"
+  displayname-success: "&aDisplay name updated."
+  description-title: "&eDescription"
+  description-label: "&7Description"
+  description-success: "&aDescription updated."
+  set-spawn-success: "&aRegion spawn set to your location."
+  transfer-title: "&6Transfer Ownership"
+  transfer-label: "&7New owner name"
+  transfer-placeholder: "PlayerName"
+  transfer-success: "&aOwnership transferred to &f%player%&a."
+  transfer-failed: "&cCouldn't transfer ownership."
+  delete-title: "&cDelete %name%?"
+  delete-content: "&7This permanently deletes the region."
+  delete-success: "&a%name% deleted."
+  invalid-input: "&cEnter a valid value."
+  confirm-no: "&7Cancel"
+
+# ---- Rating ----
+rating:
+  title: "&2Rate %name%"
+  slider-label: "&7Stars (avg %average%, %count% votes)"
+  success: "&aYou rated this region &f%score%&a stars."
+
+# ---- Claimed chunks ----
+chunks:
+  title: "&2%name% — Chunks"
+  content: "&7Tap a chunk to manage it."
+  empty: "&7This region has no claimed chunks."
+  entry-button: "&a%world% &7(%x%, %z%)"
+  actions-title: "&2Chunk (%x%, %z%)"
+  actions-content: "&7%world% (%x%, %z%)\n"
+  button-teleport: "&aTeleport here"
+  button-unclaim: "&cUnclaim"
+  teleport-success: "&aTeleported."
+  teleport-failed: "&cCouldn't teleport there."
+  unclaim-title: "&cUnclaim (%x%, %z%)?"
+  unclaim-content: "&7This releases the chunk from the region."
+  unclaim-success: "&aChunk unclaimed."
+  confirm-no: "&7Cancel"
+
+# ---- Map color / icon ----
+map:
+  unavailable: "&cMap options are unavailable."
+  color-title: "&d%name% — Map Color"
+  color-label: "&7Color"
+  color-success: "&aMap color set to &f%value%&a."
+  icon-title: "&d%name% — Map Icon"
+  icon-label: "&7Icon"
+  icon-success: "&aMap icon set to &f%value%&a."
+
+# ---- Top regions leaderboard ----
+top:
+  title: "&6Top Regions"
+  limit: 10
+  empty: "&7No regions to rank yet."
+  line: "&e#%rank% &f%name% &8- &7%value%"
+  sort-bank: "&6Sort: Bank"
+  sort-chunks: "&6Sort: Chunks"
+  sort-members: "&6Sort: Members"
+  sort-rating: "&6Sort: Rating"
+  sort-created: "&6Sort: Oldest"
+
+# ---- Regions with welcome signs ----
+welcome:
+  title: "&bWelcome Signs"
+  content: "&7Tap a region to visit its welcome sign."
+  empty: "&7No regions have welcome signs."
+  entry-button: "&a%name%\n&7%owner%"
+
+# ---- Weather / time ----
+weather:
+  title: "&2%name% — Weather / Time"
+  content: "&7Weather: &f%weather%\n&7Time: &f%time%\n"
+  button-cycle-weather: "&bCycle Weather"
+  button-cycle-time: "&bCycle Time"

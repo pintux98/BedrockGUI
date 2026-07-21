@@ -1,4 +1,14 @@
 # BedrockGUI Bedwars Addon
+
+# Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
+# Bedwars menus (shop open, arena/upgrade/stats/spectator GUIs) for Bedrock
+# players. Turn OFF to stop intercepting and build your own forms using the bw_*
+# actions instead.
+integrated-gui: true
+# Register the bw_* action handlers so any form (including your own) can open
+# Bedwars screens / run Bedwars actions. Always active while integrated-gui is true.
+register-actions: true
+
 modules:
   shop: true
   upgrades: true

@@ -32,6 +32,10 @@ public final class EssentialsAddonConfiguration {
     private final boolean actionsEconomyShopGui;
     private final boolean actionsMyPet;
 
+    // Global master switches (apply on top of the per-module toggles above)
+    private final boolean integratedGui;
+    private final boolean registerActions;
+
     // Hub
     private final String hubTitle;
     private final String hubContent;
@@ -186,6 +190,9 @@ public final class EssentialsAddonConfiguration {
         this.actionsShopGuiPlus = configuration.getBoolean("actions-only.shopgui-plus", false);
         this.actionsEconomyShopGui = configuration.getBoolean("actions-only.economyshop-gui", false);
         this.actionsMyPet = configuration.getBoolean("actions-only.mypet", false);
+
+        this.integratedGui = configuration.getBoolean("integrated-gui", true);
+        this.registerActions = configuration.getBoolean("register-actions", true);
 
         this.hubTitle = color(configuration.getString("hub.title", "&6&lEssentials Menu"));
         this.hubContent = color(configuration.getString("hub.content", "&7Select a feature to use."));
@@ -468,6 +475,11 @@ public final class EssentialsAddonConfiguration {
     public boolean actionsShopGuiPlus() { return actionsShopGuiPlus && !moduleShopGuiPlus; }
     public boolean actionsEconomyShopGui() { return actionsEconomyShopGui && !moduleEconomyShopGui; }
     public boolean actionsMyPet() { return actionsMyPet && !moduleMyPet; }
+
+    /** Master switch: serve built-in forms and intercept commands/menus. */
+    public boolean integratedGuiEnabled() { return integratedGui; }
+    /** Master switch: register action handlers so other forms can drive Essentials. */
+    public boolean registerActionsEnabled() { return registerActions; }
 
     // Hub
     public String hubTitle() { return hubTitle; }

@@ -1,0 +1,34 @@
+[CENTER][SIZE=6][B]BedrockGUI v2.0.8[/B][/SIZE][/CENTER]
+
+This release introduces [B]addon support[/B] — two official addons that bring native Bedrock Edition forms to popular server plugins, with zero menu design required.
+
+[SIZE=5][B]New: Essentials Addon[/B][/SIZE]
+Bridges BedrockGUI to your everyday plugins and serves native Bedrock forms for:
+[LIST]
+[*][B]Warps, Kits, Homes, TPA[/B] — works with EssentialsX, CMI, or HuskHomes (auto-detected).
+[*][B]Shops[/B] — adapts ShopGUI+ and EconomyShopGUI (incl. Premium) into Bedrock forms.
+[*][B]Pets[/B] — full MyPet bridge: pet shop, pet list, stats, call / put away, and skilltrees.
+[*][B]Unified Hub[/B] — one menu with a button per enabled module.
+[/LIST]
+Every module is off by default — enable only what you need, then [ICODE]/essentialsaddon reload[/ICODE].
+
+[SIZE=5][B]New: Bedwars Addon[/B][/SIZE]
+Turns BedWars chest GUIs into native Bedrock forms, auto-detecting your BedWars plugin:
+[LIST]
+[*][B]Shop, Team Upgrades, Arena selector, Stats, Spectator, Party[/B]
+[*]Supports [B]BedWars2023[/B] and [B]BedWars1058[/B] (all modules), and [B]ScreamingBedWars[/B] (arena, stats, spectator).
+[*]Bedrock players get forms automatically; Java players keep the native GUI.
+[/LIST]
+
+[SIZE=5][B]Distribution[/B][/SIZE]
+Release notes and addon pages are now published in both [B]Spigot BBCode[/B] and [B]Modrinth Markdown[/B] formats.
+
+[HR][/HR]
+
+[B]Installation:[/B] drop the addon JAR(s) into [ICODE]plugins/[/ICODE] alongside BedrockGUI v2.0.8+ and Floodgate. See each addon's page for setup details.
+[LIST]
+[*][ICODE]BedrockGUI-EssentialsAddon.jar[/ICODE]
+[*][ICODE]BedrockGUI-BedwarsAddon.jar[/ICODE]
+[/LIST]
+
+[I]Requires Paper/Spigot 1.20.1+ and Java 21.[/I]

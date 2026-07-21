@@ -19,4 +19,8 @@
 /.opencode/
 /local.properties
 /bedwars-addon/build/
+/homestead-addon/build/
+/homestead-addon/bin/
+# Third-party Homestead jar used as a compileOnly dependency (place homestead.jar here to build)
+/homestead-addon/lib/
 /.claude/

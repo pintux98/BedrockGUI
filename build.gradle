@@ -92,3 +92,9 @@ task buildBedwarsAddon {
     dependsOn ':bedwars-addon:jar'
     description = 'Builds only the Bedwars addon module'
 }
+
+// Task to build only the Homestead Bedrock addon
+task buildHomesteadAddon {
+    dependsOn ':homestead-addon:jar'
+    description = 'Builds only the Homestead addon module'
+}

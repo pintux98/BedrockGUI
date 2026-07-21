@@ -1,0 +1,41 @@
+version = homesteadAddonVersion
+
+// Homestead is a soft dependency: compiled against the bundled jar in lib/ and
+// wired at runtime when Homestead is installed (softdepend in plugin.yml).
+dependencies {
+    compileOnly project(':common')
+    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
+    compileOnly files('lib/homestead.jar')
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+    testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+}
+
+tasks.withType(JavaCompile).configureEach {
+    dependsOn(":common:jar")
+}
+
+processResources {
+    def props = [version: version]
+    inputs.properties props
+    filteringCharset 'UTF-8'
+
+    filesMatching('plugin.yml') {
+        expand props
+    }
+
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+test {
+    useJUnitPlatform()
+}
+
+shadowJar {
+    minimize()
+    archiveClassifier.set('')
+    archiveBaseName.set('BedrockGUI-HomesteadAddon')
+    if (localOutputDir) {
+        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
+    }
+}

@@ -1,0 +1,15 @@
+name: BedrockGUI-HomesteadAddon
+version: '${version}'
+main: it.pintux.life.homesteadaddon.HomesteadAddonPlugin
+api-version: '1.19'
+author: 'pintux'
+depend:
+  - BedrockGUI
+softdepend:
+  - Homestead
+commands:
+  homesteadaddon:
+    description: Manage the Homestead Bedrock addon
+    usage: /homesteadaddon <reload|open|openfor>
+    aliases: [hsaddon]
+    permission: homesteadaddon.admin

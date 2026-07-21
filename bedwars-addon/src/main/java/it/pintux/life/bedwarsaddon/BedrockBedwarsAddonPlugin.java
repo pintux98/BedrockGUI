@@ -121,12 +121,14 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
                 shopCatalogService.setProvider(new BedWars1058ShopProvider(getLogger(), apiAccess1058));
             }
             bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
-            if (bw2023) {
-                registerListenerIfEventPresent(pm, "com.tomkeuper.bedwars.api.events.shop.ShopOpenEvent",
-                        new ShopOpenListener(this, bedrockShopService));
-            } else if (bw1058) {
-                registerListenerIfEventPresent(pm, "com.andrei1058.bedwars.api.events.shop.ShopOpenEvent",
-                        new ShopOpenListener1058(this, bedrockShopService));
+            if (configuration.integratedGui()) {
+                if (bw2023) {
+                    registerListenerIfEventPresent(pm, "com.tomkeuper.bedwars.api.events.shop.ShopOpenEvent",
+                            new ShopOpenListener(this, bedrockShopService));
+                } else if (bw1058) {
+                    registerListenerIfEventPresent(pm, "com.andrei1058.bedwars.api.events.shop.ShopOpenEvent",
+                            new ShopOpenListener1058(this, bedrockShopService));
+                }
             }
         }
 
@@ -186,8 +188,9 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
         }
 
-        if (bedrockArenaService != null || bedrockUpgradeService != null
-                || bedrockStatsService != null || bedrockSpectatorService != null) {
+        // Menu interception is part of the integrated GUI experience.
+        if (configuration.integratedGui() && (bedrockArenaService != null || bedrockUpgradeService != null
+                || bedrockStatsService != null || bedrockSpectatorService != null)) {
             pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService,
                     bedrockStatsService, bedrockSpectatorService), this);
         }
@@ -195,8 +198,10 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
         getCommand("bedwarsaddon").setTabCompleter(new BedwarsAddonCommand(this));
 
+        // Actions register when explicitly enabled, or whenever the integrated GUI
+        // is on (its buttons run the same action strings).
         BedrockGUIApi api = getApiSafely();
-        if (api != null) {
+        if (api != null && (configuration.integratedGui() || configuration.registerActions())) {
             if (bedrockShopService != null) {
                 api.registerActionHandler(new OpenShopMainAction(bedrockShopService));
                 api.registerActionHandler(new OpenShopCategoryAction(bedrockShopService));

@@ -27,6 +27,14 @@ actions-only:
   economyshop-gui: false
   mypet: false
 
+# Master switches (apply on top of the per-module toggles above).
+# integrated-gui: serve the built-in forms AND intercept commands / shop menus for
+#   Bedrock players. Set false to stop all interception and build your own forms.
+# register-actions: register the action handlers so any form can drive Essentials.
+#   Keep true (with integrated-gui false) for an actions-only setup.
+integrated-gui: true
+register-actions: true
+
 # ─────────────────────────────────────────────
 # Hub — unified main menu shown to Bedrock players
 # Buttons are generated dynamically from enabled modules.

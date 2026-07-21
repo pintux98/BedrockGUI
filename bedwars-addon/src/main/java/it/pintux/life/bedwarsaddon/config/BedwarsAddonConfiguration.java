@@ -16,6 +16,8 @@ public final class BedwarsAddonConfiguration {
     private final boolean moduleStats;
     private final boolean moduleSpectator;
     private final boolean moduleParty;
+    private final boolean integratedGui;
+    private final boolean registerActions;
     private final String shopTitle;
     private final String shopContent;
     private final String shopCategoryButton;
@@ -100,6 +102,8 @@ public final class BedwarsAddonConfiguration {
         this.moduleStats = c.getBoolean("modules.stats", true);
         this.moduleSpectator = c.getBoolean("modules.spectator", true);
         this.moduleParty = c.getBoolean("modules.party", true);
+        this.integratedGui = c.getBoolean("integrated-gui", true);
+        this.registerActions = c.getBoolean("register-actions", true);
         this.shopTitle = color(c.getString("shop.title", "&8Shop"));
         this.shopContent = color(c.getString("shop.content", "Select a category"));
         this.shopCategoryButton = c.getString("shop.category-button", "&a{category}");
@@ -213,6 +217,8 @@ public final class BedwarsAddonConfiguration {
     public String statsProviderUnavailable() { return statsProviderUnavailable; }
     public boolean moduleSpectator() { return moduleSpectator; }
     public boolean moduleParty() { return moduleParty; }
+    public boolean integratedGui() { return integratedGui; }
+    public boolean registerActions() { return registerActions; }
     public String spectatorTitle() { return spectatorTitle; }
     public String spectatorContent() { return spectatorContent; }
     public String spectatorGuiTitleContains() { return spectatorGuiTitleContains; }

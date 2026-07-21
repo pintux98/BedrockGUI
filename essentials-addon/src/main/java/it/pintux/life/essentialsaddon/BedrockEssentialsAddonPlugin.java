@@ -139,7 +139,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
 
         BedrockGUIApi api = getApiSafely();
-        if (api != null) {
+        if (api != null && (configuration.integratedGuiEnabled() || configuration.registerActionsEnabled())) {
             registerActions(api);
         }
 
@@ -185,7 +185,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         EssentialsCommandListener commandListener = new EssentialsCommandListener(bedrockEssentialsService);
         if (bedrockHomeService != null) commandListener.setHomeService(bedrockHomeService);
         if (bedrockTpaService != null) commandListener.setTpaService(bedrockTpaService);
-        if (configuration.moduleWarps() || configuration.moduleKits()) {
+        if ((configuration.moduleWarps() || configuration.moduleKits()) && configuration.integratedGuiEnabled()) {
             pluginManager.registerEvents(commandListener, this);
         }
     }
@@ -240,7 +240,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     }
 
     private void registerShopListeners(PluginManager pluginManager) {
-        if (backendRouter != null) {
+        // Shop-open interception is part of the integrated GUI; lifecycle hooks
+        // (which bootstrap the shop catalog for actions) are registered elsewhere.
+        if (backendRouter != null && configuration.integratedGuiEnabled()) {
             pluginManager.registerEvents(new ShopGuiCommandListener(backendRouter), this);
             pluginManager.registerEvents(new ShopGuiInventoryListener(backendRouter), this);
         }
@@ -279,7 +281,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
         getLogger().info("Pet provider: mypet");
 
-        if (configuration.moduleMyPet()) {
+        if (configuration.moduleMyPet() && configuration.integratedGuiEnabled()) {
             pluginManager.registerEvents(new PetCommandListener(bedrockPetService), this);
         }
     }

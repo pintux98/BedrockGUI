@@ -1,0 +1,79 @@
+[CENTER][IMG]https://cdn.modrinth.com/data/cached_images/255ef9cc052bffa506f3e9c4d65692b25bc5ad58.jpeg[/IMG]
+
+[SIZE=7][B]BedrockGUI v2[/B][/SIZE]
+[SIZE=5][B]Bring native Bedrock Edition forms to your Java server![/B][/SIZE][/CENTER]
+
+BedrockGUI is a powerful utility for [B]Paper[/B], [B]Velocity[/B] and [B]Bungeecord[/B] that allows server owners to create native Bedrock-style interactive forms. By integrating with Floodgate, it provides a seamless UI experience for Bedrock players while remaining manageable via simple YAML configurations.
+
+[CENTER][URL=https://designer.pintux.org/]🚀 Web Designer[/URL] | [URL=https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2]📖 Documentation[/URL] | [URL=https://discord.com/invite/FD2MTETnyQ]💬 Discord Support[/URL][/CENTER]
+
+[HR][/HR]
+
+[SIZE=6][B]✨ Key Features[/B][/SIZE]
+
+[SIZE=5][B]🖼️ Versatile Form Types[/B][/SIZE]
+[LIST]
+[*][B]Simple Forms[/B]: Button-based menus. Support for custom images via URLs, textures, or player names.
+[*][B]Modal Forms[/B]: Simple Yes/No confirmation dialogs.
+[*][B]Custom Forms[/B]: Complex data entry with Text Inputs, Sliders, Dropdowns, and Toggles.
+[*][B]Java Menus[/B]: Early support for traditional chest-based GUIs.
+[/LIST]
+
+[SIZE=5][B]⚡ Unified Action System[/B][/SIZE]
+Execute complex logic using a modern curly-brace syntax. Chain actions together to create guided player flows.
+[LIST]
+[*][B]Commands[/B]: Run commands as the player or the console.
+[*][B]Economy[/B]: Integrate with your economy plugin for balance checks and transactions.
+[*][B]UI Feedback[/B]: Send titles, action bars, and colorized messages.
+[*][B]Inventory[/B]: Manage player items (give/remove/check).
+[*][B]Flow Control[/B]: Use [ICODE]delay[/ICODE], [ICODE]random[/ICODE], and [ICODE]conditional[/ICODE] actions to build intelligent menus.
+[*][B]BungeeCord[/B]: Send players to different servers via plugin messaging.
+[/LIST]
+
+[SIZE=5][B]🔌 Integrations[/B][/SIZE]
+[LIST]
+[*][B]Floodgate[/B]: Native support for Bedrock player detection.
+[*][B]PlaceholderAPI[/B]: Use any PAPI placeholder in your titles, button text, or action values.
+[*][B]YAML Configuration[/B]: No need to recompile; edit your menus in real-time.
+[/LIST]
+
+[HR][/HR]
+
+[SIZE=6][B]🧩 Official Addons[/B][/SIZE]
+Optional companion plugins that turn the GUIs of popular server plugins into native Bedrock forms — no menu design required. Drop them in alongside BedrockGUI and Floodgate.
+
+[SIZE=5][B]🛒 Essentials Addon[/B][/SIZE]
+Native Bedrock forms for [B]Warps, Kits, Homes, TPA, Shops and Pets[/B], auto-detecting the plugin you run:
+[LIST]
+[*]Warps / Kits / Homes / TPA — [B]EssentialsX[/B], [B]CMI[/B], or [B]HuskHomes[/B]
+[*]Shops — [B]ShopGUI+[/B] and [B]EconomyShopGUI[/B] (incl. Premium)
+[*]Pets — [B]MyPet[/B] (buy, list, stats, call, skilltrees)
+[/LIST]
+📥 [URL=https://github.com/pintux98/BedrockGUI/releases/latest][B]Download on GitHub[/B][/URL] — [ICODE]BedrockGUI-EssentialsAddon.jar[/ICODE]
+
+[SIZE=5][B]⚔️ Bedwars Addon[/B][/SIZE]
+Native Bedrock forms for [B]Shop, Team Upgrades, Arena selector, Stats, Spectator and Party[/B], auto-detecting your BedWars plugin:
+[LIST]
+[*][B]BedWars2023[/B] and [B]BedWars1058[/B] — all modules
+[*][B]ScreamingBedWars[/B] — arena, stats, spectator
+[/LIST]
+📥 [URL=https://github.com/pintux98/BedrockGUI/releases/latest][B]Download on GitHub[/B][/URL] — [ICODE]BedrockGUI-BedwarsAddon.jar[/ICODE]
+
+[INDENT]Both addons require BedrockGUI (Paper/Spigot) + Floodgate. See the [URL=https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2]Wiki[/URL] for setup.[/INDENT]
+
+[HR][/HR]
+
+[SIZE=6][B]⌨️ Commands[/B][/SIZE]
+[LIST]
+[*][ICODE]/bedrockgui[/ICODE] — Administrative control (Permission: [ICODE]bedrockgui.admin[/ICODE])
+[*][ICODE]/bedrockgui reload[/ICODE] — Reloads all configurations.
+[*][ICODE]/bedrockgui open <menu> [player][/ICODE] — Opens a specific form for a player.
+[/LIST]
+
+[HR][/HR]
+
+[SIZE=6][B]🛠️ Tools[/B][/SIZE]
+[LIST]
+[*][B]Web Designer[/B]: Use our [URL=https://designer.pintux.org/]visual editor[/URL] to build your forms without touching a text editor.
+[*][B]Wiki[/B]: For detailed configuration and action examples, visit the [URL=https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2]BedrockGUI Guide[/URL].
+[/LIST]
