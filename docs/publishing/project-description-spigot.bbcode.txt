@@ -59,7 +59,16 @@ Native Bedrock forms for [B]Shop, Team Upgrades, Arena selector, Stats, Spectato
 [/LIST]
 📥 [URL=https://github.com/pintux98/BedrockGUI/releases/latest][B]Download on GitHub[/B][/URL] — [ICODE]BedrockGUI-BedwarsAddon.jar[/ICODE]
 
-[INDENT]Both addons require BedrockGUI (Paper/Spigot) + Floodgate. See the [URL=https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2]Wiki[/URL] for setup.[/INDENT]
+[SIZE=5][B]🏡 Homestead Addon[/B][/SIZE]
+Native Bedrock forms for the [B]Homestead[/B] land-claiming plugin — all 27 of its GUIs, built for you:
+[LIST]
+[*]Regions, members, invites & bans, world/global/member flags
+[*]Sub-areas, claimed chunks, map colour & icon
+[*]Levels, rewards, logs, rating, region settings, weather/time
+[/LIST]
+📥 [URL=https://github.com/pintux98/BedrockGUI/releases/latest][B]Download on GitHub[/B][/URL] — [ICODE]BedrockGUI-HomesteadAddon.jar[/ICODE] (requires the Homestead plugin)
+
+[INDENT]These addons require BedrockGUI (Paper/Spigot) + Floodgate. Prefer your own menus? Each addon has an [B]actions-only[/B] mode ([ICODE]integrated-gui: false[/ICODE]) that registers its actions without the built-in forms. See the [URL=https://pintux.gitbook.io/pintux-support/bedrockgui/bedrockgui-v2]Wiki[/URL] for setup.[/INDENT]
 
 [HR][/HR]
 

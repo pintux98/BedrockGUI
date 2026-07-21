@@ -1,23 +1,32 @@
 ---
-description: Native Bedrock forms for Essentials-style plugins and BedWars.
+description: Native Bedrock forms for Essentials-style plugins, BedWars and Homestead.
 ---
 
 # Addons
 
-BedrockGUI ships two optional **addons** that turn the GUIs of popular server plugins into native
+BedrockGUI ships three optional **addons** that turn the GUIs of popular server plugins into native
 Bedrock Edition forms — automatically. You don't design any menus: each addon detects the plugin
 you already run and builds the forms for you. Java players keep the original interface; Bedrock
 players (via Floodgate) get a touch-friendly form.
 
 {% hint style="info" %}
-Both addons are **Paper/Spigot** plugins and require **BedrockGUI 2.0.8+** and **Floodgate**
-installed on the same server. They are downloaded separately from the main plugin.
+All addons are **Paper/Spigot** plugins and require **BedrockGUI 2.0.8+** (the Homestead addon
+needs **2.0.9+**) and **Floodgate** installed on the same server. They are downloaded separately
+from the main plugin.
+{% endhint %}
+
+{% hint style="success" %}
+**Actions-only mode.** Every addon has an `integrated-gui` and a `register-actions` toggle. Set
+`integrated-gui: false` (keep `register-actions: true`) to stop the built-in forms and command
+interception while still registering the addon's actions — so you can build your own BedrockGUI
+menus and drive the plugin through them.
 {% endhint %}
 
 **Downloads:** [GitHub Releases](https://github.com/pintux98/BedrockGUI/releases/latest)
 
 * `BedrockGUI-EssentialsAddon.jar`
 * `BedrockGUI-BedwarsAddon.jar`
+* `BedrockGUI-HomesteadAddon.jar`
 
 ---
 
@@ -166,6 +175,76 @@ Alias: `/bwaddon`.
 ```yaml
 open { - "bw_arena_main" }
 ```
+
+---
+
+## 🏡 Homestead Addon
+
+Serves native Bedrock forms for every GUI of the **Homestead** land-claiming plugin (all 27
+screens). Bedrock players who run `/region` get the form; Java players keep the native GUIs.
+
+### Compatible plugin
+
+| Feature set | Requires |
+| ----------- | -------- |
+| All region / claim GUIs | **Homestead** (SpigotMC 121873) |
+
+### Install
+
+1. Install **BedrockGUI** (2.0.9+) and **Floodgate**.
+2. Install **Homestead**.
+3. Drop `BedrockGUI-HomesteadAddon.jar` into `plugins/`.
+4. Start the server once to generate `plugins/BedrockGUI-HomesteadAddon/config.yml`.
+
+Bedrock players who run `/region` (or `/homesteadadmin`) automatically get forms in place of the
+native chest GUIs — no extra wiring.
+
+### What's covered
+
+Regions (list, hub, info, top regions, welcome signs) · Players (members, invites, bans, kick) ·
+Flags (world, global, member, control) · Sub-areas (manage, members, flags) · Claimed chunks ·
+Map colour & icon · Levels · Rewards · Logs · Rating · Region settings · Weather / time.
+
+Management respects Homestead's own ownership and control-flag checks, so members can only do what
+Homestead allows.
+
+### Commands
+
+Bedrock players are redirected automatically; the addon also has an admin command:
+
+| Command | Description | Permission |
+| ------- | ----------- | ---------- |
+| `/homesteadaddon reload` | Reload the configuration | `homesteadaddon.reload` |
+| `/homesteadaddon open <menu> [regionId]` | Open a form for yourself | `homesteadaddon.admin` |
+| `/homesteadaddon openfor <player> <menu> [regionId]` | Open a form for another player | `homesteadaddon.admin` |
+
+Alias: `/hsaddon`.
+
+### Actions
+
+Open any screen from your own menus with these action IDs (region-scoped ones take the region id):
+
+| Action | Opens |
+| ------ | ----- |
+| `hs_regions` | Your regions list |
+| `hs_region_menu:<id>` | A region's management hub |
+| `hs_players:<id>` | Players management |
+| `hs_flags:<id>` | Flags chooser (world / global) |
+| `hs_subareas:<id>` | Sub-areas list |
+| `hs_chunks:<id>` | Claimed chunks |
+| `hs_levels:<id>` | Region levels |
+| `hs_logs:<id>` | Region logs |
+| `hs_misc:<id>` | Miscellaneous settings |
+| `hs_top` | Top regions leaderboard |
+| `hs_welcome` | Regions with welcome signs |
+
+```yaml
+open { - "hs_regions" }
+```
+
+{% hint style="info" %}
+Homestead must be installed — without it, the forms report "Homestead unavailable".
+{% endhint %}
 
 ---
 

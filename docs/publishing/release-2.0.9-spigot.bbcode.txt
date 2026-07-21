@@ -1,0 +1,32 @@
+[CENTER][SIZE=6][B]BedrockGUI v2.0.9[/B][/SIZE][/CENTER]
+
+This release adds a third official addon — [B]Homestead[/B] — and a new [I]actions-only[/I] mode across all addons.
+
+[SIZE=5][B]New: Homestead Addon[/B][/SIZE]
+Native Bedrock forms for the [B]Homestead[/B] land-claiming plugin — all [B]27[/B] of its GUIs, built for you and served automatically to Bedrock players:
+[LIST]
+[*][B]Regions[/B] — list, per-region hub, info, top-regions leaderboard, welcome-sign teleports.
+[*][B]Players[/B] — members, invites, bans; invite / ban / kick / unban / revoke from forms.
+[*][B]Flags[/B] — world, global, and per-member player & control flags as toggle sheets.
+[*][B]Sub-areas[/B] — manage, rename, delete, members and flags.
+[*][B]Chunks[/B] — claimed-chunk list (teleport / unclaim) plus map colour & icon pickers.
+[*][B]Progression & settings[/B] — levels, rewards, logs, rating, region settings and a weather/time cycler.
+[/LIST]
+Bedrock players who run [ICODE]/region[/ICODE] (or [ICODE]/homesteadadmin[/ICODE]) get the form automatically; Java players keep the native GUIs. Requires [B]Homestead[/B] installed.
+
+[SIZE=5][B]New: actions-only mode for every addon[/B][/SIZE]
+All three addons now have [ICODE]integrated-gui[/ICODE] and [ICODE]register-actions[/ICODE] toggles. Set [ICODE]integrated-gui: false[/ICODE] to stop the built-in forms and command interception while still registering the addon's actions — so you can build your own BedrockGUI menus and drive the plugin through them.
+
+[SIZE=5][B]Distribution[/B][/SIZE]
+Addons are distributed with the main plugin — grab the JARs from the release:
+[LIST]
+[*][ICODE]BedrockGUI-HomesteadAddon.jar[/ICODE] (new)
+[*][ICODE]BedrockGUI-EssentialsAddon.jar[/ICODE]
+[*][ICODE]BedrockGUI-BedwarsAddon.jar[/ICODE]
+[/LIST]
+
+[HR][/HR]
+
+[B]Installation:[/B] drop the addon JAR(s) into [ICODE]plugins/[/ICODE] alongside BedrockGUI v2.0.9+ and Floodgate. The Homestead addon also needs the [B]Homestead[/B] plugin. See each addon's page for setup details.
+
+[I]Requires Paper/Spigot 1.20.1+ and Java 21.[/I]
