@@ -8,7 +8,7 @@ GUIs as clean, native Bedrock forms via Floodgate. Java players keep the normal 
 players get a touch-friendly UI. No menu design required — the addon builds all **27** screens for
 you and drives Homestead through its API.
 
-> Requires **BedrockGUI 2.0.9+** (Paper/Spigot), **Floodgate**, and **Homestead**. This is an addon,
+> Requires **BedrockGUI 2.0.8+** (Paper/Spigot), **Floodgate**, and **Homestead**. This is an addon,
 > not a standalone plugin.
 
 ---
@@ -44,7 +44,7 @@ left/right-click actions become buttons, and confirmations use modal forms.
 
 ## 📦 Installation
 
-1. Install **[BedrockGUI](https://modrinth.com/plugin/bedrockgui)** (v2.0.9 or newer) and
+1. Install **[BedrockGUI](https://modrinth.com/plugin/bedrockgui)** (v2.0.8 or newer) and
    **Floodgate** on your Paper/Spigot server.
 2. Install **Homestead**.
 3. Drop **`BedrockGUI-HomesteadAddon.jar`** into your `plugins/` folder.

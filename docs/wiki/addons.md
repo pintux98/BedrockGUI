@@ -10,9 +10,8 @@ you already run and builds the forms for you. Java players keep the original int
 players (via Floodgate) get a touch-friendly form.
 
 {% hint style="info" %}
-All addons are **Paper/Spigot** plugins and require **BedrockGUI 2.0.8+** (the Homestead addon
-needs **2.0.9+**) and **Floodgate** installed on the same server. They are downloaded separately
-from the main plugin.
+All addons are **Paper/Spigot** plugins and require **BedrockGUI 2.0.8+** and **Floodgate**
+installed on the same server. They are downloaded separately from the main plugin.
 {% endhint %}
 
 {% hint style="success" %}
@@ -191,7 +190,7 @@ screens). Bedrock players who run `/region` get the form; Java players keep the 
 
 ### Install
 
-1. Install **BedrockGUI** (2.0.9+) and **Floodgate**.
+1. Install **BedrockGUI** (2.0.8+) and **Floodgate**.
 2. Install **Homestead**.
 3. Drop `BedrockGUI-HomesteadAddon.jar` into `plugins/`.
 4. Start the server once to generate `plugins/BedrockGUI-HomesteadAddon/config.yml`.

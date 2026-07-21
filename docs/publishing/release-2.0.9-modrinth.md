@@ -35,7 +35,7 @@ Addons are distributed with the main plugin — grab the JARs from the release:
 
 ---
 
-**Installation:** drop the addon JAR(s) into `plugins/` alongside BedrockGUI v2.0.9+ and Floodgate.
+**Installation:** drop the addon JAR(s) into `plugins/` alongside BedrockGUI v2.0.8+ and Floodgate.
 The Homestead addon also needs the **Homestead** plugin. See each addon's page for setup details.
 
 *Requires Paper/Spigot 1.20.1+ and Java 21.*
