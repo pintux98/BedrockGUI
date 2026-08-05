@@ -11,6 +11,7 @@ import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.ShopGuiActionPayloads;
+import it.pintux.life.essentialsaddon.util.ShopGuiNames;
 import net.brcdev.shopgui.shop.item.ShopItem;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -109,10 +110,10 @@ public final class BedrockShopGuiService {
         List<ShopItemView> items = catalogService.getAccessibleItems(player, shopId, page);
 
         Map<String, String> replacements = new HashMap<>();
-        replacements.put("shop_name", entry.getShop().getName(page));
+        replacements.put("shop_name", pageName(entry, page));
         replacements.put("page", Integer.toString(page));
         replacements.put("max_page", Integer.toString(pages.get(pages.size() - 1)));
-        replacements.put("economy", entry.getShop().getEconomyType().name());
+        replacements.put("economy", economyName(entry));
 
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.render(configuration.shopShopTitle(), replacements));
         form.content(configuration.render(configuration.shopShopContent(), replacements));
@@ -253,6 +254,24 @@ public final class BedrockShopGuiService {
             soundFeedback.playPurchaseFailed(player);
         }
         return result;
+    }
+
+    private String pageName(ShopCatalogEntry entry, int page) {
+        try {
+            String name = ShopGuiNames.resolvePageName(entry.getShop().getName(page), page);
+            return name.isBlank() ? entry.getDisplayName() : name;
+        } catch (Exception | LinkageError ignored) {
+            // ShopGUI+ build with a different Shop signature: the cached display name is good enough
+            return entry.getDisplayName();
+        }
+    }
+
+    private String economyName(ShopCatalogEntry entry) {
+        try {
+            return entry.getShop().getEconomyType().name();
+        } catch (Exception | LinkageError ignored) {
+            return "";
+        }
     }
 
     private boolean usesTradeLabel(ShopItemView itemView) {

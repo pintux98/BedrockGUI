@@ -2,6 +2,7 @@ package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.model.ShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
+import it.pintux.life.essentialsaddon.util.ShopGuiNames;
 import it.pintux.life.essentialsaddon.util.ShopGuiReflectionSupport;
 import net.brcdev.shopgui.ShopGuiPlusApi;
 import net.brcdev.shopgui.shop.Shop;
@@ -36,13 +37,20 @@ public final class ShopGuiCatalogService {
             return;
         }
         Map<String, ShopCatalogEntry> refreshed = new ConcurrentHashMap<>();
+        Collection<Shop> shops;
         try {
-            for (Shop shop : ShopGuiPlusApi.getPlugin().getShopManager().getShops()) {
-                refreshed.put(shop.getId().toLowerCase(Locale.ROOT), snapshot(shop));
-            }
-        } catch (Exception exception) {
-            logger.warning("Unable to refresh ShopGUI+ catalog: " + exception.getMessage());
+            shops = ShopGuiPlusApi.getPlugin().getShopManager().getShops();
+        } catch (Exception | LinkageError failure) {
+            logger.warning("Unable to refresh ShopGUI+ catalog: " + failure);
             return;
+        }
+        for (Shop shop : shops) {
+            try {
+                refreshed.put(shop.getId().toLowerCase(Locale.ROOT), snapshot(shop));
+            } catch (Exception | LinkageError failure) {
+                // one shop built against an incompatible ShopGUI+ signature must not void the whole catalog
+                logger.warning("Skipping ShopGUI+ shop that could not be read: " + failure);
+            }
         }
         this.catalog = Map.copyOf(refreshed);
     }
@@ -101,11 +109,24 @@ public final class ShopGuiCatalogService {
         List<ShopItemView> accessible = new ArrayList<>();
         for (ShopItemView view : source) {
             ShopItem liveItem = entry.getLiveItemsById().get(view.getId());
-            if (liveItem != null && entry.getShop().hasAccess(player, liveItem, false)) {
+            if (liveItem != null && hasItemAccess(player, entry, liveItem, view)) {
                 accessible.add(view);
             }
         }
         return accessible;
+    }
+
+    private boolean hasItemAccess(Player player, ShopCatalogEntry entry, ShopItem liveItem, ShopItemView view) {
+        Boolean shopVerdict = ShopGuiReflectionSupport.invokeAccessCheck(entry.getShop(), player, liveItem);
+        if (shopVerdict != null) {
+            return shopVerdict;
+        }
+        // ShopGUI+ build without a usable item-gate overload: mirror its per-item permission nodes ourselves
+        if (!ShopGuiReflectionSupport.booleanFlag(entry.getShop(), false, "isEnablePerItemPermissions")) {
+            return true;
+        }
+        return player.hasPermission("shopguiplus.item." + entry.getId() + ".*")
+                || player.hasPermission("shopguiplus.item." + entry.getId() + "." + view.getId());
     }
 
     public Optional<ResolvedTitle> resolveByInventoryTitle(String rawTitle) {
@@ -130,7 +151,7 @@ public final class ShopGuiCatalogService {
         if (player.hasPermission("shopguiplus.shops.*") || player.hasPermission("shopguiplus.shops." + entry.getId())) {
             return true;
         }
-        return !entry.getShop().isDenyDirectAccess();
+        return !ShopGuiReflectionSupport.booleanFlag(entry.getShop(), false, "isDenyDirectAccess");
     }
 
     private ShopCatalogEntry snapshot(Shop shop) {
@@ -144,7 +165,7 @@ public final class ShopGuiCatalogService {
                 continue;
             }
             int page = Math.max(1, shopItem.getPage());
-            pageTitles.putIfAbsent(page, shop.getName(page));
+            pageTitles.putIfAbsent(page, ShopGuiNames.resolvePageName(shop.getName(page), page));
             ShopItemView view = toView(shopItem);
             itemsByPage.computeIfAbsent(page, ignored -> new ArrayList<>()).add(view);
             itemsById.put(view.getId(), view);
@@ -156,10 +177,12 @@ public final class ShopGuiCatalogService {
         }
 
         if (pageTitles.isEmpty()) {
-            pageTitles.put(1, shop.getName(1));
+            pageTitles.put(1, ShopGuiNames.resolvePageName(shop.getName(1), 1));
         }
 
-        return new ShopCatalogEntry(shop, shop.getId(), shop.getName(), pageTitles, itemsByPage, itemsById, liveItemsById);
+        // ShopGUI+ shows the first page's name in its own shop selection menu, so mirror that for the category list
+        String displayName = ShopGuiNames.resolvePageName(shop.getName(1), 1);
+        return new ShopCatalogEntry(shop, shop.getId(), displayName, pageTitles, itemsByPage, itemsById, liveItemsById);
     }
 
     private ShopItemView toView(ShopItem shopItem) {
