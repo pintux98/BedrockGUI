@@ -1447,6 +1447,14 @@ public class FormMenuUtil {
             }
         }
 
+        // Real URLs pass through untouched (rendered as FormImage.Type.URL).
+        // Must short-circuit BEFORE IconResolver.resolve(), which is a total
+        // function that maps any non-blank input to a "textures/..." path and
+        // would otherwise mangle a URL into "textures/items/https://..." (PATH).
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+            return trimmed;
+        }
+
         String candidate = trimmed;
         if (candidate.startsWith("textures/")) {
             String bare = candidate.substring("textures/".length());

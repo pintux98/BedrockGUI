@@ -1,28 +1,3 @@
-# ============================================================================
-#  BedrockGUI — SIMPLE menu example: conditions + show_condition
-# ----------------------------------------------------------------------------
-#  show_condition : if it evaluates FALSE the whole button is HIDDEN.
-#  conditions     : SWAP a button property (text / image / onClick) when a
-#                   condition matches; otherwise the alternative_* / base value
-#                   is used.
-#
-#  Both now accept COMPOUND expressions with logical operators:
-#     &&  AND        ||  OR        ( )  grouping
-#  (&& binds tighter than ||, same as the "conditional" action's check:)
-#
-#  Atom syntax (single check):
-#     permission:<node>
-#     not:<type>:<value>                        e.g. not:permission:group.banned
-#     placeholder:<value>:<operator>:<expected> e.g. placeholder:%player_level%:>=:10
-#     plugin:<PluginName>
-#  Operators: == != contains starts_with ends_with > >= < <= regex empty not_empty
-#
-#  NOTE: placeholder atoms in show_condition / conditions are resolved through
-#  PlaceholderAPI, so use the %papi% form (e.g. %vault_eco_balance%), NOT the
-#  {brace} form. The {brace}/${..} forms still work in display text and in the
-#  conditional action's check:.
-# ============================================================================
-
 forms:
   conditions_demo:
     command: "conddemo"

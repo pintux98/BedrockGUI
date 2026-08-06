@@ -278,6 +278,17 @@ public class ConfigValidator {
             return;
         }
 
+        // Compound condition: validate each atom around the logical operators.
+        if (condition.contains("&&") || condition.contains("||")) {
+            for (String atom : condition.split("\\|\\||&&")) {
+                String a = atom.replace("(", "").replace(")", "").trim();
+                if (!a.isEmpty()) {
+                    validateActionCondition(menuName, buttonIndex, a);
+                }
+            }
+            return;
+        }
+
 
         if (condition.contains(":")) {
             String[] parts = condition.split(":", 2);

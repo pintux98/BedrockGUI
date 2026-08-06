@@ -7,6 +7,11 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.MessageData;
 
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.List;
 import java.util.Map;
 
 
@@ -27,6 +32,19 @@ public class ConditionEvaluator {
             return true;
         }
 
+        String trimmed = condition.trim();
+        // Compound condition: combine atoms with logical operators (&&, ||) and
+        // parentheses, same as the "conditional" action's check: expression.
+        // Splitting is done on the RAW string (before placeholder resolution) so
+        // operators produced by placeholder values are never treated as logic.
+        if (trimmed.contains("&&") || trimmed.contains("||")) {
+            return evaluateExpression(player, trimmed, context, messageData);
+        }
+
+        return evaluateSingle(player, trimmed, context, messageData);
+    }
+
+    private static boolean evaluateSingle(FormPlayer player, String condition, ActionSystem.ActionContext context, MessageData messageData) {
         try {
 
             String processedCondition = PlaceholderUtil.processPlaceholders(condition.trim(), context.getPlaceholders(), player, messageData);
@@ -93,6 +111,85 @@ public class ConditionEvaluator {
             logger.error("Error evaluating condition '" + condition + "' for player " + player.getName() + ": " + e.getMessage());
             return false;
         }
+    }
+
+
+    // ─── Logical expression support (&&, ||, parentheses) ───────────────
+    // Atoms use the standard single-condition syntax (permission:x,
+    // placeholder:val:op:expected, plugin:x, not:<type>:<value>, ...).
+    // Shunting-yard: || has lower precedence than &&; parentheses group.
+    private static boolean evaluateExpression(FormPlayer player, String expr, ActionSystem.ActionContext context, MessageData messageData) {
+        try {
+            List<String> tokens = tokenize(expr);
+            Deque<String> output = new ArrayDeque<>();
+            Deque<String> ops = new ArrayDeque<>();
+            Map<String, Integer> prec = Map.of("||", 1, "&&", 2);
+            for (String t : tokens) {
+                if ("(".equals(t)) {
+                    ops.push(t);
+                } else if (")".equals(t)) {
+                    while (!ops.isEmpty() && !"(".equals(ops.peek())) output.push(ops.pop());
+                    if (!ops.isEmpty() && "(".equals(ops.peek())) ops.pop();
+                } else if ("||".equals(t) || "&&".equals(t)) {
+                    while (!ops.isEmpty() && prec.getOrDefault(ops.peek(), 0) >= prec.getOrDefault(t, 0)) output.push(ops.pop());
+                    ops.push(t);
+                } else {
+                    output.push(t);
+                }
+            }
+            while (!ops.isEmpty()) output.push(ops.pop());
+
+            Deque<Boolean> stack = new ArrayDeque<>();
+            List<String> rpn = new ArrayList<>(output);
+            Collections.reverse(rpn);
+            for (String t : rpn) {
+                if ("||".equals(t)) {
+                    stack.push(stack.pop() | stack.pop());
+                } else if ("&&".equals(t)) {
+                    stack.push(stack.pop() & stack.pop());
+                } else {
+                    stack.push(evaluateSingle(player, t.trim(), context, messageData));
+                }
+            }
+            return !stack.isEmpty() && stack.pop();
+        } catch (Exception e) {
+            logger.error("Error evaluating condition expression '" + expr + "' for player " + player.getName() + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    private static List<String> tokenize(String s) {
+        List<String> tokens = new ArrayList<>();
+        StringBuilder atom = new StringBuilder();
+        int i = 0;
+        while (i < s.length()) {
+            if (i + 1 < s.length()) {
+                String two = s.substring(i, i + 2);
+                if ("&&".equals(two) || "||".equals(two)) {
+                    flushAtom(tokens, atom);
+                    tokens.add(two);
+                    i += 2;
+                    continue;
+                }
+            }
+            char c = s.charAt(i);
+            if (c == '(' || c == ')') {
+                flushAtom(tokens, atom);
+                tokens.add(String.valueOf(c));
+                i++;
+                continue;
+            }
+            atom.append(c);
+            i++;
+        }
+        flushAtom(tokens, atom);
+        return tokens;
+    }
+
+    private static void flushAtom(List<String> tokens, StringBuilder atom) {
+        String a = atom.toString().trim();
+        if (!a.isEmpty()) tokens.add(a);
+        atom.setLength(0);
     }
 
 
