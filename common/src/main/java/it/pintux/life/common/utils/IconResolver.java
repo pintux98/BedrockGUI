@@ -10,9 +10,10 @@ import java.util.Set;
  *
  * Strategy:
  * 1. AIR / null / void → null
- * 2. Explicit irregular map (only Java→Bedrock ID differences)
- * 3. Suffix patterns: spawn eggs, music discs
- * 4. Fallback: lowercase the Java material name
+ * 2. Generated atlas table (materials whose lowercase guess is not a real Bedrock texture)
+ * 3. Explicit irregular map (only Java→Bedrock ID differences)
+ * 4. Suffix patterns: spawn eggs, music discs
+ * 5. Fallback: lowercase the Java material name
  */
 public final class IconResolver {
 
@@ -196,18 +197,86 @@ public final class IconResolver {
         String n = materialName.toUpperCase().trim();
         if (AIR_MATERIALS.contains(n)) return null;
 
-        // 1. Explicit irregular mapping
+        // 1. Generated atlas table — only holds materials whose plain guess is not a real texture,
+        //    so this can replace a broken icon but never one that already renders.
+        String atlas = BedrockTextureMap.get(n);
+        if (atlas != null) return atlas;
+
+        // 2. Explicit irregular mapping
         String hit = IRREGULAR.get(n);
         if (hit != null) return "textures/" + category(n) + "/" + hit;
 
-        // 2. Suffix patterns
+        // 3. Suffix patterns
         String pattern;
         if ((pattern = trySpawnEgg(n)) != null) return "textures/items/" + pattern;
         if ((pattern = tryMusicDisc(n)) != null) return "textures/items/" + pattern;
 
-        // 3. Fallback: simple toLowerCase
+        // 4. Fallback: simple toLowerCase
         return "textures/" + category(n) + "/" + n.toLowerCase();
     }
+
+    // ─── Potions and tipped arrows ───────────────────────────────────
+
+    /**
+     * Java potion-type aliases → the canonical effect name used by {@link PotionTextureMap}.
+     * Bukkit has renamed several of these across versions (JUMP → LEAPING, INSTANT_HEAL → HEALING),
+     * so both spellings are accepted.
+     */
+    private static final Map<String, String> POTION_ALIASES = Map.ofEntries(
+            Map.entry("SWIFTNESS", "SPEED"),
+            Map.entry("JUMP", "LEAPING"),
+            Map.entry("INSTANT_HEAL", "HEALING"),
+            Map.entry("INSTANT_DAMAGE", "HARMING"),
+            Map.entry("REGEN", "REGENERATION"),
+            Map.entry("CONFUSION", "NAUSEA"),
+            Map.entry("SLOW_FALL", "SLOW_FALLING"),
+            Map.entry("DAMAGE_BOOST", "STRENGTH"),
+            Map.entry("MOVE_SPEED", "SPEED"),
+            Map.entry("MOVE_SLOWDOWN", "SLOWNESS"),
+            Map.entry("DIG_SPEED", "HASTE"),
+            Map.entry("DIG_SLOWDOWN", "MINING_FATIGUE"),
+            Map.entry("FIRE_RES", "FIRE_RESISTANCE"),
+            Map.entry("HEAL", "HEALING"),
+            Map.entry("HARM", "HARMING")
+    );
+
+    /**
+     * Resolve the texture for a potion, splash/lingering potion or tipped arrow.
+     *
+     * <p>Bedrock ships a separate texture per effect and names it differently per container -
+     * a speed potion is {@code potion_bottle_moveSpeed}, a speed arrow is {@code tipped_arrow_swift}.
+     * Effects Bedrock has no artwork for fall back to the plain container texture.
+     *
+     * @param materialName POTION, SPLASH_POTION, LINGERING_POTION or TIPPED_ARROW
+     * @param potionType   Bukkit PotionType name (LONG_/STRONG_ prefixes are ignored), may be null
+     * @return a Bedrock texture path, or null when the material is not a potion container
+     */
+    public static String resolvePotion(String materialName, String potionType) {
+        if (materialName == null) return null;
+        String material = materialName.toUpperCase().trim();
+        String base = PotionTextureMap.base(material);
+        if (base == null) return null;
+        String effect = canonicalPotionEffect(potionType);
+        if (effect == null) return base;
+        String variant = PotionTextureMap.variant(material, effect);
+        return variant != null ? variant : base;
+    }
+
+    /** @return the canonical effect name, or null for water/mundane/thick/awkward and unknown input */
+    private static String canonicalPotionEffect(String potionType) {
+        if (potionType == null || potionType.isBlank()) return null;
+        String type = potionType.toUpperCase().trim();
+        int colon = type.indexOf(':');
+        if (colon >= 0) type = type.substring(colon + 1);          // accept "minecraft:strong_healing"
+        if (type.startsWith("LONG_")) type = type.substring(5);
+        if (type.startsWith("STRONG_")) type = type.substring(7);
+        if (type.isEmpty() || BASE_POTION_TYPES.contains(type)) return null;
+        return POTION_ALIASES.getOrDefault(type, type);
+    }
+
+    private static final Set<String> BASE_POTION_TYPES = Set.of(
+            "WATER", "MUNDANE", "THICK", "AWKWARD", "UNCRAFTABLE", "EMPTY", "LUCK"
+    );
 
     // ─── Pattern functions ───────────────────────────────────────────
 
@@ -232,7 +301,8 @@ public final class IconResolver {
     /**
      * Full image resolution chain for form button icons.
      * Handles: bare material names, Java-style paths (textures/items/X),
-     * already-resolved Bedrock paths, and player names.
+     * already-resolved Bedrock paths, potion containers written as {@code POTION:HEALING}
+     * or {@code TIPPED_ARROW:LONG_POISON}, and player names.
      */
     public static String resolveImage(String image) {
         if (image == null || image.isBlank()) return null;
@@ -240,6 +310,12 @@ public final class IconResolver {
 
         if (trimmed.startsWith("textures/") || trimmed.startsWith("http://") || trimmed.startsWith("https://"))
             return trimmed;
+
+        int separator = trimmed.indexOf(':');
+        if (separator > 0) {
+            String potion = resolvePotion(trimmed.substring(0, separator), trimmed.substring(separator + 1));
+            if (potion != null) return potion;
+        }
 
         String resolved = resolve(trimmed);
         if (resolved != null) return resolved;

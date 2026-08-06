@@ -1,6 +1,12 @@
 dependencies {
     compileOnly 'com.google.guava:guava:33.6.0-jre'
     implementation "org.yaml:snakeyaml:${snakeyamlVersion}"
+    testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testRuntimeOnly "org.junit.platform:junit-platform-launcher"
+}
+
+test {
+    useJUnitPlatform()
 }
 
 sourceSets {
