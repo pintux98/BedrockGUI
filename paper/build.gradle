@@ -37,6 +37,6 @@ shadowJar {
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-Paper')
     if (localOutputDir) {
-        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
+        destinationDirectory.set(file("${localOutputDir}/lobby2/plugins"))
     }
 }
