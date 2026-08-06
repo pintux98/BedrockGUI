@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.util;
 
+import it.pintux.life.common.utils.IconResolver;
 import net.brcdev.shopgui.shop.Shop;
 import net.brcdev.shopgui.shop.item.ShopItem;
 import org.bukkit.ChatColor;
@@ -176,7 +177,32 @@ public final class ShopGuiReflectionSupport {
         if (itemStack == null) {
             return "unknown";
         }
+        String potionTexture = potionTexture(itemStack);
+        if (potionTexture != null) {
+            return potionTexture;
+        }
         return itemStack.getType().name().toLowerCase(Locale.ROOT);
+    }
+
+    /**
+     * Bedrock draws a different texture per potion effect, and the effect lives in the item meta
+     * rather than the material. Resolve it here so the form button shows the right bottle/arrow;
+     * the returned value is already a texture path, which IconResolver passes through untouched.
+     */
+    private static String potionTexture(ItemStack itemStack) {
+        if (!(itemStack.getItemMeta() instanceof PotionMeta potionMeta)) {
+            return null;
+        }
+        String type = null;
+        try {
+            PotionData data = potionMeta.getBasePotionData();
+            if (data != null && data.getType() != null) {
+                type = data.getType().name();
+            }
+        } catch (Throwable ignored) {
+            // removed on newer APIs; the plain container texture is a fine fallback
+        }
+        return IconResolver.resolvePotion(itemStack.getType().name(), type);
     }
 
     public static String prettify(String value) {

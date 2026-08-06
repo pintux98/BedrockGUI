@@ -75,11 +75,11 @@ ui:
   kit-on-cooldown: '&cThis kit is on cooldown. Available in %time%.'
 
   # --- Navigation (shared) ---
-  # keep these bright: &7 is unreadable on the light grey Bedrock form buttons
-  back-button: '&fBack'
-  main-button: '&fMain Menu'
-  previous-button: '&fPrevious Page'
-  next-button: '&fNext Page'
+  # keep these black: light colours are unreadable on the pale Bedrock form buttons
+  back-button: '&0Back'
+  main-button: '&0Main Menu'
+  previous-button: '&0Previous Page'
+  next-button: '&0Next Page'
 
   # --- Homes ---
   home-title: '&bHomes'
@@ -108,7 +108,7 @@ ui:
   tpa-deny-button: '&cDeny Request'
   tpa-send-button: '&eSend TPA'
   tpa-here-button: '&6Send TPAHere'
-  tpa-cancel-button: '&fCancel Request'
+  tpa-cancel-button: '&0Cancel Request'
   tpa-no-pending: '&cNo pending requests.'
   tpa-send-failed: '&cFailed to send request.'
   tpa-title-send: '&eTPA - Select Player'

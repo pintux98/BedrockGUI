@@ -221,10 +221,10 @@ public final class EssentialsAddonConfiguration {
         this.kitClaimFailed = color(configuration.getString("ui.kit-claim-failed", "&cKit claim failed: %reason%"));
         this.kitOnCooldown = color(configuration.getString("ui.kit-on-cooldown", "&cThis kit is on cooldown. Available in %time%."));
 
-        this.backButton = color(configuration.getString("ui.back-button", "&fBack"));
-        this.mainButton = color(configuration.getString("ui.main-button", "&fMain Menu"));
-        this.previousButton = color(configuration.getString("ui.previous-button", "&fPrevious Page"));
-        this.nextButton = color(configuration.getString("ui.next-button", "&fNext Page"));
+        this.backButton = color(configuration.getString("ui.back-button", "&0Back"));
+        this.mainButton = color(configuration.getString("ui.main-button", "&0Main Menu"));
+        this.previousButton = color(configuration.getString("ui.previous-button", "&0Previous Page"));
+        this.nextButton = color(configuration.getString("ui.next-button", "&0Next Page"));
 
         this.homeTitle = color(configuration.getString("ui.home-title", "&bHomes"));
         this.homeContent = color(configuration.getString("ui.home-content", "&7Select a home to teleport to."));
@@ -251,7 +251,7 @@ public final class EssentialsAddonConfiguration {
         this.tpaDenyButton = color(configuration.getString("ui.tpa-deny-button", "&cDeny Request"));
         this.tpaSendButton = color(configuration.getString("ui.tpa-send-button", "&eSend TPA"));
         this.tpaHereButton = color(configuration.getString("ui.tpa-here-button", "&6Send TPAHere"));
-        this.tpaCancelButton = color(configuration.getString("ui.tpa-cancel-button", "&fCancel Request"));
+        this.tpaCancelButton = color(configuration.getString("ui.tpa-cancel-button", "&0Cancel Request"));
         this.tpaNoPending = color(configuration.getString("ui.tpa-no-pending", "&cNo pending requests."));
         this.tpaSendFailed = color(configuration.getString("ui.tpa-send-failed", "&cFailed to send request."));
         this.tpaTitleSend = color(configuration.getString("ui.tpa-title-send", "&eTPA - Select Player"));
