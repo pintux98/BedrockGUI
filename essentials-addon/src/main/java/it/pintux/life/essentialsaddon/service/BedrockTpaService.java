@@ -5,6 +5,7 @@ import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -41,22 +42,14 @@ public final class BedrockTpaService {
         form.button(configuration.tpaAcceptButton(), formPlayer -> {
             Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
             if (bukkitPlayer != null) {
-                if (tpaCatalog.hasPendingRequest(bukkitPlayer)) {
-                    tpaCatalog.acceptTpa(bukkitPlayer);
-                } else {
-                    bukkitPlayer.sendMessage(configuration.tpaNoPending());
-                }
+                acceptPending(bukkitPlayer);
             }
         });
 
         form.button(configuration.tpaDenyButton(), formPlayer -> {
             Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
             if (bukkitPlayer != null) {
-                if (tpaCatalog.hasPendingRequest(bukkitPlayer)) {
-                    tpaCatalog.denyTpa(bukkitPlayer);
-                } else {
-                    bukkitPlayer.sendMessage(configuration.tpaNoPending());
-                }
+                denyPending(bukkitPlayer);
             }
         });
 
@@ -77,7 +70,7 @@ public final class BedrockTpaService {
         form.button(configuration.tpaCancelButton(), formPlayer -> {
             Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
             if (bukkitPlayer != null) {
-                tpaCatalog.cancelTpa(bukkitPlayer);
+                MainThread.run(() -> tpaCatalog.cancelTpa(bukkitPlayer));
             }
         });
 
@@ -118,15 +111,60 @@ public final class BedrockTpaService {
                 return;
             }
 
-            boolean success = here
-                    ? tpaCatalog.sendTpahere(player, targetName)
-                    : tpaCatalog.sendTpa(player, targetName);
-            if (!success) {
-                player.sendMessage(configuration.tpaSendFailed());
-            }
+            MainThread.run(() -> {
+                boolean success = here
+                        ? tpaCatalog.sendTpahere(player, targetName)
+                        : tpaCatalog.sendTpa(player, targetName);
+                if (!success) {
+                    player.sendMessage(configuration.tpaSendFailed());
+                }
+            });
         });
 
         form.send(new BukkitFormPlayer(player));
+    }
+
+    /**
+     * Modal Accept/Deny popup pushed at a Bedrock player the moment a teleport request lands,
+     * so they never have to type /tpaccept. Driven by {@link TpaRequestWatcher}.
+     */
+    public void showIncomingRequestForm(Player player, String senderName) {
+        BedrockGUIApi api = requireApi(player);
+        if (api == null) return;
+
+        Map<String, String> replacements = Map.of("player", senderName == null ? "" : senderName);
+        api.createModalForm(
+                        configuration.render(configuration.tpaRequestTitle(), replacements),
+                        configuration.render(configuration.tpaRequestContent(), replacements))
+                .button1(configuration.tpaAcceptButton(), formPlayer -> {
+                    Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+                    if (bukkitPlayer != null) acceptPending(bukkitPlayer);
+                })
+                .button2(configuration.tpaDenyButton(), formPlayer -> {
+                    Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+                    if (bukkitPlayer != null) denyPending(bukkitPlayer);
+                })
+                .send(new BukkitFormPlayer(player));
+    }
+
+    private void acceptPending(Player player) {
+        MainThread.run(() -> {
+            if (tpaCatalog.hasPendingRequest(player)) {
+                tpaCatalog.acceptTpa(player);
+            } else {
+                player.sendMessage(configuration.tpaNoPending());
+            }
+        });
+    }
+
+    private void denyPending(Player player) {
+        MainThread.run(() -> {
+            if (tpaCatalog.hasPendingRequest(player)) {
+                tpaCatalog.denyTpa(player);
+            } else {
+                player.sendMessage(configuration.tpaNoPending());
+            }
+        });
     }
 
     private BedrockGUIApi requireApi(Player player) {

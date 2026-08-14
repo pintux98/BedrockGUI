@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 2
+config-version: 3
 
 modules:
   warps: false
@@ -16,6 +16,15 @@ modules:
   shopgui-plus: false
   economyshop-gui: false
   mypet: false
+  # Respawn menu shown to Bedrock players after they die.
+  death-menu: false
+
+# Pop the Accept/Deny form at a Bedrock player the moment a teleport request arrives,
+# instead of waiting for them to run /tpa. Requires modules.tpa.
+tpa-request-popup:
+  enabled: true
+  # How often (in ticks) to check for new incoming requests. 20 ticks = 1 second.
+  check-interval-ticks: 20
 
 # Register actions without internal forms (requires module: false).
 actions-only:
@@ -117,6 +126,26 @@ ui:
   tpa-player-input-text: '&7Enter player name:'
   tpa-player-input-placeholder: 'PlayerName'
   tpa-provider-unavailable: '&cTPA provider is not available.'
+  # Popup shown when a teleport request comes in (see tpa-request-popup above)
+  tpa-request-title: '&bTeleport Request'
+  tpa-request-content: '&f%player% &7wants to teleport. Accept?'
+
+  # --- Death menu ---
+  death-title: '&4&lYou Died'
+  death-content: '&7Where do you want to go?'
+  death-back-button: '&cReturn to death point'
+  death-spawn-button: '&aTeleport to spawn'
+  death-close-button: '&0Stay here'
+  # Commands run for the buttons above — swap these for your teleport plugin's equivalents.
+  death-back-command: 'back'
+  death-spawn-command: 'spawn'
+  # Hide the death-point button from players without this permission. Leave empty to always show.
+  death-back-permission: 'essentials.back'
+  death-show-back: true
+  death-show-spawn: true
+  # Delay after respawn before the form is sent. Raise it if the form is swallowed by the
+  # vanilla death screen on slow connections.
+  death-form-delay-ticks: 1
 
   # --- Shop UI ---
   shop-main-title: '&2Shop Categories'

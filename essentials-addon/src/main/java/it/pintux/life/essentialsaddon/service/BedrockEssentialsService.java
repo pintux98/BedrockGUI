@@ -6,7 +6,7 @@ import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -75,16 +75,19 @@ public final class BedrockEssentialsService {
             return;
         }
 
-        boolean success = warpCatalog.getProvider().teleport(player, warpName);
-        if (success) {
-            player.sendMessage(configuration.render(configuration.teleportSuccess(),
-                    Map.of("warp_name", warpCatalog.getDisplayName(warpName))));
-            playSound(player, configuration.soundTeleportSuccess());
-        } else {
-            player.sendMessage(configuration.render(configuration.teleportFailed(),
-                    Map.of("reason", "Teleport failed")));
-            playSound(player, configuration.soundActionFailed());
-        }
+        // Form callbacks arrive on a Floodgate thread; teleports are main-thread only.
+        MainThread.run(() -> {
+            boolean success = warpCatalog.getProvider().teleport(player, warpName);
+            if (success) {
+                player.sendMessage(configuration.render(configuration.teleportSuccess(),
+                        Map.of("warp_name", warpCatalog.getDisplayName(warpName))));
+                playSound(player, configuration.soundTeleportSuccess());
+            } else {
+                player.sendMessage(configuration.render(configuration.teleportFailed(),
+                        Map.of("reason", "Teleport failed")));
+                playSound(player, configuration.soundActionFailed());
+            }
+        });
     }
 
     public void openKitMenu(Player player) {
@@ -131,15 +134,17 @@ public final class BedrockEssentialsService {
             return;
         }
 
-        boolean success = kitCatalog.getProvider().claimKit(player, kitName);
-        if (success) {
-            player.sendMessage(configuration.kitClaimSuccess());
-            playSound(player, configuration.soundKitClaimSuccess());
-        } else {
-            player.sendMessage(configuration.render(configuration.kitClaimFailed(),
-                    Map.of("reason", "Kit claim failed")));
-            playSound(player, configuration.soundActionFailed());
-        }
+        MainThread.run(() -> {
+            boolean success = kitCatalog.getProvider().claimKit(player, kitName);
+            if (success) {
+                player.sendMessage(configuration.kitClaimSuccess());
+                playSound(player, configuration.soundKitClaimSuccess());
+            } else {
+                player.sendMessage(configuration.render(configuration.kitClaimFailed(),
+                        Map.of("reason", "Kit claim failed")));
+                playSound(player, configuration.soundActionFailed());
+            }
+        });
     }
 
     private BedrockGUIApi requireApi(Player player) {

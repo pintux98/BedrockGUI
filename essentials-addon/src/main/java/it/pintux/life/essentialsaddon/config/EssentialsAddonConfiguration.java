@@ -22,6 +22,11 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleShopGuiPlus;
     private final boolean moduleEconomyShopGui;
     private final boolean moduleMyPet;
+    private final boolean moduleDeathMenu;
+
+    // Incoming-TPA popup
+    private final boolean tpaRequestPopupEnabled;
+    private final long tpaRequestPopupIntervalTicks;
 
     // Actions-only (register actions without internal forms)
     private final boolean actionsWarps;
@@ -103,6 +108,20 @@ public final class EssentialsAddonConfiguration {
     private final String tpaPlayerInputText;
     private final String tpaPlayerInputPlaceholder;
     private final String tpaProviderUnavailable;
+    private final String tpaRequestTitle;
+    private final String tpaRequestContent;
+
+    private final String deathTitle;
+    private final String deathContent;
+    private final String deathBackButton;
+    private final String deathSpawnButton;
+    private final String deathCloseButton;
+    private final String deathBackCommand;
+    private final String deathSpawnCommand;
+    private final String deathBackPermission;
+    private final boolean deathShowBack;
+    private final boolean deathShowSpawn;
+    private final long deathFormDelayTicks;
 
     private final String shopMainTitle;
     private final String shopMainContent;
@@ -182,6 +201,10 @@ public final class EssentialsAddonConfiguration {
         this.moduleShopGuiPlus = configuration.getBoolean("modules.shopgui-plus", false);
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
+        this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
+
+        this.tpaRequestPopupEnabled = configuration.getBoolean("tpa-request-popup.enabled", true);
+        this.tpaRequestPopupIntervalTicks = configuration.getLong("tpa-request-popup.check-interval-ticks", 20L);
 
         this.actionsWarps = configuration.getBoolean("actions-only.warps", false);
         this.actionsKits = configuration.getBoolean("actions-only.kits", false);
@@ -260,6 +283,20 @@ public final class EssentialsAddonConfiguration {
         this.tpaPlayerInputText = color(configuration.getString("ui.tpa-player-input-text", "&7Enter player name:"));
         this.tpaPlayerInputPlaceholder = configuration.getString("ui.tpa-player-input-placeholder", "PlayerName");
         this.tpaProviderUnavailable = color(configuration.getString("ui.tpa-provider-unavailable", "&cTPA provider is not available."));
+        this.tpaRequestTitle = color(configuration.getString("ui.tpa-request-title", "&bTeleport Request"));
+        this.tpaRequestContent = color(configuration.getString("ui.tpa-request-content", "&f%player% &7wants to teleport. Accept?"));
+
+        this.deathTitle = color(configuration.getString("ui.death-title", "&4&lYou Died"));
+        this.deathContent = color(configuration.getString("ui.death-content", "&7Where do you want to go?"));
+        this.deathBackButton = color(configuration.getString("ui.death-back-button", "&cReturn to death point"));
+        this.deathSpawnButton = color(configuration.getString("ui.death-spawn-button", "&aTeleport to spawn"));
+        this.deathCloseButton = color(configuration.getString("ui.death-close-button", "&0Stay here"));
+        this.deathBackCommand = configuration.getString("ui.death-back-command", "back");
+        this.deathSpawnCommand = configuration.getString("ui.death-spawn-command", "spawn");
+        this.deathBackPermission = configuration.getString("ui.death-back-permission", "essentials.back");
+        this.deathShowBack = configuration.getBoolean("ui.death-show-back", true);
+        this.deathShowSpawn = configuration.getBoolean("ui.death-show-spawn", true);
+        this.deathFormDelayTicks = Math.max(1L, configuration.getLong("ui.death-form-delay-ticks", 1L));
 
         this.shopMainTitle = color(configuration.getString("ui.shop-main-title", "&2Shop Categories"));
         this.shopMainContent = color(configuration.getString("ui.shop-main-content", "&7Choose a supported shop category adapted for Bedrock."));
@@ -421,6 +458,22 @@ public final class EssentialsAddonConfiguration {
     public String tpaPlayerInputText() { return tpaPlayerInputText; }
     public String tpaPlayerInputPlaceholder() { return tpaPlayerInputPlaceholder; }
     public String tpaProviderUnavailable() { return tpaProviderUnavailable; }
+    public String tpaRequestTitle() { return tpaRequestTitle; }
+    public String tpaRequestContent() { return tpaRequestContent; }
+    public boolean tpaRequestPopupEnabled() { return tpaRequestPopupEnabled; }
+    public long tpaRequestPopupIntervalTicks() { return tpaRequestPopupIntervalTicks; }
+
+    public String deathTitle() { return deathTitle; }
+    public String deathContent() { return deathContent; }
+    public String deathBackButton() { return deathBackButton; }
+    public String deathSpawnButton() { return deathSpawnButton; }
+    public String deathCloseButton() { return deathCloseButton; }
+    public String deathBackCommand() { return deathBackCommand; }
+    public String deathSpawnCommand() { return deathSpawnCommand; }
+    public String deathBackPermission() { return deathBackPermission; }
+    public boolean deathShowBack() { return deathShowBack; }
+    public boolean deathShowSpawn() { return deathShowSpawn; }
+    public long deathFormDelayTicks() { return deathFormDelayTicks; }
 
     public String shopMainTitle() { return shopMainTitle; }
     public String shopMainContent() { return shopMainContent; }
@@ -466,6 +519,7 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleShopGuiPlus() { return moduleShopGuiPlus; }
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
     public boolean moduleMyPet() { return moduleMyPet; }
+    public boolean moduleDeathMenu() { return moduleDeathMenu; }
 
     // Actions-only
     public boolean actionsWarps() { return actionsWarps && !moduleWarps; }

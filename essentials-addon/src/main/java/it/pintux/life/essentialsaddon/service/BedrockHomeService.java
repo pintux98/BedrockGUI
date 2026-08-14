@@ -7,6 +7,7 @@ import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -97,12 +98,15 @@ public final class BedrockHomeService {
             return;
         }
 
-        boolean success = homeCatalog.teleportHome(player, homeName);
-        if (success) {
-            player.sendMessage(configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
-        } else {
-            player.sendMessage(configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
-        }
+        // Form callbacks arrive on a Floodgate thread; teleports are main-thread only.
+        MainThread.run(() -> {
+            boolean success = homeCatalog.teleportHome(player, homeName);
+            if (success) {
+                player.sendMessage(configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
+            } else {
+                player.sendMessage(configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
+            }
+        });
     }
 
     public void showSetHomeForm(Player player) {
@@ -127,13 +131,16 @@ public final class BedrockHomeService {
                         if (bukkitPlayer != null) bukkitPlayer.sendMessage(configuration.homeSetInvalid());
                         return;
                     }
-                    homeName = homeName.trim();
+                    String trimmed = homeName.trim();
                     Player bukkitPlayer = FormPlayerResolver.resolve(p);
-                    if (bukkitPlayer != null && homeCatalog.setHome(bukkitPlayer, homeName)) {
-                        bukkitPlayer.sendMessage(configuration.render(configuration.homeSetSuccess(), Map.of("home_name", homeName)));
-                    } else if (bukkitPlayer != null) {
-                        bukkitPlayer.sendMessage(configuration.homeSetFailed());
-                    }
+                    if (bukkitPlayer == null) return;
+                    MainThread.run(() -> {
+                        if (homeCatalog.setHome(bukkitPlayer, trimmed)) {
+                            bukkitPlayer.sendMessage(configuration.render(configuration.homeSetSuccess(), Map.of("home_name", trimmed)));
+                        } else {
+                            bukkitPlayer.sendMessage(configuration.homeSetFailed());
+                        }
+                    });
                 })
                 .send(new BukkitFormPlayer(player));
     }
@@ -156,12 +163,15 @@ public final class BedrockHomeService {
             String buttonText = configuration.render(configuration.homeDeleteButton(), Map.of("home_name", homeName));
             form.button(buttonText, formPlayer -> {
                 Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
-                if (bukkitPlayer != null && homeCatalog.deleteHome(bukkitPlayer, homeName)) {
-                    bukkitPlayer.sendMessage(configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
-                    openHomeMenu(bukkitPlayer, 1);
-                } else if (bukkitPlayer != null) {
-                    bukkitPlayer.sendMessage(configuration.homeDeleteFailed());
-                }
+                if (bukkitPlayer == null) return;
+                MainThread.run(() -> {
+                    if (homeCatalog.deleteHome(bukkitPlayer, homeName)) {
+                        bukkitPlayer.sendMessage(configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
+                        openHomeMenu(bukkitPlayer, 1);
+                    } else {
+                        bukkitPlayer.sendMessage(configuration.homeDeleteFailed());
+                    }
+                });
             });
         }
 

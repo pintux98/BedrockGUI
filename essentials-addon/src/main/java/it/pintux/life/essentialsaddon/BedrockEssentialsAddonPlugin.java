@@ -10,6 +10,7 @@ import it.pintux.life.essentialsaddon.listener.*;
 import it.pintux.life.essentialsaddon.provider.*;
 import it.pintux.life.essentialsaddon.service.*;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.Plugin;
@@ -43,6 +44,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     private BedrockPlayerDetector detector;
     private PetCatalogService petCatalogService;
     private BedrockPetService bedrockPetService;
+    private BedrockDeathService bedrockDeathService;
+    private TpaRequestWatcher tpaRequestWatcher;
 
     @Override
     public void onDisable() {
@@ -51,6 +54,12 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
     /** Nulls all per-module wiring so it can be rebuilt by {@link #setupModules()}. */
     private void resetModuleState() {
+        if (tpaRequestWatcher != null) {
+            tpaRequestWatcher.stop();
+            tpaRequestWatcher = null;
+        }
+        Bukkit.getScheduler().cancelTasks(this);
+        bedrockDeathService = null;
         warpCatalogService = null;
         kitCatalogService = null;
         homeCatalogService = null;
@@ -73,6 +82,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     @Override
     public void onEnable() {
         configuration = EssentialsAddonConfiguration.load(this);
+        MainThread.init(this);
         detector = new FloodgateBedrockPlayerDetector();
         soundFeedback = new BedrockSoundFeedback();
         soundFeedback.configure(
@@ -103,7 +113,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                 || configuration.actionsWarps() || configuration.actionsKits()
                 || configuration.actionsHomes() || configuration.actionsTpa()
                 || configuration.actionsShopGuiPlus() || configuration.actionsEconomyShopGui()
-                || configuration.moduleMyPet() || configuration.actionsMyPet();
+                || configuration.moduleMyPet() || configuration.actionsMyPet()
+                || configuration.moduleDeathMenu();
 
         if (!anyModule) {
             getLogger().info("All modules disabled. Enable one in config.yml then run /essentialsaddon reload.");
@@ -133,6 +144,14 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         if (configuration.moduleMyPet() || configuration.actionsMyPet()) {
             initMyPet(pluginManager);
         }
+        if (configuration.moduleDeathMenu()) {
+            initDeathMenu(pluginManager);
+        }
+
+        // Registered last: the listener needs every module's service, and homes/TPA are built
+        // after warps/kits.
+        registerCommandListener(pluginManager);
+        startTpaRequestWatcher();
 
         if (backendRouter != null) {
             registerShopListeners(pluginManager);
@@ -181,13 +200,52 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         bedrockEssentialsService = new BedrockEssentialsService(
                 getLogger(), configuration, warpCatalogService, kitCatalogService, detector
         );
+    }
 
-        EssentialsCommandListener commandListener = new EssentialsCommandListener(bedrockEssentialsService);
-        if (bedrockHomeService != null) commandListener.setHomeService(bedrockHomeService);
-        if (bedrockTpaService != null) commandListener.setTpaService(bedrockTpaService);
-        if ((configuration.moduleWarps() || configuration.moduleKits()) && configuration.integratedGuiEnabled()) {
+    /**
+     * Wires one command listener with whatever services exist and registers it. Splitting this
+     * out of {@link #initWarpsAndKits} is what makes /home and /tpa interception work: those
+     * services are built after the warps/kits module, so the listener used to be handed nulls.
+     */
+    private void registerCommandListener(PluginManager pluginManager) {
+        if (!configuration.integratedGuiEnabled()) {
+            return;
+        }
+
+        EssentialsCommandListener commandListener = new EssentialsCommandListener(detector);
+        if ((configuration.moduleWarps() || configuration.moduleKits()) && bedrockEssentialsService != null) {
+            commandListener.setService(bedrockEssentialsService);
+        }
+        if (configuration.moduleHomes() && bedrockHomeService != null) {
+            commandListener.setHomeService(bedrockHomeService);
+        }
+        if (configuration.moduleTpa() && bedrockTpaService != null) {
+            commandListener.setTpaService(bedrockTpaService);
+        }
+
+        if (commandListener.hasAnyService()) {
             pluginManager.registerEvents(commandListener, this);
         }
+    }
+
+    private void initDeathMenu(PluginManager pluginManager) {
+        bedrockDeathService = new BedrockDeathService(configuration, detector);
+        if (configuration.integratedGuiEnabled()) {
+            pluginManager.registerEvents(new DeathMenuListener(bedrockDeathService), this);
+        }
+    }
+
+    private void startTpaRequestWatcher() {
+        if (!configuration.moduleTpa() || !configuration.tpaRequestPopupEnabled()
+                || !configuration.integratedGuiEnabled()
+                || bedrockTpaService == null || tpaCatalogService == null) {
+            return;
+        }
+        tpaRequestWatcher = new TpaRequestWatcher(
+                this, tpaCatalogService, bedrockTpaService, detector,
+                configuration.tpaRequestPopupIntervalTicks()
+        );
+        tpaRequestWatcher.start();
     }
 
     private void initHomes(PluginManager pluginManager) {

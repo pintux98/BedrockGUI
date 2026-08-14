@@ -164,6 +164,9 @@ public final class ShopGuiCatalogService {
             if (shopItem == null || shopItem.getId() == null) {
                 continue;
             }
+            if (isNonInteractive(shopItem)) {
+                continue;
+            }
             int page = Math.max(1, shopItem.getPage());
             pageTitles.putIfAbsent(page, ShopGuiNames.resolvePageName(shop.getName(page), page));
             ShopItemView view = toView(shopItem);
@@ -183,6 +186,28 @@ public final class ShopGuiCatalogService {
         // ShopGUI+ shows the first page's name in its own shop selection menu, so mirror that for the category list
         String displayName = ShopGuiNames.resolvePageName(shop.getName(1), 1);
         return new ShopCatalogEntry(shop, shop.getId(), displayName, pageTitles, itemsByPage, itemsById, liveItemsById);
+    }
+
+    /**
+     * ShopGUI+ mixes real stock with decoration: the information icon and the filler/navigation
+     * items configured under its {@code settings} block are shop items of type {@code DUMMY} with
+     * no price at all. Java players just look at them; on Bedrock they used to render as a button
+     * that opened a dead-end form, so keep them out of the catalog entirely.
+     */
+    private boolean isNonInteractive(ShopItem shopItem) {
+        try {
+            // compare by name: older ShopGUI+ builds may not ship the DUMMY constant
+            if (shopItem.getType() != null && "DUMMY".equals(shopItem.getType().name())) {
+                return true;
+            }
+            String linkedShopId = ShopGuiReflectionSupport.resolveLinkedShopId(shopItem);
+            if (linkedShopId != null && !linkedShopId.isBlank()) {
+                return false;
+            }
+            return shopItem.getBuyPrice() < 0 && shopItem.getSellPrice() < 0;
+        } catch (Exception | LinkageError failure) {
+            return false;
+        }
     }
 
     private ShopItemView toView(ShopItem shopItem) {

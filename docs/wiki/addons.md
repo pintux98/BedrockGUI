@@ -68,7 +68,11 @@ modules:
   shopgui-plus: true       # ShopGUI+
   economyshop-gui: false   # EconomyShopGUI / Premium
   mypet: true
+  death-menu: true         # respawn menu with /back and /spawn buttons
 ```
+
+With `tpa` on, an Accept/Deny form is pushed at a Bedrock player as soon as a teleport
+request arrives — no `/tpaccept` typing. Turn it off under `tpa-request-popup`.
 
 Reload without a restart:
 
