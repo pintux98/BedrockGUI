@@ -39,7 +39,9 @@ public final class TpaRequestNotifier {
             return false;
         }
         boolean hooked = provider.registerRequestListener(plugin, this::onRequest);
-        if (!hooked) {
+        if (hooked) {
+            logger.info("TPA request popup hooked into " + provider.getProviderId() + ".");
+        } else {
             logger.info("TPA request popup unavailable: " + provider.getProviderId()
                     + " exposes no teleport-request event.");
         }
@@ -47,7 +49,12 @@ public final class TpaRequestNotifier {
     }
 
     private void onRequest(org.bukkit.entity.Player target, String senderName) {
-        if (target == null || !bedrockPlayerDetector.isBedrockPlayer(target)) {
+        if (target == null) {
+            logger.info("TPA request popup skipped: event carried no target.");
+            return;
+        }
+        if (!bedrockPlayerDetector.isBedrockPlayer(target)) {
+            logger.fine("TPA request popup skipped: " + target.getName() + " is not a Bedrock player.");
             return;
         }
         // EssentialsX fires the event before it queues the request, so let the tick finish

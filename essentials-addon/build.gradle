@@ -44,6 +44,6 @@ shadowJar {
     archiveClassifier.set('')
     archiveBaseName.set('BedrockGUI-EssentialsAddon')
     if (localOutputDir) {
-        destinationDirectory.set(file("${localOutputDir}/lobby2/plugins"))
+        destinationDirectory.set(file("${localOutputDir}/lobby/plugins"))
     }
 }

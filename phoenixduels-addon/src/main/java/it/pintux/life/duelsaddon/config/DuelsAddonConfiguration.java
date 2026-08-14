@@ -42,10 +42,39 @@ public final class DuelsAddonConfiguration {
                         new InputStreamReader(in, StandardCharsets.UTF_8));
                 cfg.setDefaults(defaults);
                 cfg.options().copyDefaults(true);
+                writeMissingKeys(plugin, cfg, defaults, file);
             }
         } catch (IOException ignored) {
         }
         return new DuelsAddonConfiguration(cfg);
+    }
+
+    /**
+     * Persists keys that exist in the shipped defaults but not in the file on disk.
+     *
+     * <p>{@code copyDefaults} only affects the in-memory view, so a key added in a new release stays
+     * invisible in the admin's file and cannot be edited. That is how {@code debug} shipped without
+     * ever appearing in a live config.</p>
+     */
+    private static void writeMissingKeys(JavaPlugin plugin, YamlConfiguration cfg,
+                                         YamlConfiguration defaults, File file) {
+        int added = 0;
+        for (String key : defaults.getKeys(true)) {
+            if (defaults.isConfigurationSection(key) || cfg.contains(key, true)) {
+                continue;
+            }
+            cfg.set(key, defaults.get(key));
+            added++;
+        }
+        if (added == 0) {
+            return;
+        }
+        try {
+            cfg.save(file);
+            plugin.getLogger().info("Added " + added + " new config key(s) to " + FILE + ".");
+        } catch (IOException e) {
+            plugin.getLogger().warning("Could not write new config keys to " + FILE + ": " + e.getMessage());
+        }
     }
 
     public String text(String path) {

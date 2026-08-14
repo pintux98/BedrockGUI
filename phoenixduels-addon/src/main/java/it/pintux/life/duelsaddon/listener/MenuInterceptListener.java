@@ -170,12 +170,14 @@ public final class MenuInterceptListener implements Listener {
         if (view == null) {
             return;
         }
-        String key = resolver.keyFor(layoutOf(view));
+        ContainerLayout layout = layoutOf(view);
+        String key = resolver.keyFor(layout);
         Handler handler = key == null ? null : handlers.get(key);
         if (handler == null) {
             if (config.debugEnabled()) {
-                plugin.getLogger().info("Not intercepting PhoenixDuels menu for "
-                        + player.getName() + ": key=" + key + " title=" + event.getView().getTitle());
+                plugin.getLogger().info("Not intercepting PhoenixDuels menu for " + player.getName()
+                        + ": layoutClass=" + PhoenixMenuResolver.describe(layout)
+                        + " key=" + key + " title=" + event.getView().getTitle());
             }
             return;
         }

@@ -126,7 +126,53 @@ public final class DuelsMenus {
             "kit_items_editor",
             "spectator_hotbar");
 
+    /**
+     * Layout class simple name mapped to the registry key it corresponds to.
+     *
+     * <p>Needed because {@code MenuRegistry.load()} calls {@code registerMenu} for only about a
+     * third of the ids — the rest go through {@code registerConfiguration}, so their layouts are
+     * constructed on demand and never stored in {@code MenuRegistry.menus}. Those menus are
+     * therefore unresolvable through the registry no matter what key is asked for, which is why
+     * {@code /duel} intercepted nothing. The layout's class is available on the instance either
+     * way.</p>
+     */
+    public static final Map<String, String> KEY_BY_LAYOUT_CLASS = layoutClasses();
+
     private DuelsMenus() {}
+
+    private static Map<String, String> layoutClasses() {
+        Map<String, String> classes = new LinkedHashMap<>();
+        classes.put("QueueLayoutMenu", "queue");
+        classes.put("UnrankedSelectPlayerModeMenu", "unranked_select_player_mode");
+        classes.put("UnrankedSelectModeMenu", "unranked_select_arena_mode");
+        classes.put("RankedSelectPlayerModeMenu", "ranked_select_player_mode");
+        classes.put("RankedSelectModeMenu", "ranked_select_arena_mode");
+        classes.put("DuelPlayerLayoutMenu", "duel_player");
+        classes.put("CreateMatchLayoutMenu", "create_match");
+        classes.put("LostItemsMenu", "lost_items");
+        classes.put("PartyLayoutMenu", "party");
+        classes.put("PartyInfoLayoutMenu", "party_info");
+        classes.put("PartyInvitePlayerLayoutMenu", "party_invite_player");
+        classes.put("ManagePartyMemberLayoutMenu", "party_manage_member");
+        classes.put("PartyFfaLayoutMenu", "party_ffa");
+        classes.put("PartyTeamFightLayoutMenu", "party_teamfight");
+        classes.put("PartyMultiTeamLayoutMenu", "party_multiteam");
+        classes.put("PartySpectatorsListMenu", "party_multiteam_spectators");
+        classes.put("ChooseOpponentPartyLayoutMenu", "custom_challenge_opponent");
+        classes.put("SettingsLayoutMenu", "settings");
+        classes.put("StatsLayoutMenu", "stats");
+        classes.put("LeaderboardLayoutMenu", "leaderboard");
+        classes.put("OngoingMatchesMenu", "ongoing_matches");
+        classes.put("SpectatorPlayersMenu", "spectator_players");
+        classes.put("KitPreviewMenu", "kit_preview");
+        classes.put("ItemsBettingMenu", "items_betting");
+        classes.put("KitItemsEditorMenu", "kit_items_editor");
+        classes.put("SelectMapMenu", "select_map");
+        classes.put("SelectModeMenu", "select_mode");
+        classes.put("SelectOptionMenu", "select_option_menu");
+        classes.put("ConfirmationMenu", "confirmation_menu");
+        return Map.copyOf(classes);
+    }
 
     private static Map<String, String> groups() {
         Map<String, String> groups = new LinkedHashMap<>();

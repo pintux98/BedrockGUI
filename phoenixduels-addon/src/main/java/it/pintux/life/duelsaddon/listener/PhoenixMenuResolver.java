@@ -27,6 +27,11 @@ import java.util.TreeSet;
  *
  * <p>The map is built lazily and rebuilt when an unrecognised layout appears, which is what makes
  * it survive {@code /pduels reload} recreating every menu.</p>
+ *
+ * <p>The registry only answers for menus registered through {@code registerMenu}. About two thirds
+ * of the ids go through {@code registerConfiguration} instead, so their layouts never enter
+ * {@code MenuRegistry.menus} and no key lookup can find them. Those fall back to
+ * {@link DuelsMenus#KEY_BY_LAYOUT_CLASS}, keyed on the layout's class name.</p>
  */
 public final class PhoenixMenuResolver {
 
@@ -52,9 +57,21 @@ public final class PhoenixMenuResolver {
         refresh();
         key = known.get(layout);
         if (key == null) {
+            key = DuelsMenus.KEY_BY_LAYOUT_CLASS.get(layout.getClass().getSimpleName());
+            if (key != null) {
+                known.put(layout, key);
+                return key;
+            }
             unresolvable.add(layout);
         }
         return key;
+    }
+
+    /**
+     * @return the layout class name this addon does not recognise, for the debug log to report
+     */
+    public static String describe(Object layout) {
+        return layout == null ? "null" : layout.getClass().getSimpleName();
     }
 
     /**
