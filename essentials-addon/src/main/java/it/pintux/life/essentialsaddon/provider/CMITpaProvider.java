@@ -1,8 +1,12 @@
 package it.pintux.life.essentialsaddon.provider;
 
+import com.Zrips.CMI.events.CMIPlayerTeleportRequestEvent;
 import it.pintux.life.essentialsaddon.api.TpaProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.lang.reflect.Method;
@@ -16,6 +20,28 @@ public final class CMITpaProvider implements TpaProvider {
     @Override
     public String getProviderId() {
         return "cmi";
+    }
+
+    @Override
+    public boolean registerRequestListener(Plugin plugin, RequestListener listener) {
+        try {
+            Bukkit.getPluginManager().registerEvents(new Listener() {
+                @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+                public void onTpaRequest(CMIPlayerTeleportRequestEvent event) {
+                    // whoAccepts is the side that has to answer, regardless of tpa vs tpahere
+                    Player target = event.getWhoAccepts();
+                    Player sender = event.getWhoOffers();
+                    if (target == null || sender == null) {
+                        return;
+                    }
+                    listener.onRequest(target, sender.getName());
+                }
+            }, plugin);
+            return true;
+        } catch (Exception | LinkageError failure) {
+            // CMI build without the request event
+            return false;
+        }
     }
 
     @Override

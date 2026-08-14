@@ -3,8 +3,12 @@ package it.pintux.life.essentialsaddon.provider;
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
 import it.pintux.life.essentialsaddon.api.TpaProvider;
+import net.ess3.api.events.TPARequestEvent;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
 import java.util.*;
@@ -16,6 +20,25 @@ public final class EssentialsXTpaProvider implements TpaProvider {
     @Override
     public String getProviderId() {
         return "essentialsx";
+    }
+
+    @Override
+    public boolean registerRequestListener(Plugin plugin, RequestListener listener) {
+        try {
+            Bukkit.getPluginManager().registerEvents(new Listener() {
+                @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+                public void onTpaRequest(TPARequestEvent event) {
+                    Player target = event.getTarget() == null ? null : event.getTarget().getBase();
+                    if (target == null || event.getRequester() == null) {
+                        return;
+                    }
+                    listener.onRequest(target, event.getRequester().getSender().getName());
+                }
+            }, plugin);
+            return true;
+        } catch (Exception | LinkageError failure) {
+            return false;
+        }
     }
 
     @Override

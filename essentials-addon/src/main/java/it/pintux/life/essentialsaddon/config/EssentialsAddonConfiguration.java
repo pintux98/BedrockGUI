@@ -26,7 +26,6 @@ public final class EssentialsAddonConfiguration {
 
     // Incoming-TPA popup
     private final boolean tpaRequestPopupEnabled;
-    private final long tpaRequestPopupIntervalTicks;
 
     // Actions-only (register actions without internal forms)
     private final boolean actionsWarps;
@@ -204,7 +203,6 @@ public final class EssentialsAddonConfiguration {
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
 
         this.tpaRequestPopupEnabled = configuration.getBoolean("tpa-request-popup.enabled", true);
-        this.tpaRequestPopupIntervalTicks = configuration.getLong("tpa-request-popup.check-interval-ticks", 20L);
 
         this.actionsWarps = configuration.getBoolean("actions-only.warps", false);
         this.actionsKits = configuration.getBoolean("actions-only.kits", false);
@@ -461,7 +459,6 @@ public final class EssentialsAddonConfiguration {
     public String tpaRequestTitle() { return tpaRequestTitle; }
     public String tpaRequestContent() { return tpaRequestContent; }
     public boolean tpaRequestPopupEnabled() { return tpaRequestPopupEnabled; }
-    public long tpaRequestPopupIntervalTicks() { return tpaRequestPopupIntervalTicks; }
 
     public String deathTitle() { return deathTitle; }
     public String deathContent() { return deathContent; }

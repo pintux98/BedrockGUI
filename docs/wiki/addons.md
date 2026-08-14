@@ -72,7 +72,9 @@ modules:
 ```
 
 With `tpa` on, an Accept/Deny form is pushed at a Bedrock player as soon as a teleport
-request arrives — no `/tpaccept` typing. Turn it off under `tpa-request-popup`.
+request arrives — no `/tpaccept` typing. It hooks the teleport plugin's own request event
+(EssentialsX and CMI; HuskHomes exposes none), so there is no polling task. Turn it off
+under `tpa-request-popup`.
 
 Reload without a restart:
 

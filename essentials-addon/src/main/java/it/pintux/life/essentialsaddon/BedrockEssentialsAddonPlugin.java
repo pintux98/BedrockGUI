@@ -45,7 +45,6 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     private PetCatalogService petCatalogService;
     private BedrockPetService bedrockPetService;
     private BedrockDeathService bedrockDeathService;
-    private TpaRequestWatcher tpaRequestWatcher;
 
     @Override
     public void onDisable() {
@@ -54,10 +53,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
     /** Nulls all per-module wiring so it can be rebuilt by {@link #setupModules()}. */
     private void resetModuleState() {
-        if (tpaRequestWatcher != null) {
-            tpaRequestWatcher.stop();
-            tpaRequestWatcher = null;
-        }
+        // Delayed tasks (death menu, TPA popup) captured the services being torn down here.
         Bukkit.getScheduler().cancelTasks(this);
         bedrockDeathService = null;
         warpCatalogService = null;
@@ -151,7 +147,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         // Registered last: the listener needs every module's service, and homes/TPA are built
         // after warps/kits.
         registerCommandListener(pluginManager);
-        startTpaRequestWatcher();
+        registerTpaRequestPopup();
 
         if (backendRouter != null) {
             registerShopListeners(pluginManager);
@@ -235,17 +231,14 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
     }
 
-    private void startTpaRequestWatcher() {
+    private void registerTpaRequestPopup() {
         if (!configuration.moduleTpa() || !configuration.tpaRequestPopupEnabled()
                 || !configuration.integratedGuiEnabled()
                 || bedrockTpaService == null || tpaCatalogService == null) {
             return;
         }
-        tpaRequestWatcher = new TpaRequestWatcher(
-                this, tpaCatalogService, bedrockTpaService, detector,
-                configuration.tpaRequestPopupIntervalTicks()
-        );
-        tpaRequestWatcher.start();
+        new TpaRequestNotifier(getLogger(), tpaCatalogService, bedrockTpaService, detector)
+                .register(this);
     }
 
     private void initHomes(PluginManager pluginManager) {
