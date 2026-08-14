@@ -128,9 +128,9 @@ public final class MenuInterceptListener implements Listener {
                     (player, view) -> services.queue().openPlayerModes(player, false);
             case "ranked_select_player_mode", "ranked_select_arena_mode" ->
                     (player, view) -> services.queue().openPlayerModes(player, true);
-            case "duel_player" -> (player, view) -> services.duel().openDuelPlayer(player, null);
-            case "create_match", "custom_select_arena_mode" ->
-                    (player, view) -> services.duel().openTargetPicker(player);
+            case "duel_player" -> (player, view) -> services.duel().openFromMenu(player, view);
+            case "create_match" -> (player, view) -> services.duel().openTargetPicker(player);
+            case "custom_select_arena_mode" -> (player, view) -> services.duel().openModeSelection(player);
             case "lost_items" -> (player, view) -> services.duel().openLostItems(player);
             case "party" -> (player, view) -> services.party().openMain(player);
             case "party_info", "party_manage_member" -> (player, view) -> services.party().openInfo(player, 1);

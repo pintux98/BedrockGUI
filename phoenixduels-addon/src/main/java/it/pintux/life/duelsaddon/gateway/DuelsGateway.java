@@ -1,5 +1,6 @@
 package it.pintux.life.duelsaddon.gateway;
 
+import it.pintux.life.duelsaddon.model.DuelDraftView;
 import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.KitView;
 import it.pintux.life.duelsaddon.model.LeaderboardEntry;
@@ -129,6 +130,15 @@ public interface DuelsGateway {
     boolean challengeParty(Player leader, UUID opponentLeaderId, String modeId, int rounds);
 
     boolean challengePlayer(Player from, String targetName, String modeId, int rounds);
+
+    /**
+     * Reads the target and mode out of a PhoenixDuels duel menu that is opening.
+     *
+     * @param containerView the cancelled view, passed as {@code Object} so callers outside the
+     *                      gateway never name a PhoenixDuels type
+     * @return the draft, or empty when the view is not a duel menu or carries no target
+     */
+    Optional<DuelDraftView> duelDraft(Object containerView);
 
     boolean hasPendingChallenge(UUID inviterId, UUID invitedId);
 

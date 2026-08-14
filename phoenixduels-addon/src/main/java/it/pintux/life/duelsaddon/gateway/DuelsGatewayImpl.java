@@ -18,10 +18,13 @@ import com.phoenixplugins.phoenixduels.managers.matchs.profiles.ChallengeMatchPr
 import com.phoenixplugins.phoenixduels.managers.matchs.profiles.RankedMatchProfile;
 import com.phoenixplugins.phoenixduels.managers.matchs.profiles.UnrankedMatchProfile;
 import com.phoenixplugins.phoenixduels.managers.modes.Mode;
+import com.phoenixplugins.phoenixduels.lib.common.uicomponents.newest.container.holders.ContainerView;
 import com.phoenixplugins.phoenixduels.managers.party.PartyImpl;
 import com.phoenixplugins.phoenixduels.managers.players.PlayerData;
 import com.phoenixplugins.phoenixduels.managers.stats.PlayerStats;
 import com.phoenixplugins.phoenixduels.registry.loadout.buitin.PremadeKitLoadout;
+import com.phoenixplugins.phoenixduels.registry.menus.generic.duel.DuelPlayerLayoutMenu;
+import it.pintux.life.duelsaddon.model.DuelDraftView;
 import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.KitView;
 import it.pintux.life.duelsaddon.model.LeaderboardEntry;
@@ -496,6 +499,29 @@ public final class DuelsGatewayImpl implements DuelsGateway {
         } catch (Throwable t) {
             warn("challengePlayer", t);
             return false;
+        }
+    }
+
+    @Override
+    public Optional<DuelDraftView> duelDraft(Object containerView) {
+        try {
+            if (!(containerView instanceof ContainerView view)) {
+                return Optional.empty();
+            }
+            if (!(view.getContainer() instanceof DuelPlayerLayoutMenu menu)) {
+                return Optional.empty();
+            }
+            Player target = menu.getTarget();
+            if (target == null) {
+                return Optional.empty();
+            }
+            Mode mode = menu.getSelectedMode();
+            return Optional.of(new DuelDraftView(target.getName(),
+                    mode == null ? null : mode.getIdentifier(),
+                    Math.max(1, menu.getRoundsToWin())));
+        } catch (Throwable t) {
+            warn("duelDraft", t);
+            return Optional.empty();
         }
     }
 

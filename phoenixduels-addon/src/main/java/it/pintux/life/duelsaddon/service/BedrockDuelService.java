@@ -4,6 +4,7 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
+import it.pintux.life.duelsaddon.model.DuelDraftView;
 import it.pintux.life.duelsaddon.model.ModeView;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -80,6 +81,47 @@ public final class BedrockDuelService extends BedrockServiceSupport {
         form.button(text("common.close-button"), fp -> {
         });
         form.send(wrap(player));
+    }
+
+    /**
+     * Opens the duel settings for the player PhoenixDuels' menu was already about.
+     *
+     * <p>{@code /duel <player>} carries the target, so asking for it again would be a step
+     * backwards. Mode and rounds are adopted from PhoenixDuels too, so a player who had already
+     * picked a mode does not lose it. Falls back to the target picker only when the menu genuinely
+     * has no target, which is the {@code /duel} with no argument case.</p>
+     *
+     * @param containerView the cancelled PhoenixDuels view, passed through opaquely
+     */
+    public void openFromMenu(Player player, Object containerView) {
+        Optional<DuelDraftView> incoming = gateway.duelDraft(containerView);
+        if (incoming.isEmpty()) {
+            openTargetPicker(player);
+            return;
+        }
+        DuelDraftView view = incoming.get();
+        Draft draft = drafts.computeIfAbsent(player.getUniqueId(), id -> new Draft());
+        draft.targetName = view.targetName();
+        if (view.modeId() != null) {
+            draft.modeId = view.modeId();
+        }
+        draft.rounds = view.rounds();
+        openDuelPlayer(player, view.targetName());
+    }
+
+    /**
+     * Re-opens the mode picker for the challenge already in progress, keeping the target.
+     */
+    public void openModeSelection(Player player) {
+        Draft draft = drafts.get(player.getUniqueId());
+        if (draft == null || draft.targetName == null) {
+            openTargetPicker(player);
+            return;
+        }
+        openModePicker(player, modeId -> {
+            draft.modeId = modeId;
+            openDuelPlayer(player, draft.targetName);
+        });
     }
 
     public void openTargetPicker(Player player) {
