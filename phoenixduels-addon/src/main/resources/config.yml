@@ -1,9 +1,43 @@
+# ============================================================
+#  BedrockGUI - PhoenixDuels Addon
+#  Serves native Bedrock forms to Bedrock (Geyser/Floodgate)
+#  players in place of PhoenixDuels' chest menus, and turns its
+#  clickable-chat party invites and duel challenges into forms
+#  Bedrock can actually use. Java players are never affected.
+#
+#  All text supports & colour codes and \n for a new line.
+#  %placeholders% are listed per section below.
+# ============================================================
 config-version: 1
 
+# Replace PhoenixDuels' chest menus with Bedrock forms.
+# When false this addon touches nothing PhoenixDuels does: no menu is
+# intercepted, no form is opened by itself. The pd_* actions still work, so you
+# can build your own menus and call them yourself.
 integrated-gui: true
+
+# Register the pd_* action handlers with BedrockGUI so any form - including your
+# own custom menus - can open duel screens or run duel actions.
+# Always active while integrated-gui is true, because the built-in forms use them.
 register-actions: true
+
+# Log why a PhoenixDuels menu was NOT replaced by a form.
+# Turn this on when a menu still opens as a chest for a Bedrock player. Each open
+# logs the menu's layout class, the key it resolved to, and the chest title, which
+# is what identifies a menu this addon does not know about yet.
+# Noisy on a busy server - leave it off unless you are chasing something.
 debug: false
 
+# Per-area switches for the built-in forms. Turning one off hands that area back
+# to PhoenixDuels' Java chest menus for everyone, Bedrock included.
+#   queue     - /queue, the ranked/unranked pickers, the mode list
+#   duel      - /duel <player>, the challenge builder, lost items
+#   party     - /party and every party screen, incl. team fight and FFA pickers
+#   settings  - /duelsettings
+#   stats     - /stats and the leaderboard
+#   spectator - the ongoing matches and spectate-player lists
+#   kit       - the kit preview (editing a kit layout always stays on Java,
+#               because a Bedrock form cannot do item drag-and-drop)
 menus:
   queue: true
   duel: true
@@ -14,10 +48,42 @@ menus:
   kit: true
 
 general:
+  # Buttons per page for long lists (modes, party members, matches, ...).
+  # Bedrock forms scroll, so this is about readability rather than a hard limit.
   items-per-page: 18
+
+  # Rounds pre-filled when a player opens the duel builder. The mode's own
+  # configured rounds win when it has one, so this is only the fallback.
   default-rounds: 1
 
+# ---- Invitations -------------------------------------------------------------
+# PhoenixDuels sends party invites and duel challenges as clickable chat text.
+# Bedrock clients cannot click chat, so the invite is unusable for them as
+# shipped. With these on, the invited Bedrock player also gets an Accept/Deny
+# form. The chat line still appears: PhoenixDuels emits it from inside its own
+# code and there is no server event that can suppress it.
+# The countdown shown comes from PhoenixDuels' own invitation-expiration-time.
+#
+# Placeholders: party-content %leader% %time%
+#               duel-content  %player% %mode% %rounds% %time%
+invitations:
+  party-forms: true
+  duel-forms: true
+  accept: "&aAccept"
+  decline: "&cDecline"
+  party-title: "&bParty Invitation"
+  party-content: "&e%leader% &7invited you to their party.\n&7You have &f%time%s &7to answer.\n"
+  duel-title: "&6Duel Challenge"
+  duel-content: "&e%player% &7challenged you.\n&7Mode: &f%mode%\n&7Rounds: &f%rounds%\n&7You have &f%time%s &7to answer.\n"
+
+# ---- Chat messages -----------------------------------------------------------
+# Sent as chat, not shown in a form. PhoenixDuels keeps sending its own messages
+# too; these only cover what this addon does itself.
+#
+# Placeholders: queue-joined %mode%
+#               party-invited, party-kicked, party-promoted, challenge-sent %player%
 messages:
+  # Shown when PhoenixDuels is missing, disabled, or its internals changed.
   duels-unavailable: "&cPhoenixDuels is not available right now."
   no-permission: "&cYou don't have permission to do that."
   action-failed: "&cSomething went wrong. Try again."
@@ -41,19 +107,35 @@ messages:
   party-promoted: "&a%player% is now the party leader."
   invite-accepted: "&aInvitation accepted."
   invite-declined: "&aInvitation declined."
+  # Shown when the player presses Accept after PhoenixDuels already expired it.
   invite-expired: "&cThat invitation has expired."
   challenge-sent: "&aChallenge sent to &f%player%&a."
   challenge-failed: "&cCouldn't send that challenge."
   spectate-failed: "&cCouldn't spectate that match."
   no-matches: "&eThere are no matches running."
 
+# ---- Buttons reused by every form -------------------------------------------
 common:
   back-button: "&8« Back"
   close-button: "&cClose"
   previous-button: "&e« Previous"
   next-button: "&eNext »"
+  # Second button on every confirmation form.
   confirm-no: "&7Cancel"
 
+# ---- Queue (/queue) ----------------------------------------------------------
+# Flow: ladder (unranked/ranked) -> team size -> mode.
+# A team size with no eligible mode is hidden rather than shown and refused, and
+# while the player is already queued the first form collapses to a leave button,
+# because PhoenixDuels allows one queue at a time.
+#
+# Placeholders: button-leave %mode%
+#               in-queue-content %mode% %waiting%
+#               player-mode-title %type%
+#               mode-title %type% %size%
+#               mode-button %mode% %players%
+#               mode-button-described %mode% %summary% %players%
+#               mode-button-locked %mode%
 queue:
   title: "&bDuels"
   content: "&7Choose how you want to play.\n"
@@ -71,13 +153,24 @@ queue:
   button-quad: "&aQuad &74v4"
   mode-title: "&b%type% %size% — Mode"
   mode-content: "&7Pick a duel mode.\n"
+  # Used when the mode has no description configured in PhoenixDuels.
   mode-button: "&a%mode%\n&7%players% queued"
+  # Used instead when the mode has a description; %summary% is its first line.
   mode-button-described: "&a%mode%\n&7%summary%\n&7%players% queued"
+  # Shown greyed out when the mode requires a permission the player lacks.
   mode-button-locked: "&8%mode%\n&cNo permission"
   no-modes: "&7No modes are available for that team size."
+  # Substituted into %type% above.
   label-unranked: "Unranked"
   label-ranked: "Ranked"
 
+# ---- Duels (/duel <player>) --------------------------------------------------
+# The challenge is assembled across several forms - mode, then rounds - because a
+# Bedrock form is one round trip and cannot hold state like a chest menu does.
+#
+# Placeholders: title, content %player%
+#               button-mode %mode%   button-rounds %rounds%
+#               opponent-button %leader% %members%
 duel:
   title: "&6Duel %player%"
   content: "&7Challenge &f%player%&7 to a duel.\n"
@@ -94,11 +187,22 @@ duel:
   challenge-opponent-content: "&7Pick a party to challenge.\n"
   opponent-button: "&a%leader%'s party\n&7%members% members"
   no-opponents: "&7There are no other parties to challenge."
+  # Items PhoenixDuels held back after a match the player could not finish.
   lost-items-title: "&eLost Items"
   lost-items-content: "&7Items recovered from your last match.\n"
   lost-items-empty: "&7You have no lost items."
   lost-items-button: "&aClaim Items"
 
+# ---- Party (/party) ----------------------------------------------------------
+# Members and pending invites are listed together: PhoenixDuels models an
+# unanswered invite as a member that has not accepted yet. Pending entries are
+# not counted towards the member total and cannot be managed.
+#
+# Placeholders: content %leader% %members% %slots%
+#               member-button, member-offline-button %player% %leader_tag%
+#               member-pending-button, manage-title, kick-title, promote-title,
+#               spectator-button %player%
+#               multiteam-button %teams%
 party:
   title: "&bParty"
   no-party-content: "&7You are not in a party.\n"
@@ -115,8 +219,10 @@ party:
   info-title: "&bParty Members"
   info-content: "&7Tap a member to manage them.\n"
   member-button: "&a%player%%leader_tag%"
+  # Offline members stay in the party, so they are listed and marked.
   member-offline-button: "&7%player% &8(offline)%leader_tag%"
   member-pending-button: "&e%player%\n&7Invitation pending"
+  # Appended to %leader_tag% for whoever leads the party.
   leader-tag: "\n&6Party leader"
   manage-title: "&b%player%"
   manage-content: "&7Manage this party member.\n"
@@ -126,6 +232,7 @@ party:
   invite-label: "&7Player name"
   invite-placeholder: "PlayerName"
   invite-online-content: "&7Pick a player to invite.\n"
+  # Offers a text box, for inviting someone the picker did not list.
   invite-manual-button: "&aType a name"
   disband-title: "&cDisband party?"
   disband-content: "&7This removes every member from the party."
@@ -137,6 +244,8 @@ party:
   promote-content: "&7They become the party leader and you lose leadership."
   ffa-title: "&6Party Free For All"
   ffa-content: "&7Everyone fights everyone. Pick a mode.\n"
+  # Free-for-all is opt-in per mode in PhoenixDuels, so the picker only offers
+  # modes that allow it. This shows when none do.
   ffa-no-modes: "&7No mode on this server allows free-for-all."
   teamfight-title: "&6Party Team Fight"
   teamfight-content: "&7The party is split into two teams. Pick a mode.\n"
@@ -146,14 +255,26 @@ party:
   spectators-title: "&7Spectators"
   spectators-content: "&7Members watching instead of playing.\n"
   spectator-button: "&7%player%"
+  # Shown when the party is too small for the chosen split.
   too-few-members: "&cYour party needs more members for that."
 
+# ---- Settings (/duelsettings) ------------------------------------------------
+# PhoenixDuels stores these as "reject" flags. The form asks the opposite way
+# round, so a toggle that is ON means requests are accepted.
 settings:
   title: "&bDuel Settings"
   toggle-duel-requests: "&7Accept duel requests"
   toggle-party-requests: "&7Accept party invitations"
   saved: "&aSettings saved."
 
+# ---- Stats and leaderboard (/stats) ------------------------------------------
+# Leaderboard rows are form text rather than buttons, since a row is not
+# clickable; only the metric switches and paging are buttons.
+#
+# Placeholders: title %player%
+#               content %wins% %losses% %draws% %kills% %deaths% %kd% %winrate%
+#               leaderboard-title %metric%
+#               leaderboard-line %rank% %player% %value%
 stats:
   title: "&bStats — %player%"
   content: "&7Wins: &a%wins%\n&7Losses: &c%losses%\n&7Draws: &f%draws%\n&7Kills: &a%kills%\n&7Deaths: &c%deaths%\n&7K/D: &f%kd%\n&7Win rate: &f%winrate%%\n"
@@ -166,11 +287,18 @@ stats:
   leaderboard-content: "&7Top players.\n"
   leaderboard-line: "&e#%rank% &f%player% &8- &7%value%"
   leaderboard-empty: "&7No leaderboard data yet."
+  # Names of the metrics players can switch the leaderboard between.
   metric-wins: "Wins"
   metric-kills: "Kills"
   metric-losses: "Losses"
   metric-deaths: "Deaths"
 
+# ---- Spectating --------------------------------------------------------------
+# PhoenixDuels starts spectating from a player rather than a match id, so a match
+# that ends while the list is open simply resolves to nothing.
+#
+# Placeholders: match-button %mode% %players% %round%
+#               player-button %player% %mode%
 spectator:
   title: "&7Ongoing Matches"
   content: "&7Pick a match to spectate.\n"
@@ -180,6 +308,12 @@ spectator:
   players-content: "&7Pick a player to spectate.\n"
   player-button: "&a%player%\n&7%mode%"
 
+# ---- Kits --------------------------------------------------------------------
+# Preview only. Editing a layout needs item drag-and-drop, which a Bedrock form
+# cannot do, so the kit editor is left to open as a normal Java inventory.
+#
+# Placeholders: preview-title %kit%
+#               preview-line %amount% %item%
 kit:
   list-title: "&bKits"
   list-content: "&7Pick a kit to preview.\n"
@@ -187,13 +321,3 @@ kit:
   preview-content: "&7Items in this kit.\n"
   preview-line: "&7- &f%amount%x %item%"
   preview-empty: "&7This kit is empty."
-
-invitations:
-  party-forms: true
-  duel-forms: true
-  accept: "&aAccept"
-  decline: "&cDecline"
-  party-title: "&bParty Invitation"
-  party-content: "&e%leader% &7invited you to their party.\n&7You have &f%time%s &7to answer.\n"
-  duel-title: "&6Duel Challenge"
-  duel-content: "&e%player% &7challenged you.\n&7Mode: &f%mode%\n&7Rounds: &f%rounds%\n&7You have &f%time%s &7to answer.\n"

@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 
@@ -64,6 +65,7 @@ public final class DuelsAddonConfiguration {
                 continue;
             }
             cfg.set(key, defaults.get(key));
+            copyComments(cfg, defaults, key);
             added++;
         }
         if (added == 0) {
@@ -74,6 +76,27 @@ public final class DuelsAddonConfiguration {
             plugin.getLogger().info("Added " + added + " new config key(s) to " + FILE + ".");
         } catch (IOException e) {
             plugin.getLogger().warning("Could not write new config keys to " + FILE + ": " + e.getMessage());
+        }
+    }
+
+    /**
+     * Carries the shipped explanation for a key onto the admin's file.
+     *
+     * <p>Without this a newly added key lands in the file bare, because saving writes only what the
+     * in-memory config holds and the comment lives in the jar's copy. Guarded against older server
+     * builds where the comment API is absent.</p>
+     */
+    private static void copyComments(YamlConfiguration cfg, YamlConfiguration defaults, String key) {
+        try {
+            List<String> above = defaults.getComments(key);
+            if (!above.isEmpty()) {
+                cfg.setComments(key, above);
+            }
+            List<String> inline = defaults.getInlineComments(key);
+            if (!inline.isEmpty()) {
+                cfg.setInlineComments(key, inline);
+            }
+        } catch (NoSuchMethodError | UnsupportedOperationException ignored) {
         }
     }
 
