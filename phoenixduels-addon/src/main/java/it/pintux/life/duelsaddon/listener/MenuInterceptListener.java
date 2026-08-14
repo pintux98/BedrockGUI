@@ -27,10 +27,14 @@ import java.util.Map;
  * Swaps PhoenixDuels' chest menus for Bedrock forms.
  *
  * <p>Identification is exact rather than title-based. Every PhoenixDuels menu is a
- * {@link ContainerLayout} opened through a {@link ContainerView}, and {@code ContainerView}
- * implements {@link org.bukkit.inventory.InventoryHolder}, so the registry id is readable straight
- * off {@link InventoryOpenEvent} before a single slot renders. That avoids the chest flash and the
- * next-tick flag polling that title matching forces.</p>
+ * {@link ContainerLayout} opened through a {@link ContainerView}, and {@code ContainerView} is the
+ * inventory's holder, so the menu is identifiable straight off {@link InventoryOpenEvent} before a
+ * single slot renders. That avoids the chest flash and the next-tick flag polling that title
+ * matching forces.</p>
+ *
+ * <p>The layout is resolved to a registry key through {@link PhoenixMenuResolver}, <em>not</em>
+ * through {@code ContainerLayout.getId()} — that method returns an incrementing counter, not the
+ * key.</p>
  *
  * <p>Only ids in {@link DuelsMenus#GROUPS} are cancelled. Anything else — the drag-and-drop
  * inventories, the generic pickers, the admin editor — falls through untouched so the Bedrock
@@ -63,9 +67,11 @@ public final class MenuInterceptListener implements Listener {
     }
 
     private final Plugin plugin;
+    private final DuelsAddonConfiguration config;
     private final BedrockPlayerDetector detector;
     private final DuelsGateway gateway;
     private final Map<String, Handler> handlers;
+    private final PhoenixMenuResolver resolver = new PhoenixMenuResolver();
 
     public MenuInterceptListener(Plugin plugin,
                                  DuelsAddonConfiguration config,
@@ -73,9 +79,18 @@ public final class MenuInterceptListener implements Listener {
                                  DuelsGateway gateway,
                                  Services services) {
         this.plugin = plugin;
+        this.config = config;
         this.detector = detector;
         this.gateway = gateway;
         this.handlers = buildHandlers(config, services);
+    }
+
+    /**
+     * @return the shared registry resolver, so the admin command can report how many menus
+     *         PhoenixDuels currently resolves
+     */
+    public PhoenixMenuResolver resolver() {
+        return resolver;
     }
 
     /**
@@ -155,8 +170,13 @@ public final class MenuInterceptListener implements Listener {
         if (view == null) {
             return;
         }
-        Handler handler = handlers.get(menuId(view));
+        String key = resolver.keyFor(layoutOf(view));
+        Handler handler = key == null ? null : handlers.get(key);
         if (handler == null) {
+            if (config.debugEnabled()) {
+                plugin.getLogger().info("Not intercepting PhoenixDuels menu for "
+                        + player.getName() + ": key=" + key + " title=" + event.getView().getTitle());
+            }
             return;
         }
         event.setCancelled(true);
@@ -176,9 +196,9 @@ public final class MenuInterceptListener implements Listener {
         }
     }
 
-    private static String menuId(ContainerView view) {
+    private static ContainerLayout layoutOf(ContainerView view) {
         try {
-            return view.getContainer() instanceof ContainerLayout layout ? layout.getId() : null;
+            return view.getContainer() instanceof ContainerLayout layout ? layout : null;
         } catch (Throwable ignored) {
             return null;
         }

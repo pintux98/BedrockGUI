@@ -2,6 +2,7 @@ config-version: 1
 
 integrated-gui: true
 register-actions: true
+debug: false
 
 menus:
   queue: true

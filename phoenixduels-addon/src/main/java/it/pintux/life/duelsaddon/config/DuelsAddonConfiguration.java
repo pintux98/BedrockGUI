@@ -97,6 +97,14 @@ public final class DuelsAddonConfiguration {
         return Math.max(1, number("general.default-rounds", 1));
     }
 
+    /**
+     * @return whether to log why a PhoenixDuels menu was not intercepted, which is the only way to
+     *         tell a menu-key mismatch apart from a player who simply is not on Bedrock
+     */
+    public boolean debugEnabled() {
+        return flag("debug", false);
+    }
+
     public boolean integratedGuiEnabled() {
         return flag("integrated-gui", true);
     }

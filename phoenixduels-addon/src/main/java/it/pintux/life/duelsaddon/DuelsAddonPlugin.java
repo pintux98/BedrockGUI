@@ -68,8 +68,16 @@ public final class DuelsAddonPlugin extends JavaPlugin {
             getLogger().warning("PhoenixDuels is not installed (or its internals changed). "
                     + "Bedrock forms stay disabled and PhoenixDuels' own Java menus are left untouched.");
         } else {
+            int resolved = menuInterceptListener.resolver().refresh();
             getLogger().info("Hooked into PhoenixDuels (" + gateway.edition() + "). "
-                    + menuInterceptListener.handlers().size() + " menus served as Bedrock forms.");
+                    + menuInterceptListener.handlers().size() + " menus served as Bedrock forms, "
+                    + resolved + " of " + it.pintux.life.duelsaddon.listener.DuelsMenus.ALL.size()
+                    + " registry keys resolved.");
+            if (resolved == 0) {
+                getLogger().warning("PhoenixDuels' MenuRegistry resolved no menus. Interception will "
+                        + "do nothing, so Bedrock players keep the Java chest menus. Set debug: true "
+                        + "in config.yml to log every menu open.");
+            }
         }
     }
 

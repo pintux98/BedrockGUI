@@ -85,6 +85,10 @@ public final class DuelsAddonCommand implements CommandExecutor, TabCompleter {
             send(sender, "&cInterception is disabled.");
             return;
         }
+        int resolved = listener.resolver().refresh();
+        send(sender, (resolved == 0 ? "&cRegistry keys resolved: &f" : "&aRegistry keys resolved: &f")
+                + resolved + "&7/&f" + DuelsMenus.ALL.size()
+                + (resolved == 0 ? " &8(interception is doing nothing)" : ""));
         send(sender, "&aServed as Bedrock forms (&f" + listener.handlers().size() + "&a): &7"
                 + String.join(", ", new TreeSet<>(listener.handlers().keySet())));
         send(sender, "&eJava-only by design: &7" + String.join(", ", new TreeSet<>(DuelsMenus.JAVA_ONLY)));
