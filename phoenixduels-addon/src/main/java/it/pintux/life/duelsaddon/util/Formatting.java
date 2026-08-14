@@ -2,9 +2,18 @@ package it.pintux.life.duelsaddon.util;
 
 import java.util.Locale;
 
+/**
+ * Number and label formatting for the stat and kit forms.
+ */
 public final class Formatting {
     private Formatting() {}
 
+    /**
+     * Divides two counts for display, treating a zero denominator as "every kill was free" rather
+     * than as an error, which is what a K/D of {@code kills / 0} means in practice.
+     *
+     * @return the ratio to two decimal places
+     */
     public static String ratio(int numerator, int denominator) {
         if (denominator <= 0) {
             return numerator <= 0 ? "0.00" : String.format(Locale.ROOT, "%.2f", (double) numerator);
@@ -12,6 +21,10 @@ public final class Formatting {
         return String.format(Locale.ROOT, "%.2f", (double) numerator / denominator);
     }
 
+    /**
+     * @return {@code part} as a percentage of {@code total} to one decimal place, or {@code 0.0}
+     *         when nothing has been played
+     */
     public static String percent(int part, int total) {
         if (total <= 0) {
             return "0.0";
@@ -19,6 +32,10 @@ public final class Formatting {
         return String.format(Locale.ROOT, "%.1f", (part * 100.0d) / total);
     }
 
+    /**
+     * Turns an identifier into a label, so a mode or material with no display name still reads
+     * properly: {@code DIAMOND_SWORD} becomes {@code Diamond Sword}.
+     */
     public static String prettify(String raw) {
         if (raw == null || raw.isBlank()) {
             return "";
@@ -36,9 +53,5 @@ public final class Formatting {
                     .append(word.substring(1).toLowerCase(Locale.ROOT));
         }
         return out.toString();
-    }
-
-    public static String stripColor(String input) {
-        return input == null ? "" : input.replaceAll("(?i)[§&][0-9A-FK-ORX]", "");
     }
 }

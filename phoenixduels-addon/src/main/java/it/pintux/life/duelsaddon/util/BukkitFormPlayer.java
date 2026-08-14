@@ -5,6 +5,9 @@ import org.bukkit.entity.Player;
 
 import java.util.UUID;
 
+/**
+ * Adapts a Bukkit {@link Player} to BedrockGUI's {@link FormPlayer}.
+ */
 public final class BukkitFormPlayer implements FormPlayer {
     private final Player player;
 

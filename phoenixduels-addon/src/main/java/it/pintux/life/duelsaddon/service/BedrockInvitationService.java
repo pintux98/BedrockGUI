@@ -13,7 +13,23 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 
+/**
+ * Turns PhoenixDuels' clickable-chat invitations into Bedrock accept/decline forms.
+ *
+ * <p>Bedrock clients cannot click chat components, so the invitation is unusable for them as
+ * shipped. The chat line itself is left alone: PhoenixDuels emits it from inside its facades and
+ * neither Bukkit nor Paper exposes an outgoing-chat event to cancel, so the form simply arrives on
+ * top.</p>
+ *
+ * <p>A form, once sent, cannot be recalled. So acceptance is re-validated against PhoenixDuels at
+ * the moment the button is pressed rather than trusted from when the form was built, and
+ * {@link #pending} suppresses duplicates while one is outstanding.</p>
+ */
 public final class BedrockInvitationService extends BedrockServiceSupport {
+
+    /**
+     * {@code kind:inviter:invited} keys for invitations with a form already on screen.
+     */
     private final Set<String> pending = ConcurrentHashMap.newKeySet();
 
     public BedrockInvitationService(DuelsAddonConfiguration config, DuelsGateway gateway,
@@ -39,7 +55,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 "time", String.valueOf(gateway.invitationExpirationSeconds()));
 
         api.createModalForm(text("invitations.party-title"), render("invitations.party-content", ph))
-                .button1(text("invitations.party-accept"), fp -> {
+                .button1(text("invitations.accept"), fp -> {
                     pending.remove(key);
                     if (gateway.acceptPartyInvitation(invited, leaderId)) {
                         invited.sendMessage(text("messages.invite-accepted"));
@@ -47,7 +63,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                         fail(invited, "messages.invite-expired");
                     }
                 })
-                .button2(text("invitations.party-decline"), fp -> {
+                .button2(text("invitations.decline"), fp -> {
                     pending.remove(key);
                     if (gateway.declinePartyInvitation(invited, leaderId)) {
                         invited.sendMessage(text("messages.invite-declined"));
@@ -81,7 +97,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 "time", String.valueOf(view.expiresInSeconds()));
 
         api.createModalForm(text("invitations.duel-title"), render("invitations.duel-content", ph))
-                .button1(text("invitations.duel-accept"), fp -> {
+                .button1(text("invitations.accept"), fp -> {
                     pending.remove(key);
                     if (!gateway.hasPendingChallenge(inviterId, invited.getUniqueId())) {
                         fail(invited, "messages.invite-expired");
@@ -93,7 +109,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                         fail(invited, "messages.invite-expired");
                     }
                 })
-                .button2(text("invitations.duel-decline"), fp -> {
+                .button2(text("invitations.decline"), fp -> {
                     pending.remove(key);
                     if (gateway.declineChallenge(invited, inviterId)) {
                         invited.sendMessage(text("messages.invite-declined"));
@@ -102,6 +118,10 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 .send(wrap(invited));
     }
 
+    /**
+     * Clears the duplicate guard once PhoenixDuels reports the invitation settled, so a later
+     * invitation between the same two players can raise a new form.
+     */
     public void resolve(UUID inviterId, UUID invitedId) {
         pending.remove(key("party", inviterId, invitedId));
         pending.remove(key("duel", inviterId, invitedId));

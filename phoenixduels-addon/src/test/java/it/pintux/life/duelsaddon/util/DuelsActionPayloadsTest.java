@@ -10,11 +10,15 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+/**
+ * Payloads are hand-written in menu YAML, so these tests use literal strings rather than builders:
+ * the input under test is what an admin actually types.
+ */
 class DuelsActionPayloadsTest {
 
     @Test
-    void queuePayloadRoundTrips() {
-        String payload = DuelsActionPayloads.queue(true, "DUO", "crystal");
+    void queuePayloadIsParsedIntoLadderSizeAndMode() {
+        String payload = "ranked|duo|crystal";
         assertTrue(DuelsActionPayloads.ranked(payload));
         assertEquals("DUO", DuelsActionPayloads.size(payload));
         assertEquals(TeamSize.DUO, TeamSize.parse(DuelsActionPayloads.size(payload)));
@@ -22,48 +26,58 @@ class DuelsActionPayloadsTest {
     }
 
     @Test
-    void unrankedQueuePayloadIsNotRanked() {
-        String payload = DuelsActionPayloads.queue(false, "solo", "classic");
-        assertFalse(DuelsActionPayloads.ranked(payload));
-        assertEquals(TeamSize.SOLO, TeamSize.parse(DuelsActionPayloads.size(payload)));
+    void anythingOtherThanRankedMeansUnranked() {
+        assertFalse(DuelsActionPayloads.ranked("unranked|solo|classic"));
+        assertFalse(DuelsActionPayloads.ranked("typo|solo|classic"));
+        assertFalse(DuelsActionPayloads.ranked(""));
+        assertFalse(DuelsActionPayloads.ranked(null));
     }
 
     @Test
-    void modePayloadRejectsBlank() {
-        assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.modeId(""));
-        assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.modeId(null));
-        assertEquals("uhc", DuelsActionPayloads.modeId("uhc"));
+    void ladderAndSizeAreCaseInsensitive() {
+        assertTrue(DuelsActionPayloads.ranked("RANKED|QUAD|uhc"));
+        assertEquals(TeamSize.QUAD, TeamSize.parse(DuelsActionPayloads.size("RANKED|quad|uhc")));
     }
 
     @Test
     void pageFallsBackToDefault() {
         assertEquals(1, DuelsActionPayloads.page("crystal", 1));
-        assertEquals(3, DuelsActionPayloads.page(DuelsActionPayloads.modePage("crystal", 3), 1));
+        assertEquals(3, DuelsActionPayloads.page("crystal|3", 1));
         assertEquals(1, DuelsActionPayloads.page("crystal|notanumber", 1));
+        assertEquals(2, DuelsActionPayloads.page(null, 2));
     }
 
     @Test
-    void uuidPayloadRoundTrips() {
+    void uuidIsParsedFromFirstSegment() {
         UUID id = UUID.randomUUID();
-        assertEquals(id, DuelsActionPayloads.uuid(DuelsActionPayloads.player(id)));
+        assertEquals(id, DuelsActionPayloads.uuid(id.toString()));
+        assertEquals(id, DuelsActionPayloads.uuid(id + "|extra"));
     }
 
     @Test
-    void uuidPayloadRejectsGarbage() {
+    void uuidRejectsGarbage() {
         assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.uuid("not-a-uuid"));
         assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.uuid(""));
+        assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.uuid(null));
     }
 
     @Test
-    void roundsClampToAtLeastOne() {
-        assertEquals(5, DuelsActionPayloads.rounds("crystal|5", 1));
-        assertEquals(1, DuelsActionPayloads.rounds("crystal|0", 3));
-        assertEquals(3, DuelsActionPayloads.rounds("crystal", 3));
-    }
-
-    @Test
-    void sizeRequiresSecondSegment() {
+    void incompleteQueuePayloadsReportWhatIsMissing() {
         assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.size("ranked"));
+        assertThrows(IllegalArgumentException.class, () -> DuelsActionPayloads.queueMode("ranked|duo"));
+    }
+
+    @Test
+    void playerNameIsTrimmedAndNullSafe() {
+        assertEquals("Notch", DuelsActionPayloads.playerName("  Notch "));
+        assertEquals("", DuelsActionPayloads.playerName(null));
+    }
+
+    @Test
+    void firstSegmentIsTrimmed() {
+        assertEquals("crystal", DuelsActionPayloads.first(" crystal |2"));
+        assertEquals("", DuelsActionPayloads.first(null));
+        assertEquals("", DuelsActionPayloads.first("   "));
     }
 
     @Test

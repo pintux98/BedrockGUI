@@ -21,6 +21,18 @@ import org.bukkit.plugin.Plugin;
 import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Watches PhoenixDuels for invitations that need a Bedrock form.
+ *
+ * <p>Party invitations have a real event. Duel challenges do not, so the direct
+ * {@code /duel <player> <mode> <rounds>} form is observed at {@link EventPriority#MONITOR} and
+ * deliberately <em>not</em> cancelled: PhoenixDuels must still process it, and only afterwards can
+ * the invitation be confirmed and the form pushed. Challenges started from this addon's own forms
+ * are pushed by {@code BedrockDuelService} instead, so both routes are covered.</p>
+ *
+ * <p>Not covered: a third-party plugin calling {@code ChallengeFacade} directly. Those players see
+ * only the chat line.</p>
+ */
 public final class InvitationListener implements Listener {
     private final Plugin plugin;
     private final DuelsGateway gateway;
@@ -119,14 +131,6 @@ public final class InvitationListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         invitationService.forget(event.getPlayer().getUniqueId());
         duelService.forget(event.getPlayer().getUniqueId());
-    }
-
-    public void notifyChallengeSent(UUID inviterId, Player target) {
-        if (target == null) {
-            return;
-        }
-        plugin.getServer().getScheduler().runTask(plugin,
-                () -> invitationService.sendDuelChallenge(target, inviterId));
     }
 
     private void resolve(Party party, Participant participant) {

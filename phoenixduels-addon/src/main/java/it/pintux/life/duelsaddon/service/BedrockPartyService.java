@@ -16,7 +16,16 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
+/**
+ * Bedrock forms for the whole party flow: creating, inviting, managing members, and starting the
+ * team fight, multi-team and free-for-all matches.
+ *
+ * <p>PhoenixDuels keeps unanswered invitations inside the party as not-yet-accepted participants,
+ * so the member list shows them as pending rather than as members, and they are excluded from the
+ * counts that decide whether a fight can start.</p>
+ */
 public final class BedrockPartyService extends BedrockServiceSupport {
 
     public BedrockPartyService(DuelsAddonConfiguration config, DuelsGateway gateway,
@@ -96,9 +105,9 @@ public final class BedrockPartyService extends BedrockServiceSupport {
                 });
                 continue;
             }
-            String label = render("party.member-button", Map.of(
-                    "player", member.playerName(),
-                    "leader_tag", member.leader() ? text("party.leader-tag") : ""));
+            String label = render(member.online() ? "party.member-button" : "party.member-offline-button",
+                    Map.of("player", member.playerName(),
+                            "leader_tag", member.leader() ? text("party.leader-tag") : ""));
             if (leader && !member.leader()) {
                 form.button(label, fp -> openManageMember(player, member.playerId()));
             } else {
@@ -185,19 +194,25 @@ public final class BedrockPartyService extends BedrockServiceSupport {
     }
 
     public void openTeamFight(Player player) {
-        openModePicker(player, "party.teamfight-title", "party.teamfight-content", modeId -> {
-            if (!gateway.startPartyTeamFight(player, modeId)) {
-                fail(player, "messages.action-failed");
-            }
-        });
+        openModePicker(player, "party.teamfight-title", "party.teamfight-content",
+                ModeView::challengeAllowed, "queue.no-modes", modeId -> {
+                    if (!gateway.startPartyTeamFight(player, modeId)) {
+                        fail(player, "messages.action-failed");
+                    }
+                });
     }
 
+    /**
+     * Free-for-all is opt-in per mode in PhoenixDuels, so the picker only offers modes that allow
+     * it rather than failing after the player has already chosen.
+     */
     public void openFfa(Player player) {
-        openModePicker(player, "party.ffa-title", "party.ffa-content", modeId -> {
-            if (!gateway.startPartyFfa(player, modeId)) {
-                fail(player, "messages.action-failed");
-            }
-        });
+        openModePicker(player, "party.ffa-title", "party.ffa-content",
+                ModeView::ffaAllowed, "party.ffa-no-modes", modeId -> {
+                    if (!gateway.startPartyFfa(player, modeId)) {
+                        fail(player, "messages.action-failed");
+                    }
+                });
     }
 
     public void openMultiTeam(Player player) {
@@ -222,6 +237,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
             int chosen = teams;
             form.button(render("party.multiteam-button", Map.of("teams", String.valueOf(teams))),
                     fp -> openModePicker(player, "party.multiteam-title", "party.multiteam-content",
+                            ModeView::challengeAllowed, "queue.no-modes",
                             modeId -> {
                                 if (!gateway.startPartyMultiTeamFight(player, chosen, modeId)) {
                                     fail(player, "messages.action-failed");
@@ -284,6 +300,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
                             "leader", opponent.leaderName(),
                             "members", String.valueOf(opponent.memberCount()))),
                     fp -> openModePicker(player, "duel.challenge-opponent-title", "duel.select-mode-content",
+                            ModeView::challengeAllowed, "queue.no-modes",
                             modeId -> {
                                 ModeView mode = gateway.mode(modeId).orElse(null);
                                 int rounds = mode == null ? config.defaultRounds() : mode.roundsToWin();
@@ -300,27 +317,28 @@ public final class BedrockPartyService extends BedrockServiceSupport {
         form.send(wrap(player));
     }
 
-    private void openModePicker(Player player, String titlePath, String contentPath, Consumer<String> onPick) {
+    /**
+     * Shared mode picker for the party fight flows.
+     *
+     * @param eligible    which modes this flow accepts, checked before the player picks
+     * @param emptyPath   config key explaining why the list is empty
+     * @param onPick      receives the chosen mode id
+     */
+    private void openModePicker(Player player, String titlePath, String contentPath,
+                                Predicate<ModeView> eligible, String emptyPath, Consumer<String> onPick) {
         BedrockGUIApi api = requireApi(player);
         if (api == null || !ensureAvailable(player)) {
             return;
         }
         List<ModeView> modes = new ArrayList<>();
         for (ModeView mode : gateway.modes()) {
-            if (mode.enabled() && mode.challengeAllowed()) {
+            if (mode.enabled() && eligible.test(mode) && mode.allowedFor(player)) {
                 modes.add(mode);
             }
         }
-        if (modes.isEmpty()) {
-            modes.addAll(gateway.modes().stream().filter(ModeView::enabled).toList());
-        }
 
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(text(titlePath));
-        if (modes.isEmpty()) {
-            form.content(text("queue.no-modes"));
-        } else {
-            form.content(text(contentPath));
-        }
+        form.content(text(modes.isEmpty() ? emptyPath : contentPath));
         for (ModeView mode : modes) {
             form.button(mode.displayName(), fp -> onPick.accept(mode.id()));
         }

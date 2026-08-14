@@ -4,7 +4,6 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
-import it.pintux.life.duelsaddon.model.MapView;
 import it.pintux.life.duelsaddon.model.ModeView;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -17,6 +16,14 @@ import java.util.Optional;
 import java.util.UUID;
 import java.util.function.Consumer;
 
+/**
+ * Bedrock forms for sending a duel challenge, and for reclaiming items PhoenixDuels saved.
+ *
+ * <p>PhoenixDuels' own duel menu keeps the half-built challenge in the open inventory's view
+ * metadata. A Bedrock form has no equivalent, since each form is a separate round trip, so the
+ * mode and round count in progress are held per player in {@link Draft} until the challenge is
+ * sent or the player disconnects.</p>
+ */
 public final class BedrockDuelService extends BedrockServiceSupport {
     private final Map<UUID, Draft> drafts = new HashMap<>();
     private BedrockInvitationService invitationService;
@@ -26,6 +33,10 @@ public final class BedrockDuelService extends BedrockServiceSupport {
         super(config, gateway, detector);
     }
 
+    /**
+     * Wired after construction because the two services are mutually dependent: this one pushes
+     * the challenge form to the target once PhoenixDuels has accepted the challenge.
+     */
     public void setInvitationService(BedrockInvitationService invitationService) {
         this.invitationService = invitationService;
     }
@@ -111,33 +122,12 @@ public final class BedrockDuelService extends BedrockServiceSupport {
             form.content(text("duel.select-mode-content"));
         }
         for (ModeView mode : modes) {
-            boolean allowed = !mode.permissionRequired() || mode.permission() == null
-                    || mode.permission().isBlank() || player.hasPermission(mode.permission());
-            if (allowed) {
+            if (mode.allowedFor(player)) {
                 form.button(mode.displayName(), fp -> onPick.accept(mode.id()));
             } else {
                 form.button(render("queue.mode-button-locked", Map.of("mode", mode.displayName())),
                         fp -> fail(player, "messages.no-permission"));
             }
-        }
-        form.send(wrap(player));
-    }
-
-    public void openMapPicker(Player player, String modeId, Consumer<String> onPick) {
-        BedrockGUIApi api = requireApi(player);
-        if (api == null || !ensureAvailable(player)) {
-            return;
-        }
-        List<MapView> maps = gateway.maps(modeId);
-        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(text("duel.select-map-title"));
-        if (maps.isEmpty()) {
-            form.content(text("duel.no-maps"));
-        } else {
-            form.content(text("duel.select-map-content"));
-        }
-        form.button(text("duel.any-map-button"), fp -> onPick.accept(""));
-        for (MapView map : maps) {
-            form.button(render("duel.map-button", Map.of("map", map.displayName())), fp -> onPick.accept(map.id()));
         }
         form.send(wrap(player));
     }
@@ -214,10 +204,16 @@ public final class BedrockDuelService extends BedrockServiceSupport {
         return gateway.modes().stream().filter(ModeView::enabled).map(ModeView::id).findFirst().orElse(null);
     }
 
+    /**
+     * Drops a disconnected player's half-built challenge.
+     */
     public void forget(UUID playerId) {
         drafts.remove(playerId);
     }
 
+    /**
+     * A challenge being assembled across several forms.
+     */
     private static final class Draft {
         private String targetName;
         private String modeId;

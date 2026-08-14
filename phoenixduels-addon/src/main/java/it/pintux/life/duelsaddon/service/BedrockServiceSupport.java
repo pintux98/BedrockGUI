@@ -1,6 +1,5 @@
 package it.pintux.life.duelsaddon.service;
 
-import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
@@ -11,6 +10,15 @@ import org.bukkit.entity.Player;
 import java.util.Map;
 import java.util.function.IntConsumer;
 
+/**
+ * Shared plumbing for the form services: config text lookup, the BedrockGUI handle, the Bedrock
+ * eligibility check, and list pagination.
+ *
+ * <p>Cumulus custom forms return their results keyed by a slug derived from each component's
+ * label, so {@link #formValue} and {@link #formToggle} exist to read a component back by the same
+ * label string it was created with, rather than by a positional index that shifts whenever a
+ * component is added.</p>
+ */
 public abstract class BedrockServiceSupport {
     protected final DuelsAddonConfiguration config;
     protected final DuelsGateway gateway;
@@ -58,10 +66,6 @@ public abstract class BedrockServiceSupport {
 
     protected void fail(Player player, String path) {
         player.sendMessage(config.text(path));
-    }
-
-    protected static ActionSystem.ActionContext context(String menuName) {
-        return ActionSystem.ActionContext.builder().menuName(menuName).formType("phoenixduels").build();
     }
 
     protected String formValue(Map<String, Object> results, String label) {

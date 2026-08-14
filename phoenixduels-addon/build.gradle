@@ -11,6 +11,8 @@ dependencies {
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
+    testImplementation "io.papermc.paper:paper-api:${paperApiVersion}"
+    testImplementation files('lib/phoenixduels.jar')
 }
 
 tasks.withType(JavaCompile).configureEach {

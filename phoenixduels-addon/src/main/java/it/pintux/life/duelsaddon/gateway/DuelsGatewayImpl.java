@@ -25,7 +25,6 @@ import com.phoenixplugins.phoenixduels.registry.loadout.buitin.PremadeKitLoadout
 import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.KitView;
 import it.pintux.life.duelsaddon.model.LeaderboardEntry;
-import it.pintux.life.duelsaddon.model.MapView;
 import it.pintux.life.duelsaddon.model.MatchView;
 import it.pintux.life.duelsaddon.model.MemberView;
 import it.pintux.life.duelsaddon.model.ModeView;
@@ -52,7 +51,20 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.logging.Logger;
 
+/**
+ * The one class in this addon that touches PhoenixDuels types.
+ *
+ * <p>Every method swallows {@link Throwable} rather than just {@link Exception}, because a
+ * PhoenixDuels update that removes an internal member surfaces as {@link NoSuchMethodError} or
+ * {@link NoClassDefFoundError} at call time. Catching those turns a broken integration into a
+ * disabled one, so the Bedrock player falls back to PhoenixDuels' own Java menu instead of the
+ * server throwing on every inventory open.</p>
+ */
 public final class DuelsGatewayImpl implements DuelsGateway {
+
+    /**
+     * The free build registers as {@code PhoenixDuelsLite}, the paid build as {@code PhoenixDuels}.
+     */
     private static final String[] PLUGIN_NAMES = {"PhoenixDuels", "PhoenixDuelsLite"};
 
     private final Logger logger;
@@ -145,22 +157,6 @@ public final class DuelsGatewayImpl implements DuelsGateway {
             if (mode.enabled() && mode.supports(ranked, size)) {
                 out.add(mode);
             }
-        }
-        return out;
-    }
-
-    @Override
-    public List<MapView> maps(String modeId) {
-        List<MapView> out = new ArrayList<>();
-        try {
-            for (com.phoenixplugins.phoenixduels.managers.maps.Map map : duels().getMapsManager().getRegisteredMaps()) {
-                if (modeId != null && !modeId.isBlank() && !allowsMode(map, modeId)) {
-                    continue;
-                }
-                out.add(new MapView(map.getIdentifier(), displayName(map.getDisplayName(), map.getIdentifier()), true));
-            }
-        } catch (Throwable t) {
-            warn("maps", t);
         }
         return out;
     }
@@ -404,6 +400,13 @@ public final class DuelsGatewayImpl implements DuelsGateway {
         return startPartyMultiTeamFight(leader, 2, modeId);
     }
 
+    /**
+     * Splits the party and queues the resulting challenge profile.
+     *
+     * <p>PhoenixDuels exposes no single "start party fight" call, so this reproduces what their
+     * menu does: build the team groups, wrap them in a challenge profile, and hand it to the
+     * matchmaker. Derived from bytecode and not yet exercised against a live server.</p>
+     */
     @Override
     public boolean startPartyMultiTeamFight(Player leader, int teams, String modeId) {
         try {
@@ -517,9 +520,8 @@ public final class DuelsGatewayImpl implements DuelsGateway {
             String modeId = profile == null ? null : profile.getSelectedModeId();
             String modeName = mode(modeId).map(ModeView::displayName).orElse(modeId == null ? "?" : modeId);
             int rounds = profile == null ? 1 : Math.max(1, profile.getRoundsToWin());
-            String inviterName = nameOf(inviterId);
-            return Optional.of(new InviteView(inviterId, inviterName, modeId, modeName, rounds,
-                    invitationExpirationSeconds(), false));
+            return Optional.of(new InviteView(nameOf(inviterId), modeName, rounds,
+                    invitationExpirationSeconds()));
         } catch (Throwable t) {
             warn("pendingChallenge", t);
             return Optional.empty();
@@ -607,7 +609,6 @@ public final class DuelsGatewayImpl implements DuelsGateway {
             }
             return Optional.of(new StatsView(
                     stats.getPlayerName() == null ? playerName : stats.getPlayerName(),
-                    kind,
                     stats.getTotalWins(),
                     stats.getTotalLosses(),
                     stats.getTotalDraws(),
@@ -660,12 +661,10 @@ public final class DuelsGatewayImpl implements DuelsGateway {
                 }
                 Mode mode = match.getMode();
                 out.add(new MatchView(any,
-                        mode == null ? "" : mode.getIdentifier(),
                         mode == null ? "?" : displayName(mode.getDisplayName(), mode.getIdentifier()),
                         names,
                         match.getCurrentRound(),
-                        match.getRoundsToWin(),
-                        true));
+                        match.getRoundsToWin()));
             }
         } catch (Throwable t) {
             warn("ongoingMatches", t);
@@ -684,8 +683,7 @@ public final class DuelsGatewayImpl implements DuelsGateway {
             duels().getMatchsManager().joinSpectator(match, player,
                     target.getBukkit() == null ? null : target.getBukkit().getLocation());
             return true;
-        } catch (Throwable t
-        ) {
+        } catch (Throwable t) {
             warn("spectate", t);
             return false;
         }
@@ -742,6 +740,15 @@ public final class DuelsGatewayImpl implements DuelsGateway {
         return invitation == null ? null : invitation.getInviter();
     }
 
+    /**
+     * Resolves a player's party.
+     *
+     * <p>{@code PartyImpl.PARTIES_PLAYERS_LOOKUP_TABLE} is a public static map covering every
+     * member of every party, so it answers for players other than the caller, which
+     * {@code PartyManager.getPartyOrNull} is consulted for as a fallback.</p>
+     *
+     * @return the party, or {@code null} when the player has none or it has been disbanded
+     */
     private PartyImpl partyImpl(UUID playerId) {
         if (playerId == null) {
             return null;
@@ -806,8 +813,7 @@ public final class DuelsGatewayImpl implements DuelsGateway {
                 mode.isFFAAllowed(),
                 mode.isPermissionRequired(),
                 mode.getPermission(),
-                Math.max(1, mode.getRoundsToWin()),
-                Math.max(0, mode.getCooldownSeconds()));
+                Math.max(1, mode.getRoundsToWin()));
     }
 
     private PartyView toPartyView(PartyImpl party) {
@@ -851,19 +857,6 @@ public final class DuelsGatewayImpl implements DuelsGateway {
             return stack.getItemMeta().getDisplayName();
         }
         return it.pintux.life.duelsaddon.util.Formatting.prettify(stack.getType().name());
-    }
-
-    private static boolean allowsMode(com.phoenixplugins.phoenixduels.managers.maps.Map map, String modeId) {
-        List<Mode> allowed = map.getAllowedModes();
-        if (allowed == null || allowed.isEmpty()) {
-            return true;
-        }
-        for (Mode mode : allowed) {
-            if (mode != null && modeId.equals(mode.getIdentifier())) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private static PlayerStats.MatchType matchType(StatsKind kind) {

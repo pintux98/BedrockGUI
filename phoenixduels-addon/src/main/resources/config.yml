@@ -12,10 +12,6 @@ menus:
   spectator: true
   kit: true
 
-invitations:
-  party-forms: true
-  duel-forms: true
-
 general:
   items-per-page: 18
   default-rounds: 1
@@ -55,7 +51,6 @@ common:
   close-button: "&cClose"
   previous-button: "&e« Previous"
   next-button: "&eNext »"
-  confirm-yes: "&aConfirm"
   confirm-no: "&7Cancel"
 
 queue:
@@ -64,7 +59,7 @@ queue:
   button-unranked: "&aUnranked\n&7Casual matches, no elo."
   button-ranked: "&6Ranked\n&7Competitive, affects elo."
   button-leave: "&cLeave Queue\n&7%mode%"
-  button-party: "&bParty"
+  button-party: "&bYour Party"
   button-stats: "&bYour Stats"
   in-queue-content: "&7You are queued for &f%mode%&7.\n&7Players waiting: &f%waiting%\n"
   player-mode-title: "&b%type% — Team Size"
@@ -76,6 +71,7 @@ queue:
   mode-title: "&b%type% %size% — Mode"
   mode-content: "&7Pick a duel mode.\n"
   mode-button: "&a%mode%\n&7%players% queued"
+  mode-button-described: "&a%mode%\n&7%summary%\n&7%players% queued"
   mode-button-locked: "&8%mode%\n&cNo permission"
   no-modes: "&7No modes are available for that team size."
   label-unranked: "Unranked"
@@ -91,13 +87,8 @@ duel:
   rounds-label: "&7Rounds to win"
   select-mode-title: "&aSelect Mode"
   select-mode-content: "&7Pick the duel mode.\n"
-  select-map-title: "&aSelect Map"
-  select-map-content: "&7Pick the arena.\n"
-  map-button: "&a%map%"
-  any-map-button: "&aAny Map"
-  no-maps: "&7No maps are available for that mode."
   create-match-title: "&6Create Match"
-  create-match-content: "&7Configure the match.\n"
+  create-match-content: "&7Pick who to duel.\n"
   challenge-opponent-title: "&6Challenge Party"
   challenge-opponent-content: "&7Pick a party to challenge.\n"
   opponent-button: "&a%leader%'s party\n&7%members% members"
@@ -123,6 +114,7 @@ party:
   info-title: "&bParty Members"
   info-content: "&7Tap a member to manage them.\n"
   member-button: "&a%player%%leader_tag%"
+  member-offline-button: "&7%player% &8(offline)%leader_tag%"
   member-pending-button: "&e%player%\n&7Invitation pending"
   leader-tag: "\n&6Party leader"
   manage-title: "&b%player%"
@@ -144,10 +136,11 @@ party:
   promote-content: "&7They become the party leader and you lose leadership."
   ffa-title: "&6Party Free For All"
   ffa-content: "&7Everyone fights everyone. Pick a mode.\n"
+  ffa-no-modes: "&7No mode on this server allows free-for-all."
   teamfight-title: "&6Party Team Fight"
   teamfight-content: "&7The party is split into two teams. Pick a mode.\n"
-  multiteam-title: "&6Multi-Team Fight"
-  multiteam-content: "&7Split the party into teams.\n"
+  multiteam-title: "&6Split Into Teams"
+  multiteam-content: "&7Choose how many teams to split into.\n"
   multiteam-button: "&a%teams% Teams"
   spectators-title: "&7Spectators"
   spectators-content: "&7Members watching instead of playing.\n"
@@ -156,7 +149,6 @@ party:
 
 settings:
   title: "&bDuel Settings"
-  content: "&7Toggle your personal preferences.\n"
   toggle-duel-requests: "&7Accept duel requests"
   toggle-party-requests: "&7Accept party invitations"
   saved: "&aSettings saved."
@@ -188,18 +180,19 @@ spectator:
   player-button: "&a%player%\n&7%mode%"
 
 kit:
+  list-title: "&bKits"
+  list-content: "&7Pick a kit to preview.\n"
   preview-title: "&bKit — %kit%"
   preview-content: "&7Items in this kit.\n"
   preview-line: "&7- &f%amount%x %item%"
   preview-empty: "&7This kit is empty."
-  button-editor-java: "&eEdit layout (Java only)"
 
 invitations:
+  party-forms: true
+  duel-forms: true
+  accept: "&aAccept"
+  decline: "&cDecline"
   party-title: "&bParty Invitation"
   party-content: "&e%leader% &7invited you to their party.\n&7You have &f%time%s &7to answer.\n"
-  party-accept: "&aAccept"
-  party-decline: "&cDecline"
   duel-title: "&6Duel Challenge"
   duel-content: "&e%player% &7challenged you.\n&7Mode: &f%mode%\n&7Rounds: &f%rounds%\n&7You have &f%time%s &7to answer.\n"
-  duel-accept: "&aAccept"
-  duel-decline: "&cDecline"

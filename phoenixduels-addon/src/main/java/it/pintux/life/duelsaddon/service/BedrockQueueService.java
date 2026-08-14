@@ -12,6 +12,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Bedrock forms for the queue flow: ladder, then team size, then mode.
+ *
+ * <p>Team sizes with no eligible mode are omitted rather than shown and then rejected, and the
+ * root form collapses to a leave-queue view while the player is already queued, since PhoenixDuels
+ * only allows one queue at a time.</p>
+ */
 public final class BedrockQueueService extends BedrockServiceSupport {
     private final BedrockPartyService partyService;
     private final BedrockStatsService statsService;
@@ -97,15 +104,17 @@ public final class BedrockQueueService extends BedrockServiceSupport {
         Pagination pagination = new Pagination(modes.size(), page);
         for (int i = pagination.start; i < pagination.end; i++) {
             ModeView mode = modes.get(i);
-            boolean allowed = !mode.permissionRequired() || mode.permission() == null
-                    || mode.permission().isBlank() || player.hasPermission(mode.permission());
+            String summary = mode.summary();
             Map<String, String> ph = Map.of(
                     "mode", mode.displayName(),
+                    "summary", summary,
                     "players", String.valueOf(gateway.queuedPlayers(ranked, size, mode.id())));
-            if (allowed) {
+            if (!mode.allowedFor(player)) {
+                form.button(render("queue.mode-button-locked", ph), fp -> fail(player, "messages.no-permission"));
+            } else if (summary.isEmpty()) {
                 form.button(render("queue.mode-button", ph), fp -> join(player, ranked, size, mode));
             } else {
-                form.button(render("queue.mode-button-locked", ph), fp -> fail(player, "messages.no-permission"));
+                form.button(render("queue.mode-button-described", ph), fp -> join(player, ranked, size, mode));
             }
         }
         pagination.addNav(form, p -> openModes(player, ranked, size, p));

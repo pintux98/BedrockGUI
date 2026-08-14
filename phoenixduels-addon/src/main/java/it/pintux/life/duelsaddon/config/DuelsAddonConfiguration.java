@@ -12,6 +12,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.Locale;
 import java.util.Map;
 
+/**
+ * This addon's own {@code config.yml}, holding the feature toggles and every string the Bedrock
+ * forms display.
+ *
+ * <p>The shipped resource is layered underneath the file on disk as defaults, so a config written
+ * by an older version keeps working and newly added keys resolve without the admin editing
+ * anything.</p>
+ */
 public final class DuelsAddonConfiguration {
     public static final String FILE = "config.yml";
 
@@ -46,10 +54,6 @@ public final class DuelsAddonConfiguration {
 
     public String text(String path, String def) {
         return color(cfg.getString(path, def));
-    }
-
-    public String raw(String path, String def) {
-        return cfg.getString(path, def);
     }
 
     public boolean flag(String path, boolean def) {

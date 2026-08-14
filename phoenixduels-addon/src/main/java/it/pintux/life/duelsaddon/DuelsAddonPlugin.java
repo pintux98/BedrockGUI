@@ -26,6 +26,14 @@ import org.bukkit.command.PluginCommand;
 import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.java.JavaPlugin;
 
+/**
+ * Serves PhoenixDuels' UI as Bedrock forms.
+ *
+ * <p>Everything is wired in {@link #setupModules()} rather than in {@code onEnable}, so
+ * {@link #reloadConfiguration()} can unregister the listeners and rebuild the whole graph. That is
+ * what makes enabling a menu group in {@code config.yml} take effect on reload instead of needing a
+ * restart.</p>
+ */
 public final class DuelsAddonPlugin extends JavaPlugin {
     private DuelsAddonConfiguration configuration;
     private BedrockPlayerDetector detector;
@@ -93,8 +101,8 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         duelService.setInvitationService(invitationService);
 
         menuInterceptListener = new MenuInterceptListener(this, configuration, detector, gateway,
-                queueService, duelService, partyService, settingsService, statsService,
-                spectatorService, kitService);
+                new MenuInterceptListener.Services(queueService, duelService, partyService,
+                        settingsService, statsService, spectatorService, kitService));
 
         boolean integratedGui = configuration.integratedGuiEnabled();
 
@@ -231,9 +239,5 @@ public final class DuelsAddonPlugin extends JavaPlugin {
 
     public BedrockKitService getKitService() {
         return kitService;
-    }
-
-    public BedrockInvitationService getInvitationService() {
-        return invitationService;
     }
 }

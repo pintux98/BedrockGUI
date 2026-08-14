@@ -1,54 +1,41 @@
 package it.pintux.life.duelsaddon.util;
 
-import java.util.Locale;
 import java.util.UUID;
 
+/**
+ * Parses the argument half of a {@code pd_*} form action, the part after the colon in a menu YAML
+ * entry such as {@code pd_queue_join:ranked|duo|crystal}.
+ *
+ * <p>Only parsers live here. Builders were removed: nothing in this addon constructs payloads,
+ * because the forms call the services directly. Payloads are hand-written by whoever authors the
+ * BedrockGUI menu, so every parser is lenient where a bad value has a sane default and throws
+ * {@link IllegalArgumentException} where it does not — {@code DuelsFormAction} turns that into a
+ * failed action with the message attached.</p>
+ */
 public final class DuelsActionPayloads {
-    private static final String SEP = "|";
     private static final String SPLIT = "\\|";
 
     private DuelsActionPayloads() {}
 
-    public static String mode(String modeId) {
-        return modeId == null ? "" : modeId;
+    /**
+     * @return the payload as a plain player name, empty string when absent
+     */
+    public static String playerName(String payload) {
+        return payload == null ? "" : payload.trim();
     }
 
-    public static String modePage(String modeId, int page) {
-        return mode(modeId) + SEP + page;
-    }
-
-    public static String queue(boolean ranked, String size, String modeId) {
-        return (ranked ? "ranked" : "unranked") + SEP + size.toLowerCase(Locale.ROOT) + SEP + mode(modeId);
-    }
-
-    public static String player(UUID target) {
-        return target == null ? "" : target.toString();
-    }
-
-    public static String playerName(String name) {
-        return name == null ? "" : name;
-    }
-
-    public static String[] parts(String payload) {
-        if (payload == null || payload.isBlank()) {
-            return new String[0];
-        }
-        return payload.split(SPLIT);
-    }
-
+    /**
+     * @return the first {@code |}-separated segment, or an empty string
+     */
     public static String first(String payload) {
         String[] parts = parts(payload);
         return parts.length == 0 ? "" : parts[0].trim();
     }
 
-    public static String modeId(String payload) {
-        String value = first(payload);
-        if (value.isEmpty()) {
-            throw new IllegalArgumentException("Missing mode id in payload: " + payload);
-        }
-        return value;
-    }
-
+    /**
+     * @param def returned when the payload has no second segment or it is not a number
+     * @return the page number from {@code <something>|<page>}
+     */
     public static int page(String payload, int def) {
         String[] parts = parts(payload);
         if (parts.length < 2) {
@@ -61,18 +48,29 @@ public final class DuelsActionPayloads {
         }
     }
 
+    /**
+     * @return whether the first segment selects the ranked ladder; anything else means unranked
+     */
     public static boolean ranked(String payload) {
         return "ranked".equalsIgnoreCase(first(payload));
     }
 
+    /**
+     * @return the team size segment of {@code <ladder>|<size>|<mode>}, uppercased
+     * @throws IllegalArgumentException when the payload has no size segment
+     */
     public static String size(String payload) {
         String[] parts = parts(payload);
         if (parts.length < 2) {
             throw new IllegalArgumentException("Missing team size in payload: " + payload);
         }
-        return parts[1].trim().toUpperCase(Locale.ROOT);
+        return parts[1].trim().toUpperCase(java.util.Locale.ROOT);
     }
 
+    /**
+     * @return the mode segment of {@code <ladder>|<size>|<mode>}
+     * @throws IllegalArgumentException when the payload has no mode segment
+     */
     public static String queueMode(String payload) {
         String[] parts = parts(payload);
         if (parts.length < 3) {
@@ -81,6 +79,10 @@ public final class DuelsActionPayloads {
         return parts[2].trim();
     }
 
+    /**
+     * @return the payload's first segment parsed as a player uuid
+     * @throws IllegalArgumentException when it is absent or malformed
+     */
     public static UUID uuid(String payload) {
         String value = first(payload);
         if (value.isEmpty()) {
@@ -93,15 +95,10 @@ public final class DuelsActionPayloads {
         }
     }
 
-    public static int rounds(String payload, int def) {
-        String[] parts = parts(payload);
-        if (parts.length < 2) {
-            return def;
+    private static String[] parts(String payload) {
+        if (payload == null || payload.isBlank()) {
+            return new String[0];
         }
-        try {
-            return Math.max(1, Integer.parseInt(parts[1].trim()));
-        } catch (NumberFormatException e) {
-            return def;
-        }
+        return payload.split(SPLIT);
     }
 }

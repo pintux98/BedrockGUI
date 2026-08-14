@@ -11,6 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Read-only kit previews.
+ *
+ * <p>Editing a kit layout is drag-and-drop, which a Bedrock form cannot express, so
+ * {@code kit_items_editor} and {@code player_kit_layout} are left to open as Java inventories and
+ * only the contents are mirrored here.</p>
+ */
 public final class BedrockKitService extends BedrockServiceSupport {
 
     public BedrockKitService(DuelsAddonConfiguration config, DuelsGateway gateway,
@@ -24,9 +31,8 @@ public final class BedrockKitService extends BedrockServiceSupport {
             return;
         }
         List<KitView> kits = gateway.kits();
-        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(
-                render("kit.preview-title", Map.of("kit", "")));
-        form.content(text("kit.preview-content"));
+        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(text("kit.list-title"));
+        form.content(text("kit.list-content"));
         for (KitView kit : kits) {
             form.button(kit.displayName(), fp -> openPreview(player, kit.id()));
         }

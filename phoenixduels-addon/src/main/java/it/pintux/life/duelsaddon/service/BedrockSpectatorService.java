@@ -11,6 +11,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+/**
+ * Bedrock forms for browsing and joining ongoing matches as a spectator.
+ *
+ * <p>PhoenixDuels starts spectating from a player rather than a match id, so a match is carried
+ * through the forms as one of its participants' uuids and resolved again on selection. That also
+ * means a match which has ended in between simply resolves to nothing.</p>
+ */
 public final class BedrockSpectatorService extends BedrockServiceSupport {
 
     public BedrockSpectatorService(DuelsAddonConfiguration config, DuelsGateway gateway,

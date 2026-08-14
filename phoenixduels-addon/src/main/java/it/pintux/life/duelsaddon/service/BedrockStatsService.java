@@ -14,6 +14,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Bedrock forms for personal statistics and the leaderboard.
+ *
+ * <p>The leaderboard is rendered as form content rather than as buttons, because its rows are not
+ * actionable; only the metric switches and pagination are buttons.</p>
+ */
 public final class BedrockStatsService extends BedrockServiceSupport {
 
     public BedrockStatsService(DuelsAddonConfiguration config, DuelsGateway gateway,

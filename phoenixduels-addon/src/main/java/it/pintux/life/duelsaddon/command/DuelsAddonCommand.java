@@ -1,6 +1,7 @@
 package it.pintux.life.duelsaddon.command;
 
 import it.pintux.life.duelsaddon.DuelsAddonPlugin;
+import it.pintux.life.duelsaddon.listener.DuelsMenus;
 import it.pintux.life.duelsaddon.listener.MenuInterceptListener;
 import it.pintux.life.duelsaddon.model.StatsKind;
 import org.bukkit.Bukkit;
@@ -16,6 +17,14 @@ import java.util.List;
 import java.util.Locale;
 import java.util.TreeSet;
 
+/**
+ * {@code /duelsaddon} — reload, inspect the menu routing table, and open any form on demand.
+ *
+ * <p>{@code openfor} exists because these forms are otherwise only reachable by triggering
+ * PhoenixDuels itself, which makes testing a single form awkward. {@code menus} prints which ids
+ * are being replaced and which fall through, which is the fastest way to see whether a
+ * PhoenixDuels update renamed something.</p>
+ */
 public final class DuelsAddonCommand implements CommandExecutor, TabCompleter {
     private static final List<String> ROOTS = List.of("reload", "open", "openfor", "menus");
     private static final List<String> FORMS = List.of(
@@ -78,10 +87,9 @@ public final class DuelsAddonCommand implements CommandExecutor, TabCompleter {
         }
         send(sender, "&aServed as Bedrock forms (&f" + listener.handlers().size() + "&a): &7"
                 + String.join(", ", new TreeSet<>(listener.handlers().keySet())));
-        send(sender, "&eJava-only by design: &7" + String.join(", ",
-                new TreeSet<>(MenuInterceptListener.JAVA_ONLY_MENUS)));
-        send(sender, "&eJava fallback, needs view context: &7" + String.join(", ",
-                new TreeSet<>(MenuInterceptListener.CONTEXT_DEPENDENT_MENUS)));
+        send(sender, "&eJava-only by design: &7" + String.join(", ", new TreeSet<>(DuelsMenus.JAVA_ONLY)));
+        send(sender, "&eJava fallback, needs view context: &7"
+                + String.join(", ", new TreeSet<>(DuelsMenus.CONTEXT_DEPENDENT)));
     }
 
     private void open(CommandSender sender, Player target, String form) {

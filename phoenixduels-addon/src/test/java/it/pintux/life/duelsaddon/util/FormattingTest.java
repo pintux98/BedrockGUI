@@ -26,12 +26,6 @@ class FormattingTest {
         assertEquals("Crystal", Formatting.prettify("crystal"));
         assertEquals("Bed Fight", Formatting.prettify("bed-fight"));
         assertEquals("", Formatting.prettify(null));
-    }
-
-    @Test
-    void stripColorRemovesCodes() {
-        assertEquals("Crystal", Formatting.stripColor("&aCrystal"));
-        assertEquals("Crystal", Formatting.stripColor("§aCrystal"));
-        assertEquals("", Formatting.stripColor(null));
+        assertEquals("", Formatting.prettify("   "));
     }
 }

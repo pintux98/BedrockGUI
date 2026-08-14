@@ -20,84 +20,127 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.plugin.Plugin;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
+/**
+ * Swaps PhoenixDuels' chest menus for Bedrock forms.
+ *
+ * <p>Identification is exact rather than title-based. Every PhoenixDuels menu is a
+ * {@link ContainerLayout} opened through a {@link ContainerView}, and {@code ContainerView}
+ * implements {@link org.bukkit.inventory.InventoryHolder}, so the registry id is readable straight
+ * off {@link InventoryOpenEvent} before a single slot renders. That avoids the chest flash and the
+ * next-tick flag polling that title matching forces.</p>
+ *
+ * <p>Only ids in {@link DuelsMenus#GROUPS} are cancelled. Anything else — the drag-and-drop
+ * inventories, the generic pickers, the admin editor — falls through untouched so the Bedrock
+ * player gets the real Java UI instead of a broken form.</p>
+ */
 public final class MenuInterceptListener implements Listener {
 
+    /**
+     * Opens the Bedrock form that replaces one PhoenixDuels menu.
+     */
     @FunctionalInterface
     public interface Handler {
+        /**
+         * @param player the Bedrock player the menu was opening for
+         * @param view   the cancelled PhoenixDuels view, whose metadata carries the flow's context
+         */
         void open(Player player, ContainerView view);
     }
 
-    public static final Set<String> JAVA_ONLY_MENUS = DuelsMenus.JAVA_ONLY;
-
-    public static final Set<String> CONTEXT_DEPENDENT_MENUS = DuelsMenus.CONTEXT_DEPENDENT;
+    /**
+     * The services a handler can route to, so {@link #handlerFor} stays testable without Bukkit.
+     */
+    public record Services(BedrockQueueService queue,
+                           BedrockDuelService duel,
+                           BedrockPartyService party,
+                           BedrockSettingsService settings,
+                           BedrockStatsService stats,
+                           BedrockSpectatorService spectator,
+                           BedrockKitService kit) {
+    }
 
     private final Plugin plugin;
     private final BedrockPlayerDetector detector;
     private final DuelsGateway gateway;
-    private final Map<String, Handler> handlers = new HashMap<>();
+    private final Map<String, Handler> handlers;
 
     public MenuInterceptListener(Plugin plugin,
                                  DuelsAddonConfiguration config,
                                  BedrockPlayerDetector detector,
                                  DuelsGateway gateway,
-                                 BedrockQueueService queueService,
-                                 BedrockDuelService duelService,
-                                 BedrockPartyService partyService,
-                                 BedrockSettingsService settingsService,
-                                 BedrockStatsService statsService,
-                                 BedrockSpectatorService spectatorService,
-                                 BedrockKitService kitService) {
+                                 Services services) {
         this.plugin = plugin;
         this.detector = detector;
         this.gateway = gateway;
-
-        if (config.menuEnabled("queue")) {
-            handlers.put("queue", (player, view) -> queueService.openMain(player));
-            handlers.put("unranked_select_player_mode", (player, view) -> queueService.openPlayerModes(player, false));
-            handlers.put("unranked_select_arena_mode", (player, view) -> queueService.openPlayerModes(player, false));
-            handlers.put("ranked_select_player_mode", (player, view) -> queueService.openPlayerModes(player, true));
-            handlers.put("ranked_select_arena_mode", (player, view) -> queueService.openPlayerModes(player, true));
-        }
-        if (config.menuEnabled("duel")) {
-            handlers.put("duel_player", (player, view) -> duelService.openDuelPlayer(player, null));
-            handlers.put("create_match", (player, view) -> duelService.openTargetPicker(player));
-            handlers.put("custom_select_arena_mode", (player, view) -> duelService.openTargetPicker(player));
-            handlers.put("lost_items", (player, view) -> duelService.openLostItems(player));
-        }
-        if (config.menuEnabled("party")) {
-            handlers.put("party", (player, view) -> partyService.openMain(player));
-            handlers.put("party_info", (player, view) -> partyService.openInfo(player, 1));
-            handlers.put("party_invite_player", (player, view) -> partyService.openInvitePicker(player));
-            handlers.put("party_manage_member", (player, view) -> partyService.openInfo(player, 1));
-            handlers.put("party_ffa", (player, view) -> partyService.openFfa(player));
-            handlers.put("party_teamfight", (player, view) -> partyService.openTeamFight(player));
-            handlers.put("party_multiteam", (player, view) -> partyService.openMultiTeam(player));
-            handlers.put("party_multiteam_spectators", (player, view) -> partyService.openSpectators(player));
-            handlers.put("custom_challenge_opponent", (player, view) -> partyService.openChallengeOpponent(player, 1));
-        }
-        if (config.menuEnabled("settings")) {
-            handlers.put("settings", (player, view) -> settingsService.openSettings(player));
-        }
-        if (config.menuEnabled("stats")) {
-            handlers.put("stats", (player, view) -> statsService.openMain(player));
-            handlers.put("leaderboard", (player, view) ->
-                    statsService.openLeaderboard(player, StatsKind.UNRANKED, "wins", 1));
-        }
-        if (config.menuEnabled("spectator")) {
-            handlers.put("ongoing_matches", (player, view) -> spectatorService.openMatches(player, 1));
-            handlers.put("spectator_players", (player, view) -> spectatorService.openMatches(player, 1));
-        }
-        if (config.menuEnabled("kit")) {
-            handlers.put("kit_preview", (player, view) -> kitService.openKitList(player));
-        }
+        this.handlers = buildHandlers(config, services);
     }
 
-    public Map<String, Handler> handlers() {
+    /**
+     * Walks {@link DuelsMenus#GROUPS} so the id list lives in exactly one place.
+     *
+     * @throws IllegalStateException if an id is declared without a matching handler, which means
+     *                               {@link DuelsMenus} and {@link #handlerFor} have drifted apart
+     */
+    private static Map<String, Handler> buildHandlers(DuelsAddonConfiguration config, Services services) {
+        Map<String, Handler> handlers = new LinkedHashMap<>();
+        for (Map.Entry<String, String> entry : DuelsMenus.GROUPS.entrySet()) {
+            Handler handler = handlerFor(entry.getKey(), services);
+            if (handler == null) {
+                throw new IllegalStateException("No handler for declared PhoenixDuels menu id: " + entry.getKey());
+            }
+            if (config.menuEnabled(entry.getValue())) {
+                handlers.put(entry.getKey(), handler);
+            }
+        }
         return Map.copyOf(handlers);
+    }
+
+    /**
+     * Maps a PhoenixDuels menu id to the form that replaces it.
+     *
+     * <p>{@code services} is only captured by the returned lambda, never dereferenced here, so
+     * tests can pass a record of nulls to assert every declared id resolves.</p>
+     *
+     * @return the handler, or {@code null} if this addon does not replace that id
+     */
+    public static Handler handlerFor(String id, Services services) {
+        return switch (id) {
+            case "queue" -> (player, view) -> services.queue().openMain(player);
+            case "unranked_select_player_mode", "unranked_select_arena_mode" ->
+                    (player, view) -> services.queue().openPlayerModes(player, false);
+            case "ranked_select_player_mode", "ranked_select_arena_mode" ->
+                    (player, view) -> services.queue().openPlayerModes(player, true);
+            case "duel_player" -> (player, view) -> services.duel().openDuelPlayer(player, null);
+            case "create_match", "custom_select_arena_mode" ->
+                    (player, view) -> services.duel().openTargetPicker(player);
+            case "lost_items" -> (player, view) -> services.duel().openLostItems(player);
+            case "party" -> (player, view) -> services.party().openMain(player);
+            case "party_info", "party_manage_member" -> (player, view) -> services.party().openInfo(player, 1);
+            case "party_invite_player" -> (player, view) -> services.party().openInvitePicker(player);
+            case "party_ffa" -> (player, view) -> services.party().openFfa(player);
+            case "party_teamfight" -> (player, view) -> services.party().openTeamFight(player);
+            case "party_multiteam" -> (player, view) -> services.party().openMultiTeam(player);
+            case "party_multiteam_spectators" -> (player, view) -> services.party().openSpectators(player);
+            case "custom_challenge_opponent" -> (player, view) -> services.party().openChallengeOpponent(player, 1);
+            case "settings" -> (player, view) -> services.settings().openSettings(player);
+            case "stats" -> (player, view) -> services.stats().openMain(player);
+            case "leaderboard" ->
+                    (player, view) -> services.stats().openLeaderboard(player, StatsKind.UNRANKED, "wins", 1);
+            case "ongoing_matches", "spectator_players" ->
+                    (player, view) -> services.spectator().openMatches(player, 1);
+            case "kit_preview" -> (player, view) -> services.kit().openKitList(player);
+            default -> null;
+        };
+    }
+
+    /**
+     * @return the menu ids currently being served as forms, after the {@code menus.*} toggles
+     */
+    public Map<String, Handler> handlers() {
+        return handlers;
     }
 
     @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
@@ -108,28 +151,34 @@ public final class MenuInterceptListener implements Listener {
         if (!detector.isBedrockPlayer(player) || !gateway.isAvailable()) {
             return;
         }
-        String id = menuId(event);
-        if (id == null) {
+        ContainerView view = phoenixView(event);
+        if (view == null) {
             return;
         }
-        Handler handler = handlers.get(id);
+        Handler handler = handlers.get(menuId(view));
         if (handler == null) {
             return;
         }
-        ContainerView view = (ContainerView) event.getInventory().getHolder();
         event.setCancelled(true);
         plugin.getServer().getScheduler().runTask(plugin, () -> handler.open(player, view));
     }
 
-    private String menuId(InventoryOpenEvent event) {
+    /**
+     * @return the PhoenixDuels view behind this inventory, or {@code null} if the inventory is not
+     *         one of theirs. Throwables are swallowed so a PhoenixDuels internal change degrades to
+     *         "not ours" instead of breaking every inventory on the server.
+     */
+    private static ContainerView phoenixView(InventoryOpenEvent event) {
         try {
-            if (!(event.getInventory().getHolder() instanceof ContainerView view)) {
-                return null;
-            }
-            if (!(view.getContainer() instanceof ContainerLayout layout)) {
-                return null;
-            }
-            return layout.getId();
+            return event.getInventory().getHolder() instanceof ContainerView view ? view : null;
+        } catch (Throwable ignored) {
+            return null;
+        }
+    }
+
+    private static String menuId(ContainerView view) {
+        try {
+            return view.getContainer() instanceof ContainerLayout layout ? layout.getId() : null;
         } catch (Throwable ignored) {
             return null;
         }

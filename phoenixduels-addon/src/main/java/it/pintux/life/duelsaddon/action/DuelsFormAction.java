@@ -5,10 +5,25 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.duelsaddon.util.FormPlayerResolver;
 import org.bukkit.entity.Player;
 
+/**
+ * One reusable BedrockGUI action handler for every {@code pd_*} action.
+ *
+ * <p>The plugin registers one instance per action type with a lambda body, so the whole routing
+ * table lives in {@code DuelsAddonPlugin.registerActions} instead of being spread across a class
+ * per action. Payload decoding throws {@link IllegalArgumentException}, which is converted here
+ * into a failed action carrying the message, so a typo in a menu YAML reports itself instead of
+ * failing silently.</p>
+ */
 public final class DuelsFormAction implements ActionSystem.ActionHandler {
 
+    /**
+     * What to run once the Bukkit player is resolved.
+     */
     @FunctionalInterface
     public interface Callback {
+        /**
+         * @param actionValue the raw payload after the colon, or an empty string
+         */
         void run(Player player, String actionValue);
     }
 

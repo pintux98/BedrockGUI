@@ -6,6 +6,12 @@ import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import org.bukkit.entity.Player;
 
+/**
+ * The duel-settings toggle form.
+ *
+ * <p>PhoenixDuels stores these as "rejecting" flags; the form presents them positively as
+ * "accept requests", so both toggles are inverted on read and on write.</p>
+ */
 public final class BedrockSettingsService extends BedrockServiceSupport {
 
     public BedrockSettingsService(DuelsAddonConfiguration config, DuelsGateway gateway,
