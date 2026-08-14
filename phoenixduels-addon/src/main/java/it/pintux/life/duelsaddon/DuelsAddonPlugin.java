@@ -48,6 +48,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
     private BedrockKitService kitService;
     private BedrockInvitationService invitationService;
     private MenuInterceptListener menuInterceptListener;
+    private final java.util.List<String> registeredActions = new java.util.ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -83,6 +84,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        unregisterActions();
         if (invitationService != null) {
             invitationService.clear();
         }
@@ -193,6 +195,28 @@ public final class DuelsAddonPlugin extends JavaPlugin {
 
     private void register(BedrockGUIApi api, String type, String description, DuelsFormAction.Callback callback) {
         api.registerActionHandler(new DuelsFormAction(type, description, callback));
+        registeredActions.add(type);
+    }
+
+    /**
+     * Hands the {@code pd_*} action types back to BedrockGUI.
+     *
+     * <p>Without this the handlers outlive the plugin: BedrockGUI's registry belongs to BedrockGUI,
+     * not to this jar, so unloading through PlugMan or a hot swap would leave stale handlers behind
+     * that still point at services from the discarded classloader.</p>
+     */
+    private void unregisterActions() {
+        if (registeredActions.isEmpty()) {
+            return;
+        }
+        try {
+            BedrockGUIApi api = BedrockGUIApi.getInstance();
+            for (String type : registeredActions) {
+                api.getActionRegistry().unregisterHandler(type);
+            }
+        } catch (Throwable ignored) {
+        }
+        registeredActions.clear();
     }
 
     private BedrockGUIApi getApiSafely() {
@@ -206,6 +230,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
 
     public void reloadConfiguration() {
         HandlerList.unregisterAll(this);
+        unregisterActions();
         configuration = DuelsAddonConfiguration.load(this);
         setupModules();
     }
