@@ -1,0 +1,20 @@
+name: BedrockGUI-PhoenixDuelsAddon
+version: '${version}'
+main: it.pintux.life.duelsaddon.DuelsAddonPlugin
+api-version: '1.19'
+author: 'pintux'
+depend:
+  - BedrockGUI
+softdepend:
+  - PhoenixDuels
+  - PhoenixDuelsLite
+commands:
+  duelsaddon:
+    description: Manage the PhoenixDuels Bedrock addon
+    usage: /duelsaddon <reload|open|openfor|menus>
+    aliases: [pdaddon]
+    permission: duelsaddon.admin
+permissions:
+  duelsaddon.admin:
+    description: Manage and inspect the PhoenixDuels Bedrock addon
+    default: op

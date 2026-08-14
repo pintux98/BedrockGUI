@@ -98,3 +98,9 @@ task buildHomesteadAddon {
     dependsOn ':homestead-addon:jar'
     description = 'Builds only the Homestead addon module'
 }
+
+// Task to build only the PhoenixDuels Bedrock addon
+task buildPhoenixDuelsAddon {
+    dependsOn ':phoenixduels-addon:jar'
+    description = 'Builds only the PhoenixDuels addon module'
+}

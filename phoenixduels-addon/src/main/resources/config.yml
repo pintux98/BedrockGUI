@@ -1,0 +1,205 @@
+config-version: 1
+
+integrated-gui: true
+register-actions: true
+
+menus:
+  queue: true
+  duel: true
+  party: true
+  settings: true
+  stats: true
+  spectator: true
+  kit: true
+
+invitations:
+  party-forms: true
+  duel-forms: true
+
+general:
+  items-per-page: 18
+  default-rounds: 1
+
+messages:
+  duels-unavailable: "&cPhoenixDuels is not available right now."
+  no-permission: "&cYou don't have permission to do that."
+  action-failed: "&cSomething went wrong. Try again."
+  player-not-found: "&cThat player is not online."
+  mode-not-found: "&cThat mode no longer exists."
+  invalid-input: "&cEnter a valid value."
+  in-match: "&cYou can't do that while in a match."
+  queue-joined: "&aQueued for &f%mode%&a."
+  queue-left: "&aYou left the queue."
+  queue-failed: "&cCouldn't join that queue."
+  not-in-queue: "&cYou are not in a queue."
+  party-created: "&aParty created."
+  party-create-failed: "&cCouldn't create a party."
+  party-none: "&cYou don't have a party."
+  party-not-leader: "&cOnly the party leader can do that."
+  party-invited: "&aInvited &f%player%&a."
+  party-invite-failed: "&cCouldn't invite that player."
+  party-left: "&aYou left the party."
+  party-disbanded: "&aParty disbanded."
+  party-kicked: "&a%player% was removed from the party."
+  party-promoted: "&a%player% is now the party leader."
+  invite-accepted: "&aInvitation accepted."
+  invite-declined: "&aInvitation declined."
+  invite-expired: "&cThat invitation has expired."
+  challenge-sent: "&aChallenge sent to &f%player%&a."
+  challenge-failed: "&cCouldn't send that challenge."
+  spectate-failed: "&cCouldn't spectate that match."
+  no-matches: "&eThere are no matches running."
+
+common:
+  back-button: "&8« Back"
+  close-button: "&cClose"
+  previous-button: "&e« Previous"
+  next-button: "&eNext »"
+  confirm-yes: "&aConfirm"
+  confirm-no: "&7Cancel"
+
+queue:
+  title: "&bDuels"
+  content: "&7Choose how you want to play.\n"
+  button-unranked: "&aUnranked\n&7Casual matches, no elo."
+  button-ranked: "&6Ranked\n&7Competitive, affects elo."
+  button-leave: "&cLeave Queue\n&7%mode%"
+  button-party: "&bParty"
+  button-stats: "&bYour Stats"
+  in-queue-content: "&7You are queued for &f%mode%&7.\n&7Players waiting: &f%waiting%\n"
+  player-mode-title: "&b%type% — Team Size"
+  player-mode-content: "&7Pick a team size.\n"
+  button-solo: "&aSolo &71v1"
+  button-duo: "&aDuo &72v2"
+  button-trio: "&aTrio &73v3"
+  button-quad: "&aQuad &74v4"
+  mode-title: "&b%type% %size% — Mode"
+  mode-content: "&7Pick a duel mode.\n"
+  mode-button: "&a%mode%\n&7%players% queued"
+  mode-button-locked: "&8%mode%\n&cNo permission"
+  no-modes: "&7No modes are available for that team size."
+  label-unranked: "Unranked"
+  label-ranked: "Ranked"
+
+duel:
+  title: "&6Duel %player%"
+  content: "&7Challenge &f%player%&7 to a duel.\n"
+  button-mode: "&aMode: &f%mode%"
+  button-rounds: "&aRounds: &f%rounds%"
+  button-send: "&aSend Challenge"
+  rounds-title: "&aRounds"
+  rounds-label: "&7Rounds to win"
+  select-mode-title: "&aSelect Mode"
+  select-mode-content: "&7Pick the duel mode.\n"
+  select-map-title: "&aSelect Map"
+  select-map-content: "&7Pick the arena.\n"
+  map-button: "&a%map%"
+  any-map-button: "&aAny Map"
+  no-maps: "&7No maps are available for that mode."
+  create-match-title: "&6Create Match"
+  create-match-content: "&7Configure the match.\n"
+  challenge-opponent-title: "&6Challenge Party"
+  challenge-opponent-content: "&7Pick a party to challenge.\n"
+  opponent-button: "&a%leader%'s party\n&7%members% members"
+  no-opponents: "&7There are no other parties to challenge."
+  lost-items-title: "&eLost Items"
+  lost-items-content: "&7Items recovered from your last match.\n"
+  lost-items-empty: "&7You have no lost items."
+  lost-items-button: "&aClaim Items"
+
+party:
+  title: "&bParty"
+  no-party-content: "&7You are not in a party.\n"
+  content: "&7Leader: &f%leader%\n&7Members: &f%members%&7/&f%slots%\n"
+  button-create: "&aCreate Party"
+  button-info: "&bMembers"
+  button-invite: "&aInvite Player"
+  button-fight: "&6Team Fight"
+  button-multiteam: "&6Multi-Team Fight"
+  button-ffa: "&6Free For All"
+  button-challenge: "&6Challenge Another Party"
+  button-leave: "&cLeave Party"
+  button-disband: "&cDisband Party"
+  info-title: "&bParty Members"
+  info-content: "&7Tap a member to manage them.\n"
+  member-button: "&a%player%%leader_tag%"
+  member-pending-button: "&e%player%\n&7Invitation pending"
+  leader-tag: "\n&6Party leader"
+  manage-title: "&b%player%"
+  manage-content: "&7Manage this party member.\n"
+  button-promote: "&6Promote to Leader"
+  button-kick: "&cKick from Party"
+  invite-title: "&aInvite Player"
+  invite-label: "&7Player name"
+  invite-placeholder: "PlayerName"
+  invite-online-content: "&7Pick a player to invite.\n"
+  invite-manual-button: "&aType a name"
+  disband-title: "&cDisband party?"
+  disband-content: "&7This removes every member from the party."
+  leave-title: "&cLeave party?"
+  leave-content: "&7You will be removed from the party."
+  kick-title: "&cKick %player%?"
+  kick-content: "&7Remove this member from the party."
+  promote-title: "&6Promote %player%?"
+  promote-content: "&7They become the party leader and you lose leadership."
+  ffa-title: "&6Party Free For All"
+  ffa-content: "&7Everyone fights everyone. Pick a mode.\n"
+  teamfight-title: "&6Party Team Fight"
+  teamfight-content: "&7The party is split into two teams. Pick a mode.\n"
+  multiteam-title: "&6Multi-Team Fight"
+  multiteam-content: "&7Split the party into teams.\n"
+  multiteam-button: "&a%teams% Teams"
+  spectators-title: "&7Spectators"
+  spectators-content: "&7Members watching instead of playing.\n"
+  spectator-button: "&7%player%"
+  too-few-members: "&cYour party needs more members for that."
+
+settings:
+  title: "&bDuel Settings"
+  content: "&7Toggle your personal preferences.\n"
+  toggle-duel-requests: "&7Accept duel requests"
+  toggle-party-requests: "&7Accept party invitations"
+  saved: "&aSettings saved."
+
+stats:
+  title: "&bStats — %player%"
+  content: "&7Wins: &a%wins%\n&7Losses: &c%losses%\n&7Draws: &f%draws%\n&7Kills: &a%kills%\n&7Deaths: &c%deaths%\n&7K/D: &f%kd%\n&7Win rate: &f%winrate%%\n"
+  no-data: "&7No stats recorded yet."
+  button-unranked: "&aUnranked Stats"
+  button-ranked: "&6Ranked Stats"
+  button-challenge: "&bChallenge Stats"
+  button-leaderboard: "&6Leaderboard"
+  leaderboard-title: "&6Leaderboard — %metric%"
+  leaderboard-content: "&7Top players.\n"
+  leaderboard-line: "&e#%rank% &f%player% &8- &7%value%"
+  leaderboard-empty: "&7No leaderboard data yet."
+  metric-wins: "Wins"
+  metric-kills: "Kills"
+  metric-losses: "Losses"
+  metric-deaths: "Deaths"
+
+spectator:
+  title: "&7Ongoing Matches"
+  content: "&7Pick a match to spectate.\n"
+  match-button: "&a%mode%\n&7%players% &8| &7Round %round%"
+  empty: "&7There are no matches running."
+  players-title: "&7Spectate Player"
+  players-content: "&7Pick a player to spectate.\n"
+  player-button: "&a%player%\n&7%mode%"
+
+kit:
+  preview-title: "&bKit — %kit%"
+  preview-content: "&7Items in this kit.\n"
+  preview-line: "&7- &f%amount%x %item%"
+  preview-empty: "&7This kit is empty."
+  button-editor-java: "&eEdit layout (Java only)"
+
+invitations:
+  party-title: "&bParty Invitation"
+  party-content: "&e%leader% &7invited you to their party.\n&7You have &f%time%s &7to answer.\n"
+  party-accept: "&aAccept"
+  party-decline: "&cDecline"
+  duel-title: "&6Duel Challenge"
+  duel-content: "&e%player% &7challenged you.\n&7Mode: &f%mode%\n&7Rounds: &f%rounds%\n&7You have &f%time%s &7to answer.\n"
+  duel-accept: "&aAccept"
+  duel-decline: "&cDecline"
