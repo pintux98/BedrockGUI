@@ -3,6 +3,7 @@ package it.pintux.life.duelsaddon.command;
 import it.pintux.life.duelsaddon.DuelsAddonPlugin;
 import it.pintux.life.duelsaddon.listener.DuelsMenus;
 import it.pintux.life.duelsaddon.listener.MenuInterceptListener;
+import it.pintux.life.duelsaddon.listener.PhoenixMenuResolver;
 import it.pintux.life.duelsaddon.model.StatsKind;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -85,15 +86,23 @@ public final class DuelsAddonCommand implements CommandExecutor, TabCompleter {
             send(sender, "&cInterception is disabled.");
             return;
         }
-        int resolved = listener.resolver().refresh();
+        PhoenixMenuResolver resolver = listener.resolver();
+        int resolved = resolver.refresh();
         send(sender, (resolved == 0 ? "&cRegistry keys resolved: &f" : "&aRegistry keys resolved: &f")
                 + resolved + "&7/&f" + DuelsMenus.ALL.size()
                 + (resolved == 0 ? " &8(interception is doing nothing)" : ""));
+        send(sender, "&aResolved: &7" + String.join(", ", resolver.resolvedKeys()));
+        send(sender, "&cNot in registry (&f" + resolver.unresolvedKeys().size() + "&c): &7"
+                + String.join(", ", resolver.unresolvedKeys()));
+        if (!resolver.collisions().isEmpty()) {
+            send(sender, "&6Keys sharing one layout: &7" + String.join(", ", resolver.collisions()));
+        }
+        List<String> live = resolver.liveRegistryKeys();
+        send(sender, "&bLive registry keys (&f" + live.size() + "&b): &7"
+                + (live.isEmpty() ? "unreadable" : String.join(", ", live)));
         send(sender, "&aServed as Bedrock forms (&f" + listener.handlers().size() + "&a): &7"
                 + String.join(", ", new TreeSet<>(listener.handlers().keySet())));
         send(sender, "&eJava-only by design: &7" + String.join(", ", new TreeSet<>(DuelsMenus.JAVA_ONLY)));
-        send(sender, "&eJava fallback, needs view context: &7"
-                + String.join(", ", new TreeSet<>(DuelsMenus.CONTEXT_DEPENDENT)));
     }
 
     private void open(CommandSender sender, Player target, String form) {

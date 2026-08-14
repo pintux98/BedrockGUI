@@ -1,6 +1,7 @@
 package it.pintux.life.duelsaddon.listener;
 
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,6 +25,41 @@ public final class DuelsMenus {
      * Menu id mapped to the {@code menus.<group>} config toggle that enables it.
      */
     public static final Map<String, String> GROUPS = groups();
+
+    /**
+     * Resolution order for {@link PhoenixMenuResolver}.
+     *
+     * <p>Deliberately a {@link List} and deliberately ordered most-specific-purpose first. Two
+     * registry keys can share one layout instance, and the resolver takes the first match, so this
+     * order decides the winner. Iterating {@link #GROUPS} or {@link #ALL} instead would be
+     * non-deterministic: {@code Map.copyOf} and {@code Set.of} randomise iteration order per JVM,
+     * which made {@code /party} sometimes open the member list instead of the party menu.</p>
+     */
+    public static final List<String> PRIORITY = List.of(
+            "queue",
+            "party",
+            "party_info",
+            "party_invite_player",
+            "party_manage_member",
+            "party_ffa",
+            "party_teamfight",
+            "party_multiteam",
+            "party_multiteam_spectators",
+            "duel_player",
+            "create_match",
+            "custom_challenge_opponent",
+            "custom_select_arena_mode",
+            "unranked_select_player_mode",
+            "unranked_select_arena_mode",
+            "ranked_select_player_mode",
+            "ranked_select_arena_mode",
+            "settings",
+            "stats",
+            "leaderboard",
+            "ongoing_matches",
+            "spectator_players",
+            "kit_preview",
+            "lost_items");
 
     /**
      * Menus this addon serves as Bedrock forms.

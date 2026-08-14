@@ -6,6 +6,7 @@ import com.phoenixplugins.phoenixduels.api.events.party.PartyParticipantAddedEve
 import com.phoenixplugins.phoenixduels.api.events.party.PartyParticipantRemovedEvent;
 import com.phoenixplugins.phoenixduels.api.participable.Participant;
 import com.phoenixplugins.phoenixduels.api.party.Party;
+import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockInvitationService;
@@ -35,14 +36,16 @@ import java.util.UUID;
  */
 public final class InvitationListener implements Listener {
     private final Plugin plugin;
+    private final DuelsAddonConfiguration config;
     private final DuelsGateway gateway;
     private final BedrockInvitationService invitationService;
     private final BedrockDuelService duelService;
 
-    public InvitationListener(Plugin plugin, DuelsGateway gateway,
+    public InvitationListener(Plugin plugin, DuelsAddonConfiguration config, DuelsGateway gateway,
                               BedrockInvitationService invitationService,
                               BedrockDuelService duelService) {
         this.plugin = plugin;
+        this.config = config;
         this.gateway = gateway;
         this.invitationService = invitationService;
         this.duelService = duelService;
@@ -52,6 +55,10 @@ public final class InvitationListener implements Listener {
     public void onParticipantAdded(PartyParticipantAddedEvent event) {
         Participant participant = event.getParticipant();
         Party party = event.getParty();
+        debug(() -> "PartyParticipantAddedEvent participant="
+                + (participant == null ? "null" : participant.getName())
+                + " accepted=" + (participant != null && participant.isAccepted())
+                + " party=" + (party == null ? "null" : party.getLeaderUniqueId()));
         if (participant == null || party == null || participant.isAccepted()) {
             return;
         }
@@ -64,10 +71,13 @@ public final class InvitationListener implements Listener {
             invited = Bukkit.getPlayer(participant.getUniqueId());
         }
         if (invited == null) {
+            debug(() -> "Party invite ignored: invited player is offline");
             return;
         }
         Player target = invited;
         String leaderName = nameOf(leaderId);
+        debug(() -> "Party invite for " + target.getName() + ": bedrockForm="
+                + invitationService.shouldHandle(target) + " formsEnabled=" + config.partyInviteFormsEnabled());
         plugin.getServer().getScheduler().runTask(plugin,
                 () -> invitationService.sendPartyInvite(target, leaderId, leaderName));
     }
@@ -131,6 +141,12 @@ public final class InvitationListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         invitationService.forget(event.getPlayer().getUniqueId());
         duelService.forget(event.getPlayer().getUniqueId());
+    }
+
+    private void debug(java.util.function.Supplier<String> message) {
+        if (config.debugEnabled()) {
+            plugin.getLogger().info(message.get());
+        }
     }
 
     private void resolve(Party party, Participant participant) {

@@ -123,7 +123,8 @@ public final class DuelsAddonPlugin extends JavaPlugin {
 
         if (configuration.partyInviteFormsEnabled() || configuration.duelInviteFormsEnabled()) {
             Bukkit.getPluginManager().registerEvents(
-                    new InvitationListener(this, gateway, invitationService, duelService), this);
+                    new InvitationListener(this, configuration, gateway, invitationService, duelService),
+                    this);
         }
 
         BedrockGUIApi api = getApiSafely();
