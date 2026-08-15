@@ -96,10 +96,16 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperTitleManager titleManager = new PaperTitleManager();
         PaperPluginManager pluginManager = new PaperPluginManager();
         PaperPlayerManager playerManager = new PaperPlayerManager(this);
-        assetServer = new AssetServer(org.bukkit.Bukkit.getIp(),8191, getDataFolder() );
-        assetServer.start();
+        PaperConfig paperConfig = new PaperConfig(getDataFolder(), getConfig());
+        if (assetServer != null) {
+            assetServer.shutdown();
+        }
+        assetServer = AssetServer.fromConfig(paperConfig, org.bukkit.Bukkit.getIp(), 8191, getDataFolder());
+        if (assetServer != null) {
+            assetServer.start();
+        }
 
-        api = new BedrockGUIApi(new PaperConfig(getDataFolder(), getConfig()), messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
+        api = new BedrockGUIApi(paperConfig, messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);

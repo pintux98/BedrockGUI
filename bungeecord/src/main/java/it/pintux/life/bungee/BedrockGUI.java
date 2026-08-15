@@ -63,8 +63,13 @@ public class BedrockGUI extends Plugin {
         BungeeTitleManager titleManager = new BungeeTitleManager();
         BungeePluginManager pluginManager = new BungeePluginManager(getProxy());
         BungeePlayerManager playerManager = new BungeePlayerManager(getProxy());
-        assetServer = new AssetServer(getProxy().getConfig().getListeners().stream().findFirst().map(s -> s.getHost().getHostString()).orElse("127.0.0.1"), 8193, dataFolder);
-        assetServer.start();
+        if (assetServer != null) {
+            assetServer.shutdown();
+        }
+        assetServer = AssetServer.fromConfig(config, getProxy().getConfig().getListeners().stream().findFirst().map(s -> s.getHost().getHostString()).orElse("127.0.0.1"), 8193, dataFolder);
+        if (assetServer != null) {
+            assetServer.start();
+        }
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
                 formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this));

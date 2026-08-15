@@ -1455,16 +1455,10 @@ public class FormMenuUtil {
             return trimmed;
         }
 
-        // An explicit texture path is the admin telling us exactly what to draw: UI, entity and
-        // custom resource-pack folders are handed to the client as typed. Only a flat vanilla
-        // item/block path gets remapped, and only when Bedrock renamed that texture.
         if (trimmed.startsWith("textures/")) {
             return it.pintux.life.common.utils.IconResolver.remapTexturePath(trimmed);
         }
 
-        // Only a bare material name or a POTION:EFFECT pair becomes an icon. A value carrying a path
-        // separator, a file extension or a namespace is left for the branches below - it is a file
-        // or a pack-relative path with some root other than textures/, not a material.
         String resolved = it.pintux.life.common.utils.IconResolver.resolveIcon(trimmed);
         if (resolved != null) return resolved;
 

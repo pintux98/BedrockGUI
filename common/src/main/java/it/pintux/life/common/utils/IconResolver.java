@@ -382,7 +382,7 @@ public final class IconResolver {
     private static final java.util.regex.Pattern MATERIAL_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_]+");
 
     private static final java.util.regex.Pattern LOCAL_IMAGE_FILE =
-            java.util.regex.Pattern.compile("[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)", java.util.regex.Pattern.CASE_INSENSITIVE);
+            java.util.regex.Pattern.compile("[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif|webp)", java.util.regex.Pattern.CASE_INSENSITIVE);
 
     /**
      * Resolve a value that is meant to name an item rather than point at a file.

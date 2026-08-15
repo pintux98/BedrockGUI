@@ -1,3 +1,8 @@
+assets:
+  enabled: true
+  port: 0
+  host: ""
+
 forms:
   dual_demo:
     type: "SIMPLE"

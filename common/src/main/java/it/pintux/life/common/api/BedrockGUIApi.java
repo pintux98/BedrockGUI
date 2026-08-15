@@ -111,6 +111,22 @@ public class BedrockGUIApi {
         return assetServer;
     }
 
+    /**
+     * Resolve a button image the same way a config-defined menu does, so an API caller can name a
+     * material, a {@code head:}/{@code POTION:} value, a texture path, a URL or a local file.
+     *
+     * @param image the raw image value
+     * @return the value to hand to the client, or null when it resolves to no image
+     */
+    private String resolveButtonImage(String image) {
+        String resolved = IconResolver.resolveImage(image);
+        if (resolved != null && assetServer != null && assetServer.isAvailable()
+                && IconResolver.isLocalImageFile(resolved)) {
+            return assetServer.getAssetUrl(resolved);
+        }
+        return resolved;
+    }
+
     public it.pintux.life.common.platform.PlatformJavaMenuManager getJavaMenuManager() {
         return javaMenuManager;
     }
@@ -481,8 +497,8 @@ public class BedrockGUIApi {
             for (FormButtonBuilder buttonBuilder : buttons) {
                 FormButtonData buttonData = buttonBuilder.build();
 
-                if (buttonData.image != null) {
-                    String resolved = it.pintux.life.common.utils.IconResolver.resolveImage(buttonData.image);
+                String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
+                if (resolved != null) {
                     FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
                     builder.button(buttonData.text, type, resolved);
                 } else {
@@ -527,8 +543,8 @@ public class BedrockGUIApi {
 
             for (FormButtonBuilder buttonBuilder : buttons) {
                 FormButtonData buttonData = buttonBuilder.build();
-                if (buttonData.image != null) {
-                    String resolved = it.pintux.life.common.utils.IconResolver.resolveImage(buttonData.image);
+                String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
+                if (resolved != null) {
                     FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
                     builder.button(buttonData.text, type, resolved);
                 } else {

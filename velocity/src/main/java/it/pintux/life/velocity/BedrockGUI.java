@@ -108,8 +108,10 @@ public class BedrockGUI {
         if (assetServer != null) {
             assetServer.shutdown();
         }
-        assetServer = new AssetServer(server.getBoundAddress().getHostString(), 8192, dataFolder);
-        assetServer.start();
+        assetServer = AssetServer.fromConfig(config, server.getBoundAddress().getHostString(), 8192, dataFolder);
+        if (assetServer != null) {
+            assetServer.start();
+        }
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
                 formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler(getServer()));
