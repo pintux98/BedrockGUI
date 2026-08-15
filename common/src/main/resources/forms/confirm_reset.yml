@@ -1,0 +1,36 @@
+bedrock:
+  type: "MODAL"
+  title: "§c§lAre you sure?"
+  content: |
+    §7A MODAL is a yes/no dialog. It takes §fexactly two§7 buttons -
+    any other number is refused at load and logged as a warning.
+
+    §7Use it in front of anything destructive.
+  buttons:
+    confirm:
+      text: "§cYes, do it"
+      onClick:
+        - |
+          title {
+            - "§c§lDone:§7Nothing was really reset:10:40:10"
+          }
+        - |
+          message {
+            - "§cThis is where the real command would run."
+            - "§7Put it behind §fserver { }§7 so it runs from console."
+          }
+        - |
+          sound {
+            - "block.note_block.bass:1.0:0.5"
+          }
+    cancel:
+      text: "§aNo, take me back"
+      onClick:
+        - |
+          message {
+            - "§aCancelled."
+          }
+        - |
+          open {
+            - "main_menu"
+          }

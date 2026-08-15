@@ -1,6 +1,7 @@
 package it.pintux.life.common.actions;
 import it.pintux.life.common.actions.ActionSystem;
 
+import it.pintux.life.common.platform.PlatformScheduler;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
 import it.pintux.life.common.utils.ValidationUtils;
@@ -19,6 +20,7 @@ public class ActionExecutor {
     private static final Logger logger = Logger.getLogger(ActionExecutor.class.getSimpleName());
     private final ActionRegistry registry;
     private final ExecutorService executorService;
+    private PlatformScheduler scheduler;
 
 
     private static final Pattern NEW_FORMAT_PATTERN = Pattern.compile(
@@ -138,10 +140,19 @@ public class ActionExecutor {
             return results;
         }
 
-        for (ActionSystem.Action action : actions) {
+        for (int i = 0; i < actions.size(); i++) {
+            ActionSystem.Action action = actions.get(i);
             if (action == null) {
                 results.add(ActionSystem.ActionResult.failure("Action cannot be null"));
                 continue;
+            }
+
+            Long pauseMs = bareDelayMillis(action);
+            if (pauseMs != null && scheduler != null && i + 1 < actions.size()) {
+                List<ActionSystem.Action> remaining = new ArrayList<>(actions.subList(i + 1, actions.size()));
+                scheduler.runLaterSync(pauseMs, () -> executeActions(player, remaining, context));
+                results.add(ActionSystem.ActionResult.success("Paused " + pauseMs + "ms before the remaining " + remaining.size() + " action(s)"));
+                return results;
             }
 
             ActionSystem.ActionResult result = executeAction(player, action.getActionDefinition(), context);
@@ -154,6 +165,26 @@ public class ActionExecutor {
         }
 
         return results;
+    }
+
+    /**
+     * @return the pause a lone "delay" action asks for, or null when this action is anything else
+     */
+    private Long bareDelayMillis(ActionSystem.Action action) {
+        ActionSystem.ActionDefinition definition = action.getActionDefinition();
+        if (definition == null || definition.getActionTypes().size() != 1) {
+            return null;
+        }
+        if (!definition.hasAction("delay")) {
+            return null;
+        }
+        Object value = definition.getAction("delay");
+        return it.pintux.life.common.actions.handlers.DelayActionHandler.bareDelayMillis(
+                value != null ? value.toString() : null);
+    }
+
+    public void setScheduler(PlatformScheduler scheduler) {
+        this.scheduler = scheduler;
     }
 
     /**

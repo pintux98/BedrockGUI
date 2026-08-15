@@ -154,7 +154,12 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public String getEffectiveText(String condition) {
+    public boolean hasAlternative() {
+        return alternativeText != null || alternativeImage != null || alternativeOnClick != null;
+    }
+
+
+    public String getEffectiveText(String condition, boolean useAlternative) {
 
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "text"));
@@ -167,7 +172,7 @@ public class ConditionalButton extends FormButton {
         }
 
 
-        if (alternativeText != null) {
+        if (useAlternative && alternativeText != null) {
             return alternativeText;
         }
 
@@ -176,7 +181,7 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public String getEffectiveImage(String condition) {
+    public String getEffectiveImage(String condition, boolean useAlternative) {
 
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "image"));
@@ -189,7 +194,7 @@ public class ConditionalButton extends FormButton {
         }
 
 
-        if (alternativeImage != null) {
+        if (useAlternative && alternativeImage != null) {
             return alternativeImage;
         }
 
@@ -198,7 +203,7 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public String getEffectiveOnClick(String condition) {
+    public String getEffectiveOnClick(String condition, boolean useAlternative) {
 
         if (condition != null) {
             ConditionalProperty property = conditionalProperties.get(createConditionalPropertyKey(condition, "onClick"));
@@ -211,7 +216,7 @@ public class ConditionalButton extends FormButton {
         }
 
 
-        if (alternativeOnClick != null) {
+        if (useAlternative && alternativeOnClick != null) {
             return alternativeOnClick;
         }
 

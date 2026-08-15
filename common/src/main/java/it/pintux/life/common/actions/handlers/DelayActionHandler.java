@@ -17,8 +17,48 @@ public class DelayActionHandler extends BaseActionHandler {
 
     private static final long MAX_DELAY_MS = 30000;
 
+    private static final java.util.regex.Pattern BLOCK_VALUE =
+            java.util.regex.Pattern.compile("-\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+
     private final ActionExecutor actionExecutor;
     private final PlatformScheduler scheduler;
+
+    /**
+     * Milliseconds a bare "delay" action should hold a sequence for, or null when this is not one.
+     *
+     * <p>A delay carrying its own chained action is handled by {@link #execute} and returns null
+     * here, so it is never paused twice.
+     */
+    public static Long bareDelayMillis(String actionValue) {
+        if (actionValue == null) {
+            return null;
+        }
+
+        String trimmed = actionValue.trim();
+        java.util.List<String> values = new java.util.ArrayList<>();
+
+        if (trimmed.matches("(?s)^delay\\s*\\{.*\\}$")) {
+            java.util.regex.Matcher matcher = BLOCK_VALUE.matcher(trimmed);
+            while (matcher.find()) {
+                values.add(matcher.group(1));
+            }
+        } else {
+            for (String part : trimmed.split(":")) {
+                values.add(part);
+            }
+        }
+
+        if (values.size() != 1) {
+            return null;
+        }
+
+        try {
+            long delayMs = Long.parseLong(values.get(0).trim());
+            return delayMs > 0 && delayMs <= MAX_DELAY_MS ? delayMs : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
 
     public DelayActionHandler(ActionExecutor actionExecutor, PlatformScheduler scheduler) {
         this.actionExecutor = actionExecutor;

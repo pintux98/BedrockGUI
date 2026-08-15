@@ -1,0 +1,134 @@
+bedrock:
+  type: "SIMPLE"
+  title: "§e§lButton Images"
+  content: |
+    §7Every value the §fimage§7 field accepts.
+    §7Each button's icon below was produced by the syntax it names.
+
+    §8Material names and texture paths are sent as PATH,
+    §8heads and links are sent as URL.
+  buttons:
+    material:
+      text: "§aMaterial name\n§8image: DIAMOND_SWORD"
+      image: "DIAMOND_SWORD"
+      onClick:
+        - |
+          message {
+            - "§aimage: §fDIAMOND_SWORD"
+            - "§7Any Bukkit material. Resolved to the Bedrock texture,"
+            - "§7including names Bedrock spells differently."
+          }
+    block_material:
+      text: "§aBlock material\n§8image: GRASS_BLOCK"
+      image: "GRASS_BLOCK"
+      onClick:
+        - |
+          message {
+            - "§aimage: §fGRASS_BLOCK"
+            - "§7Blocks resolve under textures/blocks, items under textures/items."
+            - "§7GRASS_BLOCK becomes textures/blocks/grass automatically."
+          }
+    spawn_egg:
+      text: "§aSpawn egg\n§8image: ZOMBIE_SPAWN_EGG"
+      image: "ZOMBIE_SPAWN_EGG"
+      onClick:
+        - |
+          message {
+            - "§aimage: §fZOMBIE_SPAWN_EGG"
+            - "§7Any *_SPAWN_EGG becomes textures/items/spawn_<mob>."
+          }
+    music_disc:
+      text: "§aMusic disc\n§8image: MUSIC_DISC_CAT"
+      image: "MUSIC_DISC_CAT"
+      onClick:
+        - |
+          message {
+            - "§aimage: §fMUSIC_DISC_CAT"
+            - "§7Any MUSIC_DISC_* becomes textures/items/record_<name>."
+          }
+    potion:
+      text: "§aPotion by effect\n§8image: POTION:HEALING"
+      image: "POTION:HEALING"
+      onClick:
+        - |
+          message {
+            - "§aimage: §fPOTION:HEALING"
+            - "§7Bedrock ships one texture per effect."
+            - "§7Also SPLASH_POTION:SPEED, LINGERING_POTION:LUCK,"
+            - "§7and TIPPED_ARROW:LONG_POISON."
+          }
+    texture_path:
+      text: "§bTexture path\n§8image: textures/items/apple"
+      image: "textures/items/apple"
+      onClick:
+        - |
+          message {
+            - "§bimage: §ftextures/items/apple"
+            - "§7Written as-is into the player's resource pack."
+            - "§7textures/ui/... and custom pack folders pass through untouched."
+          }
+    own_head:
+      text: "§dYour own head\n§8image: head:{player}"
+      image: "head:{player}"
+      onClick:
+        - |
+          message {
+            - "§dimage: §fhead:{player}"
+            - "§7head:<owner> renders a player head from a name, UUID or skin hash."
+            - "§7This one is blank for Bedrock players on purpose: Floodgate"
+            - "§7prefixes their name with a dot, and no Java skin exists for it."
+            - "§7Use a fixed name, or a Java-side name placeholder, for a real head."
+          }
+    named_head:
+      text: "§dNamed head\n§8image: head:Notch"
+      image: "head:Notch"
+      onClick:
+        - |
+          message {
+            - "§dimage: §fhead:Notch"
+            - "§7The head: prefix is required, because DIAMOND_SWORD"
+            - "§7and Notch have the same shape and materials win."
+          }
+    image_url:
+      text: "§9Direct URL\n§8image: https://..."
+      image: "https://mc-heads.net/head/MHF_Chest/64"
+      onClick:
+        - |
+          message {
+            - "§9image: §fhttps://mc-heads.net/head/MHF_Chest/64"
+            - "§7Any http:// or https:// link is sent to the client as a URL."
+          }
+    local_file:
+      text: "§6Local asset file\n§8image: logo.png"
+      image: "logo.png"
+      onClick:
+        - |
+          message {
+            - "§6image: §flogo.png"
+            - "§7Served from plugins/BedrockGUI/assets by the built-in asset server."
+            - "§7Enable it under §fassets§7 in config.yml. Drop the file in and"
+            - "§7name it here. Accepts png, jpg, jpeg, gif and webp."
+          }
+    swapping_icon:
+      text: "§7Icon by condition"
+      image: "IRON_INGOT"
+      conditions:
+        rich:
+          condition: "placeholder:%vault_eco_balance% >= 1000"
+          property: "image"
+          value: "DIAMOND"
+      onClick:
+        - |
+          message {
+            - "§7This button's icon depends on your balance."
+            - "§7Under $1000 it is IRON_INGOT, at or above it is DIAMOND."
+            - "§7Set with a §fconditions§7 block using §fproperty: image§7."
+          }
+    back:
+      text: "§7← Back"
+      image: "ARROW"
+      onClick:
+        - |
+          open {
+            - "main_menu"
+          }

@@ -41,9 +41,9 @@ public class PlaceholderUtil {
 
         if (dynamicPlaceholders != null && !dynamicPlaceholders.isEmpty()) {
             for (Map.Entry<String, String> entry : dynamicPlaceholders.entrySet()) {
-                String placeholder = "$" + entry.getKey();
                 String value = entry.getValue() != null ? entry.getValue() : "";
-                result = result.replace(placeholder, value);
+                result = result.replace("$" + entry.getKey(), value);
+                result = result.replace("{" + entry.getKey() + "}", value);
             }
         }
 

@@ -1,0 +1,65 @@
+bedrock:
+  type: "CUSTOM"
+  title: "§d§lPlayer Settings"
+  content: |
+    §7A CUSTOM form collects input instead of offering buttons.
+    §7Fill it in and press Submit.
+  components:
+    nickname:
+      type: "input"
+      text: "§fDisplay name"
+      placeholder: "Type a nickname"
+      default: "{player}"
+      action: |
+        message {
+          - "§dNickname set to §f$1"
+        }
+    render_distance:
+      type: "slider"
+      text: "§fRender distance (chunks)"
+      min: 2
+      max: 32
+      step: 2
+      default: 12
+      action: |
+        message {
+          - "§dRender distance: §f$1 §7chunks"
+        }
+    language:
+      type: "dropdown"
+      text: "§fLanguage"
+      options:
+        - "English"
+        - "Italiano"
+        - "Deutsch"
+        - "Espanol"
+      default: 0
+      action: |
+        message {
+          - "§dLanguage: §f$1"
+        }
+    notifications:
+      type: "toggle"
+      text: "§fReceive notifications"
+      default: true
+      action: |
+        message {
+          - "§dNotifications: §f$1"
+        }
+  global_actions:
+    - |
+      message {
+        - "§a§lSettings saved"
+        - "§7Name: §f$nickname"
+        - "§7Distance: §f$render_distance §7chunks"
+        - "§7Language: §f$language"
+        - "§7Notifications: §f$notifications"
+      }
+    - |
+      sound {
+        - "ui.button.click"
+      }
+    - |
+      open {
+        - "main_menu"
+      }

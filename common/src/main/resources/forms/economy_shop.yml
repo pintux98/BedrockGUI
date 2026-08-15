@@ -1,0 +1,211 @@
+bedrock:
+  type: "SIMPLE"
+  title: "§6§lExample Shop"
+  content: |
+    §7The same form on both platforms.
+
+    §7Bedrock players get this form. Java players get the chest menu
+    §7defined under §fjava:§7 in this same file, built from the same
+    §7actions. One file, one shop, two clients.
+
+    §7Balance: §a$%vault_eco_balance%
+  buttons:
+    buy_bread:
+      text: "§aBread §8- §a$25"
+      image: "BREAD"
+      onClick:
+        - |
+          conditional {
+            check: "placeholder:%vault_eco_balance% >= 25"
+            true:
+              - |
+                economy {
+                  - "remove:25"
+                }
+              - |
+                inventory {
+                  - "give:bread:8"
+                }
+              - |
+                sound {
+                  - "entity.experience_orb.pickup:0.8:1.2"
+                }
+              - |
+                message {
+                  - "§aBought 8 bread for $25."
+                }
+            false:
+              - |
+                message {
+                  - "§cYou need $25. You have §f$%vault_eco_balance%§c."
+                }
+              - |
+                sound {
+                  - "block.note_block.bass:0.5:0.5"
+                }
+          }
+    buy_sword:
+      text: "§bDiamond Sword §8- §a$500"
+      image: "DIAMOND_SWORD"
+      onClick:
+        - |
+          conditional {
+            check: "placeholder:%vault_eco_balance% >= 500"
+            true:
+              - |
+                economy {
+                  - "remove:500"
+                }
+              - |
+                inventory {
+                  - "give:diamond_sword:1"
+                }
+              - |
+                title {
+                  - "§b§lPurchased:§7Diamond Sword:10:40:10"
+                }
+              - |
+                sound {
+                  - "entity.player.levelup:1.0:1.0"
+                }
+            false:
+              - |
+                actionbar {
+                  - "§cNot enough money for that."
+                }
+          }
+    sell_all:
+      text: "§eSell 32 stone §8- §a+$40"
+      image: "STONE"
+      onClick:
+        - |
+          inventory {
+            - "remove:stone:32"
+          }
+        - |
+          economy {
+            - "add:40"
+          }
+        - |
+          message {
+            - "§eSold 32 stone. New balance: §a$%vault_eco_balance%"
+          }
+    admin_restock:
+      text: "§cRestock §8(staff)"
+      image: "HOPPER"
+      show_condition: "permission:bedrockgui.admin"
+      alternative_text: "§8Restock §7- §crequires bedrockgui.admin"
+      onClick:
+        - |
+          server {
+            - "say §cShop restocked by {player}"
+          }
+    back:
+      text: "§7← Back"
+      image: "ARROW"
+      onClick:
+        - |
+          open {
+            - "main_menu"
+          }
+java:
+  type: "CHEST"
+  title: "§6§lExample Shop"
+  size: "27"
+  fills:
+    border_top:
+      type: "ROW"
+      row: "1"
+      item:
+        material: "GRAY_STAINED_GLASS_PANE"
+        amount: "1"
+        name: " "
+    border_bottom:
+      type: "ROW"
+      row: "3"
+      item:
+        material: "GRAY_STAINED_GLASS_PANE"
+        amount: "1"
+        name: " "
+  items:
+    11:
+      material: "BREAD"
+      amount: "8"
+      name: "§aBread"
+      lore:
+        - "§7Cost: §a$25"
+        - "§7You have: §a$%vault_eco_balance%"
+      glow: "false"
+      onClick:
+        - |
+          conditional {
+            check: "placeholder:%vault_eco_balance% >= 25"
+            true:
+              - |
+                economy {
+                  - "remove:25"
+                }
+              - |
+                inventory {
+                  - "give:bread:8"
+                }
+              - |
+                message {
+                  - "§aBought 8 bread for $25."
+                }
+            false:
+              - |
+                message {
+                  - "§cYou need $25."
+                }
+          }
+    13:
+      material: "DIAMOND_SWORD"
+      amount: "1"
+      name: "§bDiamond Sword"
+      lore:
+        - "§7Cost: §a$500"
+      glow: "true"
+      onClick:
+        - |
+          conditional {
+            check: "placeholder:%vault_eco_balance% >= 500"
+            true:
+              - |
+                economy {
+                  - "remove:500"
+                }
+              - |
+                inventory {
+                  - "give:diamond_sword:1"
+                }
+              - |
+                title {
+                  - "§b§lPurchased:§7Diamond Sword:10:40:10"
+                }
+            false:
+              - |
+                message {
+                  - "§cNot enough money for that."
+                }
+          }
+    15:
+      material: "STONE"
+      amount: "32"
+      name: "§eSell 32 Stone"
+      lore:
+        - "§7Payout: §a$40"
+      glow: "false"
+      onClick:
+        - |
+          inventory {
+            - "remove:stone:32"
+          }
+        - |
+          economy {
+            - "add:40"
+          }
+        - |
+          message {
+            - "§eSold 32 stone."
+          }

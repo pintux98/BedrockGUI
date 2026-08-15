@@ -1,0 +1,142 @@
+bedrock:
+  command_intercept: "bguiwarp"
+  type: "SIMPLE"
+  title: "§5§lAdvanced Flow"
+  content: |
+    §7Sequencing, chance, conditions and proxy actions.
+
+    §7This form also sets §fcommand_intercept: bguiwarp§7, so a Bedrock
+    §7player running §f/bguiwarp§7 gets this form instead of the command.
+    §7Java players are never intercepted.
+  buttons:
+    delay:
+      text: "§5delay\n§8pause between actions"
+      image: "CLOCK"
+      onClick:
+        - |
+          message {
+            - "§5Starting. The next line lands in two seconds."
+          }
+        - |
+          delay {
+            - "2000"
+          }
+        - |
+          message {
+            - "§5Two seconds later."
+          }
+        - |
+          actionbar {
+            - "§5Delay is capped at 30000ms."
+          }
+    random:
+      text: "§brandom\n§8pick one at random"
+      image: "SUNFLOWER"
+      onClick:
+        - |
+          random {
+            - "message:§bYou rolled the first option"
+            - "message:§bYou rolled the second option"
+            - "message:§bYou rolled the third option"
+          }
+        - |
+          message {
+            - "§7Exactly one of the three above ran, each equally likely."
+            - "§7Entries use the compact §ftype:value§7 form."
+          }
+    loot_roll:
+      text: "§bweighted loot\n§8rare, uncommon, common"
+      image: "GOLD_NUGGET"
+      onClick:
+        - |
+          random {
+            - "inventory:give:diamond:1@1.0"
+            - "inventory:give:gold_ingot:4@3.0"
+            - "inventory:give:iron_ingot:8@6.0"
+          }
+        - |
+          sound {
+            - "entity.experience_orb.pickup:0.8:1.4"
+          }
+        - |
+          message {
+            - "§bOne prize per press, biased by weight."
+            - "§7Append §f@<weight>§7 to bias an entry. Weights are shares of"
+            - "§7the total, so 1 + 3 + 6 gives §f10%§7, §f30%§7 and §f60%§7."
+            - "§7Leave it off and the entry weighs §f1.0§7."
+            - "§8It has to be @ and not a colon, because a colon already"
+            - "§8carries sound pitch and delay durations."
+          }
+    nested_conditional:
+      text: "§enested conditional\n§8branches inside branches"
+      image: "COMPARATOR"
+      onClick:
+        - |
+          conditional {
+            check: "(placeholder:%vault_eco_balance% >= 1000 || placeholder:%player_level% >= 10) && permission:bedrockgui.use"
+            true:
+              - |
+                message {
+                  - "§aYou passed the outer check."
+                }
+              - |
+                conditional {
+                  check: "placeholder:%player_level% >= 30"
+                  true:
+                    - |
+                      title {
+                        - "§6§lVeteran:§7Level 30 or higher:10:50:10"
+                      }
+                  false:
+                    - |
+                      message {
+                        - "§7Level 30 unlocks the veteran title."
+                      }
+                }
+            false:
+              - |
+                message {
+                  - "§cOuter check failed. It needs:"
+                  - "§7- balance §f>= $1000§7 §8or§7 level §f>= 30"
+                  - "§7- permission §fbedrockgui.use"
+                  - "§7You have §a$%vault_eco_balance% §7and level §6%player_level%§7."
+                }
+          }
+    bungee:
+      text: "§9bungee\n§8proxy subchannels"
+      image: "END_PORTAL_FRAME"
+      onClick:
+        - |
+          bungee {
+            subchannel: "Message"
+            - "{player}"
+            - "§9Delivered to you by the proxy."
+          }
+        - |
+          message {
+            - "§7That sent a BungeeCord plugin message on the §fMessage§7 subchannel."
+            - "§7Others: §fConnect§7 to move you, §fConnectOther§7 to move"
+            - "§7someone else, §fKickPlayer§7 to remove them."
+            - "§7Set §fsubchannel§7 to Connect and pass the server name."
+            - "§8With no proxy in front of this server, nothing happens."
+          }
+    staff_only:
+      text: "§cStaff tools"
+      image: "NETHERITE_SWORD"
+      show_condition: "permission:bedrockgui.admin"
+      alternative_text: "§8Staff tools §7- §crequires bedrockgui.admin"
+      alternative_image: "GRAY_DYE"
+      onClick:
+        - |
+          message {
+            - "§cYou can see this because you hold bedrockgui.admin."
+            - "§7Without it the button shows the alternative text and icon."
+          }
+    back:
+      text: "§7← Back"
+      image: "ARROW"
+      onClick:
+        - |
+          open {
+            - "main_menu"
+          }

@@ -148,7 +148,7 @@ public class MessageActionHandler extends BaseActionHandler {
         }
 
         String trimmed = actionValue.trim();
-        return trimmed.length() > 0 && trimmed.length() <= 1000;
+        return trimmed.length() > 0 && trimmed.length() <= 2048;
     }
 
     @Override

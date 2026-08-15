@@ -46,8 +46,13 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         cmd.setExecutor(executor);
         cmd.setTabCompleter(executor);
         getServer().getPluginManager().registerEvents(this, this);
+        boolean freshInstall = !new File(getDataFolder(), "config.yml").exists();
         saveDefaultConfig();
         this.saveResource("messages.yml", false);
+        if (freshInstall) {
+            int extracted = it.pintux.life.common.utils.DefaultFormsExtractor.extract(getDataFolder(), getLogger()::warning);
+            getLogger().info("First run: extracted " + extracted + " default form file(s) to forms/");
+        }
         reloadData();
         new Metrics(this, 23364);
     }

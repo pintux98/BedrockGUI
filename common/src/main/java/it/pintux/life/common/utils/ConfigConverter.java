@@ -85,23 +85,19 @@ public class ConfigConverter {
             // Prepare new form content
             Map<String, Object> newFormConfig = new LinkedHashMap<>();
 
-            // 1. Copy Bedrock content (the current menuData)
-            // We need to deep copy and process onClick/actions
-            Map<String, Object> bedrockContent = deepCopyAndProcess(menuData);
-            newFormConfig.put("bedrock", bedrockContent);
+            Object javaValue = menuData.get("java");
+            String siblingJavaKey = key + ".java";
+            if (!(javaValue instanceof Map) && rootSection.get(siblingJavaKey) instanceof Map) {
+                javaValue = rootSection.get(siblingJavaKey);
+            }
 
-            // 2. Check for Java menu (inline convention: key + ".java" inside root, OR inside menuData if structure differs?)
-            // The BedrockCommand logic looked for "forms.<key>.java" as a sibling key in the root.
-            // Let's check if the root has "<key>.java"
-            String javaKey = key + ".java";
-            if (rootSection.containsKey(javaKey)) {
-                Object javaValue = rootSection.get(javaKey);
-                if (javaValue instanceof Map) {
-                    Map<String, Object> javaContent = deepCopyAndProcess((Map<String, Object>) javaValue);
-                    newFormConfig.put("java", javaContent);
-                    // Mark java section for removal from main config
-                    rootSection.remove(javaKey);
-                }
+            Map<String, Object> bedrockSource = new LinkedHashMap<>(menuData);
+            bedrockSource.remove("java");
+            newFormConfig.put("bedrock", deepCopyAndProcess(bedrockSource));
+
+            if (javaValue instanceof Map) {
+                newFormConfig.put("java", deepCopyAndProcess((Map<String, Object>) javaValue));
+                rootSection.remove(siblingJavaKey);
             }
 
             // Save to new file
@@ -199,18 +195,19 @@ public class ConfigConverter {
         return null;
     }
 
-    private Map<String, Object> deepCopyAndProcess(Map<String, Object> original) {
-        Map<String, Object> copy = new LinkedHashMap<>();
-        for (Map.Entry<String, Object> entry : original.entrySet()) {
-            String key = entry.getKey();
+    private Map<Object, Object> deepCopyAndProcess(Map<?, ?> original) {
+        Map<Object, Object> copy = new LinkedHashMap<>();
+        for (Map.Entry<?, ?> entry : original.entrySet()) {
+            Object key = entry.getKey();
+            String keyName = key == null ? null : String.valueOf(key);
             Object value = entry.getValue();
 
             if (value instanceof Map) {
-                copy.put(key, deepCopyAndProcess((Map<String, Object>) value));
+                copy.put(key, deepCopyAndProcess((Map<?, ?>) value));
             } else if (value instanceof List) {
-                copy.put(key, processList(key, (List<?>) value));
+                copy.put(key, processList(keyName, (List<?>) value));
             } else if (value instanceof String) {
-                copy.put(key, processString(key, (String) value));
+                copy.put(key, processString(keyName, (String) value));
             } else {
                 copy.put(key, value);
             }
@@ -224,7 +221,7 @@ public class ConfigConverter {
 
         for (Object item : list) {
             if (item instanceof Map) {
-                newList.add(deepCopyAndProcess((Map<String, Object>) item));
+                newList.add(deepCopyAndProcess((Map<?, ?>) item));
             } else if (item instanceof String) {
                 String s = (String) item;
                 if (isActionKey) {
@@ -259,25 +256,30 @@ public class ConfigConverter {
                "global_actions".equalsIgnoreCase(key);
     }
     
+    private static final java.util.regex.Pattern ALREADY_CONVERTED =
+            java.util.regex.Pattern.compile("(?s)^[A-Za-z_]+\\s*\\{.*\\}$");
+
     // Extracted from BedrockCommand logic
     private String convertLegacyPrefixedActionIfNeeded(String raw) {
         if (raw == null) return null;
         String value = raw.trim();
 
-        // If it's already a new format (curly braces) or a legacy type:value (colon), leave it
-        if ((value.contains("{") && value.contains("}")) || value.contains(":")) {
+        // Already a "<type> { ... }" block, or a legacy type:value - leave it alone.
+        // Only a brace that opens the block counts, so a "{player}" placeholder does not
+        // make a legacy action look converted.
+        if (ALREADY_CONVERTED.matcher(value).matches() || value.contains(":")) {
             return raw;
         }
 
-        // Check for known action types
-        // command, open, message, sound, broadcast, server, console, json, actionbar, bungee, delay, conditional, random
-        // If the string starts with one of these followed by space
-        
+        // Every action type the registry actually handles. Keep this in step with the
+        // handlers under actions/handlers - a type missing here is left as legacy text
+        // and will not parse once the form is loaded.
         List<String> knownTypes = Arrays.asList(
-            "command", "open", "message", "sound", "broadcast", "server", "console", 
-            "json", "actionbar", "bungee", "delay", "conditional", "random"
+            "message", "command", "server", "broadcast", "sound", "title", "actionbar",
+            "economy", "inventory", "open", "url", "delay", "conditional", "random", "bungee"
         );
-        
+
+
         String[] parts = value.split("\\s+", 2);
         if (parts.length < 2) {
             return raw; // e.g. just "command" without args? or just "close"?

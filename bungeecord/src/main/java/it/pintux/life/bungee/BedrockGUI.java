@@ -26,6 +26,10 @@ public class BedrockGUI extends Plugin {
         if (!getDataFolder().exists()) {
             getDataFolder().mkdirs();
         }
+        if (!new File(getDataFolder(), "config.yml").exists()) {
+            int extracted = it.pintux.life.common.utils.DefaultFormsExtractor.extract(getDataFolder(), getLogger()::warning);
+            getLogger().info("First run: extracted " + extracted + " default form file(s) to forms/");
+        }
         reloadData();
         ProxyServer.getInstance().getPluginManager().registerCommand(this, new BungeeCommand(this));
         new Metrics(this, 23364);

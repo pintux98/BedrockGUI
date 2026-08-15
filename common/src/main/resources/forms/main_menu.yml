@@ -1,0 +1,58 @@
+bedrock:
+  command: "bguidemo"
+  type: "SIMPLE"
+  title: "§b§lBedrockGUI Demo"
+  content: |
+    §7A guided tour of everything this plugin can do.
+    §7Each entry below is a form file in §fplugins/BedrockGUI/forms§7.
+
+    §8Open any of them directly with §f/bedrockgui open <name>§8.
+  buttons:
+    button_images:
+      text: "§eButton Images\n§8every image syntax"
+      image: "ITEM_FRAME"
+      onClick:
+        - |
+          open {
+            - "button_images"
+          }
+    basic_actions:
+      text: "§aBasic Actions\n§8text, commands, sound"
+      image: "PAPER"
+      onClick:
+        - |
+          open {
+            - "basic_actions"
+          }
+    economy_shop:
+      text: "§6Economy Shop\n§8Bedrock form + Java chest"
+      image: "GOLD_INGOT"
+      onClick:
+        - |
+          open {
+            - "economy_shop"
+          }
+    player_settings:
+      text: "§dPlayer Settings\n§8input, toggle, dropdown, slider"
+      image: "COMPARATOR"
+      onClick:
+        - |
+          open {
+            - "player_settings"
+          }
+    confirm_reset:
+      text: "§cConfirm Dialog\n§8a two-button MODAL"
+      image: "BARRIER"
+      onClick:
+        - |
+          open {
+            - "confirm_reset"
+          }
+    advanced_flow:
+      text: "§5Advanced Flow\n§8delay, random, conditions"
+      image: "ENDER_EYE"
+      onClick:
+        - |
+          open {
+            - "advanced_flow"
+          }

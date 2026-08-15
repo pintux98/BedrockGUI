@@ -66,6 +66,7 @@ public class FormMenuUtil {
         this.scheduler = scheduler;
         this.actionRegistry = ActionRegistry.getInstance();
         this.actionExecutor = new ActionExecutor(actionRegistry);
+        this.actionExecutor.setScheduler(scheduler);
 
 
         if (pluginManager != null) {
@@ -248,7 +249,7 @@ public class FormMenuUtil {
     }
 
     private Map<String, Map<String, Object>> readBedrockComponents(FormConfig cfg, String base, String type) {
-        Map<String, Map<String, Object>> components = new HashMap<>();
+        Map<String, Map<String, Object>> components = new LinkedHashMap<>();
         if (type.equalsIgnoreCase("CUSTOM")) {
             for (String componentKey : cfg.getKeys(base + ".components")) {
                 Map<String, Object> component = cfg.getValues(base + ".components." + componentKey);
@@ -580,13 +581,13 @@ public class FormMenuUtil {
         if (b1 instanceof ConditionalButton) {
             ConditionalButton cb1 = (ConditionalButton) b1;
 
-            if (cb1.hasShowCondition() &&
-                !ConditionEvaluator.evaluateCondition(player, cb1.getShowCondition(), context, messageData)) {
-                logger.warn("Modal form button 1 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-
+            boolean cb1ConditionFailed = cb1.hasShowCondition() &&
+                    !ConditionEvaluator.evaluateCondition(player, cb1.getShowCondition(), context, messageData);
+            if (cb1ConditionFailed && !cb1.hasAlternative()) {
+                logger.warn("Modal form button 1 has a show condition that evaluated to false and no alternative. Modal forms always need both buttons, so the primary values are used.");
             }
-            button1Text = getEffectiveButtonText(cb1, player, context, placeholders, messageData);
-            button1OnClick = getEffectiveButtonOnClick(cb1, player, context);
+            button1Text = getEffectiveButtonText(cb1, player, context, placeholders, messageData, cb1ConditionFailed);
+            button1OnClick = getEffectiveButtonOnClick(cb1, player, context, cb1ConditionFailed);
         } else {
             button1Text = replacePlaceholders(b1.getText(), placeholders, player, messageData);
             button1OnClick = b1.getOnClick();
@@ -595,13 +596,13 @@ public class FormMenuUtil {
         if (b2 instanceof ConditionalButton) {
             ConditionalButton cb2 = (ConditionalButton) b2;
 
-            if (cb2.hasShowCondition() &&
-                !ConditionEvaluator.evaluateCondition(player, cb2.getShowCondition(), context, messageData)) {
-                logger.warn("Modal form button 2 has a show condition that evaluated to false. This is not fully supported in modal forms.");
-
+            boolean cb2ConditionFailed = cb2.hasShowCondition() &&
+                    !ConditionEvaluator.evaluateCondition(player, cb2.getShowCondition(), context, messageData);
+            if (cb2ConditionFailed && !cb2.hasAlternative()) {
+                logger.warn("Modal form button 2 has a show condition that evaluated to false and no alternative. Modal forms always need both buttons, so the primary values are used.");
             }
-            button2Text = getEffectiveButtonText(cb2, player, context, placeholders, messageData);
-            button2OnClick = getEffectiveButtonOnClick(cb2, player, context);
+            button2Text = getEffectiveButtonText(cb2, player, context, placeholders, messageData, cb2ConditionFailed);
+            button2OnClick = getEffectiveButtonOnClick(cb2, player, context, cb2ConditionFailed);
         } else {
             button2Text = replacePlaceholders(b2.getText(), placeholders, player, messageData);
             button2OnClick = b2.getOnClick();
@@ -660,20 +661,22 @@ public class FormMenuUtil {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
 
 
-                if (conditionalButton.hasShowCondition() &&
-                    !ConditionEvaluator.evaluateCondition(player, conditionalButton.getShowCondition(), context, messageData)) {
+                boolean conditionFailed = conditionalButton.hasShowCondition() &&
+                        !ConditionEvaluator.evaluateCondition(player, conditionalButton.getShowCondition(), context, messageData);
+
+                if (conditionFailed && !conditionalButton.hasAlternative()) {
 
                     continue;
                 }
 
 
-                String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData);
-                String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context);
+                String effectiveText = getEffectiveButtonText(conditionalButton, player, context, placeholders, messageData, conditionFailed);
+                String effectiveImage = getEffectiveButtonImage(conditionalButton, player, context, conditionFailed);
                 if (effectiveImage != null) {
                     effectiveImage = replacePlaceholders(effectiveImage, placeholders, player, messageData);
                     effectiveImage = mapImageSource(effectiveImage);
                 }
-                String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context);
+                String effectiveOnClick = getEffectiveButtonOnClick(conditionalButton, player, context, conditionFailed);
 
 
                 if (effectiveImage != null) {
@@ -1231,7 +1234,7 @@ public class FormMenuUtil {
     }
 
 
-    private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionSystem.ActionContext context, Map<String, String> placeholders, MessageData messageData) {
+    private String getEffectiveButtonText(FormButton button, FormPlayer player, ActionSystem.ActionContext context, Map<String, String> placeholders, MessageData messageData, boolean conditionFailed) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
 
@@ -1248,7 +1251,7 @@ public class FormMenuUtil {
             }
 
 
-            String effectiveText = conditionalButton.getEffectiveText(matchedCondition);
+            String effectiveText = conditionalButton.getEffectiveText(matchedCondition, conditionFailed);
             return replacePlaceholders(effectiveText, placeholders, player, messageData);
         }
 
@@ -1257,7 +1260,7 @@ public class FormMenuUtil {
     }
 
 
-    private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
+    private String getEffectiveButtonImage(FormButton button, FormPlayer player, ActionSystem.ActionContext context, boolean conditionFailed) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
 
@@ -1274,7 +1277,7 @@ public class FormMenuUtil {
             }
 
 
-            return conditionalButton.getEffectiveImage(matchedCondition);
+            return conditionalButton.getEffectiveImage(matchedCondition, conditionFailed);
         }
 
 
@@ -1390,7 +1393,7 @@ public class FormMenuUtil {
         throw new IllegalArgumentException("Invalid action format. Actions must use curly-brace format: action { ... }");
     }
 
-    private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionSystem.ActionContext context) {
+    private String getEffectiveButtonOnClick(FormButton button, FormPlayer player, ActionSystem.ActionContext context, boolean conditionFailed) {
         if (button instanceof ConditionalButton) {
             ConditionalButton conditionalButton = (ConditionalButton) button;
 
@@ -1407,7 +1410,7 @@ public class FormMenuUtil {
             }
 
 
-            return conditionalButton.getEffectiveOnClick(matchedCondition);
+            return conditionalButton.getEffectiveOnClick(matchedCondition, conditionFailed);
         }
 
 

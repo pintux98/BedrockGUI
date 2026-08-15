@@ -19,7 +19,7 @@ public class ConditionEvaluator {
 
     private static PlatformPluginManager pluginManager;
 
-    private static final Logger logger = Logger.getLogger(ConditionEvaluator.class);
+    private static final Logger logger = Logger.getLogger(ConditionEvaluator.class.getSimpleName());
 
 
     public static void setPluginManager(PlatformPluginManager manager) {

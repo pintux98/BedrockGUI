@@ -34,8 +34,229 @@ public class ConditionalActionHandler extends BaseActionHandler {
             "-\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
     );
 
+    private static final String[] BRANCH_KEYS = {"check:", "true:", "false:"};
+
     public ConditionalActionHandler(ActionExecutor actionExecutor) {
         this.actionExecutor = actionExecutor;
+    }
+
+    private static final class Branches {
+        private String check;
+        private String trueBody = "";
+        private String falseBody = "";
+    }
+
+    /**
+     * Splits a conditional into its check / true / false parts.
+     *
+     * <p>Scanning is brace- and quote-aware, so a nested conditional keeps its own
+     * {@code true:} and {@code false:} keys instead of terminating the outer branch.
+     */
+    private Branches splitBranches(String actionData) {
+        Branches branches = new Branches();
+        String body = innerBody(actionData);
+
+        List<int[]> keys = topLevelKeyPositions(body);
+        for (int i = 0; i < keys.size(); i++) {
+            int[] key = keys.get(i);
+            int valueStart = key[0] + key[1];
+            int valueEnd = i + 1 < keys.size() ? keys.get(i + 1)[0] : body.length();
+            String value = body.substring(valueStart, valueEnd).trim();
+
+            switch (key[2]) {
+                case 0:
+                    branches.check = stripQuotes(value);
+                    break;
+                case 1:
+                    branches.trueBody = value;
+                    break;
+                case 2:
+                    branches.falseBody = value;
+                    break;
+                default:
+                    break;
+            }
+        }
+        return branches;
+    }
+
+    /** @return the text between a leading "conditional {" and its matching brace, or the input as given */
+    private static String innerBody(String actionData) {
+        String trimmed = actionData.trim();
+        int open = trimmed.indexOf('{');
+        if (open < 0 || !trimmed.substring(0, open).trim().equalsIgnoreCase("conditional")) {
+            return trimmed;
+        }
+        int close = matchingBrace(trimmed, open);
+        return close < 0 ? trimmed.substring(open + 1) : trimmed.substring(open + 1, close);
+    }
+
+    /** @return index of the brace closing the one at openIndex, or -1 */
+    private static int matchingBrace(String s, int openIndex) {
+        int depth = 0;
+        boolean inQuotes = false;
+        boolean escaped = false;
+        for (int i = openIndex; i < s.length(); i++) {
+            char c = s.charAt(i);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (inQuotes && c == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (inQuotes) {
+                continue;
+            }
+            if (c == '{') {
+                depth++;
+            } else if (c == '}') {
+                depth--;
+                if (depth == 0) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    /** @return {startIndex, keyLength, keyId} for each check:/true:/false: sitting at brace depth 0 */
+    private static List<int[]> topLevelKeyPositions(String body) {
+        List<int[]> found = new ArrayList<>();
+        int depth = 0;
+        boolean inQuotes = false;
+        boolean escaped = false;
+
+        for (int i = 0; i < body.length(); i++) {
+            char c = body.charAt(i);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (inQuotes && c == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (inQuotes) {
+                continue;
+            }
+            if (c == '{') {
+                depth++;
+                continue;
+            }
+            if (c == '}') {
+                if (depth > 0) depth--;
+                continue;
+            }
+            if (depth != 0) {
+                continue;
+            }
+            if (i > 0 && !Character.isWhitespace(body.charAt(i - 1)) && body.charAt(i - 1) != '-') {
+                continue;
+            }
+            for (int k = 0; k < BRANCH_KEYS.length; k++) {
+                if (body.regionMatches(true, i, BRANCH_KEYS[k], 0, BRANCH_KEYS[k].length())) {
+                    found.add(new int[]{i, BRANCH_KEYS[k].length(), k});
+                    i += BRANCH_KEYS[k].length() - 1;
+                    break;
+                }
+            }
+        }
+        return found;
+    }
+
+    /**
+     * Splits a branch body into its individual actions.
+     *
+     * <p>An entry starts at a "-" list marker at brace depth 0, so a nested block keeps its own
+     * markers. The optional YAML block indicator after the dash is dropped.
+     */
+    private static List<String> splitBranchEntries(String branchBody) {
+        List<String> entries = new ArrayList<>();
+        if (branchBody == null || branchBody.trim().isEmpty()) {
+            return entries;
+        }
+
+        int depth = 0;
+        boolean inQuotes = false;
+        boolean escaped = false;
+        List<Integer> starts = new ArrayList<>();
+
+        for (int i = 0; i < branchBody.length(); i++) {
+            char c = branchBody.charAt(i);
+            if (escaped) {
+                escaped = false;
+                continue;
+            }
+            if (inQuotes && c == '\\') {
+                escaped = true;
+                continue;
+            }
+            if (c == '"') {
+                inQuotes = !inQuotes;
+                continue;
+            }
+            if (inQuotes) {
+                continue;
+            }
+            if (c == '{') {
+                depth++;
+                continue;
+            }
+            if (c == '}') {
+                if (depth > 0) depth--;
+                continue;
+            }
+            if (depth == 0 && c == '-'
+                    && (i == 0 || Character.isWhitespace(branchBody.charAt(i - 1)))
+                    && i + 1 < branchBody.length()
+                    && (Character.isWhitespace(branchBody.charAt(i + 1)) || branchBody.charAt(i + 1) == '|')) {
+                starts.add(i);
+            }
+        }
+
+        if (starts.isEmpty()) {
+            String single = cleanEntry(branchBody);
+            if (!single.isEmpty()) {
+                entries.add(single);
+            }
+            return entries;
+        }
+
+        for (int i = 0; i < starts.size(); i++) {
+            int from = starts.get(i) + 1;
+            int to = i + 1 < starts.size() ? starts.get(i + 1) : branchBody.length();
+            String entry = cleanEntry(branchBody.substring(from, to));
+            if (!entry.isEmpty()) {
+                entries.add(entry);
+            }
+        }
+        return entries;
+    }
+
+    private static String cleanEntry(String raw) {
+        String entry = raw.trim();
+        if (entry.startsWith("|")) {
+            entry = entry.substring(1).trim();
+        }
+        return stripQuotes(entry);
+    }
+
+    private static String stripQuotes(String value) {
+        String trimmed = value.trim();
+        if (trimmed.length() >= 2 && trimmed.startsWith("\"") && trimmed.endsWith("\"")) {
+            return trimmed.substring(1, trimmed.length() - 1).replace("\\\"", "\"");
+        }
+        return trimmed;
     }
 
     @Override
@@ -64,20 +285,20 @@ public class ConditionalActionHandler extends BaseActionHandler {
     private ActionSystem.ActionResult executeNewFormat(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         try {
 
-            Matcher checkMatcher = CHECK_PATTERN.matcher(actionData);
-            if (!checkMatcher.find()) {
+            Branches branches = splitBranches(actionData);
+            if (branches.check == null || branches.check.trim().isEmpty()) {
                 return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No check condition found in conditional"), player);
             }
 
-            String checkCondition = checkMatcher.group(1) != null ? checkMatcher.group(1) : checkMatcher.group(2);
+            String checkCondition = branches.check;
             boolean conditionMet = evaluateExpression(player, checkCondition.trim(), context);
 
             List<String> actionsToExecute;
             if (conditionMet) {
-                actionsToExecute = parseActionList(actionData, TRUE_ACTIONS_PATTERN);
+                actionsToExecute = splitBranchEntries(branches.trueBody);
                 //logger.info("Condition met for player " + player.getName() + ", executing " + actionsToExecute.size() + " success actions");
             } else {
-                actionsToExecute = parseActionList(actionData, FALSE_ACTIONS_PATTERN);
+                actionsToExecute = splitBranchEntries(branches.falseBody);
                 if (actionsToExecute.isEmpty()) {
                     //logger.info("Condition not met for player " + player.getName() + ": " + checkCondition + " (no failure actions specified)");
                     return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Condition not met, action skipped"), player);
@@ -388,11 +609,12 @@ public class ConditionalActionHandler extends BaseActionHandler {
         }
         String trimmed = actionValue.trim();
         if (isNewCurlyBraceFormat(trimmed, "conditional")) {
-            Matcher m = CHECK_PATTERN.matcher(trimmed);
-            if (!m.find()) return false;
-            boolean hasTrue = TRUE_ACTIONS_PATTERN.matcher(trimmed).find();
-            boolean hasFalse = FALSE_ACTIONS_PATTERN.matcher(trimmed).find();
-            return hasTrue || hasFalse;
+            Branches branches = splitBranches(trimmed);
+            if (branches.check == null || branches.check.trim().isEmpty()) {
+                return false;
+            }
+            return !splitBranchEntries(branches.trueBody).isEmpty()
+                    || !splitBranchEntries(branches.falseBody).isEmpty();
         }
         return false;
     }

@@ -69,14 +69,6 @@ public class InventoryActionHandler extends BaseActionHandler {
                 if (result.isFailure()) {
                     return result;
                 }
-
-                // Small delay between operations
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
             }
 
             logSuccess("inventory", "Executed " + operations.size() + " inventory operations (new format)", player);
@@ -128,14 +120,6 @@ public class InventoryActionHandler extends BaseActionHandler {
             ActionSystem.ActionResult result = executeSingleInventoryOperation(player, operation.trim(), context);
             if (result.isFailure()) {
                 return result;
-            }
-
-
-            try {
-                Thread.sleep(100);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
             }
         }
 

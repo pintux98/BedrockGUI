@@ -50,6 +50,11 @@ public class BedrockGUI {
             dataDirectory.toFile().mkdirs();
         }
 
+        if (!new File(dataDirectory.toFile(), "config.yml").exists()) {
+            int extracted = it.pintux.life.common.utils.DefaultFormsExtractor.extract(dataDirectory.toFile(), logger::warn);
+            logger.info("First run: extracted {} default form file(s) to forms/", extracted);
+        }
+
         reloadData();
 
         metricsFactory.make(this, 23364);

@@ -1,0 +1,125 @@
+bedrock:
+  type: "SIMPLE"
+  title: "§a§lBasic Actions"
+  content: |
+    §7One button per action handler.
+    §7Every action uses the same shape:
+
+    §f<type> { - "value" - "value" }
+
+    §7List one value or many. Many run in order.
+  buttons:
+    message:
+      text: "§amessage\n§8chat lines to you"
+      image: "PAPER"
+      onClick:
+        - |
+          message {
+            - "§a§lmessage"
+            - "§7Each entry is one chat line, sent only to you."
+            - "§7Placeholders work: you are §f{player}§7 in §f%player_world%§7."
+            - "§bLegacy colours: §c&c §a&a §9&9"
+            - "&#FF8800Hex colours: &#FF8800&#FF8800"
+            - "<gold>MiniMessage tags: <bold>bold</bold> <italic>italic</italic>"
+          }
+    command:
+      text: "§ecommand\n§8run as you"
+      image: "COMMAND_BLOCK"
+      onClick:
+        - |
+          command {
+            - "me ran a command through BedrockGUI"
+          }
+        - |
+          message {
+            - "§eThat ran as §fyou§e, with your permissions."
+          }
+    server:
+      text: "§ccommand as console\n§8server"
+      image: "REPEATING_COMMAND_BLOCK"
+      onClick:
+        - |
+          server {
+            - "say §a{player} pressed the console-command button"
+          }
+        - |
+          message {
+            - "§cThat ran from §fconsole§c, so it ignores your permissions."
+            - "§7Use it for rank grants, economy hooks and anything you"
+            - "§7do not want to give players the node for."
+          }
+    broadcast:
+      text: "§5broadcast\n§8everyone sees it"
+      image: "BELL"
+      onClick:
+        - |
+          broadcast {
+            - "§5{player} §7pressed the broadcast button"
+          }
+    sound:
+      text: "§dsound\n§8name:volume:pitch"
+      image: "NOTE_BLOCK"
+      onClick:
+        - |
+          sound {
+            - "ui.button.click"
+            - "entity.experience_orb.pickup:0.8:1.2"
+            - "block.note_block.harp:1.0:0.5"
+          }
+        - |
+          message {
+            - "§dVolume and pitch are optional: §fname§d, §fname:volume§d,"
+            - "§for name:volume:pitch§d."
+          }
+    title:
+      text: "§6title\n§8title:sub:in:stay:out"
+      image: "OAK_SIGN"
+      onClick:
+        - |
+          title {
+            - "§6§lTitle§7:§eand a subtitle:10:60:10"
+          }
+        - |
+          message {
+            - "§6Every part after the title is optional:"
+            - "§fTitle§7, §fTitle:Subtitle§7, or"
+            - "§fTitle:Subtitle:fadeIn:stay:fadeOut §7in ticks."
+          }
+    actionbar:
+      text: "§3actionbar\n§8above the hotbar"
+      image: "SPECTRAL_ARROW"
+      onClick:
+        - |
+          actionbar {
+            - "§3Balance: §a$%vault_eco_balance% §8| §3Level: §6%player_level%"
+          }
+    inventory:
+      text: "§binventory\n§8give, remove, clear"
+      image: "CHEST"
+      onClick:
+        - |
+          inventory {
+            - "give:bread:3"
+          }
+        - |
+          message {
+            - "§bAlso §fremove:stone:32§b, §fclear:all§b and §fcheck:diamond§b."
+          }
+    open:
+      text: "§7open\n§8jump to another form"
+      image: "ENDER_PEARL"
+      onClick:
+        - |
+          message {
+            - "§7A single open takes you to one form."
+            - "§7Listing several opens them in order, so the last one wins"
+            - "§7and the rest act as a history trail."
+          }
+    back:
+      text: "§7← Back"
+      image: "ARROW"
+      onClick:
+        - |
+          open {
+            - "main_menu"
+          }

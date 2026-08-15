@@ -370,6 +370,10 @@ public final class IconResolver {
         String icon = resolveIcon(trimmed);
         if (icon != null) return icon;
 
+        // A material that deliberately has no artwork means "no icon". Without this it would
+        // fall through to the bare-word head lookup and render a player head called "BARRIER".
+        if (AIR_MATERIALS.contains(trimmed.toUpperCase())) return null;
+
         if (isLocalImageFile(trimmed)) return trimmed;
 
         if (trimmed.matches("^[A-Za-z0-9_.\\-]+$"))
