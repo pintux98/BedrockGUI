@@ -114,7 +114,7 @@ bedrock:
       image: "IRON_INGOT"
       conditions:
         rich:
-          condition: "placeholder:%vault_eco_balance% >= 1000"
+          condition: "placeholder:%vault_eco_balance%:>=:1000"
           property: "image"
           value: "DIAMOND"
       onClick:
