@@ -100,6 +100,16 @@ public final class ValidationUtils {
             return true;
         }
 
+        // Pack-relative paths under any other root, e.g. a custom resource pack folder
+        if (trimmed.matches("^[A-Za-z0-9_.\\-]+(/[A-Za-z0-9_.\\-]+)+$")) {
+            return true;
+        }
+
+        // Prefixed forms: head:<owner>, POTION:<effect>, TIPPED_ARROW:<effect>
+        if (trimmed.matches("^[A-Za-z_]+:[A-Za-z0-9_.\\-]+$")) {
+            return true;
+        }
+
         // Mojang texture URLs
         if (trimmed.startsWith("http://textures.minecraft.net/texture/") ||
             trimmed.startsWith("https://textures.minecraft.net/texture/")) {

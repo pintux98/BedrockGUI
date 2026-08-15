@@ -14,6 +14,9 @@ import java.util.Set;
  * 3. Explicit irregular map (only Java→Bedrock ID differences)
  * 4. Suffix patterns: spawn eggs, music discs
  * 5. Fallback: lowercase the Java material name
+ *
+ * Values that are already a texture path go through {@link #remapTexturePath(String)} instead,
+ * which only touches flat vanilla item/block paths.
  */
 public final class IconResolver {
 
@@ -197,6 +200,26 @@ public final class IconResolver {
         String n = materialName.toUpperCase().trim();
         if (AIR_MATERIALS.contains(n)) return null;
 
+        String known = resolveKnown(n);
+        if (known != null) return known;
+
+        // 4. Fallback: simple toLowerCase
+        return "textures/" + category(n) + "/" + n.toLowerCase();
+    }
+
+    /**
+     * Resolve a material name using only the explicit knowledge in this class - the generated atlas
+     * table, the irregular map and the suffix patterns. Unlike {@link #resolve(String)} this returns
+     * null instead of guessing, so callers can tell "Bedrock renamed this" apart from "no idea".
+     *
+     * @param materialName Bukkit Material name
+     * @return a Bedrock texture path, or null when only the lowercase fallback would apply
+     */
+    public static String resolveKnown(String materialName) {
+        if (materialName == null || materialName.isBlank()) return null;
+        String n = materialName.toUpperCase().trim();
+        if (AIR_MATERIALS.contains(n)) return null;
+
         // 1. Generated atlas table — only holds materials whose plain guess is not a real texture,
         //    so this can replace a broken icon but never one that already renders.
         String atlas = BedrockTextureMap.get(n);
@@ -211,9 +234,42 @@ public final class IconResolver {
         if ((pattern = trySpawnEgg(n)) != null) return "textures/items/" + pattern;
         if ((pattern = tryMusicDisc(n)) != null) return "textures/items/" + pattern;
 
-        // 4. Fallback: simple toLowerCase
-        return "textures/" + category(n) + "/" + n.toLowerCase();
+        return null;
     }
+
+    /** Vanilla item/block folders in both the Bedrock (plural) and Java (singular) conventions. */
+    private static final Set<String> VANILLA_ITEM_FOLDERS = Set.of("items", "item", "blocks", "block");
+
+    /**
+     * Normalise an explicit {@code textures/...} path written in a menu config.
+     *
+     * <p>The path is taken as written - {@code textures/ui/...}, {@code textures/entity/...} and any
+     * custom resource-pack folder are returned untouched, because only the pack author knows what
+     * lives there. The single exception is a flat vanilla item or block path whose file name is a
+     * Java material that Bedrock renamed ({@code textures/items/cooked_chicken}), which is rewritten
+     * to the real atlas entry. Anything the atlas has no opinion about stays as typed, so a custom
+     * texture dropped into {@code textures/items/} still renders.
+     *
+     * @param path an image value already known to start with {@code textures/}
+     * @return the path to hand to the client
+     */
+    public static String remapTexturePath(String path) {
+        if (path == null) return null;
+        String trimmed = path.trim();
+        if (!trimmed.startsWith(TEXTURES_PREFIX)) return trimmed;
+
+        int slash = trimmed.indexOf('/', TEXTURES_PREFIX.length());
+        if (slash < 0) return trimmed;
+        if (!VANILLA_ITEM_FOLDERS.contains(trimmed.substring(TEXTURES_PREFIX.length(), slash))) return trimmed;
+
+        String name = trimmed.substring(slash + 1);
+        if (name.isEmpty() || name.indexOf('/') >= 0) return trimmed;
+
+        String known = resolveKnown(name);
+        return known != null ? known : trimmed;
+    }
+
+    private static final String TEXTURES_PREFIX = "textures/";
 
     // ─── Potions and tipped arrows ───────────────────────────────────
 
@@ -308,8 +364,42 @@ public final class IconResolver {
         if (image == null || image.isBlank()) return null;
         String trimmed = image.trim();
 
-        if (trimmed.startsWith("textures/") || trimmed.startsWith("http://") || trimmed.startsWith("https://"))
-            return trimmed;
+        if (trimmed.startsWith(TEXTURES_PREFIX)) return remapTexturePath(trimmed);
+        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) return trimmed;
+
+        String icon = resolveIcon(trimmed);
+        if (icon != null) return icon;
+
+        if (isLocalImageFile(trimmed)) return trimmed;
+
+        if (trimmed.matches("^[A-Za-z0-9_.\\-]+$"))
+            return "https://mc-heads.net/head/" + trimmed + "/64";
+
+        return trimmed;
+    }
+
+    /** A Bukkit material name, optionally suffixed with a potion type - never a path or a file name. */
+    private static final java.util.regex.Pattern MATERIAL_NAME = java.util.regex.Pattern.compile("[A-Za-z0-9_]+");
+
+    private static final java.util.regex.Pattern LOCAL_IMAGE_FILE =
+            java.util.regex.Pattern.compile("[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)", java.util.regex.Pattern.CASE_INSENSITIVE);
+
+    /**
+     * Resolve a value that is meant to name an item rather than point at a file.
+     *
+     * <p>Only bare material names ({@code DIAMOND_SWORD}) and potion containers written as
+     * {@code POTION:HEALING} are answered. Anything holding a path separator, a file extension or a
+     * namespace is rejected with null, so the caller can pass it through untouched instead of having
+     * {@link #resolve(String)} - a total function - turn it into a bogus {@code textures/items/...}.
+     *
+     * @return a Bedrock texture path, or null when the value does not name a material
+     */
+    public static String resolveIcon(String value) {
+        if (value == null || value.isBlank()) return null;
+        String trimmed = value.trim();
+
+        String head = resolveHead(trimmed);
+        if (head != null) return head;
 
         int separator = trimmed.indexOf(':');
         if (separator > 0) {
@@ -317,13 +407,38 @@ public final class IconResolver {
             if (potion != null) return potion;
         }
 
-        String resolved = resolve(trimmed);
-        if (resolved != null) return resolved;
+        if (!MATERIAL_NAME.matcher(trimmed).matches()) return null;
+        return resolve(trimmed);
+    }
 
-        if (trimmed.matches("^[A-Za-z0-9_.\\-]+$"))
-            return "https://mc-heads.net/head/" + trimmed + "/64";
+    /** @return true when the value names a local image file rather than a material or a head owner */
+    public static boolean isLocalImageFile(String value) {
+        return value != null && LOCAL_IMAGE_FILE.matcher(value.trim()).matches();
+    }
 
-        return trimmed;
+    private static final String HEAD_PREFIX = "head:";
+
+    /** Player name, MHF name, UUID or skin hash - the part mc-heads.net renders a head for. */
+    private static final java.util.regex.Pattern HEAD_OWNER = java.util.regex.Pattern.compile("[A-Za-z0-9_.\\-]+");
+
+    /**
+     * Resolve an explicit {@code head:<owner>} value to a rendered player head.
+     *
+     * <p>A bare word cannot be used for this: {@code DIAMOND_SWORD} and {@code Steve} have the same
+     * shape, and material lookup wins so existing configs keep their icons. The prefix is how a
+     * config asks for a head instead - {@code head:%player%} once the placeholder is replaced.
+     *
+     * @param value an image value, may be any syntax
+     * @return an mc-heads.net URL, or null when the value is not a {@code head:} reference
+     */
+    public static String resolveHead(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        if (!trimmed.regionMatches(true, 0, HEAD_PREFIX, 0, HEAD_PREFIX.length())) return null;
+
+        String owner = trimmed.substring(HEAD_PREFIX.length()).trim();
+        if (!HEAD_OWNER.matcher(owner).matches()) return null;
+        return "https://mc-heads.net/head/" + owner + "/64";
     }
 
     private static final Set<String> BLOCK_SUFFIXES = Set.of(

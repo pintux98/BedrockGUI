@@ -1455,23 +1455,21 @@ public class FormMenuUtil {
             return trimmed;
         }
 
-        String candidate = trimmed;
-        if (candidate.startsWith("textures/")) {
-            String bare = candidate.substring("textures/".length());
-            int slash = bare.indexOf('/');
-            if (slash > 0) bare = bare.substring(slash + 1);
-            String resolved = it.pintux.life.common.utils.IconResolver.resolve(bare);
-            if (resolved != null) return resolved;
-        } else {
-            String resolved = it.pintux.life.common.utils.IconResolver.resolve(candidate);
-            if (resolved != null) return resolved;
+        // An explicit texture path is the admin telling us exactly what to draw: UI, entity and
+        // custom resource-pack folders are handed to the client as typed. Only a flat vanilla
+        // item/block path gets remapped, and only when Bedrock renamed that texture.
+        if (trimmed.startsWith("textures/")) {
+            return it.pintux.life.common.utils.IconResolver.remapTexturePath(trimmed);
         }
 
-        if (trimmed.startsWith("textures/")) return trimmed;
+        // Only a bare material name or a POTION:EFFECT pair becomes an icon. A value carrying a path
+        // separator, a file extension or a namespace is left for the branches below - it is a file
+        // or a pack-relative path with some root other than textures/, not a material.
+        String resolved = it.pintux.life.common.utils.IconResolver.resolveIcon(trimmed);
+        if (resolved != null) return resolved;
 
-        boolean isLocal = trimmed.matches("^[A-Za-z0-9_./\\-]+\\.(png|jpg|jpeg|gif)$");
-        if (isLocal && assetServer != null && assetServer.isAvailable()) {
-            return assetServer.getAssetUrl(trimmed);
+        if (it.pintux.life.common.utils.IconResolver.isLocalImageFile(trimmed)) {
+            return assetServer != null && assetServer.isAvailable() ? assetServer.getAssetUrl(trimmed) : trimmed;
         }
 
         if (trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
