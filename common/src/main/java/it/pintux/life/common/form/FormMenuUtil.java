@@ -677,7 +677,7 @@ public class FormMenuUtil {
 
 
                 if (effectiveImage != null) {
-                    FormImage.Type type = effectiveImage.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    FormImage.Type type = it.pintux.life.common.utils.IconResolver.isUrl(effectiveImage) ? FormImage.Type.URL : FormImage.Type.PATH;
                     formBuilder.button(effectiveText, type, effectiveImage);
                 } else {
                     formBuilder.button(effectiveText);
@@ -693,7 +693,7 @@ public class FormMenuUtil {
                     String srcRaw = button.getImage();
                     String srcProcessed = replacePlaceholders(srcRaw, placeholders, player, messageData);
                     String src = mapImageSource(srcProcessed);
-                    FormImage.Type type = src.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    FormImage.Type type = it.pintux.life.common.utils.IconResolver.isUrl(src) ? FormImage.Type.URL : FormImage.Type.PATH;
                     formBuilder.button(buttonText, type, src);
                 } else {
                     formBuilder.button(buttonText);

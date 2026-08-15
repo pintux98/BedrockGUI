@@ -499,7 +499,7 @@ public class BedrockGUIApi {
 
                 String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
                 if (resolved != null) {
-                    FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    FormImage.Type type = IconResolver.isUrl(resolved) ? FormImage.Type.URL : FormImage.Type.PATH;
                     builder.button(buttonData.text, type, resolved);
                 } else {
                     builder.button(buttonData.text);
@@ -545,7 +545,7 @@ public class BedrockGUIApi {
                 FormButtonData buttonData = buttonBuilder.build();
                 String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
                 if (resolved != null) {
-                    FormImage.Type type = resolved.startsWith("textures/") ? FormImage.Type.PATH : FormImage.Type.URL;
+                    FormImage.Type type = IconResolver.isUrl(resolved) ? FormImage.Type.URL : FormImage.Type.PATH;
                     builder.button(buttonData.text, type, resolved);
                 } else {
                     builder.button(buttonData.text);

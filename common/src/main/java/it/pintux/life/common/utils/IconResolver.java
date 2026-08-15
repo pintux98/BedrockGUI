@@ -411,6 +411,20 @@ public final class IconResolver {
         return resolve(trimmed);
     }
 
+    /**
+     * Decide how a resolved image value must be sent to the client.
+     *
+     * <p>Everything this class produces is either an http(s) URL or a path inside the player's
+     * resource pack, and the pack root is not always {@code textures/} - a pack is free to keep its
+     * artwork under any folder.
+     *
+     * @param resolved an image value that has already been through {@link #resolveImage(String)}
+     * @return true when the value is a URL, false when it is a resource-pack path
+     */
+    public static boolean isUrl(String resolved) {
+        return resolved != null && (resolved.startsWith("http://") || resolved.startsWith("https://"));
+    }
+
     /** @return true when the value names a local image file rather than a material or a head owner */
     public static boolean isLocalImageFile(String value) {
         return value != null && LOCAL_IMAGE_FILE.matcher(value.trim()).matches();
