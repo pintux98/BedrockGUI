@@ -11,7 +11,8 @@ import java.util.Set;
  *
  * <p>The ids are the registry keys, not the menu file names: {@code menus/party/party.yml} is
  * registered as {@code party} and {@code menus/custom/duel_player.yml} as {@code duel_player}.
- * They are read back at runtime from {@code ContainerLayout.getId()}.</p>
+ * They are recovered at runtime by {@link PhoenixMenuResolver}, never from
+ * {@code ContainerLayout.getId()}, which is an incrementing counter rather than the key.</p>
  *
  * <p>{@link #GROUPS} is the single source of truth for what this addon replaces.
  * {@link MenuInterceptListener} builds its handler table by walking it, so an id cannot be
@@ -59,7 +60,8 @@ public final class DuelsMenus {
             "ongoing_matches",
             "spectator_players",
             "kit_preview",
-            "lost_items");
+            "lost_items",
+            "confirmation_menu");
 
     /**
      * Menus this addon serves as Bedrock forms.
@@ -83,8 +85,7 @@ public final class DuelsMenus {
     public static final Set<String> CONTEXT_DEPENDENT = Set.of(
             "select_mode",
             "select_map",
-            "select_option_menu",
-            "confirmation_menu");
+            "select_option_menu");
 
     /**
      * Every id registered by PhoenixDuels 4.1.0, transcribed from {@code MenuRegistry} bytecode.
@@ -200,6 +201,7 @@ public final class DuelsMenus {
         groups.put("ongoing_matches", "spectator");
         groups.put("spectator_players", "spectator");
         groups.put("kit_preview", "kit");
+        groups.put("confirmation_menu", "confirmation");
         return Map.copyOf(groups);
     }
 }

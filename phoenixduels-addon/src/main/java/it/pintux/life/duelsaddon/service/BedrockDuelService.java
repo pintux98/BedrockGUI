@@ -229,7 +229,10 @@ public final class BedrockDuelService extends BedrockServiceSupport {
                     Map.of("player", draft.targetName)));
             Player target = Bukkit.getPlayerExact(draft.targetName);
             if (invitationService != null && target != null) {
-                invitationService.sendDuelChallenge(target, player.getUniqueId());
+                String modeName = gateway.mode(draft.modeId).map(ModeView::displayName).orElse(draft.modeId);
+                invitationService.sendDuelChallenge(target, player.getUniqueId(),
+                        new it.pintux.life.duelsaddon.model.InviteView(player.getName(), modeName,
+                                draft.rounds, gateway.invitationExpirationSeconds()));
             }
         } else {
             fail(player, "messages.challenge-failed");

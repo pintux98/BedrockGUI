@@ -11,6 +11,7 @@ import it.pintux.life.duelsaddon.listener.InvitationListener;
 import it.pintux.life.duelsaddon.listener.MenuInterceptListener;
 import it.pintux.life.duelsaddon.model.StatsKind;
 import it.pintux.life.duelsaddon.model.TeamSize;
+import it.pintux.life.duelsaddon.service.BedrockConfirmationService;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockInvitationService;
 import it.pintux.life.duelsaddon.service.BedrockKitService;
@@ -46,6 +47,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
     private BedrockStatsService statsService;
     private BedrockSpectatorService spectatorService;
     private BedrockKitService kitService;
+    private BedrockConfirmationService confirmationService;
     private BedrockInvitationService invitationService;
     private MenuInterceptListener menuInterceptListener;
     private final java.util.List<String> registeredActions = new java.util.ArrayList<>();
@@ -95,6 +97,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         statsService = null;
         spectatorService = null;
         kitService = null;
+        confirmationService = null;
         invitationService = null;
         menuInterceptListener = null;
     }
@@ -107,12 +110,14 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         settingsService = new BedrockSettingsService(configuration, gateway, detector);
         spectatorService = new BedrockSpectatorService(configuration, gateway, detector);
         kitService = new BedrockKitService(configuration, gateway, detector);
+        confirmationService = new BedrockConfirmationService(this, configuration, gateway, detector);
         invitationService = new BedrockInvitationService(configuration, gateway, detector);
         duelService.setInvitationService(invitationService);
 
         menuInterceptListener = new MenuInterceptListener(this, configuration, detector, gateway,
                 new MenuInterceptListener.Services(queueService, duelService, partyService,
-                        settingsService, statsService, spectatorService, kitService));
+                        settingsService, statsService, spectatorService, kitService,
+                        confirmationService));
 
         boolean integratedGui = configuration.integratedGuiEnabled();
 

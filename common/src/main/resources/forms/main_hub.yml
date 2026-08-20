@@ -1,0 +1,91 @@
+bedrock:
+  type: "SIMPLE"
+  title: "§a§l⚡ BedrockGUI Action Test Hub"
+  content: "§7Test all action handlers with the new curly brace format"
+  buttons:
+    message_test:
+      text: "§b§l💬 Message Actions"
+      onClick:
+        - |
+          message {
+            - "§a§l=== MESSAGE ACTION TEST ==="
+            - "§eHello {player}! Welcome to the message test."
+            - "§bYour current balance: §a${vault_eco_balance}"
+            - "§dYour level: §6{player_level}"
+            - "§cThis demonstrates multiple sequential messages!"
+          }
+    command_test:
+      text: "§e§l⚡ Command Actions"
+      onClick:
+        - |
+          command {
+            - "me is testing the new command format"
+            - "time query daytime"
+            - "weather query"
+            - "list"
+          }
+    sound_test:
+      text: "§d§l🔊 Sound Actions"
+      onClick:
+        - |
+          sound {
+            - "ui.button.click:1.0:1.0"
+            - "entity.experience_orb.pickup:0.8:1.2"
+            - "block.note_block.harp:1.0:0.5"
+            - "entity.firework_rocket.launch:0.7:1.5"
+          }
+    economy_test:
+      text: "§2§l💰 Economy Actions"
+      onClick:
+        - |
+          economy {
+            - "check:100"
+            - "add:500"
+            - "check:600"
+            - "remove:100"
+          }
+    title_test:
+      text: "§6§l📺 Title Actions"
+      onClick:
+        - |
+          title {
+            - "§a§lTitle Test 1:§eSubtitle 1:10:30:10"
+            - "§b§lTitle Test 2:§dSubtitle 2:5:20:5"
+            - "§c§lFinal Title:§6All Done!:10:40:20"
+          }
+    server_test:
+      text: "§c§l⚙️ Server Actions"
+      onClick:
+        - |
+          server {
+            - "time set day"
+            - "weather clear"
+            - "say §a{player} is testing server commands!"
+            - "broadcast §eServer command test completed!"
+          }
+    actionbar_test:
+      text: "§3§l📊 Action Bar Test"
+      onClick:
+        - |
+          actionbar {
+            - "§a§lAction Bar Test 1"
+            - "§b§lAction Bar Test 2"
+            - "§c§lAction Bar Test 3"
+            - "§d§lAction Bar Complete!"
+          }
+    broadcast_test:
+      text: "§5§l📢 Broadcast Test"
+      onClick:
+        - |
+          broadcast {
+            - "§a{player} is testing broadcasts!"
+            - "§eThis is broadcast message 2"
+            - "§cBroadcast test sequence complete!"
+          }
+    advanced_tests:
+      text: "§4§l🚀 Advanced Tests"
+      onClick:
+        - |
+          open {
+            - "advanced_test_menu"
+          }

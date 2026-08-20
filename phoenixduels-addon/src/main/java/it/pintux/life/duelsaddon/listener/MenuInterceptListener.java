@@ -6,6 +6,7 @@ import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.StatsKind;
+import it.pintux.life.duelsaddon.service.BedrockConfirmationService;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockKitService;
 import it.pintux.life.duelsaddon.service.BedrockPartyService;
@@ -63,7 +64,8 @@ public final class MenuInterceptListener implements Listener {
                            BedrockSettingsService settings,
                            BedrockStatsService stats,
                            BedrockSpectatorService spectator,
-                           BedrockKitService kit) {
+                           BedrockKitService kit,
+                           BedrockConfirmationService confirmation) {
     }
 
     private final Plugin plugin;
@@ -147,6 +149,11 @@ public final class MenuInterceptListener implements Listener {
             case "ongoing_matches", "spectator_players" ->
                     (player, view) -> services.spectator().openMatches(player, 1);
             case "kit_preview" -> (player, view) -> services.kit().openKitList(player);
+            case "confirmation_menu" -> (player, view) -> {
+                if (!services.confirmation().open(player, view)) {
+                    view.getViewer().openInventory(view.getInventory());
+                }
+            };
             default -> null;
         };
     }

@@ -35,9 +35,9 @@ class DuelsMenusTest {
     @Test
     void countsMatchPhoenixDuels410() {
         assertEquals(32, DuelsMenus.ALL.size());
-        assertEquals(24, DuelsMenus.HANDLED.size());
+        assertEquals(25, DuelsMenus.HANDLED.size());
         assertEquals(4, DuelsMenus.JAVA_ONLY.size());
-        assertEquals(4, DuelsMenus.CONTEXT_DEPENDENT.size());
+        assertEquals(3, DuelsMenus.CONTEXT_DEPENDENT.size());
     }
 
     /**
@@ -47,7 +47,7 @@ class DuelsMenusTest {
     @Test
     void everyHandledMenuResolvesToAHandler() {
         MenuInterceptListener.Services none =
-                new MenuInterceptListener.Services(null, null, null, null, null, null, null);
+                new MenuInterceptListener.Services(null, null, null, null, null, null, null, null);
         for (String id : DuelsMenus.HANDLED) {
             assertNotNull(MenuInterceptListener.handlerFor(id, none), "no handler for declared id: " + id);
         }
@@ -56,7 +56,7 @@ class DuelsMenusTest {
     @Test
     void unhandledMenusResolveToNothing() {
         MenuInterceptListener.Services none =
-                new MenuInterceptListener.Services(null, null, null, null, null, null, null);
+                new MenuInterceptListener.Services(null, null, null, null, null, null, null, null);
         for (String id : DuelsMenus.JAVA_ONLY) {
             assertNull(MenuInterceptListener.handlerFor(id, none), id + " must fall through to Java");
         }
@@ -68,7 +68,8 @@ class DuelsMenusTest {
 
     @Test
     void everyHandledMenuHasAConfigGroup() {
-        Set<String> groups = Set.of("queue", "duel", "party", "settings", "stats", "spectator", "kit");
+        Set<String> groups = Set.of("queue", "duel", "party", "settings", "stats", "spectator", "kit",
+                "confirmation");
         for (String id : DuelsMenus.HANDLED) {
             assertTrue(groups.contains(DuelsMenus.GROUPS.get(id)),
                     id + " maps to unknown config group " + DuelsMenus.GROUPS.get(id));

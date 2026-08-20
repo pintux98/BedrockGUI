@@ -38,6 +38,8 @@ debug: false
 #   spectator - the ongoing matches and spectate-player lists
 #   kit       - the kit preview (editing a kit layout always stays on Java,
 #               because a Bedrock form cannot do item drag-and-drop)
+#   confirmation - the "are you sure?" prompt PhoenixDuels reuses for destructive
+#               actions, disbanding a party being the one players actually hit
 menus:
   queue: true
   duel: true
@@ -46,6 +48,7 @@ menus:
   stats: true
   spectator: true
   kit: true
+  confirmation: true
 
 general:
   # Buttons per page for long lists (modes, party members, matches, ...).
@@ -113,6 +116,16 @@ messages:
   challenge-failed: "&cCouldn't send that challenge."
   spectate-failed: "&cCouldn't spectate that match."
   no-matches: "&eThere are no matches running."
+
+# ---- Confirmation prompt -----------------------------------------------------
+# Shown in place of PhoenixDuels' own "are you sure?" chest menu. The title and
+# body come from PhoenixDuels itself, so the two values here are only fallbacks
+# for a prompt that carries no text of its own. Confirming runs exactly what
+# clicking the chest item would have run.
+confirmation:
+  title: "&cAre you sure?"
+  content: "&7This cannot be undone."
+  accept: "&aConfirm"
 
 # ---- Buttons reused by every form -------------------------------------------
 common:

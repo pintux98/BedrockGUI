@@ -23,7 +23,9 @@ import com.phoenixplugins.phoenixduels.managers.party.PartyImpl;
 import com.phoenixplugins.phoenixduels.managers.players.PlayerData;
 import com.phoenixplugins.phoenixduels.managers.stats.PlayerStats;
 import com.phoenixplugins.phoenixduels.registry.loadout.buitin.PremadeKitLoadout;
+import com.phoenixplugins.phoenixduels.registry.menus.ConfirmationMenu;
 import com.phoenixplugins.phoenixduels.registry.menus.generic.duel.DuelPlayerLayoutMenu;
+import it.pintux.life.duelsaddon.model.ConfirmationRequest;
 import it.pintux.life.duelsaddon.model.DuelDraftView;
 import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.KitView;
@@ -526,6 +528,52 @@ public final class DuelsGatewayImpl implements DuelsGateway {
     }
 
     @Override
+    public Optional<ConfirmationRequest> confirmation(Object containerView) {
+        try {
+            if (!(containerView instanceof ContainerView view)) {
+                return Optional.empty();
+            }
+            if (!(view.getContainer() instanceof ConfirmationMenu menu)) {
+                return Optional.empty();
+            }
+            Runnable accept = (Runnable) readField(menu, "onAccept");
+            if (accept == null) {
+                return Optional.empty();
+            }
+            Object decline = readField(menu, "onDecline");
+            String title = String.valueOf(readField(menu, "title"));
+            Object lines = readField(menu, "description");
+            List<String> description = new ArrayList<>();
+            if (lines instanceof List<?> list) {
+                for (Object line : list) {
+                    description.add(it.pintux.life.duelsaddon.util.Formatting.colorize(String.valueOf(line)));
+                }
+            }
+            return Optional.of(new ConfirmationRequest(
+                    it.pintux.life.duelsaddon.util.Formatting.colorize(title),
+                    List.copyOf(description),
+                    accept,
+                    decline instanceof Runnable runnable ? runnable : null));
+        } catch (Throwable t) {
+            warn("confirmation", t);
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Reads a private field off a PhoenixDuels menu.
+     *
+     * <p>{@code ConfirmationMenu} keeps its prompt text and its two outcome runnables private with
+     * no accessors, and they are the whole point of the prompt: without them this addon would have
+     * to guess what a confirmation was for and reimplement the action.</p>
+     */
+    private static Object readField(Object target, String name) throws ReflectiveOperationException {
+        java.lang.reflect.Field field = target.getClass().getDeclaredField(name);
+        field.setAccessible(true);
+        return field.get(target);
+    }
+
+    @Override
     public boolean hasPendingChallenge(UUID inviterId, UUID invitedId) {
         try {
             return InvitationFacade.getFactory().isInvited(inviterId, invitedId);
@@ -880,7 +928,7 @@ public final class DuelsGatewayImpl implements DuelsGateway {
 
     private static String itemName(ItemStack stack) {
         if (stack.hasItemMeta() && stack.getItemMeta() != null && stack.getItemMeta().hasDisplayName()) {
-            return stack.getItemMeta().getDisplayName();
+            return it.pintux.life.duelsaddon.util.Formatting.colorize(stack.getItemMeta().getDisplayName());
         }
         return it.pintux.life.duelsaddon.util.Formatting.prettify(stack.getType().name());
     }
@@ -931,7 +979,7 @@ public final class DuelsGatewayImpl implements DuelsGateway {
     private static String displayName(String candidate, String fallback) {
         return candidate == null || candidate.isBlank()
                 ? it.pintux.life.duelsaddon.util.Formatting.prettify(fallback)
-                : candidate;
+                : it.pintux.life.duelsaddon.util.Formatting.colorize(candidate);
     }
 
     private static String nameOf(UUID uuid) {

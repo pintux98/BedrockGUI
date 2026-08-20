@@ -67,6 +67,7 @@ class ConfigResourceTest {
                 "menus.stats",
                 "menus.spectator",
                 "menus.kit",
+                "menus.confirmation",
                 "general.items-per-page",
                 "general.default-rounds",
                 "invitations.party-forms",
@@ -92,6 +93,9 @@ class ConfigResourceTest {
                 "party.ffa-no-modes",
                 "kit.list-title",
                 "kit.list-content",
+                "confirmation.title",
+                "confirmation.content",
+                "confirmation.accept",
                 "messages.duels-unavailable",
                 "common.confirm-no")) {
             assertNotNull(get(root, path), "missing config key: " + path);

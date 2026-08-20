@@ -33,6 +33,18 @@ public final class Formatting {
     }
 
     /**
+     * Translates {@code &} colour codes into the section-sign form a Bedrock form renders.
+     *
+     * <p>Text taken from PhoenixDuels - mode names, kit names, item display names - is stored with
+     * {@code &} codes in its config and handed to us untranslated, so it reached the forms as
+     * literal "&a" instead of colour. Config text from this addon is already translated on read;
+     * this covers everything crossing the gateway.</p>
+     */
+    public static String colorize(String input) {
+        return input == null ? "" : org.bukkit.ChatColor.translateAlternateColorCodes('&', input);
+    }
+
+    /**
      * Turns an identifier into a label, so a mode or material with no display name still reads
      * properly: {@code DIAMOND_SWORD} becomes {@code Diamond Sword}.
      */

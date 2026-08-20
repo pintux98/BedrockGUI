@@ -73,10 +73,25 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
     }
 
     public void sendDuelChallenge(Player invited, UUID inviterId) {
+        Optional<InviteView> invite = gateway.pendingChallenge(inviterId, invited.getUniqueId());
+        sendDuelChallenge(invited, inviterId, invite.orElse(null));
+    }
+
+    /**
+     * Shows the challenge form using details the caller already holds.
+     *
+     * <p>The lookup-based overload asks PhoenixDuels to describe the invitation it just created,
+     * and an empty answer there silently meant no form at all. When this addon sent the challenge
+     * itself it already knows the opponent, mode and rounds, so it passes them straight in and the
+     * form no longer depends on that lookup succeeding.</p>
+     *
+     * @param known may be {@code null}, in which case nothing is shown
+     */
+    public void sendDuelChallenge(Player invited, UUID inviterId, InviteView known) {
         if (!config.duelInviteFormsEnabled() || !shouldHandle(invited)) {
             return;
         }
-        Optional<InviteView> invite = gateway.pendingChallenge(inviterId, invited.getUniqueId());
+        Optional<InviteView> invite = Optional.ofNullable(known);
         if (invite.isEmpty()) {
             return;
         }

@@ -1,5 +1,6 @@
 package it.pintux.life.duelsaddon.gateway;
 
+import it.pintux.life.duelsaddon.model.ConfirmationRequest;
 import it.pintux.life.duelsaddon.model.DuelDraftView;
 import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.KitView;
@@ -139,6 +140,15 @@ public interface DuelsGateway {
      * @return the draft, or empty when the view is not a duel menu or carries no target
      */
     Optional<DuelDraftView> duelDraft(Object containerView);
+
+    /**
+     * Lifts a PhoenixDuels confirmation prompt out of a view that is opening.
+     *
+     * @param containerView the cancelled view, passed as {@code Object} so callers outside the
+     *                      gateway never name a PhoenixDuels type
+     * @return the prompt and its outcomes, or empty when the view is not a confirmation
+     */
+    Optional<ConfirmationRequest> confirmation(Object containerView);
 
     boolean hasPendingChallenge(UUID inviterId, UUID invitedId);
 
