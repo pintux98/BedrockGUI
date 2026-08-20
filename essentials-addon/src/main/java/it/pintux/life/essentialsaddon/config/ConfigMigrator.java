@@ -55,6 +55,7 @@ public final class ConfigMigrator {
         List<String> added = new ArrayList<>();
         List<String> removed = new ArrayList<>();
         mergeKeys(bundled, userConfig, "", added, removed);
+        repairBooleanProviders(userConfig, userVersion);
 
         userConfig.set(VERSION_KEY, bundledVersion);
 
@@ -68,6 +69,17 @@ public final class ConfigMigrator {
         }
 
         return YamlConfiguration.loadConfiguration(dataFile);
+    }
+
+    private void repairBooleanProviders(YamlConfiguration userConfig, int userVersion) {
+        if (userVersion != 4) return;
+        for (String key : List.of("warps", "kits", "homes", "tpa")) {
+            String path = "providers." + key;
+            if (userConfig.get(path) instanceof Boolean) {
+                userConfig.set(path, "auto");
+                logger.info("  Reset " + path + " to auto (config-version 4 wrote a module toggle there).");
+            }
+        }
     }
 
     private String readStream(InputStream in) {
@@ -114,96 +126,33 @@ public final class ConfigMigrator {
     private void mergeWithComments(String bundledText, YamlConfiguration userConfig, File dataFile) {
         try {
             List<String> templateLines = Arrays.asList(bundledText.split("\n"));
-            List<String> output = new ArrayList<>();
-            mergeLines(templateLines, userConfig, output, "", 0);
+            List<String> output = ConfigLineMerger.merge(templateLines, new YamlValueSource(userConfig));
             Files.write(dataFile.toPath(), output, StandardCharsets.UTF_8);
         } catch (IOException e) {
             logger.warning("Failed to merge config with comments: " + e.getMessage());
         }
     }
 
-    private int mergeLines(List<String> templateLines, YamlConfiguration userConfig,
-                           List<String> output, String currentPath, int startIdx) {
-        int i = startIdx;
-        while (i < templateLines.size()) {
-            String line = templateLines.get(i);
-            String trimmed = line.trim();
+    private static final class YamlValueSource implements ConfigLineMerger.ValueSource {
+        private final YamlConfiguration configuration;
 
-            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
-                output.add(line);
-                i++;
-                continue;
-            }
-
-            String key = extractKey(trimmed);
-            if (key == null) {
-                output.add(line);
-                i++;
-                continue;
-            }
-
-            String fullPath = currentPath.isEmpty() ? key : currentPath + "." + key;
-            int indent = getIndent(line);
-
-            if (userConfig.contains(fullPath)) {
-                Object value = userConfig.get(fullPath);
-                if (userConfig.isConfigurationSection(fullPath)) {
-                    output.add(line);
-                    i = mergeLines(templateLines, userConfig, output, fullPath, i + 1);
-                } else {
-                    output.add(spaces(indent) + key + ": " + formatValue(value));
-                    i++;
-                }
-            } else {
-                output.add(line);
-                i++;
-            }
+        private YamlValueSource(YamlConfiguration configuration) {
+            this.configuration = configuration;
         }
-        return i;
-    }
 
-    private String extractKey(String line) {
-        int colon = line.indexOf(':');
-        if (colon <= 0) return null;
-        String candidate = line.substring(0, colon).trim();
-        if (candidate.isEmpty() || candidate.contains(" ") || candidate.contains("\t")) return null;
-        return candidate;
-    }
-
-    private int getIndent(String line) {
-        int count = 0;
-        for (int i = 0; i < line.length(); i++) {
-            if (line.charAt(i) == ' ') count++;
-            else if (line.charAt(i) == '\t') count += 4;
-            else break;
+        @Override
+        public boolean contains(String path) {
+            return configuration.contains(path);
         }
-        return count;
-    }
 
-    private String spaces(int n) {
-        return " ".repeat(n);
-    }
+        @Override
+        public boolean isSection(String path) {
+            return configuration.isConfigurationSection(path);
+        }
 
-    private String formatValue(Object value) {
-        if (value == null) return "null";
-        if (value instanceof String) {
-            String s = (String) value;
-            if (s.contains("'") || s.contains("\n") || s.contains("#") ||
-                    s.startsWith(":") || s.isEmpty()) {
-                return "'" + s.replace("'", "''") + "'";
-            }
-            return s;
+        @Override
+        public Object get(String path) {
+            return configuration.get(path);
         }
-        if (value instanceof List) {
-            List<?> list = (List<?>) value;
-            if (list.isEmpty()) return "[]";
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < list.size(); i++) {
-                if (i > 0) sb.append(", ");
-                sb.append(formatValue(list.get(i)));
-            }
-            return "[" + sb + "]";
-        }
-        return value.toString();
     }
 }

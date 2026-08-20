@@ -181,13 +181,17 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         warpCatalogService = new WarpCatalogService(getLogger());
         kitCatalogService = new KitCatalogService(getLogger());
 
-        WarpProvider activeWarp = configuration.moduleWarps() ? pickProvider(warpFactories) : null;
+        WarpProvider activeWarp = configuration.moduleWarps() || configuration.actionsWarps()
+                ? pickProvider(warpFactories, configuration.providerWarps(), "warp")
+                : null;
         if (activeWarp != null) {
             warpCatalogService.setProvider(activeWarp);
             getLogger().info("Warp provider: " + activeWarp.getProviderId());
         }
 
-        KitProvider activeKit = configuration.moduleKits() ? pickProvider(kitFactories) : null;
+        KitProvider activeKit = configuration.moduleKits() || configuration.actionsKits()
+                ? pickProvider(kitFactories, configuration.providerKits(), "kit")
+                : null;
         if (activeKit != null) {
             kitCatalogService.setProvider(activeKit);
             getLogger().info("Kit provider: " + activeKit.getProviderId());
@@ -248,7 +252,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         registerProvider(homeFactories, "HuskHomes", HuskHomesHomeProvider::new);
 
         homeCatalogService = new HomeCatalogService(getLogger());
-        HomeProvider activeHome = pickProvider(homeFactories);
+        HomeProvider activeHome = pickProvider(homeFactories, configuration.providerHomes(), "home");
         if (activeHome != null) {
             homeCatalogService.setProvider(activeHome);
             getLogger().info("Home provider: " + activeHome.getProviderId());
@@ -263,7 +267,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         registerProvider(tpaFactories, "HuskHomes", HuskHomesTpaProvider::new);
 
         tpaCatalogService = new TpaCatalogService(getLogger());
-        TpaProvider activeTpa = pickProvider(tpaFactories);
+        TpaProvider activeTpa = pickProvider(tpaFactories, configuration.providerTpa(), "TPA");
         if (activeTpa != null) {
             tpaCatalogService.setProvider(activeTpa);
             getLogger().info("TPA provider: " + activeTpa.getProviderId());
@@ -357,17 +361,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> T pickProvider(Map<String, Supplier<T>> factories) {
-        for (Map.Entry<String, Supplier<T>> entry : factories.entrySet()) {
-            try {
-                T provider = entry.getValue().get();
-                if (provider != null) return provider;
-            } catch (Throwable e) {
-                getLogger().warning("Failed to initialize " + entry.getKey() + " provider: " + e.getClass().getSimpleName());
-            }
-        }
-        return null;
+    private <T> T pickProvider(Map<String, Supplier<T>> factories, String preference, String feature) {
+        return ProviderSelector.select(factories, preference, feature, getLogger()::warning);
     }
 
     private BedrockGUIApi getApiSafely() {

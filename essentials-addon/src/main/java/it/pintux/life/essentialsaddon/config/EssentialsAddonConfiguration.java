@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.config;
 
+import it.pintux.life.essentialsaddon.provider.ProviderSelector;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -23,6 +24,12 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleEconomyShopGui;
     private final boolean moduleMyPet;
     private final boolean moduleDeathMenu;
+
+    // Provider preferences
+    private final String providerWarps;
+    private final String providerKits;
+    private final String providerHomes;
+    private final String providerTpa;
 
     // Incoming-TPA popup
     private final boolean tpaRequestPopupEnabled;
@@ -202,6 +209,11 @@ public final class EssentialsAddonConfiguration {
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
 
+        this.providerWarps = providerName(configuration, "providers.warps");
+        this.providerKits = providerName(configuration, "providers.kits");
+        this.providerHomes = providerName(configuration, "providers.homes");
+        this.providerTpa = providerName(configuration, "providers.tpa");
+
         this.tpaRequestPopupEnabled = configuration.getBoolean("tpa-request-popup.enabled", true);
 
         this.actionsWarps = configuration.getBoolean("actions-only.warps", false);
@@ -357,7 +369,7 @@ public final class EssentialsAddonConfiguration {
 
         this.noBedrockGui = color(configuration.getString("messages.no-bedrockgui", "&cBedrockGUI API is not available."));
         this.essentialsNotReady = color(configuration.getString("messages.essentials-not-ready", "&eThe Essentials backend is not loaded yet."));
-        this.providerUnavailable = color(configuration.getString("messages.provider-unavailable", "&cNo compatible provider is available."));
+        this.providerUnavailable = color(configuration.getString("messages.provider-unavailable", "&cNo compatible provider is available for this feature."));
 
         this.soundsEnabled = configuration.getBoolean("sounds.enabled", true);
         this.soundFormOpen = configuration.getString("sounds.form-open", "ui.button.click");
@@ -371,6 +383,11 @@ public final class EssentialsAddonConfiguration {
     public static EssentialsAddonConfiguration load(JavaPlugin plugin) {
         YamlConfiguration config = new ConfigMigrator(plugin, FILE_NAME).migrate();
         return new EssentialsAddonConfiguration(config);
+    }
+
+    private static String providerName(YamlConfiguration configuration, String path) {
+        String raw = configuration.getString(path, ProviderSelector.AUTO);
+        return raw == null || raw.trim().isEmpty() ? ProviderSelector.AUTO : raw.trim();
     }
 
     private static String color(String input) {
@@ -517,6 +534,12 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
     public boolean moduleMyPet() { return moduleMyPet; }
     public boolean moduleDeathMenu() { return moduleDeathMenu; }
+
+    // Provider preferences
+    public String providerWarps() { return providerWarps; }
+    public String providerKits() { return providerKits; }
+    public String providerHomes() { return providerHomes; }
+    public String providerTpa() { return providerTpa; }
 
     // Actions-only
     public boolean actionsWarps() { return actionsWarps && !moduleWarps; }

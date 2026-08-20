@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 3
+config-version: 5
 
 modules:
   warps: false
@@ -18,6 +18,14 @@ modules:
   mypet: false
   # Respawn menu shown to Bedrock players after they die.
   death-menu: false
+
+# Which plugin serves each feature: auto, Essentials, CMI or HuskHomes (homes/tpa only).
+# auto = first installed, in that order. Features are independent.
+providers:
+  warps: auto
+  kits: auto
+  homes: auto
+  tpa: auto
 
 # Pop the Accept/Deny form at a Bedrock player the moment a teleport request arrives,
 # instead of waiting for them to run /tpa. Requires modules.tpa.
@@ -194,7 +202,7 @@ ui:
 messages:
   no-bedrockgui: '&cBedrockGUI API is not available.'
   essentials-not-ready: '&eThe Essentials backend is not loaded yet. Please try again in a moment.'
-  provider-unavailable: '&cNo compatible Essentials/CMI provider is available.'
+  provider-unavailable: '&cNo compatible provider is available for this feature.'
   shop-shops-not-ready: '&eThe shop backend is not loaded yet.'
   shop-no-shop-access: '&cYou do not have permission to access this shop.'
   shop-transaction-success: '&aShop action completed successfully.'
