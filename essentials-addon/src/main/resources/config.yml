@@ -30,7 +30,7 @@ providers:
 # Pop the Accept/Deny form at a Bedrock player the moment a teleport request arrives,
 # instead of waiting for them to run /tpa. Requires modules.tpa.
 # Driven by the teleport plugin's own request event — no polling task.
-# Supported on EssentialsX and CMI; HuskHomes exposes no such event.
+# Supported on EssentialsX, CMI and HuskHomes 4.1+.
 tpa-request-popup:
   enabled: true
 

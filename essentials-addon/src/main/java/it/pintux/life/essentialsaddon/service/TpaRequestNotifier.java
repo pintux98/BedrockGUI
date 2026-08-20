@@ -11,8 +11,9 @@ import java.util.logging.Logger;
  * Pushes the Accept/Deny form at a Bedrock player as soon as a teleport request arrives.
  *
  * <p>Hooks the backing plugin's own event — {@code TPARequestEvent} on EssentialsX,
- * {@code CMIPlayerTeleportRequestEvent} on CMI — rather than polling on a timer. A provider
- * without such an event simply gets no popup.</p>
+ * {@code CMIPlayerTeleportRequestEvent} on CMI, {@code ReceiveTeleportRequestEvent} on
+ * HuskHomes 4.1+ — rather than polling on a timer. A provider without such an event simply
+ * gets no popup.</p>
  */
 public final class TpaRequestNotifier {
     private final Logger logger;
