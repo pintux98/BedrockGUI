@@ -660,6 +660,17 @@ public class BedrockGUIApi {
             return this;
         }
 
+        /**
+         * An input whose result key is given explicitly, for handlers that read
+         * {@code results.get(name)} rather than iterating the values.
+         */
+        public CustomFormBuilder namedInput(String name, String text, String placeholder, String defaultValue) {
+            InputComponentBuilder component = new InputComponentBuilder(text, placeholder, defaultValue);
+            component.name(name);
+            components.add(component);
+            return this;
+        }
+
         public CustomFormBuilder slider(String text, int min, int max, int step, int defaultValue) {
             components.add(new SliderComponentBuilder(text, min, max, step, defaultValue));
             return this;
@@ -705,11 +716,17 @@ public class BedrockGUIApi {
                 if (onSubmit == null && onSubmitWithPlayer == null) {
                     return;
                 }
-                Map<String, Object> results = new HashMap<>();
+                Map<String, Object> results = new LinkedHashMap<>();
                 for (int i = 0; i < components.size(); i++) {
                     FormComponentBuilder component = components.get(i);
                     Object value = component.extractValue(response, i);
-                    results.put(component.getName(), value);
+                    String key = component.getName();
+                    // Two components can derive the same key from similar labels; keep both so a
+                    // handler reading the values positionally still sees every answer.
+                    if (results.containsKey(key)) {
+                        key = key + "_" + i;
+                    }
+                    results.put(key, value);
                 }
                 if (onSubmit != null) {
                     onSubmit.accept(results);
@@ -780,7 +797,7 @@ public class BedrockGUIApi {
 
         public FormComponentBuilder(String text) {
             this.text = text;
-            this.name = text.toLowerCase().replaceAll("\\s+", "_");
+            this.name = FormComponentNames.derive(text);
         }
 
         public FormComponentBuilder name(String name) {

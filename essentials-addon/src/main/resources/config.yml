@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 8
+config-version: 9
 
 modules:
   warps: false
@@ -130,6 +130,8 @@ ui:
   home-delete-success: '&aHome ''%home_name%'' deleted!'
   home-no-delete: '&cYou do not have any homes to delete.'
   home-delete-failed: '&cFailed to delete home.'
+  home-name-input-text: '&7Enter a name for this home:'
+  home-name-input-placeholder: 'home'
   home-provider-unavailable: '&cHome provider is not available.'
 
   # --- TPA ---

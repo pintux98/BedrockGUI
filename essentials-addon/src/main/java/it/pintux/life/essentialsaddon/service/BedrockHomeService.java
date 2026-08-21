@@ -126,7 +126,8 @@ public final class BedrockHomeService {
 
     private void renderSetHomeForm(Player player, BedrockGUIApi api) {
         api.createCustomForm(configuration.homeTitle())
-                .input(configuration.homeContent(), "home_name", "")
+                .namedInput("home_name", configuration.homeNameInputText(),
+                        configuration.homeNameInputPlaceholder(), "")
                 .onSubmit((p, results) -> {
                     String homeName = (String) results.get("home_name");
                     Player bukkitPlayer = FormPlayerResolver.resolve(p);

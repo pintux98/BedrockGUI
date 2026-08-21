@@ -110,6 +110,8 @@ public final class EssentialsAddonConfiguration {
     private final String homeDeleteSuccess;
     private final String homeNoDelete;
     private final String homeDeleteFailed;
+    private final String homeNameInputText;
+    private final String homeNameInputPlaceholder;
     private final String homeProviderUnavailable;
 
     private final String tpaTitle;
@@ -302,6 +304,8 @@ public final class EssentialsAddonConfiguration {
         this.homeDeleteSuccess = color(configuration.getString("ui.home-delete-success", "&aHome '%home_name%' deleted!"));
         this.homeNoDelete = color(configuration.getString("ui.home-no-delete", "&cYou do not have any homes to delete."));
         this.homeDeleteFailed = color(configuration.getString("ui.home-delete-failed", "&cFailed to delete home."));
+        this.homeNameInputText = color(configuration.getString("ui.home-name-input-text", "&7Enter a name for this home:"));
+        this.homeNameInputPlaceholder = configuration.getString("ui.home-name-input-placeholder", "home");
         this.homeProviderUnavailable = color(configuration.getString("ui.home-provider-unavailable", "&cHome provider is not available."));
 
         this.tpaTitle = color(configuration.getString("ui.tpa-title", "&bTeleport Requests"));
@@ -489,6 +493,8 @@ public final class EssentialsAddonConfiguration {
     public String homeDeleteSuccess() { return homeDeleteSuccess; }
     public String homeNoDelete() { return homeNoDelete; }
     public String homeDeleteFailed() { return homeDeleteFailed; }
+    public String homeNameInputText() { return homeNameInputText; }
+    public String homeNameInputPlaceholder() { return homeNameInputPlaceholder; }
     public String homeProviderUnavailable() { return homeProviderUnavailable; }
 
     public String tpaTitle() { return tpaTitle; }
