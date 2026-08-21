@@ -1,5 +1,6 @@
 package it.pintux.life.bedwarsaddon.config;
 
+import it.pintux.life.bedwarsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -95,7 +96,10 @@ public final class BedwarsAddonConfiguration {
     private final float soundVolume;
     private final float soundPitch;
 
+    private final YamlConfiguration config;
+
     private BedwarsAddonConfiguration(YamlConfiguration c) {
+        this.config = c;
         this.moduleShop = c.getBoolean("modules.shop", true);
         this.moduleUpgrades = c.getBoolean("modules.upgrades", true);
         this.moduleArena = c.getBoolean("modules.arena", true);
@@ -186,10 +190,16 @@ public final class BedwarsAddonConfiguration {
     }
 
     public static BedwarsAddonConfiguration load(JavaPlugin plugin) {
-        plugin.saveDefaultConfig();
-        File file = new File(plugin.getDataFolder(), FILE_NAME);
-        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(file);
+        plugin.getDataFolder().mkdirs();
+        YamlConfiguration yaml = new ConfigMigrator(plugin, FILE_NAME).migrate();
         return new BedwarsAddonConfiguration(yaml);
+    }
+
+    public CommandAliases commandAliases(String path, String... fallback) {
+        if (!config.contains(path)) {
+            return CommandAliases.of(fallback);
+        }
+        return CommandAliases.of(config.getStringList(path));
     }
 
     private static String color(String s) {

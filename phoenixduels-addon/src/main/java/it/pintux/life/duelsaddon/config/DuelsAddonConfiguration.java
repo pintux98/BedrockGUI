@@ -1,10 +1,10 @@
 package it.pintux.life.duelsaddon.config;
 
+import it.pintux.life.duelsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -31,74 +31,27 @@ public final class DuelsAddonConfiguration {
     }
 
     public static DuelsAddonConfiguration load(JavaPlugin plugin) {
-        File file = new File(plugin.getDataFolder(), FILE);
-        if (!file.exists()) {
-            plugin.getDataFolder().mkdirs();
-            plugin.saveResource(FILE, false);
-        }
-        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+        plugin.getDataFolder().mkdirs();
+        YamlConfiguration cfg = new ConfigMigrator(plugin, FILE).migrate();
         try (InputStream in = plugin.getResource(FILE)) {
             if (in != null) {
                 YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
                         new InputStreamReader(in, StandardCharsets.UTF_8));
                 cfg.setDefaults(defaults);
                 cfg.options().copyDefaults(true);
-                writeMissingKeys(plugin, cfg, defaults, file);
             }
         } catch (IOException ignored) {
         }
         return new DuelsAddonConfiguration(cfg);
     }
 
-    /**
-     * Persists keys that exist in the shipped defaults but not in the file on disk.
-     *
-     * <p>{@code copyDefaults} only affects the in-memory view, so a key added in a new release stays
-     * invisible in the admin's file and cannot be edited. That is how {@code debug} shipped without
-     * ever appearing in a live config.</p>
-     */
-    private static void writeMissingKeys(JavaPlugin plugin, YamlConfiguration cfg,
-                                         YamlConfiguration defaults, File file) {
-        int added = 0;
-        for (String key : defaults.getKeys(true)) {
-            if (defaults.isConfigurationSection(key) || cfg.contains(key, true)) {
-                continue;
-            }
-            cfg.set(key, defaults.get(key));
-            copyComments(cfg, defaults, key);
-            added++;
+    public CommandAliases commandAliases(String path, String... fallback) {
+        if (!cfg.contains(path)) {
+            return CommandAliases.of(fallback);
         }
-        if (added == 0) {
-            return;
-        }
-        try {
-            cfg.save(file);
-            plugin.getLogger().info("Added " + added + " new config key(s) to " + FILE + ".");
-        } catch (IOException e) {
-            plugin.getLogger().warning("Could not write new config keys to " + FILE + ": " + e.getMessage());
-        }
+        return CommandAliases.of(cfg.getStringList(path));
     }
 
-    /**
-     * Carries the shipped explanation for a key onto the admin's file.
-     *
-     * <p>Without this a newly added key lands in the file bare, because saving writes only what the
-     * in-memory config holds and the comment lives in the jar's copy. Guarded against older server
-     * builds where the comment API is absent.</p>
-     */
-    private static void copyComments(YamlConfiguration cfg, YamlConfiguration defaults, String key) {
-        try {
-            List<String> above = defaults.getComments(key);
-            if (!above.isEmpty()) {
-                cfg.setComments(key, above);
-            }
-            List<String> inline = defaults.getInlineComments(key);
-            if (!inline.isEmpty()) {
-                cfg.setInlineComments(key, inline);
-            }
-        } catch (NoSuchMethodError | UnsupportedOperationException ignored) {
-        }
-    }
 
     public String text(String path) {
         return color(cfg.getString(path, path));

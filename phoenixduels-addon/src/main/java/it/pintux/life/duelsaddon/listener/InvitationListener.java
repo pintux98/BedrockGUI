@@ -10,6 +10,7 @@ import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockInvitationService;
+import it.pintux.life.duelsaddon.util.CommandAliases;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -40,6 +41,7 @@ public final class InvitationListener implements Listener {
     private final DuelsGateway gateway;
     private final BedrockInvitationService invitationService;
     private final BedrockDuelService duelService;
+    private final CommandAliases duelCommands;
 
     public InvitationListener(Plugin plugin, DuelsAddonConfiguration config, DuelsGateway gateway,
                               BedrockInvitationService invitationService,
@@ -49,6 +51,7 @@ public final class InvitationListener implements Listener {
         this.gateway = gateway;
         this.invitationService = invitationService;
         this.duelService = duelService;
+        this.duelCommands = config.commandAliases("commands.duel", "duel");
     }
 
     @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
@@ -112,23 +115,24 @@ public final class InvitationListener implements Listener {
         if (message == null || message.length() < 2 || message.charAt(0) != '/') {
             return;
         }
-        String[] parts = message.substring(1).trim().split("\\s+");
-        if (parts.length < 2) {
+        String root = CommandAliases.rootOf(message);
+        String[] args = CommandAliases.argsOf(message);
+        if (root == null || args.length == 0) {
             return;
         }
-        String root = parts[0].toLowerCase(Locale.ROOT);
-        String duelCommand = gateway.commandName("duel", "duel");
-        if (!root.equals(duelCommand) && !root.equals("duel")) {
+        // PhoenixDuels' own configured command is watched on top of the configured aliases, so a
+        // renamed duel command keeps working without an edit here.
+        if (!duelCommands.matches(root) && !root.equals(normalize(gateway.commandName("duel", "duel")))) {
             return;
         }
-        String targetName = parts[1];
+        String targetName = args[0];
         if (targetName.equalsIgnoreCase("accept") || targetName.equalsIgnoreCase("decline")) {
             return;
         }
         UUID inviterId = event.getPlayer().getUniqueId();
         String inviterName = event.getPlayer().getName();
-        String modeArg = parts.length > 2 ? parts[2] : null;
-        int roundsArg = parts.length > 3 ? parseRounds(parts[3]) : 0;
+        String modeArg = args.length > 1 ? args[1] : null;
+        int roundsArg = args.length > 2 ? parseRounds(args[2]) : 0;
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             Player target = Bukkit.getPlayerExact(targetName);
             if (target == null || target.getUniqueId().equals(inviterId)) {
@@ -157,6 +161,10 @@ public final class InvitationListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         invitationService.forget(event.getPlayer().getUniqueId());
         duelService.forget(event.getPlayer().getUniqueId());
+    }
+
+    private static String normalize(String command) {
+        return command == null ? null : command.trim().toLowerCase(Locale.ROOT);
     }
 
     private static int parseRounds(String raw) {

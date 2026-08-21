@@ -4,7 +4,7 @@
 #  players in place of Homestead's chest GUIs. Java players are
 #  untouched. All text supports & colour codes and %placeholders%.
 # ============================================================
-config-version: 1
+config-version: 2
 
 # Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
 # Homestead GUI commands (/region, /rg, /hs, /homestead, /homesteadadmin) for
@@ -16,6 +16,14 @@ integrated-gui: true
 # own custom menus) can open Homestead screens or run Homestead actions.
 # Always active while integrated-gui is true (the built-in menus need them).
 register-actions: true
+
+# Commands intercepted for Bedrock players. Add your own aliases; a leading slash is
+# optional, matching ignores case, and an empty list turns that interception off.
+# gui-subcommands also open the form when used as the first argument (/rg menu).
+commands:
+  regions: [region, rg, hs, homestead]
+  admin: [homesteadadmin, hsadmin]
+  gui-subcommands: [menu, gui]
 
 general:
   # Buttons per page for long lists (regions, members, chunks, ...).

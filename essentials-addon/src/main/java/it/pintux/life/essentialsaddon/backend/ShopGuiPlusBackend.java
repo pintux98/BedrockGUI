@@ -1,6 +1,8 @@
 package it.pintux.life.essentialsaddon.backend;
 
+import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.BedrockShopGuiService;
+import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryOpenEvent;
@@ -8,14 +10,21 @@ import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 
 import java.util.Locale;
+import java.util.Set;
 
 public final class ShopGuiPlusBackend implements ShopBackend {
+    private static final Set<String> ADMIN_SUBCOMMANDS =
+            Set.of("reload", "check", "addmodifier", "resetmodifier", "checkmodifiers");
+
     private final Plugin plugin;
     private final BedrockShopGuiService service;
+    private final EssentialsAddonConfiguration configuration;
 
-    public ShopGuiPlusBackend(Plugin plugin, BedrockShopGuiService service) {
+    public ShopGuiPlusBackend(Plugin plugin, BedrockShopGuiService service,
+                              EssentialsAddonConfiguration configuration) {
         this.plugin = plugin;
         this.service = service;
+        this.configuration = configuration;
     }
 
     @Override
@@ -36,35 +45,37 @@ public final class ShopGuiPlusBackend implements ShopBackend {
             return false;
         }
 
-        String[] parts = event.getMessage().substring(1).split("\\s+");
-        if (parts.length == 0) {
+        String root = CommandAliases.rootOf(event.getMessage());
+        if (root == null) {
             return false;
         }
-        String label = parts[0].toLowerCase(Locale.ROOT);
+        String[] args = CommandAliases.argsOf(event.getMessage());
 
-        if (label.equals("shop") || label.equals("shopgui") || label.equals("guishop")) {
-            if (parts.length == 1) {
+        if (configuration.commandShop().matches(root)) {
+            if (args.length == 0) {
                 event.setCancelled(true);
                 service.openMainMenu(player);
                 return true;
             }
-            String firstArg = parts[1].toLowerCase(Locale.ROOT);
-            if (!firstArg.equals("reload") && !firstArg.equals("check") && !firstArg.equals("addmodifier")
-                    && !firstArg.equals("resetmodifier") && !firstArg.equals("checkmodifiers")) {
+            if (!ADMIN_SUBCOMMANDS.contains(args[0].toLowerCase(Locale.ROOT))) {
                 event.setCancelled(true);
-                service.openShop(player, parts[1], 1);
+                service.openShop(player, args[0], 1);
                 return true;
             }
             return false;
         }
 
-        if (label.equals("sell") && parts.length >= 2 && parts[1].equalsIgnoreCase("all")) {
+        if (configuration.commandSellAll().matches(root) && sellsEverything(args)) {
             event.setCancelled(true);
             service.openMainMenu(player);
             return true;
         }
 
         return false;
+    }
+
+    private boolean sellsEverything(String[] args) {
+        return args.length == 0 || args[0].equalsIgnoreCase("all");
     }
 
     @Override

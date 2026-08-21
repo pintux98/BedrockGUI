@@ -1,10 +1,10 @@
 package it.pintux.life.homesteadaddon.config;
 
+import it.pintux.life.homesteadaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -22,12 +22,8 @@ public final class HomesteadAddonConfiguration {
     }
 
     public static HomesteadAddonConfiguration load(JavaPlugin plugin) {
-        File file = new File(plugin.getDataFolder(), FILE);
-        if (!file.exists()) {
-            plugin.getDataFolder().mkdirs();
-            plugin.saveResource(FILE, false);
-        }
-        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(file);
+        plugin.getDataFolder().mkdirs();
+        YamlConfiguration cfg = new ConfigMigrator(plugin, FILE).migrate();
         try (InputStream in = plugin.getResource(FILE)) {
             if (in != null) {
                 YamlConfiguration defaults = YamlConfiguration.loadConfiguration(
@@ -38,6 +34,13 @@ public final class HomesteadAddonConfiguration {
         } catch (IOException ignored) {
         }
         return new HomesteadAddonConfiguration(cfg);
+    }
+
+    public CommandAliases commandAliases(String path, String... fallback) {
+        if (!cfg.contains(path)) {
+            return CommandAliases.of(fallback);
+        }
+        return CommandAliases.of(cfg.getStringList(path));
     }
 
 

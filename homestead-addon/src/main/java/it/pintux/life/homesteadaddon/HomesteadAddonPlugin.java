@@ -82,7 +82,7 @@ public final class HomesteadAddonPlugin extends JavaPlugin {
         boolean integratedGui = configuration.integratedGuiEnabled();
 
         if (integratedGui) {
-            Bukkit.getPluginManager().registerEvents(new HomesteadCommandListener(regionService), this);
+            Bukkit.getPluginManager().registerEvents(new HomesteadCommandListener(regionService, configuration), this);
         } else {
             getLogger().info("Integrated GUI disabled: not intercepting Homestead commands. "
                     + "Use the hs_* actions from your own forms.");

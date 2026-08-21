@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.config;
 
 import it.pintux.life.essentialsaddon.provider.ProviderSelector;
+import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -24,6 +25,19 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleEconomyShopGui;
     private final boolean moduleMyPet;
     private final boolean moduleDeathMenu;
+
+    // Intercepted commands
+    private final CommandAliases commandWarps;
+    private final CommandAliases commandKits;
+    private final CommandAliases commandHomes;
+    private final CommandAliases commandSetHome;
+    private final CommandAliases commandDeleteHome;
+    private final CommandAliases commandTpa;
+    private final CommandAliases commandPets;
+    private final CommandAliases commandPetShop;
+    private final CommandAliases commandPetSkilltree;
+    private final CommandAliases commandShop;
+    private final CommandAliases commandSellAll;
 
     // Provider preferences
     private final String providerWarps;
@@ -209,6 +223,19 @@ public final class EssentialsAddonConfiguration {
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
 
+        this.commandWarps = aliases(configuration, "commands.warps", "warp", "warps", "warplist");
+        this.commandKits = aliases(configuration, "commands.kits", "kit", "kits");
+        this.commandHomes = aliases(configuration, "commands.homes", "home", "homes", "homelist");
+        this.commandSetHome = aliases(configuration, "commands.set-home", "sethome", "createhome");
+        this.commandDeleteHome = aliases(configuration, "commands.delete-home", "delhome", "deletehome", "remhome");
+        this.commandTpa = aliases(configuration, "commands.tpa", "tpa", "tpahere", "tpaccept", "tpyes",
+                "tpdeny", "tpdecline", "tpno", "tpacancel", "tpcancel");
+        this.commandPets = aliases(configuration, "commands.pets", "pet", "pets");
+        this.commandPetShop = aliases(configuration, "commands.pet-shop", "petshop");
+        this.commandPetSkilltree = aliases(configuration, "commands.pet-skilltree", "pcst", "petskilltree");
+        this.commandShop = aliases(configuration, "commands.shop", "shop", "shopgui", "guishop");
+        this.commandSellAll = aliases(configuration, "commands.sell-all", "sellall", "sell");
+
         this.providerWarps = providerName(configuration, "providers.warps");
         this.providerKits = providerName(configuration, "providers.kits");
         this.providerHomes = providerName(configuration, "providers.homes");
@@ -385,6 +412,13 @@ public final class EssentialsAddonConfiguration {
         return new EssentialsAddonConfiguration(config);
     }
 
+    private static CommandAliases aliases(YamlConfiguration configuration, String path, String... fallback) {
+        if (!configuration.contains(path)) {
+            return CommandAliases.of(fallback);
+        }
+        return CommandAliases.of(configuration.getStringList(path));
+    }
+
     private static String providerName(YamlConfiguration configuration, String path) {
         String raw = configuration.getString(path, ProviderSelector.AUTO);
         return raw == null || raw.trim().isEmpty() ? ProviderSelector.AUTO : raw.trim();
@@ -534,6 +568,19 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
     public boolean moduleMyPet() { return moduleMyPet; }
     public boolean moduleDeathMenu() { return moduleDeathMenu; }
+
+    // Intercepted commands
+    public CommandAliases commandWarps() { return commandWarps; }
+    public CommandAliases commandKits() { return commandKits; }
+    public CommandAliases commandHomes() { return commandHomes; }
+    public CommandAliases commandSetHome() { return commandSetHome; }
+    public CommandAliases commandDeleteHome() { return commandDeleteHome; }
+    public CommandAliases commandTpa() { return commandTpa; }
+    public CommandAliases commandPets() { return commandPets; }
+    public CommandAliases commandPetShop() { return commandPetShop; }
+    public CommandAliases commandPetSkilltree() { return commandPetSkilltree; }
+    public CommandAliases commandShop() { return commandShop; }
+    public CommandAliases commandSellAll() { return commandSellAll; }
 
     // Provider preferences
     public String providerWarps() { return providerWarps; }

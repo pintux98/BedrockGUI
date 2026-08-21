@@ -1,21 +1,24 @@
 package it.pintux.life.essentialsaddon.backend;
 
+import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.BedrockEconomyShopService;
+import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.plugin.Plugin;
 
-import java.util.Locale;
-
 public final class EconomyShopGuiBackend implements ShopBackend {
     private final Plugin plugin;
     private final BedrockEconomyShopService service;
+    private final EssentialsAddonConfiguration configuration;
 
-    public EconomyShopGuiBackend(Plugin plugin, BedrockEconomyShopService service) {
+    public EconomyShopGuiBackend(Plugin plugin, BedrockEconomyShopService service,
+                                 EssentialsAddonConfiguration configuration) {
         this.plugin = plugin;
         this.service = service;
+        this.configuration = configuration;
     }
 
     @Override
@@ -36,29 +39,33 @@ public final class EconomyShopGuiBackend implements ShopBackend {
             return false;
         }
 
-        String[] parts = event.getMessage().substring(1).split("\\s+");
-        if (parts.length == 0) {
+        String root = CommandAliases.rootOf(event.getMessage());
+        if (root == null) {
             return false;
         }
-        String label = parts[0].toLowerCase(Locale.ROOT);
+        String[] args = CommandAliases.argsOf(event.getMessage());
 
-        if (label.equals("shop") || label.equals("shopgui") || label.equals("guishop")) {
+        if (configuration.commandShop().matches(root)) {
             event.setCancelled(true);
-            if (parts.length == 1) {
+            if (args.length == 0) {
                 service.openMainMenu(player);
             } else {
-                service.openShop(player, parts[1], 1);
+                service.openShop(player, args[0], 1);
             }
             return true;
         }
 
-        if (label.equals("sellall")) {
+        if (configuration.commandSellAll().matches(root) && sellsEverything(args)) {
             event.setCancelled(true);
             service.openMainMenu(player);
             return true;
         }
 
         return false;
+    }
+
+    private boolean sellsEverything(String[] args) {
+        return args.length == 0 || args[0].equalsIgnoreCase("all");
     }
 
     @Override

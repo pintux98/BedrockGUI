@@ -212,7 +212,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             return;
         }
 
-        EssentialsCommandListener commandListener = new EssentialsCommandListener(detector);
+        EssentialsCommandListener commandListener = new EssentialsCommandListener(detector, configuration);
         if ((configuration.moduleWarps() || configuration.moduleKits()) && bedrockEssentialsService != null) {
             commandListener.setService(bedrockEssentialsService);
         }
@@ -284,7 +284,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         );
 
         List<ShopBackend> backends = new ArrayList<>();
-        backends.add(new ShopGuiPlusBackend(this, bedrockShopGuiService));
+        backends.add(new ShopGuiPlusBackend(this, bedrockShopGuiService, configuration));
 
         if (configuration.moduleShopGuiPlus()) {
             pluginManager.registerEvents(new ShopGuiLifecycleListener(shopGuiPlusHook), this);
@@ -316,7 +316,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         );
 
         List<ShopBackend> backends = new ArrayList<>();
-        backends.add(new EconomyShopGuiBackend(this, bedrockEconomyShopService));
+        backends.add(new EconomyShopGuiBackend(this, bedrockEconomyShopService, configuration));
 
         if (configuration.moduleEconomyShopGui()) {
             pluginManager.registerEvents(new EconomyShopLifecycleListener(economyShopGuiHook), this);
@@ -337,7 +337,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         getLogger().info("Pet provider: mypet");
 
         if (configuration.moduleMyPet() && configuration.integratedGuiEnabled()) {
-            pluginManager.registerEvents(new PetCommandListener(bedrockPetService), this);
+            pluginManager.registerEvents(new PetCommandListener(bedrockPetService, configuration), this);
         }
     }
 

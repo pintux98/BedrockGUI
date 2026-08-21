@@ -8,7 +8,13 @@
 #  All text supports & colour codes and \n for a new line.
 #  %placeholders% are listed per section below.
 # ============================================================
-config-version: 1
+config-version: 2
+
+# Commands watched so a Bedrock player gets the challenge form. Add your own aliases;
+# a leading slash is optional, matching ignores case, an empty list turns this off.
+# PhoenixDuels' own configured duel command is always watched as well.
+commands:
+  duel: [duel]
 
 # Replace PhoenixDuels' chest menus with Bedrock forms.
 # When false this addon touches nothing PhoenixDuels does: no menu is

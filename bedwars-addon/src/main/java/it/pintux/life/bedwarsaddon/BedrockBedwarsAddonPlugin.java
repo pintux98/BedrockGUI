@@ -20,6 +20,7 @@ import it.pintux.life.bedwarsaddon.action.UpgradeBuyAction;
 import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.command.BedwarsAddonCommand;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
+import it.pintux.life.bedwarsaddon.listener.BedwarsCommandListener;
 import it.pintux.life.bedwarsaddon.listener.MenuInterceptListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener;
 import it.pintux.life.bedwarsaddon.listener.ShopOpenListener1058;
@@ -60,6 +61,7 @@ import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.bukkit.event.HandlerList;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -82,6 +84,9 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     private BedrockPartyService bedrockPartyService;
     private BedWars1058ApiAccess apiAccess1058;
     private SbwApiAccess sbwAccess;
+
+    private MenuInterceptListener menuInterceptListener;
+    private BedwarsCommandListener bedwarsCommandListener;
 
     @Override
     public void onEnable() {
@@ -188,12 +193,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
             bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
         }
 
-        // Menu interception is part of the integrated GUI experience.
-        if (configuration.integratedGui() && (bedrockArenaService != null || bedrockUpgradeService != null
-                || bedrockStatsService != null || bedrockSpectatorService != null)) {
-            pm.registerEvents(new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService,
-                    bedrockStatsService, bedrockSpectatorService), this);
-        }
+        registerInterceptListeners(pm);
 
         getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
         getCommand("bedwarsaddon").setTabCompleter(new BedwarsAddonCommand(this));
@@ -338,6 +338,41 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
         if (partyCatalogService != null) {
             bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
+        }
+        registerInterceptListeners(Bukkit.getPluginManager());
+    }
+
+    /**
+     * Registers the interception listeners against the services built from the current config.
+     * Called again on reload so edited command aliases apply and no listener is left holding a
+     * service instance from the previous config.
+     */
+    private void registerInterceptListeners(PluginManager pm) {
+        // Only these two are re-registered on reload; the backend event listeners registered in
+        // onEnable stay as they are, so they must not be torn down here.
+        if (menuInterceptListener != null) {
+            HandlerList.unregisterAll(menuInterceptListener);
+            menuInterceptListener = null;
+        }
+        if (bedwarsCommandListener != null) {
+            HandlerList.unregisterAll(bedwarsCommandListener);
+            bedwarsCommandListener = null;
+        }
+
+        // Menu interception is part of the integrated GUI experience.
+        if (configuration.integratedGui() && (bedrockArenaService != null || bedrockUpgradeService != null
+                || bedrockStatsService != null || bedrockSpectatorService != null)) {
+            menuInterceptListener = new MenuInterceptListener(this, bedrockArenaService, bedrockUpgradeService,
+                    bedrockStatsService, bedrockSpectatorService);
+            pm.registerEvents(menuInterceptListener, this);
+        }
+
+        BedwarsCommandListener commandListener = new BedwarsCommandListener(this, configuration,
+                bedrockArenaService, bedrockStatsService, bedrockPartyService, bedrockShopService,
+                bedrockUpgradeService, bedrockSpectatorService);
+        if (configuration.integratedGui() && commandListener.hasAnyCommand()) {
+            bedwarsCommandListener = commandListener;
+            pm.registerEvents(commandListener, this);
         }
     }
 
