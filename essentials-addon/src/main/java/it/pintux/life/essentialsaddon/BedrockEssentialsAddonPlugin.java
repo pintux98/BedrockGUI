@@ -411,6 +411,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new HomeTeleportAction(bedrockHomeService));
             api.registerActionHandler(new HomeSetAction(bedrockHomeService));
             api.registerActionHandler(new HomeDeleteAction(bedrockHomeService));
+            if (bedrockHomeService.supportsPublicHomes()) {
+                api.registerActionHandler(new OpenPublicHomeMainAction(bedrockHomeService));
+                api.registerActionHandler(new PublicHomeTeleportAction(bedrockHomeService));
+            }
         }
         if ((configuration.moduleTpa() || configuration.actionsTpa()) && bedrockTpaService != null) {
             api.registerActionHandler(new HubTpaAction(bedrockTpaService));

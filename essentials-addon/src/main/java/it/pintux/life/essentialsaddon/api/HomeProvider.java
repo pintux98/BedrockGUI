@@ -28,4 +28,18 @@ public interface HomeProvider {
     void setHome(Player player, String homeName, Consumer<Boolean> callback);
 
     void deleteHome(Player player, String homeName, Consumer<Boolean> callback);
+
+    /** True when the backing plugin has a notion of homes shared with everyone. */
+    default boolean supportsPublicHomes() {
+        return false;
+    }
+
+    /** Public homes as the identifiers their plugin uses, e.g. {@code owner.home}. */
+    default void publicHomes(Player player, Consumer<List<String>> callback) {
+        callback.accept(List.of());
+    }
+
+    default void teleportPublicHome(Player player, String identifier, Consumer<Boolean> callback) {
+        callback.accept(false);
+    }
 }

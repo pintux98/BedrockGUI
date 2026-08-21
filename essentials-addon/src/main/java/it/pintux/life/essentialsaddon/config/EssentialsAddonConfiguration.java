@@ -30,6 +30,7 @@ public final class EssentialsAddonConfiguration {
     private final CommandAliases commandWarps;
     private final CommandAliases commandKits;
     private final CommandAliases commandHomes;
+    private final CommandAliases commandPublicHomes;
     private final CommandAliases commandSetHome;
     private final CommandAliases commandDeleteHome;
     private final CommandAliases commandTpa;
@@ -112,6 +113,12 @@ public final class EssentialsAddonConfiguration {
     private final String homeDeleteFailed;
     private final String homeNameInputText;
     private final String homeNameInputPlaceholder;
+    private final String publicHomeTitle;
+    private final String publicHomeContent;
+    private final String publicHomeButton;
+    private final String noPublicHomesMessage;
+    private final String publicHomeTeleportSuccess;
+    private final String publicHomeTeleportFailed;
     private final String homeProviderUnavailable;
 
     private final String tpaTitle;
@@ -228,6 +235,8 @@ public final class EssentialsAddonConfiguration {
         this.commandWarps = aliases(configuration, "commands.warps", "warp", "warps", "warplist");
         this.commandKits = aliases(configuration, "commands.kits", "kit", "kits");
         this.commandHomes = aliases(configuration, "commands.homes", "home", "homes", "homelist");
+        this.commandPublicHomes = aliases(configuration, "commands.public-homes",
+                "phome", "phomes", "phomelist", "publichome", "publichomelist");
         this.commandSetHome = aliases(configuration, "commands.set-home", "sethome", "createhome");
         this.commandDeleteHome = aliases(configuration, "commands.delete-home", "delhome", "deletehome", "remhome");
         this.commandTpa = aliases(configuration, "commands.tpa", "tpa", "tpahere", "tpaccept", "tpyes",
@@ -306,6 +315,12 @@ public final class EssentialsAddonConfiguration {
         this.homeDeleteFailed = color(configuration.getString("ui.home-delete-failed", "&cFailed to delete home."));
         this.homeNameInputText = color(configuration.getString("ui.home-name-input-text", "&7Enter a name for this home:"));
         this.homeNameInputPlaceholder = configuration.getString("ui.home-name-input-placeholder", "home");
+        this.publicHomeTitle = color(configuration.getString("ui.public-home-title", "&bPublic Homes"));
+        this.publicHomeContent = color(configuration.getString("ui.public-home-content", "&7Select a public home to teleport to."));
+        this.publicHomeButton = color(configuration.getString("ui.public-home-button", "&e%home_name% &7by &f%owner%"));
+        this.noPublicHomesMessage = color(configuration.getString("ui.no-public-homes-message", "&cThere are no public homes right now."));
+        this.publicHomeTeleportSuccess = color(configuration.getString("ui.public-home-teleport-success", "&aTeleported to %home_name%."));
+        this.publicHomeTeleportFailed = color(configuration.getString("ui.public-home-teleport-failed", "&cFailed to teleport to %home_name%"));
         this.homeProviderUnavailable = color(configuration.getString("ui.home-provider-unavailable", "&cHome provider is not available."));
 
         this.tpaTitle = color(configuration.getString("ui.tpa-title", "&bTeleport Requests"));
@@ -495,6 +510,12 @@ public final class EssentialsAddonConfiguration {
     public String homeDeleteFailed() { return homeDeleteFailed; }
     public String homeNameInputText() { return homeNameInputText; }
     public String homeNameInputPlaceholder() { return homeNameInputPlaceholder; }
+    public String publicHomeTitle() { return publicHomeTitle; }
+    public String publicHomeContent() { return publicHomeContent; }
+    public String publicHomeButton() { return publicHomeButton; }
+    public String noPublicHomesMessage() { return noPublicHomesMessage; }
+    public String publicHomeTeleportSuccess() { return publicHomeTeleportSuccess; }
+    public String publicHomeTeleportFailed() { return publicHomeTeleportFailed; }
     public String homeProviderUnavailable() { return homeProviderUnavailable; }
 
     public String tpaTitle() { return tpaTitle; }
@@ -579,6 +600,7 @@ public final class EssentialsAddonConfiguration {
     public CommandAliases commandWarps() { return commandWarps; }
     public CommandAliases commandKits() { return commandKits; }
     public CommandAliases commandHomes() { return commandHomes; }
+    public CommandAliases commandPublicHomes() { return commandPublicHomes; }
     public CommandAliases commandSetHome() { return commandSetHome; }
     public CommandAliases commandDeleteHome() { return commandDeleteHome; }
     public CommandAliases commandTpa() { return commandTpa; }

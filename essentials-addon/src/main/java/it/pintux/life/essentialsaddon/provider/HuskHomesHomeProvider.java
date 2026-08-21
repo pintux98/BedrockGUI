@@ -25,6 +25,8 @@ import java.util.logging.Logger;
  * exactly why the home menu used to come up empty.</p>
  */
 public final class HuskHomesHomeProvider implements HomeProvider {
+    private static final String PUBLIC_HOME_PERMISSION = "huskhomes.command.phome";
+
     private final Logger logger;
     private volatile String lastFailure;
 
@@ -158,6 +160,68 @@ public final class HuskHomesHomeProvider implements HomeProvider {
             callback.accept(true);
         } catch (Throwable failure) {
             report("Could not delete home '" + homeName + "' for " + player.getName(), failure);
+            callback.accept(false);
+        }
+    }
+
+    @Override
+    public boolean supportsPublicHomes() {
+        return true;
+    }
+
+    @Override
+    public void publicHomes(Player player, Consumer<List<String>> callback) {
+        HuskHomesAPI api = apiOrNull();
+        if (api == null || !player.hasPermission(PUBLIC_HOME_PERMISSION)) {
+            callback.accept(List.of());
+            return;
+        }
+        try {
+            api.getPublicHomes().whenComplete((homes, failure) -> {
+                if (failure != null || homes == null) {
+                    report("Could not read the public home list", failure);
+                    callback.accept(List.of());
+                    return;
+                }
+                List<String> identifiers = new ArrayList<>();
+                for (Home home : homes) {
+                    identifiers.add(home.getIdentifier());
+                }
+                callback.accept(identifiers);
+            });
+        } catch (Throwable failure) {
+            report("Could not read the public home list", failure);
+            callback.accept(List.of());
+        }
+    }
+
+    @Override
+    public void teleportPublicHome(Player player, String identifier, Consumer<Boolean> callback) {
+        HuskHomesAPI api = apiOrNull();
+        if (api == null || !player.hasPermission(PUBLIC_HOME_PERMISSION)) {
+            callback.accept(false);
+            return;
+        }
+        try {
+            OnlineUser user = api.adaptUser(player);
+            // A public home is addressed as owner.name, and only its owner's list can resolve it,
+            // so the public list is the lookup.
+            api.getPublicHomes().whenComplete((homes, failure) -> {
+                if (failure != null || homes == null) {
+                    report("Could not read the public home list", failure);
+                    callback.accept(false);
+                    return;
+                }
+                for (Home home : homes) {
+                    if (home.getIdentifier().equalsIgnoreCase(identifier)) {
+                        callback.accept(teleport(api, user, home, player, identifier));
+                        return;
+                    }
+                }
+                callback.accept(false);
+            });
+        } catch (Throwable failure) {
+            report("Could not teleport " + player.getName() + " to public home '" + identifier + "'", failure);
             callback.accept(false);
         }
     }

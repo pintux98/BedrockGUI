@@ -74,6 +74,26 @@ public final class HomeCatalogService {
         provider.deleteHome(player, homeName, callback);
     }
 
+    public boolean supportsPublicHomes() {
+        return isReady() && provider.supportsPublicHomes();
+    }
+
+    public void publicHomes(Player player, Consumer<List<String>> callback) {
+        if (!supportsPublicHomes()) {
+            callback.accept(List.of());
+            return;
+        }
+        provider.publicHomes(player, callback);
+    }
+
+    public void teleportPublicHome(Player player, String identifier, Consumer<Boolean> callback) {
+        if (!supportsPublicHomes()) {
+            callback.accept(false);
+            return;
+        }
+        provider.teleportPublicHome(player, identifier, callback);
+    }
+
     public HomeProvider getProvider() {
         return provider;
     }

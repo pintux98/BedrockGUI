@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 10
+config-version: 11
 
 modules:
   warps: false
@@ -33,6 +33,7 @@ commands:
   warps: [warp, warps, warplist]
   kits: [kit, kits]
   homes: [home, homes, homelist]
+  public-homes: [phome, phomes, phomelist, publichome, publichomelist]
   set-home: [sethome, createhome]
   delete-home: [delhome, deletehome, remhome]
   tpa: [tpa, tpahere, tpaccept, tpyes, tpdeny, tpdecline, tpno, tpacancel, tpcancel]
@@ -132,6 +133,13 @@ ui:
   home-delete-failed: '&cFailed to delete home.'
   home-name-input-text: '&7Enter a name for this home:'
   home-name-input-placeholder: 'home'
+  # --- Public homes (HuskHomes only) ---
+  public-home-title: '&bPublic Homes'
+  public-home-content: '&7Select a public home to teleport to.'
+  public-home-button: '&e%home_name% &7by &f%owner%'
+  no-public-homes-message: '&cThere are no public homes right now.'
+  public-home-teleport-success: '&aTeleported to %home_name%.'
+  public-home-teleport-failed: '&cFailed to teleport to %home_name%'
   home-provider-unavailable: '&cHome provider is not available.'
 
   # --- TPA ---

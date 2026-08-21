@@ -91,6 +91,89 @@ public final class BedrockHomeService {
         form.send(new BukkitFormPlayer(player));
     }
 
+    public boolean supportsPublicHomes() {
+        return homeCatalog.supportsPublicHomes();
+    }
+
+    public void openPublicHomeMenu(Player player, int page) {
+        BedrockGUIApi api = requireApi(player);
+        if (api == null) return;
+        if (!ensureHomeCatalog(player)) return;
+
+        homeCatalog.publicHomes(player, homes -> renderPublicHomeMenu(player, api, page, homes));
+    }
+
+    private void renderPublicHomeMenu(Player player, BedrockGUIApi api, int page, List<String> homes) {
+        if (homes.isEmpty()) {
+            player.sendMessage(configuration.noPublicHomesMessage());
+            return;
+        }
+
+        int totalPages = (int) Math.ceil((double) homes.size() / ITEMS_PER_PAGE);
+        int currentPage = Math.max(1, Math.min(page, totalPages));
+        int start = (currentPage - 1) * ITEMS_PER_PAGE;
+        int end = Math.min(start + ITEMS_PER_PAGE, homes.size());
+
+        BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.publicHomeTitle());
+        form.content(configuration.publicHomeContent());
+
+        for (int i = start; i < end; i++) {
+            String identifier = homes.get(i);
+            String buttonText = configuration.render(configuration.publicHomeButton(),
+                    Map.of("home_name", publicHomeName(identifier), "owner", publicHomeOwner(identifier)));
+            form.button(buttonText, formPlayer ->
+                    api.executeActionString(formPlayer,
+                            "public_home_teleport:" + EssentialsActionPayloads.encodeHome(identifier),
+                            context("public-home-menu", identifier)));
+        }
+
+        if (currentPage > 1) {
+            form.button(configuration.previousButton(), formPlayer ->
+                    api.executeActionString(formPlayer,
+                            "public_home_main:" + (currentPage - 1),
+                            context("public-home-prev", "")));
+        }
+
+        form.button(configuration.mainButton(), formPlayer ->
+                api.executeActionString(formPlayer, "essentials_hub:",
+                        context("public-home-main", "")));
+
+        if (currentPage < totalPages) {
+            form.button(configuration.nextButton(), formPlayer ->
+                    api.executeActionString(formPlayer,
+                            "public_home_main:" + (currentPage + 1),
+                            context("public-home-next", "")));
+        }
+
+        form.send(new BukkitFormPlayer(player));
+    }
+
+    public void teleportPublicHome(Player player, String identifier) {
+        if (!ensureHomeCatalog(player)) return;
+
+        homeCatalog.teleportPublicHome(player, identifier, success -> {
+            String name = publicHomeName(identifier);
+            if (success) {
+                player.sendMessage(configuration.render(configuration.publicHomeTeleportSuccess(),
+                        Map.of("home_name", name, "owner", publicHomeOwner(identifier))));
+            } else {
+                player.sendMessage(configuration.render(configuration.publicHomeTeleportFailed(),
+                        Map.of("home_name", name, "owner", publicHomeOwner(identifier))));
+            }
+        });
+    }
+
+    /** Public homes are addressed as {@code owner.name}; split for display only. */
+    private String publicHomeName(String identifier) {
+        int dot = identifier.indexOf('.');
+        return dot >= 0 && dot + 1 < identifier.length() ? identifier.substring(dot + 1) : identifier;
+    }
+
+    private String publicHomeOwner(String identifier) {
+        int dot = identifier.indexOf('.');
+        return dot > 0 ? identifier.substring(0, dot) : "";
+    }
+
     public void teleportHome(Player player, String homeName) {
         if (!ensureHomeCatalog(player)) return;
 

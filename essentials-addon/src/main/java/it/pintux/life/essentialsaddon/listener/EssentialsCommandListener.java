@@ -76,6 +76,13 @@ public final class EssentialsCommandListener implements Listener {
                 event.setCancelled(true);
                 homeService.openHomeMenu(event.getPlayer(), 1);
             }
+        } else if (configuration.commandPublicHomes().matches(root)) {
+            // Only when the provider actually has public homes; otherwise the command belongs to
+            // whatever plugin registered it.
+            if (homeService != null && homeService.supportsPublicHomes()) {
+                event.setCancelled(true);
+                homeService.openPublicHomeMenu(event.getPlayer(), 1);
+            }
         } else if (configuration.commandSetHome().matches(root)) {
             if (homeService != null) {
                 event.setCancelled(true);
