@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 13
+config-version: 14
 
 modules:
   warps: false
@@ -161,6 +161,7 @@ ui:
   # --- Public homes (HuskHomes only) ---
   public-home-title: '&bPublic Homes'
   public-home-content: '&7Select a public home to teleport to.'
+  # %home_name%, %owner% and %identifier% (the owner.name HuskHomes addresses it by)
   public-home-button: '&e%home_name% &7by &f%owner%'
   no-public-homes-message: '&cThere are no public homes right now.'
   public-home-teleport-success: '&aTeleported to %home_name%.'

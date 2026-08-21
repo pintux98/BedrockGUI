@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.provider;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
 import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.HomeWriteResult;
+import it.pintux.life.essentialsaddon.model.PublicHomeView;
 import net.william278.huskhomes.HuskHomes;
 import net.william278.huskhomes.api.HuskHomesAPI;
 import net.william278.huskhomes.position.Home;
@@ -267,7 +268,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
     }
 
     @Override
-    public void publicHomes(Player player, Consumer<List<String>> callback) {
+    public void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         HuskHomesAPI api = apiOrNull();
         if (api == null || !player.hasPermission(PUBLIC_HOME_PERMISSION)) {
             callback.accept(List.of());
@@ -280,11 +281,12 @@ public final class HuskHomesHomeProvider implements HomeProvider {
                     callback.accept(List.of());
                     return;
                 }
-                List<String> identifiers = new ArrayList<>();
+                List<PublicHomeView> views = new ArrayList<>();
                 for (Home home : homes) {
-                    identifiers.add(home.getIdentifier());
+                    String owner = home.getOwner() == null ? "" : home.getOwner().getUsername();
+                    views.add(new PublicHomeView(home.getIdentifier(), home.getName(), owner));
                 }
-                callback.accept(identifiers);
+                callback.accept(views);
             });
         } catch (Throwable failure) {
             report("Could not read the public home list", failure);

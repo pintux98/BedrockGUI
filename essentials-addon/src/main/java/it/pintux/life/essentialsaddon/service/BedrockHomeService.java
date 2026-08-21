@@ -5,6 +5,7 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.HomeView;
+import it.pintux.life.essentialsaddon.model.PublicHomeView;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
@@ -123,7 +124,7 @@ public final class BedrockHomeService {
         homeCatalog.publicHomes(player, homes -> renderPublicHomeMenu(player, api, page, homes));
     }
 
-    private void renderPublicHomeMenu(Player player, BedrockGUIApi api, int page, List<String> homes) {
+    private void renderPublicHomeMenu(Player player, BedrockGUIApi api, int page, List<PublicHomeView> homes) {
         if (homes.isEmpty()) {
             player.sendMessage(configuration.noPublicHomesMessage());
             return;
@@ -138,13 +139,13 @@ public final class BedrockHomeService {
         form.content(configuration.publicHomeContent());
 
         for (int i = start; i < end; i++) {
-            String identifier = homes.get(i);
+            PublicHomeView home = homes.get(i);
             String buttonText = configuration.render(configuration.publicHomeButton(),
-                    Map.of("home_name", publicHomeName(identifier), "owner", publicHomeOwner(identifier)));
+                    Map.of("home_name", home.name(), "owner", home.owner(), "identifier", home.identifier()));
             form.button(buttonText, formPlayer ->
                     api.executeActionString(formPlayer,
-                            "public_home_teleport:" + EssentialsActionPayloads.encodeHome(identifier),
-                            context("public-home-menu", identifier)));
+                            "public_home_teleport:" + EssentialsActionPayloads.encodeHome(home.identifier()),
+                            context("public-home-menu", home.identifier())));
         }
 
         if (currentPage > 1) {
@@ -172,26 +173,30 @@ public final class BedrockHomeService {
         if (!supportsPublicHomes() || !ensureHomeCatalog(player)) return;
 
         homeCatalog.teleportPublicHome(player, identifier, success -> {
-            String name = publicHomeName(identifier);
-            if (success) {
-                player.sendMessage(configuration.render(configuration.publicHomeTeleportSuccess(),
-                        Map.of("home_name", name, "owner", publicHomeOwner(identifier))));
-            } else {
-                player.sendMessage(configuration.render(configuration.publicHomeTeleportFailed(),
-                        Map.of("home_name", name, "owner", publicHomeOwner(identifier))));
-            }
+            Map<String, String> values = Map.of(
+                    "home_name", publicHomeName(identifier),
+                    "owner", publicHomeOwner(identifier),
+                    "identifier", identifier);
+            player.sendMessage(configuration.render(success
+                    ? configuration.publicHomeTeleportSuccess()
+                    : configuration.publicHomeTeleportFailed(), values));
         });
     }
 
-    /** Public homes are addressed as {@code owner.name}; split for display only. */
+    /**
+     * Splits an {@code owner.name} identifier for the teleport messages, which only carry the
+     * identifier. The last separator is the one that counts: a Floodgate name starts with a dot,
+     * so cutting at the first one leaves the owner empty and the name wrong. Home names cannot
+     * contain the separator, so the tail is always the name.
+     */
     private String publicHomeName(String identifier) {
-        int dot = identifier.indexOf('.');
-        return dot >= 0 && dot + 1 < identifier.length() ? identifier.substring(dot + 1) : identifier;
+        int split = identifier.lastIndexOf('.');
+        return split >= 0 && split + 1 < identifier.length() ? identifier.substring(split + 1) : identifier;
     }
 
     private String publicHomeOwner(String identifier) {
-        int dot = identifier.indexOf('.');
-        return dot > 0 ? identifier.substring(0, dot) : "";
+        int split = identifier.lastIndexOf('.');
+        return split > 0 ? identifier.substring(0, split) : "";
     }
 
     public void showManageHomesForm(Player player) {

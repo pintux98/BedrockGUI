@@ -2,6 +2,7 @@ package it.pintux.life.essentialsaddon.api;
 
 import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.HomeWriteResult;
+import it.pintux.life.essentialsaddon.model.PublicHomeView;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -50,8 +51,8 @@ public interface HomeProvider {
         return false;
     }
 
-    /** Public homes as the identifiers their plugin uses, e.g. {@code owner.home}. */
-    default void publicHomes(Player player, Consumer<List<String>> callback) {
+    /** Public homes, each carrying the identifier to act on plus its owner and name to show. */
+    default void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         callback.accept(List.of());
     }
 

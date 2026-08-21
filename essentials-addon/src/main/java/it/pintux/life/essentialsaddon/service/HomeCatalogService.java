@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.service;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
 import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.HomeWriteResult;
+import it.pintux.life.essentialsaddon.model.PublicHomeView;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -97,7 +98,7 @@ public final class HomeCatalogService {
         return isReady() && provider.supportsPublicHomes();
     }
 
-    public void publicHomes(Player player, Consumer<List<String>> callback) {
+    public void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         if (!supportsPublicHomes()) {
             callback.accept(List.of());
             return;
