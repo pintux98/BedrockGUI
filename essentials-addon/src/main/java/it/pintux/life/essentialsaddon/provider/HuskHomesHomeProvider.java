@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.provider;
 
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.model.HomeView;
 import net.william278.huskhomes.api.HuskHomesAPI;
 import net.william278.huskhomes.position.Home;
 import net.william278.huskhomes.teleport.TeleportBuilder;
@@ -160,6 +161,48 @@ public final class HuskHomesHomeProvider implements HomeProvider {
             callback.accept(true);
         } catch (Throwable failure) {
             report("Could not delete home '" + homeName + "' for " + player.getName(), failure);
+            callback.accept(false);
+        }
+    }
+
+    @Override
+    public void homeDetails(Player player, Consumer<List<HomeView>> callback) {
+        HuskHomesAPI api = apiOrNull();
+        if (api == null) {
+            callback.accept(List.of());
+            return;
+        }
+        try {
+            api.getUserHomes(api.adaptUser(player)).whenComplete((homes, failure) -> {
+                if (failure != null || homes == null) {
+                    report("Could not read homes for " + player.getName(), failure);
+                    callback.accept(List.of());
+                    return;
+                }
+                List<HomeView> views = new ArrayList<>();
+                for (Home home : homes) {
+                    views.add(new HomeView(home.getName(), home.isPublic()));
+                }
+                callback.accept(views);
+            });
+        } catch (Throwable failure) {
+            report("Could not read homes for " + player.getName(), failure);
+            callback.accept(List.of());
+        }
+    }
+
+    @Override
+    public void setHomePrivacy(Player player, String homeName, boolean isPublic, Consumer<Boolean> callback) {
+        HuskHomesAPI api = apiOrNull();
+        if (api == null) {
+            callback.accept(false);
+            return;
+        }
+        try {
+            api.setHomePrivacy(api.adaptUser(player), homeName, isPublic);
+            callback.accept(true);
+        } catch (Throwable failure) {
+            report("Could not change the privacy of home '" + homeName + "' for " + player.getName(), failure);
             callback.accept(false);
         }
     }

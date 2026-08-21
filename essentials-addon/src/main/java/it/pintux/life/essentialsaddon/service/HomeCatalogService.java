@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.model.HomeView;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -40,6 +41,22 @@ public final class HomeCatalogService {
             return;
         }
         provider.homeNames(player, callback);
+    }
+
+    public void homeDetails(Player player, Consumer<List<HomeView>> callback) {
+        if (!isReady()) {
+            callback.accept(List.of());
+            return;
+        }
+        provider.homeDetails(player, callback);
+    }
+
+    public void setHomePrivacy(Player player, String homeName, boolean isPublic, Consumer<Boolean> callback) {
+        if (!supportsPublicHomes()) {
+            callback.accept(false);
+            return;
+        }
+        provider.setHomePrivacy(player, homeName, isPublic, callback);
     }
 
     public void homeLimit(Player player, IntConsumer callback) {

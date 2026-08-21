@@ -118,6 +118,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
 
         hubService = new BedrockHubService(configuration, detector, soundFeedback);
+        hubService.setPublicHomesAvailable(
+                () -> bedrockHomeService != null && bedrockHomeService.supportsPublicHomes());
 
         PluginManager pluginManager = Bukkit.getPluginManager();
 
@@ -411,6 +413,13 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new HomeTeleportAction(bedrockHomeService));
             api.registerActionHandler(new HomeSetAction(bedrockHomeService));
             api.registerActionHandler(new HomeDeleteAction(bedrockHomeService));
+            api.registerActionHandler(new HomeDeleteConfirmAction(bedrockHomeService));
+            if (bedrockHomeService.manageMenuEnabled()) {
+                api.registerActionHandler(new OpenHomeManageMainAction(bedrockHomeService));
+                api.registerActionHandler(new OpenHomeManageAction(bedrockHomeService));
+                api.registerActionHandler(new HomeMakePublicAction(bedrockHomeService));
+                api.registerActionHandler(new HomeMakePrivateAction(bedrockHomeService));
+            }
             if (bedrockHomeService.supportsPublicHomes()) {
                 api.registerActionHandler(new OpenPublicHomeMainAction(bedrockHomeService));
                 api.registerActionHandler(new PublicHomeTeleportAction(bedrockHomeService));

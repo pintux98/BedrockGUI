@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.api;
 
+import it.pintux.life.essentialsaddon.model.HomeView;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -29,6 +30,20 @@ public interface HomeProvider {
 
     void deleteHome(Player player, String homeName, Consumer<Boolean> callback);
 
+    /**
+     * Homes with the extra detail the manage form needs. Providers without a privacy concept
+     * inherit this, which reports every home as private.
+     */
+    default void homeDetails(Player player, Consumer<List<HomeView>> callback) {
+        homeNames(player, names -> {
+            List<HomeView> views = new java.util.ArrayList<>();
+            for (String name : names) {
+                views.add(new HomeView(name, false));
+            }
+            callback.accept(views);
+        });
+    }
+
     /** True when the backing plugin has a notion of homes shared with everyone. */
     default boolean supportsPublicHomes() {
         return false;
@@ -40,6 +55,11 @@ public interface HomeProvider {
     }
 
     default void teleportPublicHome(Player player, String identifier, Consumer<Boolean> callback) {
+        callback.accept(false);
+    }
+
+    /** Makes an existing home public or private; only meaningful with {@link #supportsPublicHomes()}. */
+    default void setHomePrivacy(Player player, String homeName, boolean isPublic, Consumer<Boolean> callback) {
         callback.accept(false);
     }
 }

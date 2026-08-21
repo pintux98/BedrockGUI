@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 11
+config-version: 12
 
 modules:
   warps: false
@@ -42,6 +42,16 @@ commands:
   pet-skilltree: [pcst, petskilltree]
   shop: [shop, shopgui, guishop]
   sell-all: [sellall, sell]
+
+# Extra home features, each on top of modules.homes and only where the provider has them
+# (public homes and privacy are HuskHomes only).
+homes:
+  # "Manage Homes" button on the home menu: teleport, privacy and delete for one home.
+  manage-menu: true
+  # Serve /phome and /phomelist, and show the hub button for them.
+  public-homes: true
+  # Let players make a home public or private, from the manage form and when setting a home.
+  privacy: true
 
 # Pop the Accept/Deny form at a Bedrock player the moment a teleport request arrives,
 # instead of waiting for them to run /tpa. Requires modules.tpa.
@@ -80,6 +90,7 @@ hub:
   button-kits: '&6&lKits'
   button-homes: '&a&lHomes'
   button-tpa: '&e&lTeleport'
+  button-public-homes: '&a&lPublic Homes'
   button-shopgui-plus: '&2&lShopGUI+'
   button-economyshop-gui: '&2&lEconomyShop'
   button-mypet: '&d&lPets'
@@ -133,6 +144,20 @@ ui:
   home-delete-failed: '&cFailed to delete home.'
   home-name-input-text: '&7Enter a name for this home:'
   home-name-input-placeholder: 'home'
+  # --- Manage a home (rename-free: teleport, privacy, delete) ---
+  home-manage-button: '&0Manage Homes'
+  home-manage-title: '&bManage Homes'
+  home-manage-content: '&7Select a home to manage.'
+  home-manage-teleport-button: '&aTeleport'
+  home-manage-delete-button: '&cDelete Home'
+  home-public-suffix: ' &a(Public)'
+  home-make-public-button: '&aMake Public'
+  home-make-private-button: '&6Make Private'
+  home-set-public-toggle: '&7Make this home public'
+  home-privacy-public-success: '&aHome ''%home_name%'' is now public.'
+  home-privacy-private-success: '&aHome ''%home_name%'' is now private.'
+  home-privacy-failed: '&cFailed to change the privacy of %home_name%.'
+
   # --- Public homes (HuskHomes only) ---
   public-home-title: '&bPublic Homes'
   public-home-content: '&7Select a public home to teleport to.'

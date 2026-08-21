@@ -25,6 +25,9 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleEconomyShopGui;
     private final boolean moduleMyPet;
     private final boolean moduleDeathMenu;
+    private final boolean homeManageMenu;
+    private final boolean homePublicHomes;
+    private final boolean homePrivacy;
 
     // Intercepted commands
     private final CommandAliases commandWarps;
@@ -69,6 +72,7 @@ public final class EssentialsAddonConfiguration {
     private final String hubButtonKits;
     private final String hubButtonHomes;
     private final String hubButtonTpa;
+    private final String hubButtonPublicHomes;
     private final String hubButtonShopGuiPlus;
     private final String hubButtonEconomyShopGui;
     private final String hubButtonMyPet;
@@ -113,6 +117,18 @@ public final class EssentialsAddonConfiguration {
     private final String homeDeleteFailed;
     private final String homeNameInputText;
     private final String homeNameInputPlaceholder;
+    private final String homeManageButton;
+    private final String homeManageTitle;
+    private final String homeManageContent;
+    private final String homeManageTeleportButton;
+    private final String homeManageDeleteButton;
+    private final String homePublicSuffix;
+    private final String homeMakePublicButton;
+    private final String homeMakePrivateButton;
+    private final String homeSetPublicToggle;
+    private final String homePrivacyPublicSuccess;
+    private final String homePrivacyPrivateSuccess;
+    private final String homePrivacyFailed;
     private final String publicHomeTitle;
     private final String publicHomeContent;
     private final String publicHomeButton;
@@ -231,6 +247,9 @@ public final class EssentialsAddonConfiguration {
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
+        this.homeManageMenu = configuration.getBoolean("homes.manage-menu", true);
+        this.homePublicHomes = configuration.getBoolean("homes.public-homes", true);
+        this.homePrivacy = configuration.getBoolean("homes.privacy", true);
 
         this.commandWarps = aliases(configuration, "commands.warps", "warp", "warps", "warplist");
         this.commandKits = aliases(configuration, "commands.kits", "kit", "kits");
@@ -271,6 +290,7 @@ public final class EssentialsAddonConfiguration {
         this.hubButtonKits = color(configuration.getString("hub.button-kits", "&6&lKits"));
         this.hubButtonHomes = color(configuration.getString("hub.button-homes", "&a&lHomes"));
         this.hubButtonTpa = color(configuration.getString("hub.button-tpa", "&e&lTeleport"));
+        this.hubButtonPublicHomes = color(configuration.getString("hub.button-public-homes", "&a&lPublic Homes"));
         this.hubButtonShopGuiPlus = color(configuration.getString("hub.button-shopgui-plus", "&2&lShopGUI+"));
         this.hubButtonEconomyShopGui = color(configuration.getString("hub.button-economyshop-gui", "&2&lEconomyShop"));
         this.hubButtonMyPet = color(configuration.getString("hub.button-mypet", "&d&lPets"));
@@ -315,6 +335,18 @@ public final class EssentialsAddonConfiguration {
         this.homeDeleteFailed = color(configuration.getString("ui.home-delete-failed", "&cFailed to delete home."));
         this.homeNameInputText = color(configuration.getString("ui.home-name-input-text", "&7Enter a name for this home:"));
         this.homeNameInputPlaceholder = configuration.getString("ui.home-name-input-placeholder", "home");
+        this.homeManageButton = color(configuration.getString("ui.home-manage-button", "&0Manage Homes"));
+        this.homeManageTitle = color(configuration.getString("ui.home-manage-title", "&bManage Homes"));
+        this.homeManageContent = color(configuration.getString("ui.home-manage-content", "&7Select a home to manage."));
+        this.homeManageTeleportButton = color(configuration.getString("ui.home-manage-teleport-button", "&aTeleport"));
+        this.homeManageDeleteButton = color(configuration.getString("ui.home-manage-delete-button", "&cDelete Home"));
+        this.homePublicSuffix = color(configuration.getString("ui.home-public-suffix", " &a(Public)"));
+        this.homeMakePublicButton = color(configuration.getString("ui.home-make-public-button", "&aMake Public"));
+        this.homeMakePrivateButton = color(configuration.getString("ui.home-make-private-button", "&6Make Private"));
+        this.homeSetPublicToggle = color(configuration.getString("ui.home-set-public-toggle", "&7Make this home public"));
+        this.homePrivacyPublicSuccess = color(configuration.getString("ui.home-privacy-public-success", "&aHome '%home_name%' is now public."));
+        this.homePrivacyPrivateSuccess = color(configuration.getString("ui.home-privacy-private-success", "&aHome '%home_name%' is now private."));
+        this.homePrivacyFailed = color(configuration.getString("ui.home-privacy-failed", "&cFailed to change the privacy of %home_name%."));
         this.publicHomeTitle = color(configuration.getString("ui.public-home-title", "&bPublic Homes"));
         this.publicHomeContent = color(configuration.getString("ui.public-home-content", "&7Select a public home to teleport to."));
         this.publicHomeButton = color(configuration.getString("ui.public-home-button", "&e%home_name% &7by &f%owner%"));
@@ -510,6 +542,18 @@ public final class EssentialsAddonConfiguration {
     public String homeDeleteFailed() { return homeDeleteFailed; }
     public String homeNameInputText() { return homeNameInputText; }
     public String homeNameInputPlaceholder() { return homeNameInputPlaceholder; }
+    public String homeManageButton() { return homeManageButton; }
+    public String homeManageTitle() { return homeManageTitle; }
+    public String homeManageContent() { return homeManageContent; }
+    public String homeManageTeleportButton() { return homeManageTeleportButton; }
+    public String homeManageDeleteButton() { return homeManageDeleteButton; }
+    public String homePublicSuffix() { return homePublicSuffix; }
+    public String homeMakePublicButton() { return homeMakePublicButton; }
+    public String homeMakePrivateButton() { return homeMakePrivateButton; }
+    public String homeSetPublicToggle() { return homeSetPublicToggle; }
+    public String homePrivacyPublicSuccess() { return homePrivacyPublicSuccess; }
+    public String homePrivacyPrivateSuccess() { return homePrivacyPrivateSuccess; }
+    public String homePrivacyFailed() { return homePrivacyFailed; }
     public String publicHomeTitle() { return publicHomeTitle; }
     public String publicHomeContent() { return publicHomeContent; }
     public String publicHomeButton() { return publicHomeButton; }
@@ -596,6 +640,11 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleMyPet() { return moduleMyPet; }
     public boolean moduleDeathMenu() { return moduleDeathMenu; }
 
+    // Home extras
+    public boolean homeManageMenuEnabled() { return homeManageMenu; }
+    public boolean homePublicHomesEnabled() { return homePublicHomes; }
+    public boolean homePrivacyEnabled() { return homePrivacy; }
+
     // Intercepted commands
     public CommandAliases commandWarps() { return commandWarps; }
     public CommandAliases commandKits() { return commandKits; }
@@ -637,6 +686,7 @@ public final class EssentialsAddonConfiguration {
     public String hubButtonKits() { return hubButtonKits; }
     public String hubButtonHomes() { return hubButtonHomes; }
     public String hubButtonTpa() { return hubButtonTpa; }
+    public String hubButtonPublicHomes() { return hubButtonPublicHomes; }
     public String hubButtonShopGuiPlus() { return hubButtonShopGuiPlus; }
     public String hubButtonEconomyShopGui() { return hubButtonEconomyShopGui; }
     public String hubButtonMyPet() { return hubButtonMyPet; }

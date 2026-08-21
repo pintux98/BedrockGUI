@@ -7,10 +7,13 @@ import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import org.bukkit.entity.Player;
 
+import java.util.function.BooleanSupplier;
+
 public final class BedrockHubService {
     private final EssentialsAddonConfiguration configuration;
     private final BedrockPlayerDetector detector;
     private final BedrockSoundFeedback soundFeedback;
+    private BooleanSupplier publicHomesAvailable = () -> false;
 
     public BedrockHubService(EssentialsAddonConfiguration configuration,
                              BedrockPlayerDetector detector,
@@ -18,6 +21,14 @@ public final class BedrockHubService {
         this.configuration = configuration;
         this.detector = detector;
         this.soundFeedback = soundFeedback;
+    }
+
+    /**
+     * Set by the plugin once the homes module is built, because the hub is created first and the
+     * button only belongs there when the active provider serves public homes.
+     */
+    public void setPublicHomesAvailable(BooleanSupplier publicHomesAvailable) {
+        this.publicHomesAvailable = publicHomesAvailable == null ? () -> false : publicHomesAvailable;
     }
 
     public boolean shouldHandle(Player player) {
@@ -58,6 +69,15 @@ public final class BedrockHubService {
                     api.executeActionString(formPlayer, "essentials_hub_home:",
                             api.createActionContext(java.util.Map.of(), java.util.Map.of(),
                                     java.util.Map.of("source", "hub", "feature", "homes"), "hub", "simple"));
+                } catch (IllegalStateException ignored) {}
+            });
+        }
+        if (configuration.moduleHomes() && publicHomesAvailable.getAsBoolean()) {
+            form.button(configuration.hubButtonPublicHomes(), formPlayer -> {
+                try {
+                    api.executeActionString(formPlayer, "public_home_main:",
+                            api.createActionContext(java.util.Map.of(), java.util.Map.of(),
+                                    java.util.Map.of("source", "hub", "feature", "public-homes"), "hub", "simple"));
                 } catch (IllegalStateException ignored) {}
             });
         }
