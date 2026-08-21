@@ -264,7 +264,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         Map<String, Supplier<TpaProvider>> tpaFactories = new LinkedHashMap<>();
         registerProvider(tpaFactories, "Essentials", EssentialsXTpaProvider::new);
         registerProvider(tpaFactories, "CMI", CMITpaProvider::new);
-        registerProvider(tpaFactories, "HuskHomes", HuskHomesTpaProvider::new);
+        registerProvider(tpaFactories, "HuskHomes", () -> new HuskHomesTpaProvider(getLogger()));
 
         tpaCatalogService = new TpaCatalogService(getLogger());
         TpaProvider activeTpa = pickProvider(tpaFactories, configuration.providerTpa(), "TPA");

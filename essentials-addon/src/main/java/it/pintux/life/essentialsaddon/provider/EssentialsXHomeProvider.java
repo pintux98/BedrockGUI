@@ -3,12 +3,16 @@ package it.pintux.life.essentialsaddon.provider;
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public final class EssentialsXHomeProvider implements HomeProvider {
 
@@ -30,88 +34,100 @@ public final class EssentialsXHomeProvider implements HomeProvider {
         }
         try {
             essentials = (Essentials) plugin;
-            return essentials.getUser(Bukkit.getOnlinePlayers().iterator().next()) != null;
+            return true;
         } catch (Exception e) {
             return false;
         }
     }
 
     @Override
-    public List<String> getHomeNames(Player player) {
-        if (!isReady()) return List.of();
+    public void homeNames(Player player, Consumer<List<String>> callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(List.of());
+            return;
+        }
         try {
-            User user = essentials.getUser(player);
-            if (user == null) return List.of();
-            return new ArrayList<>(user.getHomes());
+            callback.accept(new ArrayList<>(user.getHomes()));
         } catch (Exception e) {
-            return List.of();
+            callback.accept(List.of());
         }
     }
 
     @Override
-    public Location getHomeLocation(Player player, String homeName) {
-        if (!isReady()) return null;
+    public void homeLimit(Player player, IntConsumer callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(0);
+            return;
+        }
         try {
-            User user = essentials.getUser(player);
-            if (user == null) return null;
-            return user.getHome(homeName);
+            callback.accept(essentials.getSettings().getHomeLimit(user));
+        } catch (Exception e) {
+            callback.accept(0);
+        }
+    }
+
+    @Override
+    public void teleportHome(Player player, String homeName, Consumer<Boolean> callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        // EssentialsX teleports on the server thread.
+        MainThread.run(() -> {
+            try {
+                Location home = user.getHome(homeName);
+                callback.accept(home != null && player.teleport(home));
+            } catch (Exception e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    @Override
+    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                user.setHome(homeName, player.getLocation());
+                callback.accept(true);
+            } catch (Exception e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    @Override
+    public void deleteHome(Player player, String homeName, Consumer<Boolean> callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                user.delHome(homeName);
+                callback.accept(true);
+            } catch (Exception e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    private User user(Player player) {
+        if (!isReady()) {
+            return null;
+        }
+        try {
+            return essentials.getUser(player);
         } catch (Exception e) {
             return null;
         }
-    }
-
-    @Override
-    public boolean teleportHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        try {
-            Location loc = getHomeLocation(player, homeName);
-            if (loc == null) return false;
-            return player.teleport(loc);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean setHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        try {
-            User user = essentials.getUser(player);
-            if (user == null) return false;
-            user.setHome(homeName, player.getLocation());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean deleteHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        try {
-            User user = essentials.getUser(player);
-            if (user == null) return false;
-            user.delHome(homeName);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public int getMaxHomes(Player player) {
-        if (!isReady()) return 0;
-        try {
-            User user = essentials.getUser(player);
-            if (user == null) return 0;
-            return essentials.getSettings().getHomeLimit(user);
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    @Override
-    public int getHomeCount(Player player) {
-        return getHomeNames(player).size();
     }
 }

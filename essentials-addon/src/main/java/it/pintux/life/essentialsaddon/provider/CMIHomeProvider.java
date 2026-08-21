@@ -1,18 +1,22 @@
 package it.pintux.life.essentialsaddon.provider;
 
+import com.Zrips.CMI.CMI;
+import com.Zrips.CMI.Containers.CMIUser;
+import com.Zrips.CMI.Modules.Homes.CmiHome;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.util.MainThread;
+import net.Zrips.CMILib.Container.CMILocation;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 public final class CMIHomeProvider implements HomeProvider {
-
-    private Object cmiInstance;
-    private Method getPlayerManagerMethod;
 
     @Override
     public String getProviderId() {
@@ -21,127 +25,110 @@ public final class CMIHomeProvider implements HomeProvider {
 
     @Override
     public boolean isReady() {
-        if (cmiInstance != null) {
-            return true;
-        }
         Plugin plugin = Bukkit.getPluginManager().getPlugin("CMI");
         if (plugin == null || !plugin.isEnabled()) {
             return false;
         }
         try {
-            cmiInstance = plugin;
-            getPlayerManagerMethod = cmiInstance.getClass().getMethod("getPlayerManager");
-            return getPlayerManagerMethod.invoke(cmiInstance) != null;
-        } catch (Exception e) {
+            return CMI.getInstance() != null && CMI.getInstance().getPlayerManager() != null;
+        } catch (Throwable e) {
             return false;
         }
     }
 
     @Override
-    public List<String> getHomeNames(Player player) {
-        if (!isReady()) return List.of();
+    public void homeNames(Player player, Consumer<List<String>> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(List.of());
+            return;
+        }
         try {
-            Object playerManager = getPlayerManagerMethod.invoke(cmiInstance);
-            Method getUser = playerManager.getClass().getMethod("getUser", Player.class);
-            Object user = getUser.invoke(playerManager, player);
-            if (user == null) return List.of();
-            Method getHomes = user.getClass().getMethod("getHomes");
-            Object homes = getHomes.invoke(user);
-            if (homes instanceof Map) {
-                return new ArrayList<>(((Map<?, ?>) homes).keySet().stream()
-                        .map(Object::toString)
-                        .toList());
-            }
-            return List.of();
-        } catch (Exception e) {
-            return List.of();
+            callback.accept(new ArrayList<>(user.getHomes().keySet()));
+        } catch (Throwable e) {
+            callback.accept(List.of());
         }
     }
 
     @Override
-    public Location getHomeLocation(Player player, String homeName) {
-        if (!isReady()) return null;
+    public void homeLimit(Player player, IntConsumer callback) {
+        if (!isReady()) {
+            callback.accept(0);
+            return;
+        }
         try {
-            Object playerManager = getPlayerManagerMethod.invoke(cmiInstance);
-            Method getUser = playerManager.getClass().getMethod("getUser", Player.class);
-            Object user = getUser.invoke(playerManager, player);
-            if (user == null) return null;
-            Method getHome = user.getClass().getMethod("getHome", String.class);
-            Object home = getHome.invoke(user, homeName);
-            if (home == null) return null;
-            Method getLocation = home.getClass().getMethod("getLocation");
-            return (Location) getLocation.invoke(home);
-        } catch (Exception e) {
+            callback.accept(CMI.getInstance().getHomeManager().getMaxHomes(player));
+        } catch (Throwable e) {
+            callback.accept(0);
+        }
+    }
+
+    @Override
+    public void teleportHome(Player player, String homeName, Consumer<Boolean> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        // CMI teleports on the server thread.
+        MainThread.run(() -> {
+            try {
+                CmiHome home = user.getHome(homeName);
+                Location target = home == null ? null : bukkitLocation(home);
+                callback.accept(target != null && player.teleport(target));
+            } catch (Throwable e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    @Override
+    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                user.addHome(new CmiHome(homeName, new CMILocation(player.getLocation())), true);
+                callback.accept(true);
+            } catch (Throwable e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    @Override
+    public void deleteHome(Player player, String homeName, Consumer<Boolean> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(false);
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                user.removeHome(homeName);
+                callback.accept(true);
+            } catch (Throwable e) {
+                callback.accept(false);
+            }
+        });
+    }
+
+    private Location bukkitLocation(CmiHome home) {
+        CMILocation location = home.getLoc();
+        return location == null ? null : location.getBukkitLoc();
+    }
+
+    private CMIUser user(Player player) {
+        if (!isReady()) {
             return null;
         }
-    }
-
-    @Override
-    public boolean teleportHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        Location loc = getHomeLocation(player, homeName);
-        if (loc == null) return false;
         try {
-            player.teleport(loc);
-            return true;
-        } catch (Exception e) {
-            return false;
+            return CMI.getInstance().getPlayerManager().getUser(player);
+        } catch (Throwable e) {
+            return null;
         }
-    }
-
-    @Override
-    public boolean setHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        try {
-            Object playerManager = getPlayerManagerMethod.invoke(cmiInstance);
-            Method getUser = playerManager.getClass().getMethod("getUser", Player.class);
-            Object user = getUser.invoke(playerManager, player);
-            if (user == null) return false;
-            Method addHome = user.getClass().getMethod("addHome", String.class, Location.class);
-            addHome.invoke(user, homeName, player.getLocation());
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public boolean deleteHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        try {
-            Object playerManager = getPlayerManagerMethod.invoke(cmiInstance);
-            Method getUser = playerManager.getClass().getMethod("getUser", Player.class);
-            Object user = getUser.invoke(playerManager, player);
-            if (user == null) return false;
-            Method removeHome = user.getClass().getMethod("removeHome", String.class);
-            removeHome.invoke(user, homeName);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    @Override
-    public int getMaxHomes(Player player) {
-        if (!isReady()) return 0;
-        try {
-            Object playerManager = getPlayerManagerMethod.invoke(cmiInstance);
-            Method getUser = playerManager.getClass().getMethod("getUser", Player.class);
-            Object user = getUser.invoke(playerManager, player);
-            if (user == null) return 0;
-            Method getMaxHomes = user.getClass().getMethod("getMaxHomes");
-            Object result = getMaxHomes.invoke(user);
-            if (result instanceof Number) {
-                return ((Number) result).intValue();
-            }
-            return 0;
-        } catch (Exception e) {
-            return 0;
-        }
-    }
-
-    @Override
-    public int getHomeCount(Player player) {
-        return getHomeNames(player).size();
     }
 }

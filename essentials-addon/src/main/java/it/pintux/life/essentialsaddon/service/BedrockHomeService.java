@@ -7,7 +7,6 @@ import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
-import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -38,7 +37,11 @@ public final class BedrockHomeService {
         if (api == null) return;
         if (!ensureHomeCatalog(player)) return;
 
-        List<String> homes = homeCatalog.getAccessibleHomes(player);
+        homeCatalog.homeNames(player, homes ->
+                homeCatalog.homeLimit(player, max -> renderHomeMenu(player, api, page, homes, max)));
+    }
+
+    private void renderHomeMenu(Player player, BedrockGUIApi api, int page, List<String> homes, int max) {
         if (homes.isEmpty()) {
             player.sendMessage(configuration.noHomesMessage());
             return;
@@ -50,10 +53,9 @@ public final class BedrockHomeService {
         int start = (currentPage - 1) * ITEMS_PER_PAGE;
         int end = Math.min(start + ITEMS_PER_PAGE, homes.size());
 
-        int count = homeCatalog.getHomeCount(player);
-        int max = homeCatalog.getMaxHomes(player);
         String limitText = max > 0
-                ? configuration.render(configuration.homeLimitText(), Map.of("count", String.valueOf(count), "max", String.valueOf(max)))
+                ? configuration.render(configuration.homeLimitText(),
+                        Map.of("count", String.valueOf(homes.size()), "max", String.valueOf(max)))
                 : "";
 
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.homeTitle() + limitText);
@@ -92,20 +94,18 @@ public final class BedrockHomeService {
     public void teleportHome(Player player, String homeName) {
         if (!ensureHomeCatalog(player)) return;
 
-        List<String> homes = homeCatalog.getAccessibleHomes(player);
-        if (!homes.contains(homeName)) {
-            player.sendMessage(configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
-            return;
-        }
-
-        // Form callbacks arrive on a Floodgate thread; teleports are main-thread only.
-        MainThread.run(() -> {
-            boolean success = homeCatalog.teleportHome(player, homeName);
-            if (success) {
-                player.sendMessage(configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
-            } else {
-                player.sendMessage(configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
+        homeCatalog.homeNames(player, homes -> {
+            if (!homes.contains(homeName)) {
+                player.sendMessage(configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
+                return;
             }
+            homeCatalog.teleportHome(player, homeName, success -> {
+                if (success) {
+                    player.sendMessage(configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
+                } else {
+                    player.sendMessage(configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
+                }
+            });
         });
     }
 
@@ -114,28 +114,30 @@ public final class BedrockHomeService {
         if (api == null) return;
         if (!ensureHomeCatalog(player)) return;
 
-        int count = homeCatalog.getHomeCount(player);
-        int max = homeCatalog.getMaxHomes(player);
-        if (max > 0 && count >= max) {
-            player.sendMessage(configuration.render(configuration.homeLimitReached(),
-                    Map.of("count", String.valueOf(count), "max", String.valueOf(max))));
-            return;
-        }
+        homeCatalog.homeNames(player, homes -> homeCatalog.homeLimit(player, max -> {
+            if (max > 0 && homes.size() >= max) {
+                player.sendMessage(configuration.render(configuration.homeLimitReached(),
+                        Map.of("count", String.valueOf(homes.size()), "max", String.valueOf(max))));
+                return;
+            }
+            renderSetHomeForm(player, api);
+        }));
+    }
 
+    private void renderSetHomeForm(Player player, BedrockGUIApi api) {
         api.createCustomForm(configuration.homeTitle())
                 .input(configuration.homeContent(), "home_name", "")
                 .onSubmit((p, results) -> {
                     String homeName = (String) results.get("home_name");
+                    Player bukkitPlayer = FormPlayerResolver.resolve(p);
+                    if (bukkitPlayer == null) return;
                     if (homeName == null || homeName.trim().isEmpty()) {
-                        Player bukkitPlayer = FormPlayerResolver.resolve(p);
-                        if (bukkitPlayer != null) bukkitPlayer.sendMessage(configuration.homeSetInvalid());
+                        bukkitPlayer.sendMessage(configuration.homeSetInvalid());
                         return;
                     }
                     String trimmed = homeName.trim();
-                    Player bukkitPlayer = FormPlayerResolver.resolve(p);
-                    if (bukkitPlayer == null) return;
-                    MainThread.run(() -> {
-                        if (homeCatalog.setHome(bukkitPlayer, trimmed)) {
+                    homeCatalog.setHome(bukkitPlayer, trimmed, success -> {
+                        if (success) {
                             bukkitPlayer.sendMessage(configuration.render(configuration.homeSetSuccess(), Map.of("home_name", trimmed)));
                         } else {
                             bukkitPlayer.sendMessage(configuration.homeSetFailed());
@@ -150,12 +152,16 @@ public final class BedrockHomeService {
         if (api == null) return;
         if (!ensureHomeCatalog(player)) return;
 
-        List<String> homes = homeCatalog.getAccessibleHomes(player);
-        if (homes.isEmpty()) {
-            player.sendMessage(configuration.homeNoDelete());
-            return;
-        }
+        homeCatalog.homeNames(player, homes -> {
+            if (homes.isEmpty()) {
+                player.sendMessage(configuration.homeNoDelete());
+                return;
+            }
+            renderDeleteHomeForm(player, api, homes);
+        });
+    }
 
+    private void renderDeleteHomeForm(Player player, BedrockGUIApi api, List<String> homes) {
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.homeTitle());
         form.content(configuration.homeContent());
 
@@ -164,8 +170,8 @@ public final class BedrockHomeService {
             form.button(buttonText, formPlayer -> {
                 Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
                 if (bukkitPlayer == null) return;
-                MainThread.run(() -> {
-                    if (homeCatalog.deleteHome(bukkitPlayer, homeName)) {
+                homeCatalog.deleteHome(bukkitPlayer, homeName, success -> {
+                    if (success) {
                         bukkitPlayer.sendMessage(configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
                         openHomeMenu(bukkitPlayer, 1);
                     } else {

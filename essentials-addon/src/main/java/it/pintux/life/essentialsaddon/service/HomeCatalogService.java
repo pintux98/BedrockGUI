@@ -1,12 +1,17 @@
 package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.api.HomeProvider;
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
-import java.util.*;
+import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 import java.util.logging.Logger;
 
+/**
+ * Routes home reads and writes to the active provider. Results arrive through callbacks, which
+ * may run on any thread: see {@link HomeProvider}.
+ */
 public final class HomeCatalogService {
     private final Logger logger;
     private volatile boolean ready = false;
@@ -22,50 +27,51 @@ public final class HomeCatalogService {
     }
 
     public synchronized void refresh() {
-        if (provider == null || !provider.isReady()) {
-            ready = false;
-            return;
-        }
-        ready = true;
+        ready = provider != null && provider.isReady();
     }
 
     public boolean isReady() {
         return ready && provider != null;
     }
 
-    public List<String> getAccessibleHomes(Player player) {
-        if (!isReady()) return List.of();
-        return provider.getHomeNames(player);
+    public void homeNames(Player player, Consumer<List<String>> callback) {
+        if (!isReady()) {
+            callback.accept(List.of());
+            return;
+        }
+        provider.homeNames(player, callback);
     }
 
-    public Location getHomeLocation(Player player, String homeName) {
-        if (!isReady()) return null;
-        return provider.getHomeLocation(player, homeName);
+    public void homeLimit(Player player, IntConsumer callback) {
+        if (!isReady()) {
+            callback.accept(0);
+            return;
+        }
+        provider.homeLimit(player, callback);
     }
 
-    public boolean teleportHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        return provider.teleportHome(player, homeName);
+    public void teleportHome(Player player, String homeName, Consumer<Boolean> callback) {
+        if (!isReady()) {
+            callback.accept(false);
+            return;
+        }
+        provider.teleportHome(player, homeName, callback);
     }
 
-    public boolean setHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        return provider.setHome(player, homeName);
+    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+        if (!isReady()) {
+            callback.accept(false);
+            return;
+        }
+        provider.setHome(player, homeName, callback);
     }
 
-    public boolean deleteHome(Player player, String homeName) {
-        if (!isReady()) return false;
-        return provider.deleteHome(player, homeName);
-    }
-
-    public int getMaxHomes(Player player) {
-        if (!isReady()) return 0;
-        return provider.getMaxHomes(player);
-    }
-
-    public int getHomeCount(Player player) {
-        if (!isReady()) return 0;
-        return provider.getHomeCount(player);
+    public void deleteHome(Player player, String homeName, Consumer<Boolean> callback) {
+        if (!isReady()) {
+            callback.accept(false);
+            return;
+        }
+        provider.deleteHome(player, homeName, callback);
     }
 
     public HomeProvider getProvider() {

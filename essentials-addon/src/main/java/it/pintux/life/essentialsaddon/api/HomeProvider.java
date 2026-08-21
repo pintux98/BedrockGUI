@@ -1,22 +1,31 @@
 package it.pintux.life.essentialsaddon.api;
 
-import org.bukkit.Location;
 import org.bukkit.entity.Player;
 
 import java.util.List;
+import java.util.function.Consumer;
+import java.util.function.IntConsumer;
 
 /**
- * Contract for home providers (EssentialsX, CMI, etc.).
- * Implement to add support for new home plugins.
+ * Contract for home providers (EssentialsX, CMI, HuskHomes).
+ *
+ * <p>Every call hands its result to a callback and must return without waiting. HuskHomes answers
+ * its API on the server thread, so a provider that blocked for an answer while holding that thread
+ * could never receive one. Callbacks therefore run on whichever thread the backing plugin
+ * finishes on, and callers must not assume the server thread.</p>
  */
 public interface HomeProvider {
     String getProviderId();
+
     boolean isReady();
-    List<String> getHomeNames(Player player);
-    Location getHomeLocation(Player player, String homeName);
-    boolean teleportHome(Player player, String homeName);
-    boolean setHome(Player player, String homeName);
-    boolean deleteHome(Player player, String homeName);
-    int getMaxHomes(Player player);
-    int getHomeCount(Player player);
+
+    void homeNames(Player player, Consumer<List<String>> callback);
+
+    void homeLimit(Player player, IntConsumer callback);
+
+    void teleportHome(Player player, String homeName, Consumer<Boolean> callback);
+
+    void setHome(Player player, String homeName, Consumer<Boolean> callback);
+
+    void deleteHome(Player player, String homeName, Consumer<Boolean> callback);
 }

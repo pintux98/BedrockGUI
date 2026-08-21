@@ -1,192 +1,200 @@
 package it.pintux.life.essentialsaddon.provider;
 
 import it.pintux.life.essentialsaddon.api.TpaProvider;
+import net.william278.huskhomes.HuskHomes;
+import net.william278.huskhomes.api.HuskHomesAPI;
+import net.william278.huskhomes.event.ReceiveTeleportRequestEvent;
+import net.william278.huskhomes.manager.RequestsManager;
+import net.william278.huskhomes.teleport.TeleportRequest;
+import net.william278.huskhomes.user.OnlineUser;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Event;
+import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.plugin.EventExecutor;
 import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Method;
 import java.util.List;
+import java.util.Locale;
+import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
+/**
+ * Teleport requests served by HuskHomes through its published API.
+ *
+ * <p>Pending requests are read from HuskHomes' own {@link RequestsManager} rather than tracked
+ * here, so the form always shows what HuskHomes actually holds.</p>
+ */
 public final class HuskHomesTpaProvider implements TpaProvider {
-    private static final String RECEIVE_EVENT = "net.william278.huskhomes.event.ReceiveTeleportRequestEvent";
-    private static final String REPLY_EVENT = "net.william278.huskhomes.event.ReplyTeleportRequestEvent";
-    private static final long REQUEST_TTL_MILLIS = 60_000L;
+    private final Logger logger;
+    private volatile String lastFailure;
 
-    private final Object api;
-    private final ClassLoader huskLoader;
-    private final PendingRequestLog pending = new PendingRequestLog(REQUEST_TTL_MILLIS, System::currentTimeMillis);
-
-    public HuskHomesTpaProvider() {
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("HuskHomes");
-        if (plugin == null) throw new IllegalStateException("HuskHomes not found");
-        try {
-            this.huskLoader = plugin.getClass().getClassLoader();
-            Class<?> apiClass = huskLoader.loadClass("net.william278.huskhomes.api.HuskHomesAPI");
-            this.api = apiClass.getMethod("getInstance").invoke(null);
-        } catch (Exception e) {
-            throw new RuntimeException("Failed to initialize HuskHomesTpaProvider", e);
+    public HuskHomesTpaProvider(Logger logger) {
+        this.logger = logger;
+        if (Bukkit.getPluginManager().getPlugin("HuskHomes") == null) {
+            throw new IllegalStateException("HuskHomes not found");
         }
+        HuskHomesAPI.getInstance();
     }
 
     @Override
-    public String getProviderId() { return "HuskHomes"; }
+    public String getProviderId() {
+        return "HuskHomes";
+    }
 
     @Override
     public boolean isReady() {
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("HuskHomes");
-        return api != null && plugin != null && plugin.isEnabled();
+        return requests() != null;
     }
 
     @Override
     public boolean registerRequestListener(Plugin plugin, RequestListener listener) {
-        Class<? extends Event> receiveEvent = loadEvent(RECEIVE_EVENT);
-        if (receiveEvent == null) {
-            return false;
-        }
-        Listener owner = new Listener() {
-        };
-        EventExecutor receiveExecutor = (ignored, event) -> handleReceive(event, listener);
         try {
-            Bukkit.getPluginManager().registerEvent(
-                    receiveEvent, owner, EventPriority.MONITOR, receiveExecutor, plugin, true);
+            return hookRequestEvent(plugin, listener);
         } catch (Exception | LinkageError failure) {
+            // HuskHomes older than 4.1 has no request event: no popup, everything else still works.
+            report("This HuskHomes build exposes no teleport-request event", failure);
             return false;
         }
+    }
 
-        Class<? extends Event> replyEvent = loadEvent(REPLY_EVENT);
-        if (replyEvent != null) {
-            EventExecutor replyExecutor = (ignored, event) -> handleReply(event);
-            try {
-                Bukkit.getPluginManager().registerEvent(
-                        replyEvent, owner, EventPriority.MONITOR, replyExecutor, plugin, true);
-            } catch (Exception | LinkageError ignored) {
+    private boolean hookRequestEvent(Plugin plugin, RequestListener listener) {
+        Bukkit.getPluginManager().registerEvents(new Listener() {
+            @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+            public void onReceive(ReceiveTeleportRequestEvent event) {
+                OnlineUser recipient = event.getRecipient();
+                TeleportRequest request = event.getRequest();
+                if (recipient == null || request == null) {
+                    return;
+                }
+                Player target = Bukkit.getPlayerExact(recipient.getUsername());
+                if (target != null) {
+                    listener.onRequest(target, request.getRequesterName());
+                }
             }
-        }
+        }, plugin);
         return true;
     }
 
     @Override
     public boolean sendTpaRequest(Player sender, Player target) {
-        return dispatch(sender, "tpa " + target.getName());
+        return send(sender, target.getName(), TeleportRequest.Type.TPA);
     }
 
     @Override
     public boolean sendTpahereRequest(Player sender, Player target) {
-        return dispatch(sender, "tpahere " + target.getName());
+        return send(sender, target.getName(), TeleportRequest.Type.TPA_HERE);
     }
 
     @Override
     public boolean acceptTpa(Player target) {
-        return respond(target, "tpaccept");
+        return respond(target, true);
     }
 
     @Override
     public boolean denyTpa(Player target) {
-        return respond(target, "tpdecline");
+        return respond(target, false);
     }
 
     @Override
     public boolean cancelTpa(Player sender) {
+        // HuskHomes has no sender-side cancel: a request it holds only expires.
         return false;
     }
 
     @Override
     public List<String> getPendingRequests(Player player) {
-        return pending.senders(player.getName());
+        String sender = getPendingRequestSender(player);
+        return sender == null ? List.of() : List.of(sender);
     }
 
     @Override
     public boolean hasPendingRequest(Player player) {
-        return !getPendingRequests(player).isEmpty();
+        return getPendingRequestSender(player) != null;
     }
 
     @Override
     public String getPendingRequestSender(Player player) {
-        return pending.newestSender(player.getName());
-    }
-
-    private boolean respond(Player target, String command) {
-        String senderName = getPendingRequestSender(target);
-        boolean dispatched = dispatch(target, senderName == null ? command : command + " " + senderName);
-        if (dispatched) {
-            pending.forget(target.getName(), senderName);
+        RequestsManager requests = requests();
+        if (requests == null) {
+            return null;
         }
-        return dispatched;
-    }
-
-    private boolean dispatch(Player player, String command) {
-        if (!isReady()) return false;
         try {
-            return player.performCommand(command);
-        } catch (Exception e) {
-            return false;
-        }
-    }
-
-    private void handleReceive(Object event, RequestListener listener) {
-        String recipientName = resolveName(event, "getRecipient");
-        String senderName = senderName(event);
-        if (recipientName == null || senderName == null) {
-            return;
-        }
-        pending.record(recipientName, senderName);
-        Player target = Bukkit.getPlayerExact(recipientName);
-        if (target != null) {
-            listener.onRequest(target, senderName);
-        }
-    }
-
-    private void handleReply(Object event) {
-        String recipientName = resolveName(event, "getRecipient");
-        if (recipientName == null) {
-            return;
-        }
-        pending.forget(recipientName, senderName(event));
-    }
-
-    private String senderName(Object event) {
-        String senderName = resolveName(event, "getSender", "getRequester");
-        if (senderName != null) {
-            return senderName;
-        }
-        return resolveName(call(event, "getRequest"), "getRequesterName", "getRequester");
-    }
-
-    @SuppressWarnings("unchecked")
-    private Class<? extends Event> loadEvent(String className) {
-        try {
-            Class<?> loaded = huskLoader.loadClass(className);
-            if (!Event.class.isAssignableFrom(loaded)) return null;
-            return (Class<? extends Event>) loaded;
-        } catch (Exception | LinkageError failure) {
+            OnlineUser user = HuskHomesAPI.getInstance().adaptUser(player);
+            Optional<TeleportRequest> request = requests.getLastTeleportRequest(user);
+            if (request.isEmpty() || request.get().hasExpired()) {
+                return null;
+            }
+            return request.get().getRequesterName();
+        } catch (Throwable failure) {
+            report("Could not read the pending request for " + player.getName(), failure);
             return null;
         }
     }
 
-    private String resolveName(Object holder, String... methodNames) {
-        Object value = call(holder, methodNames);
-        if (value instanceof String name) {
-            return name.isBlank() ? null : name;
+    private boolean send(Player sender, String targetName, TeleportRequest.Type type) {
+        RequestsManager requests = requests();
+        if (requests == null) {
+            return false;
         }
-        Object username = call(value, "getUsername", "getName");
-        return username instanceof String name && !name.isBlank() ? name : null;
+        try {
+            OnlineUser user = HuskHomesAPI.getInstance().adaptUser(sender);
+            requests.sendTeleportRequest(user, targetName, type, null);
+            return true;
+        } catch (IllegalArgumentException unknownTarget) {
+            return false;
+        } catch (Throwable failure) {
+            report("Could not send a " + type + " request from " + sender.getName(), failure);
+            return false;
+        }
     }
 
-    private Object call(Object holder, String... methodNames) {
-        if (holder == null) return null;
-        for (String methodName : methodNames) {
-            try {
-                Method method = holder.getClass().getMethod(methodName);
-                method.setAccessible(true);
-                return method.invoke(holder);
-            } catch (Exception | LinkageError ignored) {
-            }
+    private boolean respond(Player target, boolean accept) {
+        RequestsManager requests = requests();
+        if (requests == null) {
+            return false;
         }
-        return null;
+        try {
+            OnlineUser user = HuskHomesAPI.getInstance().adaptUser(target);
+            if (requests.getLastTeleportRequest(user).isEmpty()) {
+                return false;
+            }
+            requests.respondToTeleportRequest(user, accept);
+            return true;
+        } catch (Throwable failure) {
+            report("Could not answer the pending request for " + target.getName(), failure);
+            return false;
+        }
+    }
+
+    private RequestsManager requests() {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("HuskHomes");
+        if (!(plugin instanceof HuskHomes huskHomes) || !plugin.isEnabled()) {
+            return null;
+        }
+        try {
+            return huskHomes.getManager().requests();
+        } catch (Throwable failure) {
+            report("HuskHomes' request manager is unavailable", failure);
+            return null;
+        }
+    }
+
+    /** Logs each distinct failure once, so a broken call is visible without spamming console. */
+    private void report(String message, Throwable failure) {
+        String detail = failure == null ? message
+                : message + ": " + failure.getClass().getSimpleName()
+                        + (failure.getMessage() == null ? "" : " - " + failure.getMessage());
+        String key = detail.toLowerCase(Locale.ROOT);
+        if (key.equals(lastFailure)) {
+            return;
+        }
+        lastFailure = key;
+        if (failure == null) {
+            logger.warning("HuskHomes TPA provider: " + detail);
+        } else {
+            logger.log(Level.WARNING, "HuskHomes TPA provider: " + detail, failure);
+        }
     }
 }

@@ -5,6 +5,12 @@ dependencies {
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly "net.essentialsx:EssentialsX:${essentialsXVersion}"
     compileOnly "com.github.Zrips:CMI-API:${cmiApiVersion}"
+    compileOnly("com.github.Zrips:CMILib:${cmiLibVersion}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+    }
+    compileOnly("net.william278.huskhomes:huskhomes-bukkit:${huskHomesVersion}") {
+        exclude group: "org.spigotmc", module: "spigot-api"
+    }
     compileOnly("com.github.brcdev-minecraft:shopgui-api:${shopguiApiVersion}") {
         exclude group: "org.spigotmc", module: "spigot-api"
     }
