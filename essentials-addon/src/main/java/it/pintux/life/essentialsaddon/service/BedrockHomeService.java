@@ -112,7 +112,7 @@ public final class BedrockHomeService {
     }
 
     private boolean privacyAvailable() {
-        return configuration.homePrivacyEnabled() && homeCatalog.supportsPublicHomes();
+        return configuration.homePrivacyEnabled() && homeCatalog.supportsPrivacy();
     }
 
     private boolean renameAvailable() {

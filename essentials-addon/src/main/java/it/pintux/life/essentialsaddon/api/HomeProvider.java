@@ -46,9 +46,18 @@ public interface HomeProvider {
         });
     }
 
-    /** True when the backing plugin has a notion of homes shared with everyone. */
+    /** True when the backing plugin has a browsable directory of homes shared with everyone. */
     default boolean supportsPublicHomes() {
         return false;
+    }
+
+    /**
+     * True when a single home can be made public or private. Separate from
+     * {@link #supportsPublicHomes()}: CMI marks homes private without publishing a directory of
+     * the public ones, so it has the switch but nothing to browse.
+     */
+    default boolean supportsPrivacy() {
+        return supportsPublicHomes();
     }
 
     /**

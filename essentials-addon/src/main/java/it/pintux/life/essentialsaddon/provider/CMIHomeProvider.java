@@ -4,6 +4,7 @@ import com.Zrips.CMI.CMI;
 import com.Zrips.CMI.Containers.CMIUser;
 import com.Zrips.CMI.Modules.Homes.CmiHome;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.HomeWriteResult;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import net.Zrips.CMILib.Container.CMILocation;
@@ -14,6 +15,7 @@ import org.bukkit.plugin.Plugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
 
@@ -93,6 +95,56 @@ public final class CMIHomeProvider implements HomeProvider {
         MainThread.run(() -> {
             try {
                 user.addHome(new CmiHome(homeName, new CMILocation(player.getLocation())), true);
+                callback.accept(HomeWriteResult.ok());
+            } catch (Throwable e) {
+                callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
+            }
+        });
+    }
+
+    @Override
+    public boolean supportsPrivacy() {
+        return true;
+    }
+
+    @Override
+    public void homeDetails(Player player, Consumer<List<HomeView>> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(List.of());
+            return;
+        }
+        try {
+            List<HomeView> views = new ArrayList<>();
+            for (Map.Entry<String, CmiHome> entry : user.getHomes().entrySet()) {
+                CmiHome home = entry.getValue();
+                // CMI states the negative, so a home that is not private is the shared one.
+                boolean shared = home != null && !home.isPrivate();
+                views.add(new HomeView(entry.getKey(), shared));
+            }
+            callback.accept(views);
+        } catch (Throwable e) {
+            callback.accept(List.of());
+        }
+    }
+
+    @Override
+    public void setHomePrivacy(Player player, String homeName, boolean isPublic,
+                               Consumer<HomeWriteResult> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(HomeWriteResult.failed("CMI user unavailable"));
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                CmiHome home = user.getHome(homeName);
+                if (home == null) {
+                    callback.accept(HomeWriteResult.failed("home not found"));
+                    return;
+                }
+                home.setPrivate(!isPublic);
+                user.addForDelayedSave();
                 callback.accept(HomeWriteResult.ok());
             } catch (Throwable e) {
                 callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));

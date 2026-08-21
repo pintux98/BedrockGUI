@@ -55,7 +55,7 @@ public final class HomeCatalogService {
 
     public void setHomePrivacy(Player player, String homeName, boolean isPublic,
                                Consumer<HomeWriteResult> callback) {
-        if (!supportsPublicHomes()) {
+        if (!supportsPrivacy()) {
             callback.accept(HomeWriteResult.failed("privacy is not supported"));
             return;
         }
@@ -96,6 +96,10 @@ public final class HomeCatalogService {
 
     public boolean supportsPublicHomes() {
         return isReady() && provider.supportsPublicHomes();
+    }
+
+    public boolean supportsPrivacy() {
+        return isReady() && provider.supportsPrivacy();
     }
 
     public boolean supportsRename() {
