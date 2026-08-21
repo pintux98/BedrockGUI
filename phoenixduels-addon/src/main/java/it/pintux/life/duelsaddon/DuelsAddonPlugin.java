@@ -111,7 +111,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         spectatorService = new BedrockSpectatorService(configuration, gateway, detector);
         kitService = new BedrockKitService(configuration, gateway, detector);
         confirmationService = new BedrockConfirmationService(this, configuration, gateway, detector);
-        invitationService = new BedrockInvitationService(configuration, gateway, detector);
+        invitationService = new BedrockInvitationService(this, configuration, gateway, detector);
         duelService.setInvitationService(invitationService);
 
         menuInterceptListener = new MenuInterceptListener(this, configuration, detector, gateway,

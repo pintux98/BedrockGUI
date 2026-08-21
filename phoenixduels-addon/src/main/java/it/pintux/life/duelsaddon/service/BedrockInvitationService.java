@@ -6,6 +6,7 @@ import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.InviteView;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 
 import java.util.Map;
 import java.util.Optional;
@@ -31,10 +32,12 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
      * {@code kind:inviter:invited} keys for invitations with a form already on screen.
      */
     private final Set<String> pending = ConcurrentHashMap.newKeySet();
+    private final Plugin plugin;
 
-    public BedrockInvitationService(DuelsAddonConfiguration config, DuelsGateway gateway,
+    public BedrockInvitationService(Plugin plugin, DuelsAddonConfiguration config, DuelsGateway gateway,
                                     BedrockPlayerDetector detector) {
         super(config, gateway, detector);
+        this.plugin = plugin;
     }
 
     public void sendPartyInvite(Player invited, UUID leaderId, String leaderName) {
@@ -111,26 +114,35 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 "rounds", String.valueOf(view.rounds()),
                 "time", String.valueOf(view.expiresInSeconds()));
 
+        String inviterName = view.inviterName();
         api.createModalForm(text("invitations.duel-title"), render("invitations.duel-content", ph))
                 .button1(text("invitations.accept"), fp -> {
                     pending.remove(key);
-                    if (!gateway.hasPendingChallenge(inviterId, invited.getUniqueId())) {
-                        fail(invited, "messages.invite-expired");
-                        return;
-                    }
-                    if (gateway.acceptChallenge(invited, inviterId)) {
-                        invited.sendMessage(text("messages.invite-accepted"));
-                    } else {
-                        fail(invited, "messages.invite-expired");
-                    }
+                    dispatchDuelReply(invited, "accept", inviterName);
                 })
                 .button2(text("invitations.decline"), fp -> {
                     pending.remove(key);
-                    if (gateway.declineChallenge(invited, inviterId)) {
-                        invited.sendMessage(text("messages.invite-declined"));
-                    }
+                    dispatchDuelReply(invited, "decline", inviterName);
                 })
                 .send(wrap(invited));
+    }
+
+    /**
+     * Answers a duel challenge by running the command PhoenixDuels' own chat button runs.
+     *
+     * <p>{@code ChallengeFacade} builds that button as {@code /<duel> accept <name>}, so dispatching
+     * the same command goes through exactly the path a Java player takes, including PhoenixDuels'
+     * own validation and its "invitation expired" reply. Calling the facade directly instead meant
+     * first resolving the invitation out of PhoenixDuels' registry, and a miss there produced no
+     * form and no message at all.</p>
+     */
+    private void dispatchDuelReply(Player invited, String subcommand, String inviterName) {
+        if (inviterName == null || inviterName.isBlank()) {
+            fail(invited, "messages.invite-expired");
+            return;
+        }
+        String command = gateway.commandName("duel", "duel") + " " + subcommand + " " + inviterName;
+        plugin.getServer().getScheduler().runTask(plugin, () -> invited.performCommand(command));
     }
 
     /**

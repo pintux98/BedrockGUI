@@ -126,14 +126,30 @@ public final class InvitationListener implements Listener {
             return;
         }
         UUID inviterId = event.getPlayer().getUniqueId();
+        String inviterName = event.getPlayer().getName();
+        String modeArg = parts.length > 2 ? parts[2] : null;
+        int roundsArg = parts.length > 3 ? parseRounds(parts[3]) : 0;
         plugin.getServer().getScheduler().runTask(plugin, () -> {
             Player target = Bukkit.getPlayerExact(targetName);
             if (target == null || target.getUniqueId().equals(inviterId)) {
                 return;
             }
-            if (gateway.hasPendingChallenge(inviterId, target.getUniqueId())) {
-                invitationService.sendDuelChallenge(target, inviterId);
-            }
+            // Deliberately not gated on the invitation registry. Looking the invitation up here
+            // returned nothing often enough that the form never appeared, and a form shown for an
+            // invitation PhoenixDuels no longer has is harmless: accepting runs their command,
+            // which answers "invitation not found or expired" itself.
+            String modeName = modeArg == null ? null
+                    : gateway.mode(modeArg).map(it.pintux.life.duelsaddon.model.ModeView::displayName)
+                            .orElse(modeArg);
+            int rounds = roundsArg > 0 ? roundsArg
+                    : gateway.mode(modeArg == null ? "" : modeArg)
+                            .map(it.pintux.life.duelsaddon.model.ModeView::roundsToWin).orElse(1);
+            debug(() -> "Duel challenge from " + inviterName + " to " + target.getName()
+                    + ": bedrockForm=" + invitationService.shouldHandle(target));
+            invitationService.sendDuelChallenge(target, inviterId,
+                    new it.pintux.life.duelsaddon.model.InviteView(inviterName,
+                            modeName == null ? "?" : modeName, rounds,
+                            gateway.invitationExpirationSeconds()));
         });
     }
 
@@ -141,6 +157,14 @@ public final class InvitationListener implements Listener {
     public void onQuit(PlayerQuitEvent event) {
         invitationService.forget(event.getPlayer().getUniqueId());
         duelService.forget(event.getPlayer().getUniqueId());
+    }
+
+    private static int parseRounds(String raw) {
+        try {
+            return Math.max(0, Integer.parseInt(raw.trim()));
+        } catch (NumberFormatException e) {
+            return 0;
+        }
     }
 
     private void debug(java.util.function.Supplier<String> message) {
