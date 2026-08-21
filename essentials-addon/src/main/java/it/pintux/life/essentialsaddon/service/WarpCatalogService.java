@@ -38,8 +38,13 @@ public final class WarpCatalogService {
         }
     }
 
+    /**
+     * Ready means the provider answered, not that it had anything to say: a server with no warps
+     * yet is ready and simply has an empty list. Treating empty as unready reported the backend
+     * as not loaded while the provider was working fine.
+     */
     public boolean isReady() {
-        return ready && !warpNames.isEmpty();
+        return ready && provider != null;
     }
 
     public List<String> getAccessibleWarps(Player player) {

@@ -446,7 +446,7 @@ public final class EssentialsAddonConfiguration {
         this.petSkilltreeSetFailed = color(configuration.getString("messages.pet-skilltree-set-failed", "&cCould not change skilltree."));
 
         this.noBedrockGui = color(configuration.getString("messages.no-bedrockgui", "&cBedrockGUI API is not available."));
-        this.essentialsNotReady = color(configuration.getString("messages.essentials-not-ready", "&eThe Essentials backend is not loaded yet."));
+        this.essentialsNotReady = color(configuration.getString("messages.essentials-not-ready", "&eThe backend is still loading. Please try again in a moment."));
         this.providerUnavailable = color(configuration.getString("messages.provider-unavailable", "&cNo compatible provider is available for this feature."));
 
         this.soundsEnabled = configuration.getBoolean("sounds.enabled", true);

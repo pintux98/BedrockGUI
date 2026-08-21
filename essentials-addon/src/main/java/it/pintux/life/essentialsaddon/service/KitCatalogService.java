@@ -38,8 +38,9 @@ public final class KitCatalogService {
         }
     }
 
+    /** Ready means the provider answered; a server with no kits is ready with an empty list. */
     public boolean isReady() {
-        return ready && !kitNames.isEmpty();
+        return ready && provider != null;
     }
 
     public List<String> getAccessibleKits(Player player) {

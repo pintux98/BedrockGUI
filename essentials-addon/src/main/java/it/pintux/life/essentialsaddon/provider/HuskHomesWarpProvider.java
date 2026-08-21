@@ -66,7 +66,9 @@ public final class HuskHomesWarpProvider implements WarpProvider {
             return false;
         }
         if (!loaded) {
+            // Still reading the list: say so rather than pass off an empty list as the truth.
             load();
+            return false;
         }
         return true;
     }

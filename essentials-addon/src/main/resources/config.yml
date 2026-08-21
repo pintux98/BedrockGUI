@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 12
+config-version: 13
 
 modules:
   warps: false
@@ -251,7 +251,7 @@ ui:
 # ─────────────────────────────────────────────
 messages:
   no-bedrockgui: '&cBedrockGUI API is not available.'
-  essentials-not-ready: '&eThe Essentials backend is not loaded yet. Please try again in a moment.'
+  essentials-not-ready: '&eThe backend is still loading. Please try again in a moment.'
   provider-unavailable: '&cNo compatible provider is available for this feature.'
   shop-shops-not-ready: '&eThe shop backend is not loaded yet.'
   shop-no-shop-access: '&cYou do not have permission to access this shop.'
