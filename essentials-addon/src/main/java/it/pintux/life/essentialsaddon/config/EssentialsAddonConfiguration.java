@@ -26,8 +26,6 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleMyPet;
     private final boolean moduleDeathMenu;
 
-    private final boolean debug;
-
     // Intercepted commands
     private final CommandAliases commandWarps;
     private final CommandAliases commandKits;
@@ -224,8 +222,6 @@ public final class EssentialsAddonConfiguration {
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
-
-        this.debug = configuration.getBoolean("debug", false);
 
         this.commandWarps = aliases(configuration, "commands.warps", "warp", "warps", "warplist");
         this.commandKits = aliases(configuration, "commands.kits", "kit", "kits");
@@ -572,8 +568,6 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
     public boolean moduleMyPet() { return moduleMyPet; }
     public boolean moduleDeathMenu() { return moduleDeathMenu; }
-
-    public boolean debugEnabled() { return debug; }
 
     // Intercepted commands
     public CommandAliases commandWarps() { return commandWarps; }

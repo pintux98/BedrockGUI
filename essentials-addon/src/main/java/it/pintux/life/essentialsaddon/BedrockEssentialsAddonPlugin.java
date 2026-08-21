@@ -249,7 +249,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         Map<String, Supplier<HomeProvider>> homeFactories = new LinkedHashMap<>();
         registerProvider(homeFactories, "Essentials", EssentialsXHomeProvider::new);
         registerProvider(homeFactories, "CMI", CMIHomeProvider::new);
-        registerProvider(homeFactories, "HuskHomes", () -> new HuskHomesHomeProvider(getLogger(), () -> configuration.debugEnabled()));
+        registerProvider(homeFactories, "HuskHomes", () -> new HuskHomesHomeProvider(getLogger()));
 
         homeCatalogService = new HomeCatalogService(getLogger());
         HomeProvider activeHome = pickProvider(homeFactories, configuration.providerHomes(), "home");
