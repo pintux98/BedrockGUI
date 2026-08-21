@@ -175,6 +175,12 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         registerProvider(warpFactories, "Essentials", () -> new EssentialsXWarpProvider());
         registerProvider(warpFactories, "CMI", () -> new CMIWarpProvider());
+        registerProvider(warpFactories, "HuskHomes", () -> new HuskHomesWarpProvider(this, getLogger(),
+                () -> {
+                    if (warpCatalogService != null) {
+                        warpCatalogService.refresh();
+                    }
+                }));
         registerProvider(kitFactories, "Essentials", () -> new EssentialsXKitProvider());
         registerProvider(kitFactories, "CMI", () -> new CMIKitProvider());
 

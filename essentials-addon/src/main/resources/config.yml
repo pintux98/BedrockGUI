@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 9
+config-version: 10
 
 modules:
   warps: false
@@ -19,7 +19,7 @@ modules:
   # Respawn menu shown to Bedrock players after they die.
   death-menu: false
 
-# Which plugin serves each feature: auto, Essentials, CMI or HuskHomes (homes/tpa only).
+# Which plugin serves each feature: auto, Essentials, CMI or HuskHomes (not kits).
 # auto = first installed, in that order. Features are independent.
 providers:
   warps: auto
