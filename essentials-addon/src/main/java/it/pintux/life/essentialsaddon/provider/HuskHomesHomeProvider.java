@@ -12,8 +12,10 @@ import org.bukkit.plugin.Plugin;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
 import java.util.function.IntConsumer;
+import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -26,14 +28,15 @@ import java.util.logging.Logger;
  */
 public final class HuskHomesHomeProvider implements HomeProvider {
     private final Logger logger;
+    private final BooleanSupplier debug;
     private volatile String lastFailure;
 
-    public HuskHomesHomeProvider(Logger logger) {
+    public HuskHomesHomeProvider(Logger logger, BooleanSupplier debug) {
         this.logger = logger;
+        this.debug = debug;
         if (Bukkit.getPluginManager().getPlugin("HuskHomes") == null) {
             throw new IllegalStateException("HuskHomes not found");
         }
-        HuskHomesAPI.getInstance();
     }
 
     @Override
@@ -63,7 +66,10 @@ public final class HuskHomesHomeProvider implements HomeProvider {
             return;
         }
         try {
-            api.getUserHomes(api.adaptUser(player)).whenComplete((homes, failure) -> {
+            OnlineUser user = api.adaptUser(player);
+            debug(() -> "getUserHomes for " + player.getName() + " (HuskHomes user "
+                    + user.getUsername() + " / " + user.getUuid() + ") requested");
+            api.getUserHomes(user).whenComplete((homes, failure) -> {
                 if (failure != null || homes == null) {
                     report("Could not read homes for " + player.getName(), failure);
                     callback.accept(List.of());
@@ -73,6 +79,8 @@ public final class HuskHomesHomeProvider implements HomeProvider {
                 for (Home home : homes) {
                     names.add(home.getName());
                 }
+                debug(() -> "getUserHomes for " + player.getName() + " answered " + names.size()
+                        + " home(s): " + names);
                 callback.accept(names);
             });
         } catch (Throwable failure) {
@@ -89,7 +97,9 @@ public final class HuskHomesHomeProvider implements HomeProvider {
             return;
         }
         try {
-            callback.accept(api.getMaxHomeSlots(api.adaptUser(player)));
+            int slots = api.getMaxHomeSlots(api.adaptUser(player));
+            debug(() -> "getMaxHomeSlots for " + player.getName() + " answered " + slots);
+            callback.accept(slots);
         } catch (Throwable failure) {
             report("Could not read the home limit for " + player.getName(), failure);
             callback.accept(0);
@@ -105,6 +115,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
         }
         try {
             OnlineUser user = api.adaptUser(player);
+            debug(() -> "getHome '" + homeName + "' for " + player.getName() + " requested");
             api.getHome(user, homeName).whenComplete((home, failure) -> {
                 if (failure != null) {
                     report("Could not look up home '" + homeName + "' for " + player.getName(), failure);
@@ -112,6 +123,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
                     return;
                 }
                 if (home == null || home.isEmpty()) {
+                    debug(() -> "getHome '" + homeName + "' for " + player.getName() + " found nothing");
                     callback.accept(false);
                     return;
                 }
@@ -132,6 +144,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
         }
         try {
             OnlineUser user = api.adaptUser(player);
+            debug(() -> "createHome '" + homeName + "' for " + player.getName() + " requested");
             api.createHome(user, homeName, user.getPosition()).whenComplete((home, failure) -> {
                 if (failure != null) {
                     // HuskHomes tells the player why itself (name taken, slots used up, bad name).
@@ -139,6 +152,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
                     callback.accept(false);
                     return;
                 }
+                debug(() -> "createHome '" + homeName + "' for " + player.getName() + " succeeded");
                 callback.accept(true);
             });
         } catch (Throwable failure) {
@@ -156,6 +170,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
         }
         try {
             api.deleteHome(api.adaptUser(player), homeName);
+            debug(() -> "deleteHome '" + homeName + "' for " + player.getName() + " handed to HuskHomes");
             callback.accept(true);
         } catch (Throwable failure) {
             report("Could not delete home '" + homeName + "' for " + player.getName(), failure);
@@ -179,11 +194,18 @@ public final class HuskHomesHomeProvider implements HomeProvider {
         }
     }
 
+    private void debug(Supplier<String> message) {
+        if (debug.getAsBoolean()) {
+            logger.info("[debug] HuskHomes homes: " + message.get()
+                    + " [thread " + Thread.currentThread().getName() + "]");
+        }
+    }
+
     private HuskHomesAPI apiOrNull() {
         try {
             return HuskHomesAPI.getInstance();
         } catch (Throwable notRegistered) {
-            report("HuskHomes' API is not registered", notRegistered);
+            report("HuskHomes' API is not registered, so no home operation can run", notRegistered);
             return null;
         }
     }

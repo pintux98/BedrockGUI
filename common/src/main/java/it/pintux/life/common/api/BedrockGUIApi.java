@@ -649,6 +649,7 @@ public class BedrockGUIApi {
         private List<FormComponentBuilder> components = new ArrayList<>();
         private Consumer<Map<String, Object>> onSubmit;
         private BiConsumer<FormPlayer, Map<String, Object>> onSubmitWithPlayer;
+        private FormPlayer currentPlayer;
 
         public CustomFormBuilder(String title) {
             super(title);
@@ -685,6 +686,13 @@ public class BedrockGUIApi {
         }
 
         @Override
+        public CompletableFuture<FormResult> send(FormPlayer player) {
+            // Remembered so the player-aware onSubmit overload has someone to hand results to.
+            this.currentPlayer = player;
+            return super.send(player);
+        }
+
+        @Override
         public CustomForm build() {
             CustomForm.Builder builder = CustomForm.builder()
                     .title(title);
@@ -694,14 +702,24 @@ public class BedrockGUIApi {
             }
 
             builder.validResultHandler((form, response) -> {
+                if (onSubmit == null && onSubmitWithPlayer == null) {
+                    return;
+                }
+                Map<String, Object> results = new HashMap<>();
+                for (int i = 0; i < components.size(); i++) {
+                    FormComponentBuilder component = components.get(i);
+                    Object value = component.extractValue(response, i);
+                    results.put(component.getName(), value);
+                }
                 if (onSubmit != null) {
-                    Map<String, Object> results = new HashMap<>();
-                    for (int i = 0; i < components.size(); i++) {
-                        FormComponentBuilder component = components.get(i);
-                        Object value = component.extractValue(response, i);
-                        results.put(component.getName(), value);
-                    }
                     onSubmit.accept(results);
+                }
+                if (onSubmitWithPlayer != null) {
+                    if (currentPlayer != null) {
+                        onSubmitWithPlayer.accept(currentPlayer, results);
+                    } else {
+                        logger.warn("Custom form submitted but FormPlayer context not available");
+                    }
                 }
             });
 
