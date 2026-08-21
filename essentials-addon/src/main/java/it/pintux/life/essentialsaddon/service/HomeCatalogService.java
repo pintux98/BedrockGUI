@@ -98,6 +98,10 @@ public final class HomeCatalogService {
         return isReady() && provider.supportsPublicHomes();
     }
 
+    public String publicHomeSeparator() {
+        return provider == null ? "." : provider.publicHomeSeparator();
+    }
+
     public void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         if (!supportsPublicHomes()) {
             callback.accept(List.of());

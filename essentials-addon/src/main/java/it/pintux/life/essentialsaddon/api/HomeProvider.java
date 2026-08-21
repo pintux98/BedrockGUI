@@ -51,6 +51,15 @@ public interface HomeProvider {
         return false;
     }
 
+    /**
+     * What separates owner from home name in a public home identifier. Configurable in the
+     * backing plugin, so it is asked for rather than assumed — and a Bedrock username may itself
+     * start with that character.
+     */
+    default String publicHomeSeparator() {
+        return ".";
+    }
+
     /** Public homes, each carrying the identifier to act on plus its owner and name to show. */
     default void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         callback.accept(List.of());

@@ -184,18 +184,20 @@ public final class BedrockHomeService {
     }
 
     /**
-     * Splits an {@code owner.name} identifier for the teleport messages, which only carry the
-     * identifier. The last separator is the one that counts: a Floodgate name starts with a dot,
-     * so cutting at the first one leaves the owner empty and the name wrong. Home names cannot
-     * contain the separator, so the tail is always the name.
+     * Splits an owner-and-name identifier for the teleport messages, which only carry the
+     * identifier. The separator comes from the provider, and the last one is the one that counts:
+     * a Bedrock username carries a prefix that may be the separator itself, so cutting at the
+     * first would leave the owner empty. A home name cannot contain the separator, so the tail is
+     * always the name.
      */
     private String publicHomeName(String identifier) {
-        int split = identifier.lastIndexOf('.');
-        return split >= 0 && split + 1 < identifier.length() ? identifier.substring(split + 1) : identifier;
+        int split = identifier.lastIndexOf(homeCatalog.publicHomeSeparator());
+        int nameStart = split + homeCatalog.publicHomeSeparator().length();
+        return split >= 0 && nameStart < identifier.length() ? identifier.substring(nameStart) : identifier;
     }
 
     private String publicHomeOwner(String identifier) {
-        int split = identifier.lastIndexOf('.');
+        int split = identifier.lastIndexOf(homeCatalog.publicHomeSeparator());
         return split > 0 ? identifier.substring(0, split) : "";
     }
 

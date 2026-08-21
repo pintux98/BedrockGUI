@@ -268,6 +268,16 @@ public final class HuskHomesHomeProvider implements HomeProvider {
     }
 
     @Override
+    public String publicHomeSeparator() {
+        try {
+            String delimiter = Home.getDelimiter();
+            return delimiter == null || delimiter.isEmpty() ? "." : delimiter;
+        } catch (Throwable failure) {
+            return ".";
+        }
+    }
+
+    @Override
     public void publicHomes(Player player, Consumer<List<PublicHomeView>> callback) {
         HuskHomesAPI api = apiOrNull();
         if (api == null || !player.hasPermission(PUBLIC_HOME_PERMISSION)) {
