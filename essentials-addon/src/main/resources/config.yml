@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 16
+config-version: 17
 
 modules:
   warps: false
@@ -207,6 +207,8 @@ ui:
   death-back-command: 'back'
   death-spawn-command: 'spawn'
   # Hide the death-point button from players without this permission. Leave empty to always show.
+  # Must match the plugin that serves /back: essentials.back on EssentialsX,
+  # huskhomes.command.back on HuskHomes, cmi.command.back on CMI.
   death-back-permission: 'essentials.back'
   death-show-back: true
   death-show-spawn: true
