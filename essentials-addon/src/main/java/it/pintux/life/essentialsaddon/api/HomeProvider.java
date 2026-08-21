@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.api;
 
 import it.pintux.life.essentialsaddon.model.HomeView;
+import it.pintux.life.essentialsaddon.model.HomeWriteResult;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -26,7 +27,7 @@ public interface HomeProvider {
 
     void teleportHome(Player player, String homeName, Consumer<Boolean> callback);
 
-    void setHome(Player player, String homeName, Consumer<Boolean> callback);
+    void setHome(Player player, String homeName, Consumer<HomeWriteResult> callback);
 
     void deleteHome(Player player, String homeName, Consumer<Boolean> callback);
 
@@ -59,7 +60,8 @@ public interface HomeProvider {
     }
 
     /** Makes an existing home public or private; only meaningful with {@link #supportsPublicHomes()}. */
-    default void setHomePrivacy(Player player, String homeName, boolean isPublic, Consumer<Boolean> callback) {
-        callback.accept(false);
+    default void setHomePrivacy(Player player, String homeName, boolean isPublic,
+                                Consumer<HomeWriteResult> callback) {
+        callback.accept(HomeWriteResult.failed("privacy is not supported"));
     }
 }

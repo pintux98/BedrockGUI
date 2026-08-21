@@ -4,6 +4,7 @@ import com.Zrips.CMI.CMI;
 import com.Zrips.CMI.Containers.CMIUser;
 import com.Zrips.CMI.Modules.Homes.CmiHome;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.model.HomeWriteResult;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import net.Zrips.CMILib.Container.CMILocation;
 import org.bukkit.Bukkit;
@@ -83,18 +84,18 @@ public final class CMIHomeProvider implements HomeProvider {
     }
 
     @Override
-    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+    public void setHome(Player player, String homeName, Consumer<HomeWriteResult> callback) {
         CMIUser user = user(player);
         if (user == null) {
-            callback.accept(false);
+            callback.accept(HomeWriteResult.failed("CMI user unavailable"));
             return;
         }
         MainThread.run(() -> {
             try {
                 user.addHome(new CmiHome(homeName, new CMILocation(player.getLocation())), true);
-                callback.accept(true);
+                callback.accept(HomeWriteResult.ok());
             } catch (Throwable e) {
-                callback.accept(false);
+                callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
             }
         });
     }

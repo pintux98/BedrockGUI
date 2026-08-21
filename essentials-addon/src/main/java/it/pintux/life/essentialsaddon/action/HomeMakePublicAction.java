@@ -26,7 +26,7 @@ public final class HomeMakePublicAction implements ActionSystem.ActionHandler {
             return ActionSystem.ActionResult.failure("Bukkit player context is unavailable");
         }
         String homeName = EssentialsActionPayloads.decodeHome(actionValue);
-        service.setHomePrivacy(bukkitPlayer, homeName, true);
+        service.setHomePrivacy(bukkitPlayer, homeName, true, true);
         return ActionSystem.ActionResult.success("Made home public: " + homeName);
     }
 

@@ -2,10 +2,13 @@ package it.pintux.life.essentialsaddon.provider;
 
 import it.pintux.life.essentialsaddon.api.HomeProvider;
 import it.pintux.life.essentialsaddon.model.HomeView;
+import it.pintux.life.essentialsaddon.model.HomeWriteResult;
+import net.william278.huskhomes.HuskHomes;
 import net.william278.huskhomes.api.HuskHomesAPI;
 import net.william278.huskhomes.position.Home;
 import net.william278.huskhomes.teleport.TeleportBuilder;
 import net.william278.huskhomes.user.OnlineUser;
+import net.william278.huskhomes.util.ValidationException;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
@@ -126,27 +129,46 @@ public final class HuskHomesHomeProvider implements HomeProvider {
     }
 
     @Override
-    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+    public void setHome(Player player, String homeName, Consumer<HomeWriteResult> callback) {
         HuskHomesAPI api = apiOrNull();
         if (api == null) {
-            callback.accept(false);
+            callback.accept(HomeWriteResult.failed("HuskHomes API unavailable"));
             return;
         }
         try {
             OnlineUser user = api.adaptUser(player);
-            api.createHome(user, homeName, user.getPosition()).whenComplete((home, failure) -> {
-                if (failure != null) {
-                    // HuskHomes tells the player why itself (name taken, slots used up, bad name).
-                    report("Could not set home '" + homeName + "' for " + player.getName(), failure);
-                    callback.accept(false);
-                    return;
-                }
-                callback.accept(true);
-            });
+            api.createHome(user, homeName, user.getPosition()).whenComplete((home, failure) ->
+                    callback.accept(failure == null
+                            ? HomeWriteResult.ok()
+                            : refusal(player, user, homeName, failure)));
         } catch (Throwable failure) {
-            report("Could not set home '" + homeName + "' for " + player.getName(), failure);
-            callback.accept(false);
+            callback.accept(refusal(player, api.adaptUser(player), homeName, failure));
         }
+    }
+
+    /**
+     * A refused write is the player's own input more often than a fault: an invalid name, a name
+     * already taken, no slots left. HuskHomes words those better than this addon can, so it is
+     * asked to tell the player, and only a genuine fault is logged.
+     */
+    private HomeWriteResult refusal(Player player, OnlineUser user, String homeName, Throwable failure) {
+        Throwable cause = failure instanceof java.util.concurrent.CompletionException && failure.getCause() != null
+                ? failure.getCause()
+                : failure;
+        if (cause instanceof ValidationException validation) {
+            Plugin plugin = Bukkit.getPluginManager().getPlugin("HuskHomes");
+            if (plugin instanceof HuskHomes huskHomes) {
+                try {
+                    validation.dispatchHomeError(user, false, huskHomes, homeName);
+                    return HomeWriteResult.reportedToPlayer(validation.getType().name());
+                } catch (Throwable ignored) {
+                    // Fall through to this addon's own message.
+                }
+            }
+            return HomeWriteResult.failed(validation.getType().name());
+        }
+        report("Could not set home '" + homeName + "' for " + player.getName(), cause);
+        return HomeWriteResult.failed(cause.getClass().getSimpleName());
     }
 
     @Override
@@ -156,13 +178,24 @@ public final class HuskHomesHomeProvider implements HomeProvider {
             callback.accept(false);
             return;
         }
-        try {
-            api.deleteHome(api.adaptUser(player), homeName);
-            callback.accept(true);
-        } catch (Throwable failure) {
-            report("Could not delete home '" + homeName + "' for " + player.getName(), failure);
+        HuskHomes huskHomes = huskHomesOrNull();
+        if (huskHomes == null) {
             callback.accept(false);
+            return;
         }
+        OnlineUser user = api.adaptUser(player);
+        // Same reason as setHomePrivacy: the API's own method swallows the refusal in an async task.
+        huskHomes.runAsync(() -> {
+            try {
+                huskHomes.getManager().homes().deleteHome(user, homeName);
+                callback.accept(true);
+            } catch (ValidationException validation) {
+                callback.accept(false);
+            } catch (Throwable failure) {
+                report("Could not delete home '" + homeName + "' for " + player.getName(), failure);
+                callback.accept(false);
+            }
+        });
     }
 
     @Override
@@ -192,19 +225,40 @@ public final class HuskHomesHomeProvider implements HomeProvider {
     }
 
     @Override
-    public void setHomePrivacy(Player player, String homeName, boolean isPublic, Consumer<Boolean> callback) {
+    public void setHomePrivacy(Player player, String homeName, boolean isPublic,
+                               Consumer<HomeWriteResult> callback) {
         HuskHomesAPI api = apiOrNull();
-        if (api == null) {
-            callback.accept(false);
+        HuskHomes huskHomes = huskHomesOrNull();
+        if (api == null || huskHomes == null) {
+            callback.accept(HomeWriteResult.failed("HuskHomes API unavailable"));
             return;
         }
-        try {
-            api.setHomePrivacy(api.adaptUser(player), homeName, isPublic);
-            callback.accept(true);
-        } catch (Throwable failure) {
-            report("Could not change the privacy of home '" + homeName + "' for " + player.getName(), failure);
-            callback.accept(false);
-        }
+        OnlineUser user = api.adaptUser(player);
+        // HuskHomesAPI#setHomePrivacy hands the work to its own async task and returns void, so a
+        // refusal such as REACHED_MAX_PUBLIC_HOMES would be lost and reported here as success.
+        // Calling the manager on that same scheduler keeps the write off the server thread while
+        // making the outcome visible.
+        huskHomes.runAsync(() -> {
+            try {
+                huskHomes.getManager().homes().setHomePrivacy(user, homeName, isPublic);
+                callback.accept(HomeWriteResult.ok());
+            } catch (ValidationException validation) {
+                try {
+                    validation.dispatchHomeError(user, isPublic, huskHomes, homeName);
+                    callback.accept(HomeWriteResult.reportedToPlayer(validation.getType().name()));
+                } catch (Throwable ignored) {
+                    callback.accept(HomeWriteResult.failed(validation.getType().name()));
+                }
+            } catch (Throwable failure) {
+                report("Could not change the privacy of home '" + homeName + "' for " + player.getName(), failure);
+                callback.accept(HomeWriteResult.failed(failure.getClass().getSimpleName()));
+            }
+        });
+    }
+
+    private HuskHomes huskHomesOrNull() {
+        Plugin plugin = Bukkit.getPluginManager().getPlugin("HuskHomes");
+        return plugin instanceof HuskHomes huskHomes && plugin.isEnabled() ? huskHomes : null;
     }
 
     @Override

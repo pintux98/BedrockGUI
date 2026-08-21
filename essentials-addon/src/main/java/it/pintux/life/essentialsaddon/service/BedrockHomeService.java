@@ -8,6 +8,7 @@ import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
+import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -18,6 +19,8 @@ public final class BedrockHomeService {
     private final HomeCatalogService homeCatalog;
     private final BedrockPlayerDetector bedrockPlayerDetector;
     private static final int ITEMS_PER_PAGE = 18;
+    // HuskHomes writes privacy asynchronously, so give it a tick before reading it back.
+    private static final long PRIVACY_REFRESH_TICKS = 10L;
 
     public BedrockHomeService(
             EssentialsAddonConfiguration configuration,
@@ -277,19 +280,33 @@ public final class BedrockHomeService {
     }
 
     public void setHomePrivacy(Player player, String homeName, boolean isPublic) {
+        setHomePrivacy(player, homeName, isPublic, false);
+    }
+
+    /**
+     * @param reopenManageForm true only when the change came from the manage form, so the player
+     *                         lands back where they pressed the button. Setting a home does not
+     *                         reopen anything: HuskHomes applies the change asynchronously, and a
+     *                         form built straight after the write would still read the old state.
+     */
+    public void setHomePrivacy(Player player, String homeName, boolean isPublic, boolean reopenManageForm) {
         if (!privacyAvailable() || !ensureHomeCatalog(player)) return;
 
-        homeCatalog.setHomePrivacy(player, homeName, isPublic, success -> {
-            if (!success) {
-                player.sendMessage(configuration.render(configuration.homePrivacyFailed(),
-                        Map.of("home_name", homeName)));
+        homeCatalog.setHomePrivacy(player, homeName, isPublic, result -> {
+            if (!result.success()) {
+                if (!result.playerNotified()) {
+                    player.sendMessage(configuration.render(configuration.homePrivacyFailed(),
+                            Map.of("home_name", homeName)));
+                }
                 return;
             }
             player.sendMessage(configuration.render(isPublic
                             ? configuration.homePrivacyPublicSuccess()
                             : configuration.homePrivacyPrivateSuccess(),
                     Map.of("home_name", homeName)));
-            showHomeManageForm(player, homeName);
+            if (reopenManageForm) {
+                MainThread.runLater(() -> showHomeManageForm(player, homeName), PRIVACY_REFRESH_TICKS);
+            }
         });
     }
 
@@ -357,9 +374,11 @@ public final class BedrockHomeService {
             }
             String trimmed = homeName.trim();
             boolean makePublic = privacyAvailable && isToggled(results);
-            homeCatalog.setHome(bukkitPlayer, trimmed, success -> {
-                if (!success) {
-                    bukkitPlayer.sendMessage(configuration.homeSetFailed());
+            homeCatalog.setHome(bukkitPlayer, trimmed, result -> {
+                if (!result.success()) {
+                    if (!result.playerNotified()) {
+                        bukkitPlayer.sendMessage(configuration.homeSetFailed());
+                    }
                     return;
                 }
                 bukkitPlayer.sendMessage(configuration.render(configuration.homeSetSuccess(), Map.of("home_name", trimmed)));

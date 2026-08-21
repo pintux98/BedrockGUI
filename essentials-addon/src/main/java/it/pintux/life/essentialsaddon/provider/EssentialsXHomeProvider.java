@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.provider;
 import com.earth2me.essentials.Essentials;
 import com.earth2me.essentials.User;
 import it.pintux.life.essentialsaddon.api.HomeProvider;
+import it.pintux.life.essentialsaddon.model.HomeWriteResult;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -87,18 +88,18 @@ public final class EssentialsXHomeProvider implements HomeProvider {
     }
 
     @Override
-    public void setHome(Player player, String homeName, Consumer<Boolean> callback) {
+    public void setHome(Player player, String homeName, Consumer<HomeWriteResult> callback) {
         User user = user(player);
         if (user == null) {
-            callback.accept(false);
+            callback.accept(HomeWriteResult.failed("Essentials user unavailable"));
             return;
         }
         MainThread.run(() -> {
             try {
                 user.setHome(homeName, player.getLocation());
-                callback.accept(true);
+                callback.accept(HomeWriteResult.ok());
             } catch (Exception e) {
-                callback.accept(false);
+                callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
             }
         });
     }
