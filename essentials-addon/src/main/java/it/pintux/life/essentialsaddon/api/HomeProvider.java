@@ -69,6 +69,16 @@ public interface HomeProvider {
         callback.accept(false);
     }
 
+    /** True when a home can be renamed without losing it. */
+    default boolean supportsRename() {
+        return false;
+    }
+
+    default void renameHome(Player player, String homeName, String newName,
+                            Consumer<HomeWriteResult> callback) {
+        callback.accept(HomeWriteResult.failed("renaming is not supported"));
+    }
+
     /** Makes an existing home public or private; only meaningful with {@link #supportsPublicHomes()}. */
     default void setHomePrivacy(Player player, String homeName, boolean isPublic,
                                 Consumer<HomeWriteResult> callback) {

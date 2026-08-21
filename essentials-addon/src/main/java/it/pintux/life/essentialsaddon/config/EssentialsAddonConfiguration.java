@@ -28,6 +28,7 @@ public final class EssentialsAddonConfiguration {
     private final boolean homeManageMenu;
     private final boolean homePublicHomes;
     private final boolean homePrivacy;
+    private final boolean homeRename;
 
     // Intercepted commands
     private final CommandAliases commandWarps;
@@ -122,6 +123,11 @@ public final class EssentialsAddonConfiguration {
     private final String homeManageContent;
     private final String homeManageTeleportButton;
     private final String homeManageDeleteButton;
+    private final String homeRenameButton;
+    private final String homeRenameTitle;
+    private final String homeRenameInputText;
+    private final String homeRenameSuccess;
+    private final String homeRenameFailed;
     private final String homePublicSuffix;
     private final String homeMakePublicButton;
     private final String homeMakePrivateButton;
@@ -250,6 +256,7 @@ public final class EssentialsAddonConfiguration {
         this.homeManageMenu = configuration.getBoolean("homes.manage-menu", true);
         this.homePublicHomes = configuration.getBoolean("homes.public-homes", true);
         this.homePrivacy = configuration.getBoolean("homes.privacy", true);
+        this.homeRename = configuration.getBoolean("homes.rename", true);
 
         this.commandWarps = aliases(configuration, "commands.warps", "warp", "warps", "warplist");
         this.commandKits = aliases(configuration, "commands.kits", "kit", "kits");
@@ -340,6 +347,11 @@ public final class EssentialsAddonConfiguration {
         this.homeManageContent = color(configuration.getString("ui.home-manage-content", "&7Select a home to manage."));
         this.homeManageTeleportButton = color(configuration.getString("ui.home-manage-teleport-button", "&aTeleport"));
         this.homeManageDeleteButton = color(configuration.getString("ui.home-manage-delete-button", "&cDelete Home"));
+        this.homeRenameButton = color(configuration.getString("ui.home-rename-button", "&bRename"));
+        this.homeRenameTitle = color(configuration.getString("ui.home-rename-title", "&bRename Home"));
+        this.homeRenameInputText = color(configuration.getString("ui.home-rename-input-text", "&7New name for %home_name%:"));
+        this.homeRenameSuccess = color(configuration.getString("ui.home-rename-success", "&aHome '%home_name%' is now '%new_name%'."));
+        this.homeRenameFailed = color(configuration.getString("ui.home-rename-failed", "&cFailed to rename %home_name%."));
         this.homePublicSuffix = color(configuration.getString("ui.home-public-suffix", " &a(Public)"));
         this.homeMakePublicButton = color(configuration.getString("ui.home-make-public-button", "&aMake Public"));
         this.homeMakePrivateButton = color(configuration.getString("ui.home-make-private-button", "&6Make Private"));
@@ -547,6 +559,11 @@ public final class EssentialsAddonConfiguration {
     public String homeManageContent() { return homeManageContent; }
     public String homeManageTeleportButton() { return homeManageTeleportButton; }
     public String homeManageDeleteButton() { return homeManageDeleteButton; }
+    public String homeRenameButton() { return homeRenameButton; }
+    public String homeRenameTitle() { return homeRenameTitle; }
+    public String homeRenameInputText() { return homeRenameInputText; }
+    public String homeRenameSuccess() { return homeRenameSuccess; }
+    public String homeRenameFailed() { return homeRenameFailed; }
     public String homePublicSuffix() { return homePublicSuffix; }
     public String homeMakePublicButton() { return homeMakePublicButton; }
     public String homeMakePrivateButton() { return homeMakePrivateButton; }
@@ -644,6 +661,7 @@ public final class EssentialsAddonConfiguration {
     public boolean homeManageMenuEnabled() { return homeManageMenu; }
     public boolean homePublicHomesEnabled() { return homePublicHomes; }
     public boolean homePrivacyEnabled() { return homePrivacy; }
+    public boolean homeRenameEnabled() { return homeRename; }
 
     // Intercepted commands
     public CommandAliases commandWarps() { return commandWarps; }

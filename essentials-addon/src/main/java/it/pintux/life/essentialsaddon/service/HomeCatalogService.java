@@ -98,6 +98,19 @@ public final class HomeCatalogService {
         return isReady() && provider.supportsPublicHomes();
     }
 
+    public boolean supportsRename() {
+        return isReady() && provider.supportsRename();
+    }
+
+    public void renameHome(Player player, String homeName, String newName,
+                           Consumer<HomeWriteResult> callback) {
+        if (!supportsRename()) {
+            callback.accept(HomeWriteResult.failed("renaming is not supported"));
+            return;
+        }
+        provider.renameHome(player, homeName, newName, callback);
+    }
+
     public String publicHomeSeparator() {
         return provider == null ? "." : provider.publicHomeSeparator();
     }

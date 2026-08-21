@@ -419,6 +419,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                 api.registerActionHandler(new OpenHomeManageAction(bedrockHomeService));
                 api.registerActionHandler(new HomeMakePublicAction(bedrockHomeService));
                 api.registerActionHandler(new HomeMakePrivateAction(bedrockHomeService));
+                api.registerActionHandler(new OpenHomeRenameAction(bedrockHomeService));
             }
             if (bedrockHomeService.supportsPublicHomes()) {
                 api.registerActionHandler(new OpenPublicHomeMainAction(bedrockHomeService));

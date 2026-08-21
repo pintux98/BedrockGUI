@@ -115,6 +115,10 @@ public final class BedrockHomeService {
         return configuration.homePrivacyEnabled() && homeCatalog.supportsPublicHomes();
     }
 
+    private boolean renameAvailable() {
+        return configuration.homeRenameEnabled() && homeCatalog.supportsRename();
+    }
+
     public void openPublicHomeMenu(Player player, int page) {
         if (!supportsPublicHomes()) return;
         BedrockGUIApi api = requireApi(player);
@@ -275,6 +279,13 @@ public final class BedrockHomeService {
                             context("home-manage-privacy", home.name())));
         }
 
+        if (renameAvailable()) {
+            form.button(configuration.homeRenameButton(), formPlayer ->
+                    api.executeActionString(formPlayer,
+                            "home_rename:" + EssentialsActionPayloads.encodeHome(home.name()),
+                            context("home-manage-rename", home.name())));
+        }
+
         form.button(configuration.homeManageDeleteButton(), formPlayer ->
                 api.executeActionString(formPlayer,
                         "home_delete_confirm:" + EssentialsActionPayloads.encodeHome(home.name()),
@@ -284,6 +295,51 @@ public final class BedrockHomeService {
                 api.executeActionString(formPlayer, "home_manage_main:", context("home-manage-back", "")));
 
         form.send(new BukkitFormPlayer(player));
+    }
+
+    public void showRenameHomeForm(Player player, String homeName) {
+        if (!renameAvailable()) return;
+        BedrockGUIApi api = requireApi(player);
+        if (api == null) return;
+        if (!ensureHomeCatalog(player)) return;
+
+        api.createCustomForm(configuration.homeRenameTitle())
+                .namedInput("new_name",
+                        configuration.render(configuration.homeRenameInputText(), Map.of("home_name", homeName)),
+                        configuration.homeNameInputPlaceholder(), homeName)
+                .onSubmit((formPlayer, results) -> {
+                    Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
+                    if (bukkitPlayer == null) return;
+                    Object answer = results.get("new_name");
+                    String newName = answer == null ? "" : answer.toString().trim();
+                    if (newName.isEmpty()) {
+                        bukkitPlayer.sendMessage(configuration.homeSetInvalid());
+                        return;
+                    }
+                    if (newName.equalsIgnoreCase(homeName)) {
+                        showHomeManageForm(bukkitPlayer, homeName);
+                        return;
+                    }
+                    renameHome(bukkitPlayer, homeName, newName);
+                })
+                .send(new BukkitFormPlayer(player));
+    }
+
+    public void renameHome(Player player, String homeName, String newName) {
+        if (!renameAvailable() || !ensureHomeCatalog(player)) return;
+
+        homeCatalog.renameHome(player, homeName, newName, result -> {
+            if (!result.success()) {
+                if (!result.playerNotified()) {
+                    player.sendMessage(configuration.render(configuration.homeRenameFailed(),
+                            Map.of("home_name", homeName, "new_name", newName)));
+                }
+                return;
+            }
+            player.sendMessage(configuration.render(configuration.homeRenameSuccess(),
+                    Map.of("home_name", homeName, "new_name", newName)));
+            MainThread.runLater(() -> showHomeManageForm(player, newName), PRIVACY_REFRESH_TICKS);
+        });
     }
 
     public void setHomePrivacy(Player player, String homeName, boolean isPublic) {

@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 14
+config-version: 15
 
 modules:
   warps: false
@@ -52,6 +52,8 @@ homes:
   public-homes: true
   # Let players make a home public or private, from the manage form and when setting a home.
   privacy: true
+  # Let players rename a home from the manage form.
+  rename: true
 
 # Pop the Accept/Deny form at a Bedrock player the moment a teleport request arrives,
 # instead of waiting for them to run /tpa. Requires modules.tpa.
@@ -150,6 +152,11 @@ ui:
   home-manage-content: '&7Select a home to manage.'
   home-manage-teleport-button: '&aTeleport'
   home-manage-delete-button: '&cDelete Home'
+  home-rename-button: '&bRename'
+  home-rename-title: '&bRename Home'
+  home-rename-input-text: '&7New name for %home_name%:'
+  home-rename-success: '&aHome ''%home_name%'' is now ''%new_name%''.'
+  home-rename-failed: '&cFailed to rename %home_name%.'
   home-public-suffix: ' &a(Public)'
   home-make-public-button: '&aMake Public'
   home-make-private-button: '&6Make Private'

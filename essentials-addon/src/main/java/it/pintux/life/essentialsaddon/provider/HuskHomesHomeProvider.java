@@ -268,6 +268,39 @@ public final class HuskHomesHomeProvider implements HomeProvider {
     }
 
     @Override
+    public boolean supportsRename() {
+        return true;
+    }
+
+    @Override
+    public void renameHome(Player player, String homeName, String newName,
+                          Consumer<HomeWriteResult> callback) {
+        HuskHomesAPI api = apiOrNull();
+        HuskHomes huskHomes = huskHomesOrNull();
+        if (api == null || huskHomes == null) {
+            callback.accept(HomeWriteResult.failed("HuskHomes API unavailable"));
+            return;
+        }
+        OnlineUser user = api.adaptUser(player);
+        huskHomes.runAsync(() -> {
+            try {
+                huskHomes.getManager().homes().setHomeName(user, homeName, newName);
+                callback.accept(HomeWriteResult.ok());
+            } catch (ValidationException validation) {
+                try {
+                    validation.dispatchHomeError(user, false, huskHomes, newName);
+                    callback.accept(HomeWriteResult.reportedToPlayer(validation.getType().name()));
+                } catch (Throwable ignored) {
+                    callback.accept(HomeWriteResult.failed(validation.getType().name()));
+                }
+            } catch (Throwable failure) {
+                report("Could not rename home '" + homeName + "' for " + player.getName(), failure);
+                callback.accept(HomeWriteResult.failed(failure.getClass().getSimpleName()));
+            }
+        });
+    }
+
+    @Override
     public String publicHomeSeparator() {
         try {
             String delimiter = Home.getDelimiter();

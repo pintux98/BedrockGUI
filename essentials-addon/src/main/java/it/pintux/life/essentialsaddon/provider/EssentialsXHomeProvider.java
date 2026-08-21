@@ -105,6 +105,29 @@ public final class EssentialsXHomeProvider implements HomeProvider {
     }
 
     @Override
+    public boolean supportsRename() {
+        return true;
+    }
+
+    @Override
+    public void renameHome(Player player, String homeName, String newName,
+                          Consumer<HomeWriteResult> callback) {
+        User user = user(player);
+        if (user == null) {
+            callback.accept(HomeWriteResult.failed("Essentials user unavailable"));
+            return;
+        }
+        MainThread.run(() -> {
+            try {
+                user.renameHome(homeName, newName);
+                callback.accept(HomeWriteResult.ok());
+            } catch (Exception e) {
+                callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
+            }
+        });
+    }
+
+    @Override
     public void deleteHome(Player player, String homeName, Consumer<Boolean> callback) {
         User user = user(player);
         if (user == null) {

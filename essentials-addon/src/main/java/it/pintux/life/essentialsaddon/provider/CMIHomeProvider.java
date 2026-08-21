@@ -101,6 +101,37 @@ public final class CMIHomeProvider implements HomeProvider {
     }
 
     @Override
+    public boolean supportsRename() {
+        return true;
+    }
+
+    @Override
+    public void renameHome(Player player, String homeName, String newName,
+                          Consumer<HomeWriteResult> callback) {
+        CMIUser user = user(player);
+        if (user == null) {
+            callback.accept(HomeWriteResult.failed("CMI user unavailable"));
+            return;
+        }
+        // CMI has no rename either: add under the new name first, remove the old name after.
+        MainThread.run(() -> {
+            try {
+                CmiHome existing = user.getHome(homeName);
+                Location location = existing == null ? null : bukkitLocation(existing);
+                if (location == null) {
+                    callback.accept(HomeWriteResult.failed("home not found"));
+                    return;
+                }
+                user.addHome(new CmiHome(newName, new CMILocation(location)), true);
+                user.removeHome(homeName);
+                callback.accept(HomeWriteResult.ok());
+            } catch (Throwable e) {
+                callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
+            }
+        });
+    }
+
+    @Override
     public void deleteHome(Player player, String homeName, Consumer<Boolean> callback) {
         CMIUser user = user(player);
         if (user == null) {
