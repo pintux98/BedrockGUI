@@ -173,10 +173,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         Map<String, Supplier<WarpProvider>> warpFactories = new LinkedHashMap<>();
         Map<String, Supplier<KitProvider>> kitFactories = new LinkedHashMap<>();
 
-        registerProvider(warpFactories, "Essentials", EssentialsXWarpProvider::new);
-        registerProvider(warpFactories, "CMI", CMIWarpProvider::new);
-        registerProvider(kitFactories, "Essentials", EssentialsXKitProvider::new);
-        registerProvider(kitFactories, "CMI", CMIKitProvider::new);
+        registerProvider(warpFactories, "Essentials", () -> new EssentialsXWarpProvider());
+        registerProvider(warpFactories, "CMI", () -> new CMIWarpProvider());
+        registerProvider(kitFactories, "Essentials", () -> new EssentialsXKitProvider());
+        registerProvider(kitFactories, "CMI", () -> new CMIKitProvider());
 
         warpCatalogService = new WarpCatalogService(getLogger());
         kitCatalogService = new KitCatalogService(getLogger());
@@ -247,8 +247,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
     private void initHomes(PluginManager pluginManager) {
         Map<String, Supplier<HomeProvider>> homeFactories = new LinkedHashMap<>();
-        registerProvider(homeFactories, "Essentials", EssentialsXHomeProvider::new);
-        registerProvider(homeFactories, "CMI", CMIHomeProvider::new);
+        registerProvider(homeFactories, "Essentials", () -> new EssentialsXHomeProvider());
+        registerProvider(homeFactories, "CMI", () -> new CMIHomeProvider());
         registerProvider(homeFactories, "HuskHomes", () -> new HuskHomesHomeProvider(getLogger()));
 
         homeCatalogService = new HomeCatalogService(getLogger());
@@ -262,8 +262,8 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
     private void initTpa(PluginManager pluginManager) {
         Map<String, Supplier<TpaProvider>> tpaFactories = new LinkedHashMap<>();
-        registerProvider(tpaFactories, "Essentials", EssentialsXTpaProvider::new);
-        registerProvider(tpaFactories, "CMI", CMITpaProvider::new);
+        registerProvider(tpaFactories, "Essentials", () -> new EssentialsXTpaProvider());
+        registerProvider(tpaFactories, "CMI", () -> new CMITpaProvider());
         registerProvider(tpaFactories, "HuskHomes", () -> new HuskHomesTpaProvider(getLogger()));
 
         tpaCatalogService = new TpaCatalogService(getLogger());
@@ -341,6 +341,14 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
     }
 
+    /**
+     * Registers a provider factory only when its plugin is installed.
+     *
+     * <p>The factory must be a lambda, never a {@code Provider::new} reference: linking a
+     * constructor reference loads the provider class right here, and a provider class cannot be
+     * linked without the plugin it compiles against — which crashed enable with
+     * NoClassDefFoundError on a server that runs only one of them.</p>
+     */
     private <T> void registerProvider(Map<String, Supplier<T>> factories, String pluginName, Supplier<T> factory) {
         if (Bukkit.getPluginManager().getPlugin(pluginName) != null) {
             factories.put(pluginName, factory);
