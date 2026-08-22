@@ -8,6 +8,8 @@ import com.phoenixplugins.phoenixduels.api.participable.Participant;
 import com.phoenixplugins.phoenixduels.api.party.Party;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
+import it.pintux.life.duelsaddon.model.InviteView;
+import it.pintux.life.duelsaddon.model.ModeView;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockInvitationService;
 import it.pintux.life.duelsaddon.util.CommandAliases;
@@ -19,6 +21,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.Locale;
 import java.util.UUID;
@@ -26,11 +29,11 @@ import java.util.UUID;
 /**
  * Watches PhoenixDuels for invitations that need a Bedrock form.
  *
- * <p>Party invitations have a real event. Duel challenges do not, so the direct
- * {@code /duel <player> <mode> <rounds>} form is observed at {@link EventPriority#MONITOR} and
- * deliberately <em>not</em> cancelled: PhoenixDuels must still process it, and only afterwards can
- * the invitation be confirmed and the form pushed. Challenges started from this addon's own forms
- * are pushed by {@code BedrockDuelService} instead, so both routes are covered.</p>
+ * <p>Party invitations have a real event. Duel challenges do not, and the duel command is not the
+ * moment one is sent - it usually just opens the sender's builder - so the command is observed at
+ * {@link EventPriority#MONITOR}, never cancelled, and used only to start watching for the
+ * invitation to appear. Challenges sent through this addon's own duel form push their form
+ * directly, and the duplicate guard keeps the two from doubling up.</p>
  *
  * <p>Not covered: a third-party plugin calling {@code ChallengeFacade} directly. Those players see
  * only the chat line.</p>
@@ -133,28 +136,60 @@ public final class InvitationListener implements Listener {
         String inviterName = event.getPlayer().getName();
         String modeArg = args.length > 1 ? args[1] : null;
         int roundsArg = args.length > 2 ? parseRounds(args[2]) : 0;
-        plugin.getServer().getScheduler().runTask(plugin, () -> {
+        watchForChallenge(inviterId, inviterName, targetName, modeArg, roundsArg);
+    }
+
+    /**
+     * Waits for the challenge to actually exist, then shows the form.
+     *
+     * <p>The command itself is not the moment a challenge is sent. {@code /duel <player>} opens
+     * PhoenixDuels' builder for the sender, who still has to choose a mode and rounds and press
+     * send, so firing the accept form off the command showed it to the target before the sender had
+     * chosen anything. Passing a mode inline sends immediately instead, and there is no event for
+     * either case, so this polls the invitation registry until one appears.</p>
+     *
+     * <p>Bounded by PhoenixDuels' own invitation lifetime, and stops as soon as the invitation shows
+     * up, the target leaves, or that window passes.</p>
+     */
+    private void watchForChallenge(UUID inviterId, String inviterName, String targetName,
+                                   String modeArg, int roundsArg) {
+        long interval = 10L;
+        int maxChecks = Math.max(1, (int) ((gateway.invitationExpirationSeconds() * 20L) / interval) + 2);
+        int[] checks = {0};
+        BukkitTask[] task = new BukkitTask[1];
+        task[0] = plugin.getServer().getScheduler().runTaskTimer(plugin, () -> {
             Player target = Bukkit.getPlayerExact(targetName);
-            if (target == null || target.getUniqueId().equals(inviterId)) {
+            boolean expired = ++checks[0] > maxChecks;
+            if (target == null || target.getUniqueId().equals(inviterId) || expired) {
+                cancel(task);
                 return;
             }
-            // Deliberately not gated on the invitation registry. Looking the invitation up here
-            // returned nothing often enough that the form never appeared, and a form shown for an
-            // invitation PhoenixDuels no longer has is harmless: accepting runs their command,
-            // which answers "invitation not found or expired" itself.
-            String modeName = modeArg == null ? null
-                    : gateway.mode(modeArg).map(it.pintux.life.duelsaddon.model.ModeView::displayName)
-                            .orElse(modeArg);
-            int rounds = roundsArg > 0 ? roundsArg
-                    : gateway.mode(modeArg == null ? "" : modeArg)
-                            .map(it.pintux.life.duelsaddon.model.ModeView::roundsToWin).orElse(1);
+            if (!gateway.hasPendingChallenge(inviterId, target.getUniqueId())) {
+                return;
+            }
+            cancel(task);
+            InviteView known = gateway.pendingChallenge(inviterId, target.getUniqueId())
+                    .orElseGet(() -> fallbackView(inviterName, modeArg, roundsArg));
             debug(() -> "Duel challenge from " + inviterName + " to " + target.getName()
-                    + ": bedrockForm=" + invitationService.shouldHandle(target));
-            invitationService.sendDuelChallenge(target, inviterId,
-                    new it.pintux.life.duelsaddon.model.InviteView(inviterName,
-                            modeName == null ? "?" : modeName, rounds,
-                            gateway.invitationExpirationSeconds()));
-        });
+                    + " after " + checks[0] + " checks: bedrockForm="
+                    + invitationService.shouldHandle(target));
+            invitationService.sendDuelChallenge(target, inviterId, known);
+        }, interval, interval);
+    }
+
+    private InviteView fallbackView(String inviterName, String modeArg, int roundsArg) {
+        String modeName = modeArg == null ? null
+                : gateway.mode(modeArg).map(ModeView::displayName).orElse(modeArg);
+        int rounds = roundsArg > 0 ? roundsArg
+                : gateway.mode(modeArg == null ? "" : modeArg).map(ModeView::roundsToWin).orElse(1);
+        return new InviteView(inviterName, modeName == null ? "?" : modeName, rounds,
+                gateway.invitationExpirationSeconds());
+    }
+
+    private static void cancel(BukkitTask[] task) {
+        if (task[0] != null) {
+            task[0].cancel();
+        }
     }
 
     @EventHandler
