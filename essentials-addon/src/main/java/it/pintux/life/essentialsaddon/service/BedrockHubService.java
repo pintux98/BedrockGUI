@@ -41,8 +41,8 @@ public final class BedrockHubService {
 
     /**
      * @param openedByButton true when a form button led here. The Bedrock client plays its own
-     *                       click for that tap, so the form-open sound would be the second one
-     *                       heard unless sounds.play-when-opened-by-button says otherwise.
+     *                       click for that tap, so the form-open sound is left out to avoid
+     *                       hearing the same sound twice.
      */
     public void openHub(Player player, boolean openedByButton) {
         BedrockGUIApi api = BedrockGUIApi.getInstance();
@@ -119,7 +119,7 @@ public final class BedrockHubService {
         }
 
         form.send(new BukkitFormPlayer(player));
-        if (!openedByButton || configuration.soundOnButtonOpen()) {
+        if (!openedByButton) {
             soundFeedback.playFormOpen(player);
         }
     }

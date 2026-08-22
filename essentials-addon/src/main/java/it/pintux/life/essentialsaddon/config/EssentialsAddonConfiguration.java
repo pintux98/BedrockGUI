@@ -239,7 +239,6 @@ public final class EssentialsAddonConfiguration {
     private final String providerUnavailable;
 
     private final boolean soundsEnabled;
-    private final boolean soundOnButtonOpen;
     private final String soundFormOpen;
     private final String soundTeleportSuccess;
     private final String soundKitClaimSuccess;
@@ -469,7 +468,6 @@ public final class EssentialsAddonConfiguration {
         this.providerUnavailable = color(configuration.getString("messages.provider-unavailable", "&cNo compatible provider is available for this feature."));
 
         this.soundsEnabled = configuration.getBoolean("sounds.enabled", true);
-        this.soundOnButtonOpen = configuration.getBoolean("sounds.play-when-opened-by-button", false);
         this.soundFormOpen = configuration.getString("sounds.form-open", "ui.button.click");
         this.soundTeleportSuccess = configuration.getString("sounds.teleport-success", "entity.enderman.teleport");
         this.soundKitClaimSuccess = configuration.getString("sounds.kit-claim-success", "entity.player.levelup");
@@ -650,7 +648,6 @@ public final class EssentialsAddonConfiguration {
     public String providerUnavailable() { return providerUnavailable; }
 
     public boolean soundsEnabled() { return soundsEnabled; }
-    public boolean soundOnButtonOpen() { return soundOnButtonOpen; }
     public String soundFormOpen() { return soundFormOpen; }
     public String soundTeleportSuccess() { return soundTeleportSuccess; }
     public String soundKitClaimSuccess() { return soundKitClaimSuccess; }

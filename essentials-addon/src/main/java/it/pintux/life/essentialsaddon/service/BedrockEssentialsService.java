@@ -45,8 +45,8 @@ public final class BedrockEssentialsService {
 
     /**
      * @param openedByButton true when a form button led here. The Bedrock client plays its own
-     *                       click for that tap, so the form-open sound would be heard twice unless
-     *                       sounds.play-when-opened-by-button says otherwise.
+     *                       click for that tap, so the form-open sound is left out to avoid
+     *                       hearing the same sound twice.
      */
     public void openWarpMenu(Player player, boolean openedByButton) {
         BedrockGUIApi api = requireApi(player);
@@ -73,7 +73,7 @@ public final class BedrockEssentialsService {
         }
 
         form.send(new BukkitFormPlayer(player));
-        if (!openedByButton || configuration.soundOnButtonOpen()) {
+        if (!openedByButton) {
             playSound(player, configuration.soundFormOpen());
         }
     }
@@ -130,7 +130,7 @@ public final class BedrockEssentialsService {
         }
 
         form.send(new BukkitFormPlayer(player));
-        if (!openedByButton || configuration.soundOnButtonOpen()) {
+        if (!openedByButton) {
             playSound(player, configuration.soundFormOpen());
         }
     }

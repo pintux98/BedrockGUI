@@ -289,9 +289,6 @@ messages:
 # ─────────────────────────────────────────────
 sounds:
   enabled: true
-  # Bedrock clients already click when a form button is tapped, so replaying form-open on top of
-  # that is heard twice. Leave false to keep the sound for forms opened by a command only.
-  play-when-opened-by-button: false
   form-open: ui.button.click
   teleport-success: entity.enderman.teleport
   kit-claim-success: entity.player.levelup
