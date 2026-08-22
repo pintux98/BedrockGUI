@@ -20,7 +20,7 @@ public final class HubWarpAction implements ActionSystem.ActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
         Player bukkit = FormPlayerResolver.resolve(player);
         if (bukkit == null || !service.shouldHandle(bukkit)) return ActionSystem.ActionResult.success("skipped");
-        service.openWarpMenu(bukkit);
+        service.openWarpMenu(bukkit, true);
         return ActionSystem.ActionResult.success("opened warp menu");
     }
 

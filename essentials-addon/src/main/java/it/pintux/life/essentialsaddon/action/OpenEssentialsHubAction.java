@@ -24,7 +24,7 @@ public final class OpenEssentialsHubAction implements ActionSystem.ActionHandler
         if (bukkit == null || !hubService.shouldHandle(bukkit)) {
             return ActionSystem.ActionResult.success("Not a Bedrock player or no hub service");
         }
-        hubService.openHub(bukkit);
+        hubService.openHub(bukkit, true);
         return ActionSystem.ActionResult.success("Opened hub");
     }
 

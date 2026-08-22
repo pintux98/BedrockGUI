@@ -40,6 +40,15 @@ public final class BedrockEssentialsService {
     }
 
     public void openWarpMenu(Player player) {
+        openWarpMenu(player, false);
+    }
+
+    /**
+     * @param openedByButton true when a form button led here. The Bedrock client plays its own
+     *                       click for that tap, so the form-open sound would be heard twice unless
+     *                       sounds.play-when-opened-by-button says otherwise.
+     */
+    public void openWarpMenu(Player player, boolean openedByButton) {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!ensureWarpCatalog(player)) return;
@@ -64,7 +73,9 @@ public final class BedrockEssentialsService {
         }
 
         form.send(new BukkitFormPlayer(player));
-        playSound(player, configuration.soundFormOpen());
+        if (!openedByButton || configuration.soundOnButtonOpen()) {
+            playSound(player, configuration.soundFormOpen());
+        }
     }
 
     public void teleportToWarp(Player player, String warpName) {
@@ -91,6 +102,10 @@ public final class BedrockEssentialsService {
     }
 
     public void openKitMenu(Player player) {
+        openKitMenu(player, false);
+    }
+
+    public void openKitMenu(Player player, boolean openedByButton) {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!ensureKitCatalog(player)) return;
@@ -115,7 +130,9 @@ public final class BedrockEssentialsService {
         }
 
         form.send(new BukkitFormPlayer(player));
-        playSound(player, configuration.soundFormOpen());
+        if (!openedByButton || configuration.soundOnButtonOpen()) {
+            playSound(player, configuration.soundFormOpen());
+        }
     }
 
     public void claimKit(Player player, String kitName) {

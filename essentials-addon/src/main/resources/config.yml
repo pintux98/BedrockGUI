@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 17
+config-version: 18
 
 modules:
   warps: false
@@ -190,7 +190,9 @@ ui:
   tpa-title-send: '&eTPA - Select Player'
   tpa-title-here: '&6TPAHere - Select Player'
   tpa-send-content: '&7Select a player to request teleport.'
+  tpa-here-content: '&7Select a player to ask them to teleport to you.'
   tpa-player-input-text: '&7Enter player name:'
+  tpa-here-player-input-text: '&7Enter the player to bring to you:'
   tpa-player-input-placeholder: 'PlayerName'
   tpa-provider-unavailable: '&cTPA provider is not available.'
   # Popup shown when a teleport request comes in (see tpa-request-popup above)
@@ -287,6 +289,9 @@ messages:
 # ─────────────────────────────────────────────
 sounds:
   enabled: true
+  # Bedrock clients already click when a form button is tapped, so replaying form-open on top of
+  # that is heard twice. Leave false to keep the sound for forms opened by a command only.
+  play-when-opened-by-button: false
   form-open: ui.button.click
   teleport-success: entity.enderman.teleport
   kit-claim-success: entity.player.levelup

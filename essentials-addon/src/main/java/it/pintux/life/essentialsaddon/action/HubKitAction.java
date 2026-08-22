@@ -20,7 +20,7 @@ public final class HubKitAction implements ActionSystem.ActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionValue, ActionSystem.ActionContext context) {
         Player bukkit = FormPlayerResolver.resolve(player);
         if (bukkit == null || !service.shouldHandle(bukkit)) return ActionSystem.ActionResult.success("skipped");
-        service.openKitMenu(bukkit);
+        service.openKitMenu(bukkit, true);
         return ActionSystem.ActionResult.success("opened kit menu");
     }
 

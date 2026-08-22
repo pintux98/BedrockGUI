@@ -156,7 +156,9 @@ public final class EssentialsAddonConfiguration {
     private final String tpaTitleSend;
     private final String tpaTitleHere;
     private final String tpaSendContent;
+    private final String tpaHereContent;
     private final String tpaPlayerInputText;
+    private final String tpaHerePlayerInputText;
     private final String tpaPlayerInputPlaceholder;
     private final String tpaProviderUnavailable;
     private final String tpaRequestTitle;
@@ -237,6 +239,7 @@ public final class EssentialsAddonConfiguration {
     private final String providerUnavailable;
 
     private final boolean soundsEnabled;
+    private final boolean soundOnButtonOpen;
     private final String soundFormOpen;
     private final String soundTeleportSuccess;
     private final String soundKitClaimSuccess;
@@ -380,6 +383,10 @@ public final class EssentialsAddonConfiguration {
         this.tpaTitleSend = color(configuration.getString("ui.tpa-title-send", "&eTPA - Select Player"));
         this.tpaTitleHere = color(configuration.getString("ui.tpa-title-here", "&6TPAHere - Select Player"));
         this.tpaSendContent = color(configuration.getString("ui.tpa-send-content", "&7Select a player to request teleport."));
+        this.tpaHereContent = color(configuration.getString("ui.tpa-here-content",
+                "&7Select a player to ask them to teleport to you."));
+        this.tpaHerePlayerInputText = color(configuration.getString("ui.tpa-here-player-input-text",
+                "&7Enter the player to bring to you:"));
         this.tpaPlayerInputText = color(configuration.getString("ui.tpa-player-input-text", "&7Enter player name:"));
         this.tpaPlayerInputPlaceholder = configuration.getString("ui.tpa-player-input-placeholder", "PlayerName");
         this.tpaProviderUnavailable = color(configuration.getString("ui.tpa-provider-unavailable", "&cTPA provider is not available."));
@@ -462,6 +469,7 @@ public final class EssentialsAddonConfiguration {
         this.providerUnavailable = color(configuration.getString("messages.provider-unavailable", "&cNo compatible provider is available for this feature."));
 
         this.soundsEnabled = configuration.getBoolean("sounds.enabled", true);
+        this.soundOnButtonOpen = configuration.getBoolean("sounds.play-when-opened-by-button", false);
         this.soundFormOpen = configuration.getString("sounds.form-open", "ui.button.click");
         this.soundTeleportSuccess = configuration.getString("sounds.teleport-success", "entity.enderman.teleport");
         this.soundKitClaimSuccess = configuration.getString("sounds.kit-claim-success", "entity.player.levelup");
@@ -592,7 +600,9 @@ public final class EssentialsAddonConfiguration {
     public String tpaTitleSend() { return tpaTitleSend; }
     public String tpaTitleHere() { return tpaTitleHere; }
     public String tpaSendContent() { return tpaSendContent; }
+    public String tpaHereContent() { return tpaHereContent; }
     public String tpaPlayerInputText() { return tpaPlayerInputText; }
+    public String tpaHerePlayerInputText() { return tpaHerePlayerInputText; }
     public String tpaPlayerInputPlaceholder() { return tpaPlayerInputPlaceholder; }
     public String tpaProviderUnavailable() { return tpaProviderUnavailable; }
     public String tpaRequestTitle() { return tpaRequestTitle; }
@@ -640,6 +650,7 @@ public final class EssentialsAddonConfiguration {
     public String providerUnavailable() { return providerUnavailable; }
 
     public boolean soundsEnabled() { return soundsEnabled; }
+    public boolean soundOnButtonOpen() { return soundOnButtonOpen; }
     public String soundFormOpen() { return soundFormOpen; }
     public String soundTeleportSuccess() { return soundTeleportSuccess; }
     public String soundKitClaimSuccess() { return soundKitClaimSuccess; }

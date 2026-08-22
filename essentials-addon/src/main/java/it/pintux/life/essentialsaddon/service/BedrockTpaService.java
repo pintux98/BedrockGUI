@@ -89,9 +89,11 @@ public final class BedrockTpaService {
 
         String title = here ? configuration.tpaTitleHere() : configuration.tpaTitleSend();
         BedrockGUIApi.CustomFormBuilder form = api.createCustomForm(title);
-        form.content(configuration.tpaSendContent());
+        // /tpa brings the sender to the target and /tpahere the other way round, so the two forms
+        // ask for different things and no longer share one wording.
+        form.content(here ? configuration.tpaHereContent() : configuration.tpaSendContent());
         form.input(
-                configuration.tpaPlayerInputText(),
+                here ? configuration.tpaHerePlayerInputText() : configuration.tpaPlayerInputText(),
                 configuration.tpaPlayerInputPlaceholder(),
                 ""
         );

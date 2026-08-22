@@ -24,7 +24,7 @@ public final class OpenKitMainAction implements ActionSystem.ActionHandler {
         if (bukkitPlayer == null) {
             return ActionSystem.ActionResult.failure("Bukkit player context is unavailable");
         }
-        service.openKitMenu(bukkitPlayer);
+        service.openKitMenu(bukkitPlayer, true);
         return ActionSystem.ActionResult.success("Opened kit menu");
     }
 

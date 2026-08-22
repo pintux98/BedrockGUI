@@ -24,7 +24,7 @@ public final class OpenWarpMainAction implements ActionSystem.ActionHandler {
         if (bukkitPlayer == null) {
             return ActionSystem.ActionResult.failure("Bukkit player context is unavailable");
         }
-        service.openWarpMenu(bukkitPlayer);
+        service.openWarpMenu(bukkitPlayer, true);
         return ActionSystem.ActionResult.success("Opened warp menu");
     }
 
