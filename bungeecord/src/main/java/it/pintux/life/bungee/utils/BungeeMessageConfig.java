@@ -1,5 +1,6 @@
 package it.pintux.life.bungee.utils;
 
+import it.pintux.life.common.utils.LegacyColors;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.FormPlayer;
 import org.yaml.snakeyaml.Yaml;
@@ -65,7 +66,7 @@ public class BungeeMessageConfig implements MessageConfig {
     }
 
     @Override
-    public String applyColor(String message) { return message.replace("&", "§"); }
+    public String applyColor(String message) { return LegacyColors.translate(message); }
 
     public void reload() { loadMessages(); }
 

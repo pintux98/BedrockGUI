@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.service;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.MainThread;
@@ -79,11 +80,11 @@ public final class BedrockDeathService {
         try {
             BedrockGUIApi api = BedrockGUIApi.getInstance();
             if (api == null) {
-                player.sendMessage(configuration.noBedrockGui());
+                AddonText.send(player, configuration.noBedrockGui());
             }
             return api;
         } catch (IllegalStateException e) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
             return null;
         }
     }

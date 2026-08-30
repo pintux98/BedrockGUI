@@ -5,6 +5,7 @@ import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.InviteView;
+import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 
@@ -61,7 +62,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 .button1(text("invitations.accept"), fp -> {
                     pending.remove(key);
                     if (gateway.acceptPartyInvitation(invited, leaderId)) {
-                        invited.sendMessage(text("messages.invite-accepted"));
+                        AddonText.send(invited, text("messages.invite-accepted"));
                     } else {
                         fail(invited, "messages.invite-expired");
                     }
@@ -69,7 +70,7 @@ public final class BedrockInvitationService extends BedrockServiceSupport {
                 .button2(text("invitations.decline"), fp -> {
                     pending.remove(key);
                     if (gateway.declinePartyInvitation(invited, leaderId)) {
-                        invited.sendMessage(text("messages.invite-declined"));
+                        AddonText.send(invited, text("messages.invite-declined"));
                     }
                 })
                 .send(wrap(invited));

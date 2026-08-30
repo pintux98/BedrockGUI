@@ -8,6 +8,7 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.LevelView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.RewardsView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
@@ -85,7 +86,7 @@ public final class BedrockLevelService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -93,7 +94,7 @@ public final class BedrockLevelService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -103,7 +104,7 @@ public final class BedrockLevelService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

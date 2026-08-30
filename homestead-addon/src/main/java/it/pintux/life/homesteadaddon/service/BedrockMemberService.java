@@ -8,6 +8,7 @@ import it.pintux.life.homesteadaddon.model.BanView;
 import it.pintux.life.homesteadaddon.model.InviteView;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import org.bukkit.entity.Player;
@@ -37,7 +38,7 @@ public final class BedrockMemberService {
             return;
         }
         if (!canView(player, regionId)) {
-            player.sendMessage(config.text("players.no-access"));
+            AddonText.send(player, config.text("players.no-access"));
             return;
         }
         boolean manage = canManage(player, regionId);
@@ -109,7 +110,7 @@ public final class BedrockMemberService {
         }
         MemberView member = findMember(regionId, memberId);
         if (member == null) {
-            player.sendMessage(config.text("messages.member-not-found"));
+            AddonText.send(player, config.text("messages.member-not-found"));
             return;
         }
 
@@ -214,13 +215,13 @@ public final class BedrockMemberService {
                 .onSubmit(results -> {
                     String name = string(results, label);
                     if (name.isBlank()) {
-                        player.sendMessage(config.text("messages.invite-invalid"));
+                        AddonText.send(player, config.text("messages.invite-invalid"));
                         return;
                     }
                     if (gateway.invitePlayer(regionId, name)) {
-                        player.sendMessage(config.apply(config.text("messages.invite-success"), Map.of("player", name)));
+                        AddonText.send(player, config.apply(config.text("messages.invite-success"), Map.of("player", name)));
                     } else {
-                        player.sendMessage(config.text("messages.invite-failed"));
+                        AddonText.send(player, config.text("messages.invite-failed"));
                     }
                 })
                 .send(new BukkitFormPlayer(player));
@@ -240,13 +241,13 @@ public final class BedrockMemberService {
                     String name = string(results, nameLabel);
                     String reason = string(results, reasonLabel);
                     if (name.isBlank()) {
-                        player.sendMessage(config.text("messages.invite-invalid"));
+                        AddonText.send(player, config.text("messages.invite-invalid"));
                         return;
                     }
                     if (gateway.banPlayer(regionId, name, reason)) {
-                        player.sendMessage(config.apply(config.text("messages.ban-success"), Map.of("player", name)));
+                        AddonText.send(player, config.apply(config.text("messages.ban-success"), Map.of("player", name)));
                     } else {
-                        player.sendMessage(config.text("messages.ban-failed"));
+                        AddonText.send(player, config.text("messages.ban-failed"));
                     }
                 })
                 .send(new BukkitFormPlayer(player));
@@ -263,7 +264,7 @@ public final class BedrockMemberService {
                         config.apply(config.text("players.kick-content"), ph))
                 .button1(config.text("players.button-kick"), fp -> {
                     if (canManage(player, regionId) && gateway.kickMember(regionId, member.playerId())) {
-                        player.sendMessage(config.apply(config.text("messages.kick-success"), ph));
+                        AddonText.send(player, config.apply(config.text("messages.kick-success"), ph));
                     }
                     openMembersList(player, regionId, 1);
                 })
@@ -281,7 +282,7 @@ public final class BedrockMemberService {
                         config.apply(config.text("players.revoke-content"), ph))
                 .button1(config.text("players.button-revoke"), fp -> {
                     if (canManage(player, regionId) && gateway.revokeInvite(invite.inviteId())) {
-                        player.sendMessage(config.text("messages.revoke-success"));
+                        AddonText.send(player, config.text("messages.revoke-success"));
                     }
                     openInvitesList(player, regionId, 1);
                 })
@@ -299,7 +300,7 @@ public final class BedrockMemberService {
                         config.apply(config.text("players.unban-content"), ph))
                 .button1(config.text("players.button-unban"), fp -> {
                     if (canManage(player, regionId) && gateway.unbanPlayer(regionId, ban.playerId())) {
-                        player.sendMessage(config.apply(config.text("messages.unban-success"), ph));
+                        AddonText.send(player, config.apply(config.text("messages.unban-success"), ph));
                     }
                     openBansList(player, regionId, 1);
                 })
@@ -330,7 +331,7 @@ public final class BedrockMemberService {
 
     private boolean requireManage(Player player, long regionId) {
         if (!canManage(player, regionId)) {
-            player.sendMessage(config.text("players.no-access"));
+            AddonText.send(player, config.text("players.no-access"));
             return false;
         }
         return true;
@@ -353,7 +354,7 @@ public final class BedrockMemberService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -361,7 +362,7 @@ public final class BedrockMemberService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -371,7 +372,7 @@ public final class BedrockMemberService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

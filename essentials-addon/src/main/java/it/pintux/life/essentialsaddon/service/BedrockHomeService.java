@@ -6,6 +6,7 @@ import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.PublicHomeView;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
@@ -48,7 +49,7 @@ public final class BedrockHomeService {
 
     private void renderHomeMenu(Player player, BedrockGUIApi api, int page, List<String> homes, int max) {
         if (homes.isEmpty()) {
-            player.sendMessage(configuration.noHomesMessage());
+            AddonText.send(player, configuration.noHomesMessage());
             return;
         }
 
@@ -130,7 +131,7 @@ public final class BedrockHomeService {
 
     private void renderPublicHomeMenu(Player player, BedrockGUIApi api, int page, List<PublicHomeView> homes) {
         if (homes.isEmpty()) {
-            player.sendMessage(configuration.noPublicHomesMessage());
+            AddonText.send(player, configuration.noPublicHomesMessage());
             return;
         }
 
@@ -213,7 +214,7 @@ public final class BedrockHomeService {
 
         homeCatalog.homeDetails(player, homes -> {
             if (homes.isEmpty()) {
-                player.sendMessage(configuration.noHomesMessage());
+                AddonText.send(player, configuration.noHomesMessage());
                 return;
             }
             BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.homeManageTitle());
@@ -251,7 +252,7 @@ public final class BedrockHomeService {
                 }
             }
             if (selected == null) {
-                player.sendMessage(configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
+                AddonText.send(player, configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
                 return;
             }
             renderHomeManageForm(player, api, selected);
@@ -313,7 +314,7 @@ public final class BedrockHomeService {
                     Object answer = results.get("new_name");
                     String newName = answer == null ? "" : answer.toString().trim();
                     if (newName.isEmpty()) {
-                        bukkitPlayer.sendMessage(configuration.homeSetInvalid());
+                        AddonText.send(bukkitPlayer, configuration.homeSetInvalid());
                         return;
                     }
                     if (newName.equalsIgnoreCase(homeName)) {
@@ -378,10 +379,10 @@ public final class BedrockHomeService {
 
         homeCatalog.deleteHome(player, homeName, success -> {
             if (success) {
-                player.sendMessage(configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
+                AddonText.send(player, configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
                 openHomeMenu(player, 1);
             } else {
-                player.sendMessage(configuration.homeDeleteFailed());
+                AddonText.send(player, configuration.homeDeleteFailed());
             }
         });
     }
@@ -391,14 +392,14 @@ public final class BedrockHomeService {
 
         homeCatalog.homeNames(player, homes -> {
             if (!homes.contains(homeName)) {
-                player.sendMessage(configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
+                AddonText.send(player, configuration.render(configuration.homeNotFound(), Map.of("home_name", homeName)));
                 return;
             }
             homeCatalog.teleportHome(player, homeName, success -> {
                 if (success) {
-                    player.sendMessage(configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
+                    AddonText.send(player, configuration.render(configuration.homeTeleportSuccess(), Map.of("home_name", homeName)));
                 } else {
-                    player.sendMessage(configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
+                    AddonText.send(player, configuration.render(configuration.homeTeleportFailed(), Map.of("home_name", homeName)));
                 }
             });
         });
@@ -432,7 +433,7 @@ public final class BedrockHomeService {
             Player bukkitPlayer = FormPlayerResolver.resolve(p);
             if (bukkitPlayer == null) return;
             if (homeName == null || homeName.trim().isEmpty()) {
-                bukkitPlayer.sendMessage(configuration.homeSetInvalid());
+                AddonText.send(bukkitPlayer, configuration.homeSetInvalid());
                 return;
             }
             String trimmed = homeName.trim();
@@ -440,11 +441,11 @@ public final class BedrockHomeService {
             homeCatalog.setHome(bukkitPlayer, trimmed, result -> {
                 if (!result.success()) {
                     if (!result.playerNotified()) {
-                        bukkitPlayer.sendMessage(configuration.homeSetFailed());
+                        AddonText.send(bukkitPlayer, configuration.homeSetFailed());
                     }
                     return;
                 }
-                bukkitPlayer.sendMessage(configuration.render(configuration.homeSetSuccess(), Map.of("home_name", trimmed)));
+                AddonText.send(bukkitPlayer, configuration.render(configuration.homeSetSuccess(), Map.of("home_name", trimmed)));
                 if (makePublic) {
                     setHomePrivacy(bukkitPlayer, trimmed, true);
                 }
@@ -469,7 +470,7 @@ public final class BedrockHomeService {
 
         homeCatalog.homeNames(player, homes -> {
             if (homes.isEmpty()) {
-                player.sendMessage(configuration.homeNoDelete());
+                AddonText.send(player, configuration.homeNoDelete());
                 return;
             }
             renderDeleteHomeForm(player, api, homes);
@@ -487,10 +488,10 @@ public final class BedrockHomeService {
                 if (bukkitPlayer == null) return;
                 homeCatalog.deleteHome(bukkitPlayer, homeName, success -> {
                     if (success) {
-                        bukkitPlayer.sendMessage(configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
+                        AddonText.send(bukkitPlayer, configuration.render(configuration.homeDeleteSuccess(), Map.of("home_name", homeName)));
                         openHomeMenu(bukkitPlayer, 1);
                     } else {
-                        bukkitPlayer.sendMessage(configuration.homeDeleteFailed());
+                        AddonText.send(bukkitPlayer, configuration.homeDeleteFailed());
                     }
                 });
             });
@@ -503,11 +504,11 @@ public final class BedrockHomeService {
         try {
             BedrockGUIApi api = BedrockGUIApi.getInstance();
             if (api == null) {
-                player.sendMessage(configuration.noBedrockGui());
+                AddonText.send(player, configuration.noBedrockGui());
             }
             return api;
         } catch (IllegalStateException e) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
             return null;
         }
     }
@@ -517,7 +518,7 @@ public final class BedrockHomeService {
             homeCatalog.refresh();
         }
         if (!homeCatalog.isReady()) {
-            player.sendMessage(configuration.homeProviderUnavailable());
+            AddonText.send(player, configuration.homeProviderUnavailable());
             return false;
         }
         return true;

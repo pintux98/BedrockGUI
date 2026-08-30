@@ -1,3 +1,5 @@
+config-version: 1
+
 prefix: "&8[&bBedrockGUI&8] &r"
 noPex: "You don't have permission for this!"
 menu:
@@ -19,6 +21,8 @@ action:
   broadcast_success: "&aBroadcast sent successfully"
   broadcast_failed: "&cFailed to send broadcast: {error}"
   form_opened: "&aForm opened successfully"
+  economy:
+    not_available: "&cEconomy is not available on this server"
 player:
   not_found: "&cPlayer not found: {player}"
 system:
@@ -27,6 +31,10 @@ system:
   command_execution_failed: "&cCommand execution failed: {description}. Please contact an administrator."
   operation_interrupted: "&cAn error occurred while executing the command. Please try again later."
 validation:
+  no_forms: "&cNo forms are defined in config.yml"
+  menu_null: "&cMenu '{menu}' could not be loaded"
+  no_title: "&eMenu '{menu}' has no title defined"
+  button_null: "&cButton {button} in menu '{menu}' could not be loaded"
   invalid_menu_name: "&cInvalid menu name: '{menu}'"
   invalid_form_type: "&cInvalid form type '{type}' in menu '{menu}'"
   button_invalid_image: "&cButton {button} in menu '{menu}' has invalid image"

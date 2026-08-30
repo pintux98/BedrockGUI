@@ -6,6 +6,7 @@ import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.ModeView;
 import it.pintux.life.duelsaddon.model.TeamSize;
+import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -47,7 +48,7 @@ public final class BedrockQueueService extends BedrockServiceSupport {
                     "waiting", String.valueOf(waitingFor(queued.orElse(null))))));
             form.button(render("queue.button-leave", Map.of("mode", modeName)), fp -> {
                 if (gateway.leaveQueue(player)) {
-                    player.sendMessage(text("messages.queue-left"));
+                    AddonText.send(player, text("messages.queue-left"));
                 } else {
                     fail(player, "messages.not-in-queue");
                 }
@@ -140,7 +141,7 @@ public final class BedrockQueueService extends BedrockServiceSupport {
             return;
         }
         if (gateway.joinQueue(player, ranked, size, mode.id())) {
-            player.sendMessage(config.apply(text("messages.queue-joined"), Map.of("mode", mode.displayName())));
+            AddonText.send(player, config.apply(text("messages.queue-joined"), Map.of("mode", mode.displayName())));
         } else {
             fail(player, "messages.queue-failed");
         }

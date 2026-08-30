@@ -5,6 +5,7 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.ArenaMenuModel;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.model.ArenaInfo;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.actions.ActionSystem;
@@ -62,7 +63,7 @@ public final class BedrockArenaService {
         if (!catalog.isReady()) { player.sendMessage(config.arenaProviderUnavailable()); return; }
         boolean ok = catalog.join(player, arenaName);
         if (!ok) {
-            player.sendMessage(config.render(config.arenaJoinFailed(), Map.of("arena", arenaName)));
+            AddonText.send(player, config.render(config.arenaJoinFailed(), Map.of("arena", arenaName)));
         }
         // On success BedWars moves the player into the arena; nothing else to do.
     }
@@ -71,7 +72,7 @@ public final class BedrockArenaService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.arenaProviderUnavailable());
+            AddonText.send(player, config.arenaProviderUnavailable());
             return null;
         }
     }

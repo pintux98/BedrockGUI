@@ -2,6 +2,7 @@ package it.pintux.life.homesteadaddon.command;
 
 import it.pintux.life.homesteadaddon.HomesteadAddonPlugin;
 import it.pintux.life.homesteadaddon.service.BedrockRegionService;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -201,7 +202,7 @@ public final class HomesteadAddonCommand implements CommandExecutor, TabComplete
     }
 
     private void send(CommandSender sender, String message) {
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+        AddonText.send(sender, ChatColor.translateAlternateColorCodes('&', message));
     }
 
     @Override

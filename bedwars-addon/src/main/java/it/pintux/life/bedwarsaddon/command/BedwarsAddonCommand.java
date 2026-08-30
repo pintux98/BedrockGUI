@@ -1,6 +1,7 @@
 package it.pintux.life.bedwarsaddon.command;
 
 import it.pintux.life.bedwarsaddon.BedrockBedwarsAddonPlugin;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,16 +19,16 @@ public final class BedwarsAddonCommand implements CommandExecutor, TabCompleter 
     public boolean onCommand(CommandSender sender, Command command, String label, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (!sender.hasPermission("bedwarsaddon.admin")) {
-                sender.sendMessage(plugin.getConfiguration().commandNoPermission());
+                AddonText.send(sender, plugin.getConfiguration().commandNoPermission());
                 return true;
             }
             plugin.reloadConfiguration();
-            sender.sendMessage(plugin.getConfiguration().commandReloaded());
+            AddonText.send(sender, plugin.getConfiguration().commandReloaded());
             return true;
         }
         if (args.length == 1 && isPlayerForm(args[0])) {
             if (!(sender instanceof Player player)) {
-                sender.sendMessage(plugin.getConfiguration().commandPlayersOnly());
+                AddonText.send(sender, plugin.getConfiguration().commandPlayersOnly());
                 return true;
             }
             switch (args[0].toLowerCase()) {
@@ -38,7 +39,7 @@ public final class BedwarsAddonCommand implements CommandExecutor, TabCompleter 
             }
             return true;
         }
-        sender.sendMessage(plugin.getConfiguration().commandUsage());
+        AddonText.send(sender, plugin.getConfiguration().commandUsage());
         return true;
     }
 

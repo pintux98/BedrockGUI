@@ -61,9 +61,19 @@ public class MessageData {
     public static String VALIDATION_LEGACY_FORMAT_DETECTED = "validation.legacy_format_detected";
 
     private final MessageConfig config;
+    private final PlaceholderRegistry placeholderRegistry;
 
     public MessageData(MessageConfig config) {
+        this(config, PlaceholderRegistry.shared());
+    }
+
+    public MessageData(MessageConfig config, PlaceholderRegistry placeholderRegistry) {
         this.config = config;
+        this.placeholderRegistry = placeholderRegistry == null ? PlaceholderRegistry.shared() : placeholderRegistry;
+    }
+
+    public PlaceholderRegistry getPlaceholderRegistry() {
+        return placeholderRegistry;
     }
 
     public String getValueNoPrefix(String key, Map<String, Object> replacements, FormPlayer player) {
@@ -102,6 +112,7 @@ public class MessageData {
             }
         }
 
+        value = placeholderRegistry.apply(player, value);
         value = config.setPlaceholders(player, value);
         if (player != null && value != null && value.contains("%")) {
             String name = player.getName();

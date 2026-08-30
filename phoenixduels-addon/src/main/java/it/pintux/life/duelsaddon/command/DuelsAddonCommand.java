@@ -5,6 +5,7 @@ import it.pintux.life.duelsaddon.listener.DuelsMenus;
 import it.pintux.life.duelsaddon.listener.MenuInterceptListener;
 import it.pintux.life.duelsaddon.listener.PhoenixMenuResolver;
 import it.pintux.life.duelsaddon.model.StatsKind;
+import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
@@ -135,7 +136,7 @@ public final class DuelsAddonCommand implements CommandExecutor, TabCompleter {
     }
 
     private static void send(CommandSender sender, String message) {
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+        AddonText.send(sender, ChatColor.translateAlternateColorCodes('&', message));
     }
 
     @Override

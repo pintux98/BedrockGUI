@@ -5,6 +5,7 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.PartyMenuModel;
 import it.pintux.life.bedwarsaddon.model.PartyInfo;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.bedwarsaddon.util.FormPlayerResolver;
@@ -122,7 +123,7 @@ public final class BedrockPartyService {
         if (!catalog.isReady()) { player.sendMessage(config.partyProviderUnavailable()); return; }
         boolean ok = catalog.kick(player, targetName);
         if (ok) {
-            player.sendMessage(config.render(config.partyKicked(), Map.of("player", targetName)));
+            AddonText.send(player, config.render(config.partyKicked(), Map.of("player", targetName)));
         }
         openMain(player);
     }
@@ -131,7 +132,7 @@ public final class BedrockPartyService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.partyProviderUnavailable());
+            AddonText.send(player, config.partyProviderUnavailable());
             return null;
         }
     }

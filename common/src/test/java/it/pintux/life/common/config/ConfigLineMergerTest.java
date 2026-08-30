@@ -1,4 +1,4 @@
-package it.pintux.life.essentialsaddon.config;
+package it.pintux.life.common.config;
 
 import org.junit.jupiter.api.Test;
 
@@ -168,7 +168,7 @@ class ConfigLineMergerTest {
 
     @Test
     void multilineStringsBecomeEscapedDoubleQuoted() {
-        assertEquals("\"&7Type: &fCat\n&7Level: &f3\"",
+        assertEquals("\"&7Type: &fCat\\n&7Level: &f3\"",
                 ConfigLineMerger.formatValue("&7Type: &fCat\n&7Level: &f3"));
     }
 

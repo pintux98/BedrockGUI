@@ -1,5 +1,6 @@
 package it.pintux.life.velocity.utils;
 
+import it.pintux.life.common.utils.LegacyColors;
 import it.pintux.life.common.utils.MessageConfig;
 import it.pintux.life.common.utils.FormPlayer;
 import org.yaml.snakeyaml.Yaml;
@@ -87,8 +88,7 @@ public class VelocityMessageConfig implements MessageConfig {
 
     @Override
     public String applyColor(String message) {
-        // Simple color code conversion - can be enhanced later
-        return message.replace("&", "§");
+        return LegacyColors.translate(message);
     }
 
     public void reload() {

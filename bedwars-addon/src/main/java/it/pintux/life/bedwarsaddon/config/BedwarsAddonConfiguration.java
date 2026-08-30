@@ -1,6 +1,7 @@
 package it.pintux.life.bedwarsaddon.config;
 
 import it.pintux.life.bedwarsaddon.util.CommandAliases;
+import it.pintux.life.common.config.ConfigMigrator;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -191,7 +192,11 @@ public final class BedwarsAddonConfiguration {
 
     public static BedwarsAddonConfiguration load(JavaPlugin plugin) {
         plugin.getDataFolder().mkdirs();
-        YamlConfiguration yaml = new ConfigMigrator(plugin, FILE_NAME).migrate();
+        YamlConfiguration yaml = YamlConfiguration.loadConfiguration(ConfigMigrator
+                .of(plugin.getDataFolder(), FILE_NAME, () -> plugin.getResource(FILE_NAME),
+                        plugin.getLogger()::info, plugin.getLogger()::warning)
+                .migrate()
+                .getFile());
         return new BedwarsAddonConfiguration(yaml);
     }
 

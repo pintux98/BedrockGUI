@@ -1,5 +1,6 @@
 package it.pintux.life.duelsaddon.config;
 
+import it.pintux.life.common.config.ConfigMigrator;
 import it.pintux.life.duelsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -32,7 +33,11 @@ public final class DuelsAddonConfiguration {
 
     public static DuelsAddonConfiguration load(JavaPlugin plugin) {
         plugin.getDataFolder().mkdirs();
-        YamlConfiguration cfg = new ConfigMigrator(plugin, FILE).migrate();
+        YamlConfiguration cfg = YamlConfiguration.loadConfiguration(ConfigMigrator
+                .of(plugin.getDataFolder(), FILE, () -> plugin.getResource(FILE),
+                        plugin.getLogger()::info, plugin.getLogger()::warning)
+                .migrate()
+                .getFile());
         try (InputStream in = plugin.getResource(FILE)) {
             if (in != null) {
                 YamlConfiguration defaults = YamlConfiguration.loadConfiguration(

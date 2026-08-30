@@ -11,6 +11,7 @@ import de.Keyle.MyPet.api.util.hooks.types.EconomyHook;
 import de.Keyle.MyPet.api.util.locale.Translation;
 import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
@@ -109,7 +110,7 @@ final class MyPetShopBridge {
         // A player who already has an active pet needs the storage permission to buy another
         // (mirrors MyPet's own check, done before charging).
         if (owner.hasMyPet() && !player.hasPermission("MyPet.shop.storage")) {
-            player.sendMessage(Translation.getString("Message.Command.Trade.Receiver.HasPet", player));
+            AddonText.send(player, Translation.getString("Message.Command.Trade.Receiver.HasPet", player));
             return PetBuyResult.fail("storage not allowed");
         }
 
@@ -135,15 +136,15 @@ final class MyPetShopBridge {
         if (price > 0) {
             EconomyHook economy = MyPetApi.getHookHelper().getEconomy();
             if (economy == null || !MyPetApi.getHookHelper().isEconomyEnabled()) {
-                player.sendMessage(Translation.getString("Message.No.Economy", player));
+                AddonText.send(player, Translation.getString("Message.No.Economy", player));
                 return PetBuyResult.fail("no economy");
             }
             if (!economy.canPay(player.getUniqueId(), price)) {
-                player.sendMessage(Translation.getString("Message.Shop.NoMoney", player));
+                AddonText.send(player, Translation.getString("Message.Shop.NoMoney", player));
                 return PetBuyResult.fail("cannot afford");
             }
             if (!economy.pay(player.getUniqueId(), price)) {
-                player.sendMessage(Translation.getString("Message.No.Money", player));
+                AddonText.send(player, Translation.getString("Message.No.Money", player));
                 return PetBuyResult.fail("payment failed");
             }
         }

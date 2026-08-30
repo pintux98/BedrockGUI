@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.command;
 import it.pintux.life.essentialsaddon.BedrockEssentialsAddonPlugin;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.*;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
@@ -50,7 +51,7 @@ public final class EssentialsAddonCommand implements CommandExecutor, TabComplet
     }
 
     private void send(CommandSender sender, String message) {
-        sender.sendMessage(ChatColor.translateAlternateColorCodes('&', message));
+        AddonText.send(sender, ChatColor.translateAlternateColorCodes('&', message));
     }
 
     @Override

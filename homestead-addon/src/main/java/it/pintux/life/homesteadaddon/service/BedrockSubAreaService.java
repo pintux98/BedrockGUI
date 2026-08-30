@@ -8,6 +8,7 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.SubAreaView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import it.pintux.life.homesteadaddon.util.HomesteadActionPayloads;
@@ -106,11 +107,11 @@ public final class BedrockSubAreaService {
                 .onSubmit(results -> {
                     String name = string(results, label);
                     if (name.isBlank()) {
-                        player.sendMessage(config.text("subareas.rename-invalid"));
+                        AddonText.send(player, config.text("subareas.rename-invalid"));
                         return;
                     }
                     if (gateway.renameSubArea(subAreaId, name)) {
-                        player.sendMessage(config.apply(config.text("subareas.rename-success"), Map.of("name", name)));
+                        AddonText.send(player, config.apply(config.text("subareas.rename-success"), Map.of("name", name)));
                     }
                     openSubAreaMenu(player, subAreaId);
                 })
@@ -123,7 +124,7 @@ public final class BedrockSubAreaService {
             return;
         }
         gateway.endSubAreaRent(subAreaId);
-        player.sendMessage(config.text("subareas.end-rent-success"));
+        AddonText.send(player, config.text("subareas.end-rent-success"));
         openSubAreaMenu(player, subAreaId);
     }
 
@@ -137,7 +138,7 @@ public final class BedrockSubAreaService {
                         config.apply(config.text("subareas.delete-content"), ph))
                 .button1(config.text("subareas.button-delete"), fp -> {
                     if (canManage(player, subArea.regionId()) && gateway.deleteSubArea(subArea.id())) {
-                        player.sendMessage(config.apply(config.text("subareas.delete-success"), ph));
+                        AddonText.send(player, config.apply(config.text("subareas.delete-success"), ph));
                     }
                     openSubAreasList(player, subArea.regionId(), 1);
                 })
@@ -189,7 +190,7 @@ public final class BedrockSubAreaService {
         }
         MemberView member = findMember(subAreaId, memberId);
         if (member == null) {
-            player.sendMessage(config.text("messages.member-not-found"));
+            AddonText.send(player, config.text("messages.member-not-found"));
             return;
         }
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(
@@ -216,13 +217,13 @@ public final class BedrockSubAreaService {
                 .onSubmit(results -> {
                     String name = string(results, label);
                     if (name.isBlank()) {
-                        player.sendMessage(config.text("messages.invite-invalid"));
+                        AddonText.send(player, config.text("messages.invite-invalid"));
                         return;
                     }
                     if (gateway.addSubAreaMember(subAreaId, name)) {
-                        player.sendMessage(config.apply(config.text("subareas.add-member-success"), Map.of("player", name)));
+                        AddonText.send(player, config.apply(config.text("subareas.add-member-success"), Map.of("player", name)));
                     } else {
-                        player.sendMessage(config.text("subareas.add-member-failed"));
+                        AddonText.send(player, config.text("subareas.add-member-failed"));
                     }
                     openSubAreaMembers(player, subAreaId, 1);
                 })
@@ -241,7 +242,7 @@ public final class BedrockSubAreaService {
                     SubAreaView subArea = gateway.subArea(subAreaId).orElse(null);
                     if (subArea != null && canManage(player, subArea.regionId())
                             && gateway.removeSubAreaMember(subAreaId, member.playerId())) {
-                        player.sendMessage(config.apply(config.text("subareas.remove-member-success"), ph));
+                        AddonText.send(player, config.apply(config.text("subareas.remove-member-success"), ph));
                     }
                     openSubAreaMembers(player, subAreaId, 1);
                 })
@@ -266,7 +267,7 @@ public final class BedrockSubAreaService {
 
     private boolean requireManage(Player player, long regionId) {
         if (!canManage(player, regionId)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return false;
         }
         return true;
@@ -291,7 +292,7 @@ public final class BedrockSubAreaService {
     private SubAreaView requireSubArea(Player player, long subAreaId) {
         Optional<SubAreaView> subArea = gateway.subArea(subAreaId);
         if (subArea.isEmpty()) {
-            player.sendMessage(config.text("messages.sub-area-not-found"));
+            AddonText.send(player, config.text("messages.sub-area-not-found"));
             return null;
         }
         return subArea.get();
@@ -300,7 +301,7 @@ public final class BedrockSubAreaService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -308,7 +309,7 @@ public final class BedrockSubAreaService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -318,7 +319,7 @@ public final class BedrockSubAreaService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

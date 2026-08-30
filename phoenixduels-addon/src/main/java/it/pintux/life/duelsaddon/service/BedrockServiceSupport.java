@@ -4,6 +4,7 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
+import it.pintux.life.duelsaddon.util.AddonText;
 import it.pintux.life.duelsaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
@@ -39,14 +40,14 @@ public abstract class BedrockServiceSupport {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.duels-unavailable"));
+            AddonText.send(player, config.text("messages.duels-unavailable"));
             return null;
         }
     }
 
     protected boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.duels-unavailable"));
+            AddonText.send(player, config.text("messages.duels-unavailable"));
             return false;
         }
         return true;
@@ -65,7 +66,7 @@ public abstract class BedrockServiceSupport {
     }
 
     protected void fail(Player player, String path) {
-        player.sendMessage(config.text(path));
+        AddonText.send(player, config.text(path));
     }
 
     protected String formValue(Map<String, Object> results, String label) {

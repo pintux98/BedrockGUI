@@ -7,6 +7,7 @@ import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.MemberView;
 import it.pintux.life.duelsaddon.model.ModeView;
 import it.pintux.life.duelsaddon.model.PartyView;
+import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 
@@ -45,7 +46,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
             form.content(text("party.no-party-content"));
             form.button(text("party.button-create"), fp -> {
                 if (gateway.createParty(player)) {
-                    player.sendMessage(text("messages.party-created"));
+                    AddonText.send(player, text("messages.party-created"));
                     openMain(player);
                 } else {
                     fail(player, "messages.party-create-failed");
@@ -348,7 +349,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
 
     private void invite(Player player, String targetName) {
         if (gateway.invitePlayer(player, targetName)) {
-            player.sendMessage(config.apply(text("messages.party-invited"), Map.of("player", targetName)));
+            AddonText.send(player, config.apply(text("messages.party-invited"), Map.of("player", targetName)));
         } else {
             fail(player, "messages.party-invite-failed");
         }
@@ -362,7 +363,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
         api.createModalForm(text("party.disband-title"), text("party.disband-content"))
                 .button1(text("party.button-disband"), fp -> {
                     if (gateway.disbandParty(player)) {
-                        player.sendMessage(text("messages.party-disbanded"));
+                        AddonText.send(player, text("messages.party-disbanded"));
                     } else {
                         fail(player, "messages.action-failed");
                     }
@@ -379,7 +380,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
         api.createModalForm(text("party.leave-title"), text("party.leave-content"))
                 .button1(text("party.button-leave"), fp -> {
                     if (gateway.leaveParty(player)) {
-                        player.sendMessage(text("messages.party-left"));
+                        AddonText.send(player, text("messages.party-left"));
                     } else {
                         fail(player, "messages.action-failed");
                     }
@@ -397,7 +398,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
         api.createModalForm(render("party.kick-title", ph), text("party.kick-content"))
                 .button1(text("party.button-kick"), fp -> {
                     if (gateway.kickMember(player, member.playerId())) {
-                        player.sendMessage(config.apply(text("messages.party-kicked"), ph));
+                        AddonText.send(player, config.apply(text("messages.party-kicked"), ph));
                     } else {
                         fail(player, "messages.action-failed");
                     }
@@ -416,7 +417,7 @@ public final class BedrockPartyService extends BedrockServiceSupport {
         api.createModalForm(render("party.promote-title", ph), text("party.promote-content"))
                 .button1(text("party.button-promote"), fp -> {
                     if (gateway.promoteMember(player, member.playerId())) {
-                        player.sendMessage(config.apply(text("messages.party-promoted"), ph));
+                        AddonText.send(player, config.apply(text("messages.party-promoted"), ph));
                     } else {
                         fail(player, "messages.action-failed");
                     }

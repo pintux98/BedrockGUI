@@ -47,14 +47,25 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         cmd.setTabCompleter(executor);
         getServer().getPluginManager().registerEvents(this, this);
         boolean freshInstall = !new File(getDataFolder(), "config.yml").exists();
-        saveDefaultConfig();
-        this.saveResource("messages.yml", false);
+        migrateConfigurations();
         if (freshInstall) {
             int extracted = it.pintux.life.common.utils.DefaultFormsExtractor.extract(getDataFolder(), getLogger()::warning);
             getLogger().info("First run: extracted " + extracted + " default form file(s) to forms/");
         }
         reloadData();
         new Metrics(this, 23364);
+    }
+
+    private void migrateConfigurations() {
+        it.pintux.life.common.config.ConfigMigrator
+                .of(getDataFolder(), "config.yml", () -> getResource("config.yml"),
+                        getLogger()::info, getLogger()::warning)
+                .preserve("forms")
+                .migrate();
+        it.pintux.life.common.config.ConfigMigrator
+                .of(getDataFolder(), "messages.yml", () -> getResource("messages.yml"),
+                        getLogger()::info, getLogger()::warning)
+                .migrate();
     }
 
     @Override
@@ -119,11 +130,13 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         formMenuUtil.setJavaMenuManager(javaMenuManager);
         playerChecker = new PaperPlayerChecker();
 
+        it.pintux.life.paper.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry());
+
         if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
             new BedrockGUIExpansion(this).register();
             getLogger().info("PlaceholderAPI expansion registered");
         } else {
-            getLogger().warning("PlaceholderAPI not found. Placeholder features disabled.");
+            getLogger().info("PlaceholderAPI not found. Built-in placeholders are still served by BedrockGUI.");
         }
         getLogger().info("Loaded and enabled");
 

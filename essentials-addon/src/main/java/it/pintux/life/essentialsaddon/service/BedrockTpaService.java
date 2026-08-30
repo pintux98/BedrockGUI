@@ -3,6 +3,7 @@ package it.pintux.life.essentialsaddon.service;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.MainThread;
@@ -109,7 +110,7 @@ public final class BedrockTpaService {
 
             Player target = Bukkit.getPlayerExact(targetName);
             if (target == null) {
-                player.sendMessage(configuration.tpaSendFailed());
+                AddonText.send(player, configuration.tpaSendFailed());
                 return;
             }
 
@@ -118,7 +119,7 @@ public final class BedrockTpaService {
                         ? tpaCatalog.sendTpahere(player, targetName)
                         : tpaCatalog.sendTpa(player, targetName);
                 if (!success) {
-                    player.sendMessage(configuration.tpaSendFailed());
+                    AddonText.send(player, configuration.tpaSendFailed());
                 }
             });
         });
@@ -154,7 +155,7 @@ public final class BedrockTpaService {
             if (tpaCatalog.hasPendingRequest(player)) {
                 tpaCatalog.acceptTpa(player);
             } else {
-                player.sendMessage(configuration.tpaNoPending());
+                AddonText.send(player, configuration.tpaNoPending());
             }
         });
     }
@@ -164,7 +165,7 @@ public final class BedrockTpaService {
             if (tpaCatalog.hasPendingRequest(player)) {
                 tpaCatalog.denyTpa(player);
             } else {
-                player.sendMessage(configuration.tpaNoPending());
+                AddonText.send(player, configuration.tpaNoPending());
             }
         });
     }
@@ -173,11 +174,11 @@ public final class BedrockTpaService {
         try {
             BedrockGUIApi api = BedrockGUIApi.getInstance();
             if (api == null) {
-                player.sendMessage(configuration.noBedrockGui());
+                AddonText.send(player, configuration.noBedrockGui());
             }
             return api;
         } catch (IllegalStateException e) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
             return null;
         }
     }
@@ -187,7 +188,7 @@ public final class BedrockTpaService {
             tpaCatalog.refresh();
         }
         if (!tpaCatalog.isReady()) {
-            player.sendMessage(configuration.tpaProviderUnavailable());
+            AddonText.send(player, configuration.tpaProviderUnavailable());
             return false;
         }
         return true;

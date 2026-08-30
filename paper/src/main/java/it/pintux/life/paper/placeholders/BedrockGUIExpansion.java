@@ -1,14 +1,15 @@
 package it.pintux.life.paper.placeholders;
 
 import it.pintux.life.paper.BedrockGUI;
+import it.pintux.life.paper.utils.PaperPlayer;
+import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.common.utils.PlaceholderRegistry;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
-import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
-import java.util.stream.Collectors;
 
 
 public class BedrockGUIExpansion extends PlaceholderExpansion {
@@ -41,20 +42,8 @@ public class BedrockGUIExpansion extends PlaceholderExpansion {
 
     @Override
     public @Nullable String onRequest(OfflinePlayer player, @NotNull String params) {
-        switch (params.toLowerCase()) {
-            case "online_players_list":
-                return getOnlinePlayersList();
-            case "online_players_size":
-                return String.valueOf(Bukkit.getOnlinePlayers().size());
-            default:
-                return null;
-        }
-    }
-
-
-    private String getOnlinePlayersList() {
-        return Bukkit.getOnlinePlayers().stream()
-                .map(p -> p.getName() + ":" + p.getUniqueId().toString())
-                .collect(Collectors.joining(","));
+        Player online = player == null ? null : player.getPlayer();
+        FormPlayer formPlayer = online == null ? null : new PaperPlayer(online);
+        return PlaceholderRegistry.shared().resolve(formPlayer, CorePlaceholders.IDENTIFIER, params);
     }
 }

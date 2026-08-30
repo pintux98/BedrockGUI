@@ -7,6 +7,7 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.ChunkView;
 import it.pintux.life.homesteadaddon.model.RegionView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
@@ -81,9 +82,9 @@ public final class BedrockChunkService {
         form.content(config.apply(config.text("chunks.actions-content"), ph));
         form.button(config.text("chunks.button-teleport"), fp -> {
             if (gateway.teleportToChunk(player, chunk.worldId(), chunk.x(), chunk.z())) {
-                player.sendMessage(config.text("chunks.teleport-success"));
+                AddonText.send(player, config.text("chunks.teleport-success"));
             } else {
-                player.sendMessage(config.text("chunks.teleport-failed"));
+                AddonText.send(player, config.text("chunks.teleport-failed"));
             }
         });
         if (gateway.canManageChunks(regionId, player) || player.hasPermission(BedrockRegionService.ADMIN_PERMISSION)) {
@@ -106,7 +107,7 @@ public final class BedrockChunkService {
                     boolean allowed = gateway.canManageChunks(regionId, player)
                             || player.hasPermission(BedrockRegionService.ADMIN_PERMISSION);
                     if (allowed && gateway.unclaimChunk(regionId, chunk.worldId(), chunk.x(), chunk.z())) {
-                        player.sendMessage(config.text("chunks.unclaim-success"));
+                        AddonText.send(player, config.text("chunks.unclaim-success"));
                     }
                     openClaimedChunks(player, regionId, 1);
                 })
@@ -126,7 +127,7 @@ public final class BedrockChunkService {
         }
         List<String> colors = gateway.mapColors();
         if (colors.isEmpty()) {
-            player.sendMessage(config.text("map.unavailable"));
+            AddonText.send(player, config.text("map.unavailable"));
             return;
         }
         String currentName = gateway.mapColorName(region.mapColor());
@@ -137,7 +138,7 @@ public final class BedrockChunkService {
                 .onSubmit(results -> {
                     Object value = results.get(componentName(label));
                     if (value != null && gateway.setMapColor(regionId, value.toString())) {
-                        player.sendMessage(config.apply(config.text("map.color-success"), Map.of("value", value.toString())));
+                        AddonText.send(player, config.apply(config.text("map.color-success"), Map.of("value", value.toString())));
                     }
                     navigate(new BukkitFormPlayer(player), "hs_misc:" + regionId);
                 })
@@ -155,7 +156,7 @@ public final class BedrockChunkService {
         }
         List<String> icons = gateway.mapIcons();
         if (icons.isEmpty()) {
-            player.sendMessage(config.text("map.unavailable"));
+            AddonText.send(player, config.text("map.unavailable"));
             return;
         }
         int def = region.mapIcon() != null ? Math.max(0, icons.indexOf(region.mapIcon())) : 0;
@@ -165,7 +166,7 @@ public final class BedrockChunkService {
                 .onSubmit(results -> {
                     Object value = results.get(componentName(label));
                     if (value != null && gateway.setMapIcon(regionId, value.toString())) {
-                        player.sendMessage(config.apply(config.text("map.icon-success"), Map.of("value", value.toString())));
+                        AddonText.send(player, config.apply(config.text("map.icon-success"), Map.of("value", value.toString())));
                     }
                     navigate(new BukkitFormPlayer(player), "hs_misc:" + regionId);
                 })
@@ -177,7 +178,7 @@ public final class BedrockChunkService {
         if (player.hasPermission(BedrockRegionService.ADMIN_PERMISSION) || gateway.isOwner(regionId, player)) {
             return true;
         }
-        player.sendMessage(config.text("messages.no-permission"));
+        AddonText.send(player, config.text("messages.no-permission"));
         return false;
     }
 
@@ -196,7 +197,7 @@ public final class BedrockChunkService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -204,7 +205,7 @@ public final class BedrockChunkService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -214,7 +215,7 @@ public final class BedrockChunkService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

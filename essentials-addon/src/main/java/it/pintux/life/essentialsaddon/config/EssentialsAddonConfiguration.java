@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.config;
 
+import it.pintux.life.common.config.ConfigMigrator;
 import it.pintux.life.essentialsaddon.provider.ProviderSelector;
 import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
@@ -477,7 +478,20 @@ public final class EssentialsAddonConfiguration {
     }
 
     public static EssentialsAddonConfiguration load(JavaPlugin plugin) {
-        YamlConfiguration config = new ConfigMigrator(plugin, FILE_NAME).migrate();
+        YamlConfiguration config = YamlConfiguration.loadConfiguration(ConfigMigrator
+                .of(plugin.getDataFolder(), FILE_NAME, () -> plugin.getResource(FILE_NAME),
+                        plugin.getLogger()::info, plugin.getLogger()::warning)
+                .step(4, (document, log) -> {
+                    for (String provider : List.of("warps", "kits", "homes", "tpa")) {
+                        String path = "providers." + provider;
+                        if (document.get(path) instanceof Boolean) {
+                            document.set(path, "auto");
+                            log.accept("  Reset " + path + " to auto (config-version 4 wrote a module toggle there).");
+                        }
+                    }
+                })
+                .migrate()
+                .getFile());
         return new EssentialsAddonConfiguration(config);
     }
 

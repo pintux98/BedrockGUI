@@ -7,6 +7,7 @@ import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.MyPetMessages;
 import it.pintux.life.essentialsaddon.util.PetActionPayloads;
@@ -46,7 +47,7 @@ public final class BedrockPetService {
 
         petCatalog.listOwnedPets(player, pets -> {
             if (pets.isEmpty()) {
-                player.sendMessage(configuration.petNoPets());
+                AddonText.send(player, configuration.petNoPets());
                 return;
             }
             BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.petListTitle());
@@ -75,7 +76,7 @@ public final class BedrockPetService {
         petCatalog.listOwnedPets(player, pets -> {
             PetView pet = pets.stream().filter(p -> p.uuid().equals(petUuid)).findFirst().orElse(null);
             if (pet == null) {
-                player.sendMessage(configuration.petNoPets());
+                AddonText.send(player, configuration.petNoPets());
                 return;
             }
             String content = configuration.render(configuration.petInfoContent(), Map.of(
@@ -110,10 +111,10 @@ public final class BedrockPetService {
     public void callPet(Player player, UUID petUuid) {
         petCatalog.call(player, petUuid, success -> {
             if (success) {
-                player.sendMessage(configuration.petCallSuccess());
+                AddonText.send(player, configuration.petCallSuccess());
                 playSound(player, configuration.soundFormOpen());
             } else {
-                player.sendMessage(configuration.petCallFailed());
+                AddonText.send(player, configuration.petCallFailed());
                 playSound(player, configuration.soundActionFailed());
             }
         });
@@ -122,10 +123,10 @@ public final class BedrockPetService {
     public void putAwayPet(Player player, UUID petUuid) {
         boolean ok = petCatalog.putAway(player, petUuid);
         if (ok) {
-            player.sendMessage(configuration.petPutAwaySuccess());
+            AddonText.send(player, configuration.petPutAwaySuccess());
             playSound(player, configuration.soundFormOpen());
         } else {
-            player.sendMessage(configuration.petPutAwayFailed());
+            AddonText.send(player, configuration.petPutAwayFailed());
             playSound(player, configuration.soundActionFailed());
         }
     }
@@ -140,12 +141,12 @@ public final class BedrockPetService {
         // Text comes from MyPet's own localized messages, not the addon config.
         String petName = petCatalog.activePetName(player);
         if (petName == null) {
-            player.sendMessage(MyPetMessages.get("Message.No.HasPet", player));
+            AddonText.send(player, MyPetMessages.get("Message.No.HasPet", player));
             return;
         }
         List<SkilltreeView> trees = petCatalog.listSkilltrees(player);
         if (trees.isEmpty()) {
-            player.sendMessage(MyPetMessages.format("Message.Command.ChooseSkilltree.NoneAvailable", player, petName));
+            AddonText.send(player, MyPetMessages.format("Message.Command.ChooseSkilltree.NoneAvailable", player, petName));
             return;
         }
         String title = MyPetMessages.format("Message.Skilltree.Available", player, petName);
@@ -183,7 +184,7 @@ public final class BedrockPetService {
 
         petCatalog.listShopEntries(player, shopId, entries -> {
             if (entries.isEmpty()) {
-                player.sendMessage(configuration.petNoPets());
+                AddonText.send(player, configuration.petNoPets());
                 return;
             }
             BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.petShopTitle());
@@ -229,7 +230,7 @@ public final class BedrockPetService {
         if (petCatalog.isReady()) {
             return true;
         }
-        player.sendMessage(configuration.petNotReady());
+        AddonText.send(player, configuration.petNotReady());
         return false;
     }
 
@@ -237,11 +238,11 @@ public final class BedrockPetService {
         try {
             BedrockGUIApi api = BedrockGUIApi.getInstance();
             if (api == null) {
-                player.sendMessage(configuration.noBedrockGui());
+                AddonText.send(player, configuration.noBedrockGui());
             }
             return api;
         } catch (IllegalStateException e) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
             return null;
         }
     }

@@ -6,6 +6,7 @@ import it.pintux.life.homesteadaddon.api.BedrockPlayerDetector;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.RegionView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
@@ -44,7 +45,7 @@ public final class BedrockRegionService {
 
         List<RegionView> regions = all ? gateway.allRegions() : gateway.regionsFor(player);
         if (regions.isEmpty() && !all) {
-            player.sendMessage(config.text("region.list.empty"));
+            AddonText.send(player, config.text("region.list.empty"));
             return;
         }
 
@@ -97,7 +98,7 @@ public final class BedrockRegionService {
         if (!player.hasPermission(ADMIN_PERMISSION)
                 && !region.isOwnedBy(player.getUniqueId())
                 && !gateway.isMember(regionId, player)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return;
         }
 
@@ -162,14 +163,14 @@ public final class BedrockRegionService {
         }
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return;
         }
         if (gateway.teleport(player, regionId)) {
             player.sendMessage(config.apply(config.text("messages.teleport-success"),
                     Map.of("name", region.get().name())));
         } else {
-            player.sendMessage(config.text("messages.teleport-failed"));
+            AddonText.send(player, config.text("messages.teleport-failed"));
         }
     }
 
@@ -187,7 +188,7 @@ public final class BedrockRegionService {
                                 Map.of("name", region.name())));
                         openRegionList(player, false, 1);
                     } else {
-                        player.sendMessage(config.text("messages.cannot-leave"));
+                        AddonText.send(player, config.text("messages.cannot-leave"));
                     }
                 })
                 .button2(config.text("region.menu.leave-no"), fp -> openRegionMenu(player, region.id()))
@@ -258,9 +259,9 @@ public final class BedrockRegionService {
             RegionView region = regions.get(i);
             form.button(config.apply(config.text("welcome.entry-button"), placeholders(region)), fp -> {
                 if (gateway.teleportToWelcomeSign(player, region.id())) {
-                    player.sendMessage(config.apply(config.text("messages.teleport-success"), Map.of("name", region.name())));
+                    AddonText.send(player, config.apply(config.text("messages.teleport-success"), Map.of("name", region.name())));
                 } else {
-                    player.sendMessage(config.text("messages.teleport-failed"));
+                    AddonText.send(player, config.text("messages.teleport-failed"));
                 }
             });
         }
@@ -340,7 +341,7 @@ public final class BedrockRegionService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -348,7 +349,7 @@ public final class BedrockRegionService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -358,7 +359,7 @@ public final class BedrockRegionService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

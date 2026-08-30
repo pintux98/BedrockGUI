@@ -4,6 +4,7 @@ import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
+import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.entity.Player;
 
 /**
@@ -33,7 +34,7 @@ public final class BedrockSettingsService extends BedrockServiceSupport {
                 .onSubmit(results -> {
                     gateway.setRejectingDuelRequests(player, !formToggle(results, duelLabel));
                     gateway.setRejectingPartyRequests(player, !formToggle(results, partyLabel));
-                    player.sendMessage(text("settings.saved"));
+                    AddonText.send(player, text("settings.saved"));
                 })
                 .send(wrap(player));
     }

@@ -4,6 +4,7 @@ import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.MainThread;
@@ -55,7 +56,7 @@ public final class BedrockEssentialsService {
 
         List<String> warps = warpCatalog.getAccessibleWarps(player);
         if (warps.isEmpty()) {
-            player.sendMessage(configuration.noWarpsMessage());
+            AddonText.send(player, configuration.noWarpsMessage());
             return;
         }
 
@@ -82,7 +83,7 @@ public final class BedrockEssentialsService {
         if (!ensureWarpCatalog(player)) return;
 
         if (!warpCatalog.getAccessibleWarps(player).contains(warpName)) {
-            player.sendMessage(configuration.noWarpAccess());
+            AddonText.send(player, configuration.noWarpAccess());
             return;
         }
 
@@ -112,7 +113,7 @@ public final class BedrockEssentialsService {
 
         List<String> kits = kitCatalog.getAccessibleKits(player);
         if (kits.isEmpty()) {
-            player.sendMessage(configuration.noKitsMessage());
+            AddonText.send(player, configuration.noKitsMessage());
             return;
         }
 
@@ -139,7 +140,7 @@ public final class BedrockEssentialsService {
         if (!ensureKitCatalog(player)) return;
 
         if (!kitCatalog.getAccessibleKits(player).contains(kitName)) {
-            player.sendMessage(configuration.noKitAccess());
+            AddonText.send(player, configuration.noKitAccess());
             return;
         }
 
@@ -154,7 +155,7 @@ public final class BedrockEssentialsService {
         MainThread.run(() -> {
             boolean success = kitCatalog.getProvider().claimKit(player, kitName);
             if (success) {
-                player.sendMessage(configuration.kitClaimSuccess());
+                AddonText.send(player, configuration.kitClaimSuccess());
                 playSound(player, configuration.soundKitClaimSuccess());
             } else {
                 player.sendMessage(configuration.render(configuration.kitClaimFailed(),
@@ -168,11 +169,11 @@ public final class BedrockEssentialsService {
         try {
             BedrockGUIApi api = BedrockGUIApi.getInstance();
             if (api == null) {
-                player.sendMessage(configuration.noBedrockGui());
+                AddonText.send(player, configuration.noBedrockGui());
             }
             return api;
         } catch (IllegalStateException e) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
             return null;
         }
     }
@@ -183,9 +184,9 @@ public final class BedrockEssentialsService {
         }
         if (!warpCatalog.isReady()) {
             if (warpCatalog.getProvider() == null) {
-                player.sendMessage(configuration.providerUnavailable());
+                AddonText.send(player, configuration.providerUnavailable());
             } else {
-                player.sendMessage(configuration.essentialsNotReady());
+                AddonText.send(player, configuration.essentialsNotReady());
             }
             return false;
         }
@@ -198,9 +199,9 @@ public final class BedrockEssentialsService {
         }
         if (!kitCatalog.isReady()) {
             if (kitCatalog.getProvider() == null) {
-                player.sendMessage(configuration.providerUnavailable());
+                AddonText.send(player, configuration.providerUnavailable());
             } else {
-                player.sendMessage(configuration.essentialsNotReady());
+                AddonText.send(player, configuration.essentialsNotReady());
             }
             return false;
         }

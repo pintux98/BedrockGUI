@@ -1,3 +1,5 @@
+config-version: 1
+
 assets:
   enabled: false
   port: 0

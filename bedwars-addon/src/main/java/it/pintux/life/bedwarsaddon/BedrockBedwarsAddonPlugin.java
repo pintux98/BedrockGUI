@@ -57,6 +57,7 @@ import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
 import it.pintux.life.bedwarsaddon.service.SpectatorCatalogService;
 import it.pintux.life.bedwarsaddon.service.StatsCatalogService;
 import it.pintux.life.bedwarsaddon.service.UpgradeCatalogService;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.Bukkit;
@@ -260,7 +261,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         if (bedrockPartyService != null) {
             bedrockPartyService.openMain(player);
         } else {
-            player.sendMessage(configuration.commandPartyDisabled());
+            AddonText.send(player, configuration.commandPartyDisabled());
         }
     }
 
@@ -269,7 +270,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         if (bedrockArenaService != null) {
             bedrockArenaService.openMain(player);
         } else {
-            player.sendMessage(configuration.commandModuleDisabled());
+            AddonText.send(player, configuration.commandModuleDisabled());
         }
     }
 
@@ -278,7 +279,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         if (bedrockStatsService != null) {
             bedrockStatsService.openStats(player);
         } else {
-            player.sendMessage(configuration.commandModuleDisabled());
+            AddonText.send(player, configuration.commandModuleDisabled());
         }
     }
 
@@ -287,7 +288,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         if (bedrockSpectatorService != null) {
             bedrockSpectatorService.openTeleporter(player);
         } else {
-            player.sendMessage(configuration.commandModuleDisabled());
+            AddonText.send(player, configuration.commandModuleDisabled());
         }
     }
 

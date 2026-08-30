@@ -7,6 +7,7 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.RatingView;
 import it.pintux.life.homesteadaddon.model.RegionView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
@@ -33,7 +34,7 @@ public final class BedrockMiscService {
             return;
         }
         if (!canManage(player, regionId)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return;
         }
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(
@@ -42,21 +43,21 @@ public final class BedrockMiscService {
         form.button(config.text("misc.button-rename"), fp -> showTextForm(player, regionId,
                 "misc.rename-title", "misc.rename-label", region.name(), (id, value) -> {
                     gateway.renameRegion(id, value);
-                    player.sendMessage(config.apply(config.text("misc.rename-success"), Map.of("name", value)));
+                    AddonText.send(player, config.apply(config.text("misc.rename-success"), Map.of("name", value)));
                 }));
         form.button(config.text("misc.button-displayname"), fp -> showTextForm(player, regionId,
                 "misc.displayname-title", "misc.displayname-label", "", (id, value) -> {
                     gateway.setDisplayName(id, value);
-                    player.sendMessage(config.text("misc.displayname-success"));
+                    AddonText.send(player, config.text("misc.displayname-success"));
                 }));
         form.button(config.text("misc.button-description"), fp -> showTextForm(player, regionId,
                 "misc.description-title", "misc.description-label", "", (id, value) -> {
                     gateway.setDescription(id, value);
-                    player.sendMessage(config.text("misc.description-success"));
+                    AddonText.send(player, config.text("misc.description-success"));
                 }));
         form.button(config.text("misc.button-set-spawn"), fp -> {
             gateway.setRegionSpawn(regionId, player);
-            player.sendMessage(config.text("misc.set-spawn-success"));
+            AddonText.send(player, config.text("misc.set-spawn-success"));
             openMiscSettings(player, regionId);
         });
         form.button(config.text("misc.button-transfer"), fp -> showTransferForm(player, regionId));
@@ -78,7 +79,7 @@ public final class BedrockMiscService {
                 .onSubmit(results -> {
                     String value = string(results, label);
                     if (value.isBlank()) {
-                        player.sendMessage(config.text("misc.invalid-input"));
+                        AddonText.send(player, config.text("misc.invalid-input"));
                     } else {
                         applier.apply(regionId, value);
                     }
@@ -98,14 +99,14 @@ public final class BedrockMiscService {
                 .onSubmit(results -> {
                     String name = string(results, label);
                     if (name.isBlank()) {
-                        player.sendMessage(config.text("misc.invalid-input"));
+                        AddonText.send(player, config.text("misc.invalid-input"));
                         openMiscSettings(player, regionId);
                         return;
                     }
                     if (gateway.transferOwnership(regionId, name)) {
-                        player.sendMessage(config.apply(config.text("misc.transfer-success"), Map.of("player", name)));
+                        AddonText.send(player, config.apply(config.text("misc.transfer-success"), Map.of("player", name)));
                     } else {
-                        player.sendMessage(config.text("misc.transfer-failed"));
+                        AddonText.send(player, config.text("misc.transfer-failed"));
                         openMiscSettings(player, regionId);
                     }
                 })
@@ -122,7 +123,7 @@ public final class BedrockMiscService {
                         config.apply(config.text("misc.delete-content"), ph))
                 .button1(config.text("misc.button-delete"), fp -> {
                     if (canManage(player, region.id()) && gateway.deleteRegion(region.id(), player)) {
-                        player.sendMessage(config.apply(config.text("misc.delete-success"), ph));
+                        AddonText.send(player, config.apply(config.text("misc.delete-success"), ph));
                         navigate(new BukkitFormPlayer(player), "hs_regions:");
                     } else {
                         openMiscSettings(player, region.id());
@@ -153,7 +154,7 @@ public final class BedrockMiscService {
                     Object value = results.get(componentName(label));
                     int score = value instanceof Number n ? n.intValue() : def;
                     if (gateway.rateRegion(regionId, player, score)) {
-                        player.sendMessage(config.apply(config.text("rating.success"), Map.of("score", String.valueOf(score))));
+                        AddonText.send(player, config.apply(config.text("rating.success"), Map.of("score", String.valueOf(score))));
                     }
                 })
                 .send(new BukkitFormPlayer(player));
@@ -171,7 +172,7 @@ public final class BedrockMiscService {
 
     private boolean requireManage(Player player, long regionId) {
         if (!canManage(player, regionId)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return false;
         }
         return true;
@@ -197,7 +198,7 @@ public final class BedrockMiscService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -205,7 +206,7 @@ public final class BedrockMiscService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -215,7 +216,7 @@ public final class BedrockMiscService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

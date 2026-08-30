@@ -5,6 +5,7 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.UpgradeMenuModel;
 import it.pintux.life.bedwarsaddon.model.UpgradeContent;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.actions.ActionSystem;
@@ -69,7 +70,7 @@ public final class BedrockUpgradeService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.upgradeProviderUnavailable());
+            AddonText.send(player, config.upgradeProviderUnavailable());
             return null;
         }
     }

@@ -30,9 +30,22 @@ public class BedrockGUI extends Plugin {
             int extracted = it.pintux.life.common.utils.DefaultFormsExtractor.extract(getDataFolder(), getLogger()::warning);
             getLogger().info("First run: extracted " + extracted + " default form file(s) to forms/");
         }
+        migrateConfigurations();
         reloadData();
         ProxyServer.getInstance().getPluginManager().registerCommand(this, new BungeeCommand(this));
         new Metrics(this, 23364);
+    }
+
+    private void migrateConfigurations() {
+        it.pintux.life.common.config.ConfigMigrator
+                .of(getDataFolder(), "config.yml", () -> getResourceAsStream("config.yml"),
+                        getLogger()::info, getLogger()::warning)
+                .preserve("forms")
+                .migrate();
+        it.pintux.life.common.config.ConfigMigrator
+                .of(getDataFolder(), "messages.yml", () -> getResourceAsStream("messages.yml"),
+                        getLogger()::info, getLogger()::warning)
+                .migrate();
     }
 
     @Override
@@ -77,6 +90,8 @@ public class BedrockGUI extends Plugin {
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
                 formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this));
+
+        it.pintux.life.bungee.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry(), getProxy());
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);

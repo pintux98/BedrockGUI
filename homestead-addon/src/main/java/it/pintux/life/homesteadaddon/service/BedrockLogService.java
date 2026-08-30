@@ -7,6 +7,7 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.LogView;
 import it.pintux.life.homesteadaddon.model.RegionView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import org.bukkit.entity.Player;
@@ -70,7 +71,7 @@ public final class BedrockLogService {
         if (manage && !logs.isEmpty()) {
             form.button(config.text("logs.button-mark-read"), fp -> {
                 gateway.markLogsRead(regionId);
-                player.sendMessage(config.text("logs.marked-read"));
+                AddonText.send(player, config.text("logs.marked-read"));
                 openLogs(player, regionId, 1);
             });
             form.button(config.text("logs.button-clear"), fp -> confirmClear(player, region));
@@ -88,7 +89,7 @@ public final class BedrockLogService {
                         config.text("logs.clear-content"))
                 .button1(config.text("logs.button-clear"), fp -> {
                     if (canManage(player, region.id()) && gateway.clearLogs(region.id())) {
-                        player.sendMessage(config.text("logs.cleared"));
+                        AddonText.send(player, config.text("logs.cleared"));
                     }
                     openLogs(player, region.id(), 1);
                 })
@@ -112,7 +113,7 @@ public final class BedrockLogService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -120,7 +121,7 @@ public final class BedrockLogService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -130,7 +131,7 @@ public final class BedrockLogService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

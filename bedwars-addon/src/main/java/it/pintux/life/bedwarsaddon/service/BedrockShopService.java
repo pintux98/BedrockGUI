@@ -5,6 +5,7 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.ShopMenuModel;
 import it.pintux.life.bedwarsaddon.model.ShopContent;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.actions.ActionSystem;
@@ -89,7 +90,7 @@ public final class BedrockShopService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.shopProviderUnavailable());
+            AddonText.send(player, config.shopProviderUnavailable());
             return null;
         }
     }

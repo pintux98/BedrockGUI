@@ -8,6 +8,7 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.SubAreaView;
+import it.pintux.life.homesteadaddon.util.AddonText;
 import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.HomesteadActionPayloads;
 import org.bukkit.entity.Player;
@@ -44,7 +45,7 @@ public final class BedrockFlagService {
         boolean canGlobal = canSet(player, regionId, SET_GLOBAL_FLAGS);
         boolean canWorld = canSet(player, regionId, SET_WORLD_FLAGS);
         if (!canGlobal && !canWorld) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return;
         }
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(
@@ -72,7 +73,7 @@ public final class BedrockFlagService {
                 FlagDomain.WORLD_FLAGS, region.worldFlags(),
                 mask -> {
                     gateway.setWorldFlags(regionId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     openFlagsChooser(player, regionId);
                 });
     }
@@ -87,7 +88,7 @@ public final class BedrockFlagService {
                 FlagDomain.PLAYER_FLAGS, region.playerFlags(),
                 mask -> {
                     gateway.setGlobalPlayerFlags(regionId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     openFlagsChooser(player, regionId);
                 });
     }
@@ -103,7 +104,7 @@ public final class BedrockFlagService {
                 FlagDomain.PLAYER_FLAGS, member.playerFlags(),
                 mask -> {
                     gateway.setMemberPlayerFlags(regionId, memberId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     navigate(new BukkitFormPlayer(player),
                             "hs_player_info:" + HomesteadActionPayloads.regionMember(regionId, memberId));
                 });
@@ -119,7 +120,7 @@ public final class BedrockFlagService {
                 FlagDomain.CONTROL_FLAGS, member.controlFlags(),
                 mask -> {
                     gateway.setMemberControlFlags(regionId, memberId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     navigate(new BukkitFormPlayer(player),
                             "hs_player_info:" + HomesteadActionPayloads.regionMember(regionId, memberId));
                 });
@@ -132,12 +133,12 @@ public final class BedrockFlagService {
         }
         Optional<SubAreaView> subArea = gateway.subArea(subAreaId);
         if (subArea.isEmpty()) {
-            player.sendMessage(config.text("messages.sub-area-not-found"));
+            AddonText.send(player, config.text("messages.sub-area-not-found"));
             return;
         }
         SubAreaView view = subArea.get();
         if (!canManageSubArea(player, view.regionId())) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return;
         }
         buildFlagForm(player,
@@ -145,7 +146,7 @@ public final class BedrockFlagService {
                 FlagDomain.PLAYER_FLAGS, view.playerFlags(),
                 mask -> {
                     gateway.setSubAreaFlags(subAreaId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     navigate(new BukkitFormPlayer(player), "hs_subarea_menu:" + subAreaId);
                 });
     }
@@ -156,12 +157,12 @@ public final class BedrockFlagService {
         }
         Optional<SubAreaView> subArea = gateway.subArea(subAreaId);
         if (subArea.isEmpty()) {
-            player.sendMessage(config.text("messages.sub-area-not-found"));
+            AddonText.send(player, config.text("messages.sub-area-not-found"));
             return;
         }
         SubAreaView view = subArea.get();
         if (!canManageSubArea(player, view.regionId())) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return;
         }
         MemberView member = null;
@@ -172,7 +173,7 @@ public final class BedrockFlagService {
             }
         }
         if (member == null) {
-            player.sendMessage(config.text("messages.member-not-found"));
+            AddonText.send(player, config.text("messages.member-not-found"));
             return;
         }
         String playerName = member.playerName();
@@ -181,7 +182,7 @@ public final class BedrockFlagService {
                 FlagDomain.PLAYER_FLAGS, member.playerFlags(),
                 mask -> {
                     gateway.setSubAreaMemberFlags(subAreaId, memberId, mask);
-                    player.sendMessage(config.text("messages.flags-updated"));
+                    AddonText.send(player, config.text("messages.flags-updated"));
                     navigate(new BukkitFormPlayer(player),
                             "hs_subarea_member:" + HomesteadActionPayloads.regionMember(subAreaId, memberId));
                 });
@@ -232,7 +233,7 @@ public final class BedrockFlagService {
             return null;
         }
         if (!canSet(player, regionId, controlFlag)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return null;
         }
         return region;
@@ -243,7 +244,7 @@ public final class BedrockFlagService {
             return null;
         }
         if (!canSet(player, regionId, SET_MEMBER_FLAGS)) {
-            player.sendMessage(config.text("messages.no-permission"));
+            AddonText.send(player, config.text("messages.no-permission"));
             return null;
         }
         for (MemberView member : gateway.membersOf(regionId)) {
@@ -251,7 +252,7 @@ public final class BedrockFlagService {
                 return member;
             }
         }
-        player.sendMessage(config.text("messages.member-not-found"));
+        AddonText.send(player, config.text("messages.member-not-found"));
         return null;
     }
 
@@ -275,7 +276,7 @@ public final class BedrockFlagService {
     private RegionView requireRegion(Player player, long regionId) {
         Optional<RegionView> region = gateway.region(regionId);
         if (region.isEmpty()) {
-            player.sendMessage(config.text("messages.region-not-found"));
+            AddonText.send(player, config.text("messages.region-not-found"));
             return null;
         }
         return region.get();
@@ -283,7 +284,7 @@ public final class BedrockFlagService {
 
     private boolean ensureAvailable(Player player) {
         if (!gateway.isAvailable()) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return false;
         }
         return true;
@@ -293,7 +294,7 @@ public final class BedrockFlagService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.text("messages.homestead-unavailable"));
+            AddonText.send(player, config.text("messages.homestead-unavailable"));
             return null;
         }
     }

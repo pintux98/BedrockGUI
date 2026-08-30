@@ -55,6 +55,8 @@ public class BedrockGUI {
             logger.info("First run: extracted {} default form file(s) to forms/", extracted);
         }
 
+        migrateConfigurations();
+
         reloadData();
 
         metricsFactory.make(this, 23364);
@@ -83,6 +85,18 @@ public class BedrockGUI {
         }
 
         logger.info("BedrockGUI for Velocity disabled");
+    }
+
+    private void migrateConfigurations() {
+        it.pintux.life.common.config.ConfigMigrator
+                .ofClasspath(dataDirectory.toFile(), "config.yml", getClass().getClassLoader(),
+                        logger::info, logger::warn)
+                .preserve("forms")
+                .migrate();
+        it.pintux.life.common.config.ConfigMigrator
+                .ofClasspath(dataDirectory.toFile(), "messages.yml", getClass().getClassLoader(),
+                        logger::info, logger::warn)
+                .migrate();
     }
 
     public void reloadData() {
@@ -120,6 +134,8 @@ public class BedrockGUI {
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
                 formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler(getServer()));
+
+        it.pintux.life.velocity.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry(), getServer());
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);

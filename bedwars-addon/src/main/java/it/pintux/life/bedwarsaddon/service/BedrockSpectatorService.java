@@ -5,6 +5,7 @@ import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.SpectatorMenuModel;
 import it.pintux.life.bedwarsaddon.model.SpectateTarget;
+import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.actions.ActionSystem;
@@ -70,7 +71,7 @@ public final class BedrockSpectatorService {
         try {
             return BedrockGUIApi.getInstance();
         } catch (IllegalStateException e) {
-            player.sendMessage(config.spectatorProviderUnavailable());
+            AddonText.send(player, config.spectatorProviderUnavailable());
             return null;
         }
     }

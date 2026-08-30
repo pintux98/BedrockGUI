@@ -7,6 +7,7 @@ import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.ShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
+import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
@@ -71,7 +72,7 @@ public final class BedrockShopGuiService {
 
         Collection<ShopCatalogEntry> shops = catalogService.getAccessibleShops(player);
         if (shops.isEmpty()) {
-            player.sendMessage(configuration.shopEmptyShopMessage());
+            AddonText.send(player, configuration.shopEmptyShopMessage());
             return;
         }
 
@@ -96,12 +97,12 @@ public final class BedrockShopGuiService {
         }
         Optional<ShopCatalogEntry> optionalEntry = catalogService.getShop(shopId);
         if (optionalEntry.isEmpty()) {
-            player.sendMessage(configuration.shopNoShopAccess());
+            AddonText.send(player, configuration.shopNoShopAccess());
             return;
         }
         ShopCatalogEntry entry = optionalEntry.get();
         if (!catalogService.hasShopAccess(player, entry)) {
-            player.sendMessage(configuration.shopNoShopAccess());
+            AddonText.send(player, configuration.shopNoShopAccess());
             return;
         }
 
@@ -162,7 +163,7 @@ public final class BedrockShopGuiService {
         Optional<ShopItemView> optionalItemView = catalogService.getItemView(shopId, itemId);
         Optional<ShopItem> optionalLiveItem = catalogService.getLiveItem(shopId, itemId);
         if (optionalItemView.isEmpty() || optionalLiveItem.isEmpty()) {
-            player.sendMessage(configuration.shopUnavailableItemMessage());
+            AddonText.send(player, configuration.shopUnavailableItemMessage());
             return;
         }
 
@@ -230,7 +231,7 @@ public final class BedrockShopGuiService {
         }
         Optional<ShopItem> optionalLiveItem = catalogService.getLiveItem(shopId, itemId);
         if (optionalLiveItem.isEmpty()) {
-            player.sendMessage(configuration.shopUnavailableItemMessage());
+            AddonText.send(player, configuration.shopUnavailableItemMessage());
             return ShopGuiTransactionGateway.TransactionExecutionResult.failure("Missing ShopGUI+ item");
         }
 
@@ -238,19 +239,19 @@ public final class BedrockShopGuiService {
         if (action == BedrockShopAction.BUY || action == BedrockShopAction.TRADE) {
             double price = liveItem.getBuyPriceForAmount(player, Math.max(1, amount));
             if (price > 0 && !hasBalance(player, price)) {
-                player.sendMessage(configuration.shopTransactionFailed().replace("%reason%", "Insufficient balance"));
+                AddonText.send(player, configuration.shopTransactionFailed().replace("%reason%", "Insufficient balance"));
                 soundFeedback.playPurchaseFailed(player);
                 return ShopGuiTransactionGateway.TransactionExecutionResult.failure("Insufficient balance");
             }
         }
         ShopGuiTransactionGateway.TransactionExecutionResult result = transactionGateway.execute(player, liveItem, action, Math.max(1, amount));
         if (result.success()) {
-            player.sendMessage(configuration.shopTransactionSuccess());
+            AddonText.send(player, configuration.shopTransactionSuccess());
             soundFeedback.playPurchaseSuccess(player);
             openShop(player, shopId, page);
         } else {
             String reason = result.message() == null || result.message().isBlank() ? configuration.shopUnsupportedTransaction() : result.message();
-            player.sendMessage(configuration.shopTransactionFailed().replace("%reason%", reason));
+            AddonText.send(player, configuration.shopTransactionFailed().replace("%reason%", reason));
             soundFeedback.playPurchaseFailed(player);
         }
         return result;
@@ -281,7 +282,7 @@ public final class BedrockShopGuiService {
     private BedrockGUIApi requireApi(Player player) {
         BedrockGUIApi api = BedrockGUIApi.getInstance();
         if (api == null) {
-            player.sendMessage(configuration.noBedrockGui());
+            AddonText.send(player, configuration.noBedrockGui());
         }
         return api;
     }
@@ -291,7 +292,7 @@ public final class BedrockShopGuiService {
             catalogService.refreshCatalog();
         }
         if (!catalogService.isReady()) {
-            player.sendMessage(configuration.shopShopsNotReady());
+            AddonText.send(player, configuration.shopShopsNotReady());
             return false;
         }
         return true;
