@@ -24,16 +24,23 @@ public final class ConfigLineMerger {
     }
 
     public static List<String> merge(List<String> templateLines, ValueSource values) {
-        return merge(templateLines, values, Collections.emptySet());
+        return merge(templateLines, values, Collections.emptyMap());
     }
 
-    public static List<String> merge(List<String> templateLines, ValueSource values, Set<String> verbatimPaths) {
+    /**
+     * @param verbatimSections body lines, copied straight from the user's own file, for paths that
+     *                         must not be re-serialised - their comments, block scalars and layout
+     *                         are preserved exactly as written.
+     */
+    public static List<String> merge(List<String> templateLines, ValueSource values,
+                                     Map<String, List<String>> verbatimSections) {
         List<String> output = new ArrayList<>();
-        mergeLines(templateLines, values, verbatimPaths, output, "", 0, -1);
+        mergeLines(templateLines, values, verbatimSections, output, "", 0, -1);
         return output;
     }
 
-    private static int mergeLines(List<String> templateLines, ValueSource values, Set<String> verbatimPaths,
+    private static int mergeLines(List<String> templateLines, ValueSource values,
+                                  Map<String, List<String>> verbatimSections,
                                   List<String> output, String currentPath, int startIdx, int parentIndent) {
         boolean nested = !currentPath.isEmpty();
         int i = startIdx;
@@ -65,13 +72,14 @@ public final class ConfigLineMerger {
             String fullPath = currentPath.isEmpty() ? key : currentPath + "." + key;
             boolean sectionHeader = trimmed.endsWith(":");
 
-            if (verbatimPaths.contains(fullPath) && values.isSection(fullPath)) {
+            List<String> verbatim = verbatimSections.get(fullPath);
+            if (verbatim != null) {
                 output.add(line);
-                dumpSection(values, fullPath, indent + 2, output);
+                output.addAll(verbatim);
                 i = skipSection(templateLines, i + 1, indent);
             } else if (values.isSection(fullPath) || (sectionHeader && !values.contains(fullPath))) {
                 output.add(line);
-                i = mergeLines(templateLines, values, verbatimPaths, output, fullPath, i + 1, indent);
+                i = mergeLines(templateLines, values, verbatimSections, output, fullPath, i + 1, indent);
             } else if (values.contains(fullPath)) {
                 emitEntry(indent, key, values.get(fullPath), output);
                 i = skipSection(templateLines, i + 1, indent);
@@ -101,19 +109,6 @@ public final class ConfigLineMerger {
             i++;
         }
         return i;
-    }
-
-    private static void dumpSection(ValueSource values, String path, int indent, List<String> output) {
-        for (String key : values.getKeys(path)) {
-            String childPath = path + "." + key;
-            Object value = values.get(childPath);
-            if (value instanceof Map) {
-                output.add(spaces(indent) + key + ":");
-                dumpSection(values, childPath, indent + 2, output);
-            } else {
-                emitEntry(indent, key, value, output);
-            }
-        }
     }
 
     private static void emitEntry(int indent, String key, Object value, List<String> output) {

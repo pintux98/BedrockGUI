@@ -9,9 +9,11 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -126,9 +128,21 @@ public final class ConfigMigrator {
         return this;
     }
 
+    /**
+     * Upgrading a config must never be fatal: whatever goes wrong, the caller still gets a result
+     * and the file on disk is left exactly as it was.
+     */
     public Result migrate() {
         File dataFile = new File(dataFolder, fileName);
+        try {
+            return runMigration(dataFile);
+        } catch (Exception e) {
+            warn.accept("Could not migrate " + fileName + ", keeping the existing file: " + e);
+            return new Result(dataFile, 0, 0, List.of(), List.of(), false);
+        }
+    }
 
+    private Result runMigration(File dataFile) {
         String bundledText = readBundled();
         if (bundledText == null) {
             warn.accept("Bundled " + fileName + " not found in resources. Skipping migration.");
@@ -143,14 +157,12 @@ public final class ConfigMigrator {
             return new Result(dataFile, bundledVersion, bundledVersion, List.of(), List.of(), true);
         }
 
-        YamlDocument user;
-        try {
-            user = YamlDocument.load(dataFile.toPath());
-        } catch (IOException e) {
-            warn.accept("Failed to read " + fileName + ": " + e.getMessage());
+        String userText = readUser(dataFile);
+        if (userText == null) {
             return new Result(dataFile, 0, bundledVersion, List.of(), List.of(), false);
         }
 
+        YamlDocument user = YamlDocument.parse(userText);
         int userVersion = user.getInt(versionKey, 0);
         if (userVersion == bundledVersion) {
             return new Result(dataFile, userVersion, bundledVersion, List.of(), List.of(), false);
@@ -158,16 +170,42 @@ public final class ConfigMigrator {
 
         info.accept("Migrating " + fileName + " from version " + userVersion + " to " + bundledVersion);
 
+        YamlDocument original = YamlDocument.parse(userText);
         List<String> added = new ArrayList<>();
         List<String> removed = new ArrayList<>();
         mergeKeys(template, user, "", added, removed);
 
+        YamlDocument beforeSteps = user.copy();
         for (MigrationStep step : steps.getOrDefault(userVersion, List.of())) {
             step.apply(user, info);
         }
+        Set<String> stepChanged = changedPaths(beforeSteps, user);
 
         user.set(versionKey, bundledVersion);
-        write(dataFile, bundledText, user);
+
+        List<String> userLines = Arrays.asList(userText.split("\n"));
+        Map<String, List<String>> verbatim = new LinkedHashMap<>();
+        for (String path : preserved) {
+            List<String> body = sectionBody(userLines, path);
+            if (body != null) {
+                verbatim.put(path, body);
+            }
+        }
+
+        List<String> output = ConfigLineMerger.merge(
+                Arrays.asList(bundledText.split("\n")), user, verbatim);
+        String merged = String.join("\n", output) + "\n";
+
+        String problem = verifyNothingLost(original, merged, removed, stepChanged);
+        if (problem != null) {
+            warn.accept("Migrating " + fileName + " would have changed " + problem
+                    + ", so the existing file was kept untouched. Please report this.");
+            return new Result(dataFile, userVersion, bundledVersion, List.of(), List.of(), false);
+        }
+
+        if (!write(dataFile, merged)) {
+            return new Result(dataFile, userVersion, bundledVersion, List.of(), List.of(), false);
+        }
 
         if (!added.isEmpty()) {
             info.accept("  Added " + added.size() + " new key(s) to " + fileName + ".");
@@ -179,16 +217,137 @@ public final class ConfigMigrator {
         return new Result(dataFile, userVersion, bundledVersion, added, removed, false);
     }
 
+    /**
+     * Re-reads what is about to be written and refuses it unless every value the user had is still
+     * there, unchanged. New keys are never worth a silently mangled setting.
+     */
+    private static Set<String> changedPaths(YamlDocument before, YamlDocument after) {
+        Set<String> changed = new LinkedHashSet<>(before.leafPaths());
+        changed.addAll(after.leafPaths());
+        changed.removeIf(path -> Objects.equals(before.get(path), after.get(path)));
+        return changed;
+    }
+
+    private String verifyNothingLost(YamlDocument original, String merged, List<String> removed,
+                                     Set<String> stepChanged) {
+        YamlDocument reloaded;
+        try {
+            reloaded = YamlDocument.parse(merged);
+        } catch (Exception e) {
+            return "the file into something unreadable (" + e + ")";
+        }
+
+        for (String path : original.leafPaths()) {
+            if (path.equals(versionKey) || isUnder(path, removed) || isUnder(path, preserved)
+                    || isUnder(path, stepChanged)) {
+                continue;
+            }
+            if (!Objects.equals(original.get(path), reloaded.get(path))) {
+                return path + " from " + original.get(path) + " to " + reloaded.get(path);
+            }
+        }
+
+        for (String path : preserved) {
+            if (original.contains(path) && !Objects.equals(original.get(path), reloaded.get(path))) {
+                return "the preserved section " + path;
+            }
+        }
+
+        return null;
+    }
+
+    private static boolean isUnder(String path, Iterable<String> parents) {
+        for (String parent : parents) {
+            if (path.equals(parent) || path.startsWith(parent + ".")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * The user's own lines for a section, so a preserved block is copied rather than re-serialised.
+     */
+    static List<String> sectionBody(List<String> lines, String path) {
+        String[] parts = path.split("\\.");
+        int depth = 0;
+        int parentIndent = -1;
+
+        for (int i = 0; i < lines.size(); i++) {
+            String trimmed = lines.get(i).trim();
+            if (trimmed.isEmpty() || trimmed.startsWith("#")) {
+                continue;
+            }
+            int indent = indentOf(lines.get(i));
+            if (depth > 0 && indent <= parentIndent) {
+                return null;
+            }
+            String key = keyOf(trimmed);
+            if (key == null || !key.equals(parts[depth])) {
+                continue;
+            }
+            if (depth < parts.length - 1) {
+                parentIndent = indent;
+                depth++;
+                continue;
+            }
+
+            List<String> body = new ArrayList<>();
+            for (int j = i + 1; j < lines.size(); j++) {
+                String next = lines.get(j);
+                String nextTrimmed = next.trim();
+                if (nextTrimmed.isEmpty() || nextTrimmed.startsWith("#")) {
+                    body.add(next);
+                    continue;
+                }
+                if (indentOf(next) <= indent) {
+                    break;
+                }
+                body.add(next);
+            }
+            while (!body.isEmpty()) {
+                String last = body.get(body.size() - 1).trim();
+                if (last.isEmpty() || last.startsWith("#")) {
+                    body.remove(body.size() - 1);
+                } else {
+                    break;
+                }
+            }
+            return body;
+        }
+        return null;
+    }
+
+    private static int indentOf(String line) {
+        int count = 0;
+        for (int i = 0; i < line.length(); i++) {
+            char c = line.charAt(i);
+            if (c == ' ') count++;
+            else if (c == '\t') count += 4;
+            else break;
+        }
+        return count;
+    }
+
+    private static String keyOf(String trimmed) {
+        int colon = trimmed.indexOf(':');
+        if (colon <= 0) {
+            return null;
+        }
+        String candidate = trimmed.substring(0, colon).trim();
+        return candidate.isEmpty() || candidate.contains(" ") || candidate.contains("\t") ? null : candidate;
+    }
+
     private void mergeKeys(YamlDocument template, YamlDocument user, String path,
                            List<String> added, List<String> removed) {
         for (String key : template.getKeys(path)) {
             String fullPath = path.isEmpty() ? key : path + "." + key;
-            if (isPreserved(fullPath)) {
+            if (isUnder(fullPath, preserved)) {
                 continue;
             }
             if (template.isSection(fullPath)) {
                 if (!user.isSection(fullPath)) {
-                    user.set(fullPath, new java.util.LinkedHashMap<String, Object>());
+                    user.set(fullPath, new LinkedHashMap<String, Object>());
                 }
                 mergeKeys(template, user, fullPath, added, removed);
             } else if (!user.contains(fullPath)) {
@@ -198,7 +357,7 @@ public final class ConfigMigrator {
         }
         for (String key : user.getKeys(path)) {
             String fullPath = path.isEmpty() ? key : path + "." + key;
-            if (isPreserved(fullPath)) {
+            if (isUnder(fullPath, preserved)) {
                 continue;
             }
             if (!template.contains(fullPath)) {
@@ -206,15 +365,6 @@ public final class ConfigMigrator {
                 removed.add(fullPath);
             }
         }
-    }
-
-    private boolean isPreserved(String path) {
-        for (String preservedPath : preserved) {
-            if (path.equals(preservedPath) || path.startsWith(preservedPath + ".")) {
-                return true;
-            }
-        }
-        return false;
     }
 
     private void writeDefault(File dataFile, String bundledText) {
@@ -229,13 +379,22 @@ public final class ConfigMigrator {
         }
     }
 
-    private void write(File dataFile, String bundledText, YamlDocument user) {
+    private boolean write(File dataFile, String merged) {
         try {
-            List<String> templateLines = Arrays.asList(bundledText.split("\n"));
-            List<String> output = ConfigLineMerger.merge(templateLines, user, preserved);
-            Files.writeString(dataFile.toPath(), String.join("\n", output) + "\n", StandardCharsets.UTF_8);
+            Files.writeString(dataFile.toPath(), merged, StandardCharsets.UTF_8);
+            return true;
         } catch (IOException e) {
             warn.accept("Failed to write " + fileName + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    private String readUser(File dataFile) {
+        try {
+            return normalize(Files.readString(dataFile.toPath(), StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            warn.accept("Failed to read " + fileName + ": " + e.getMessage());
+            return null;
         }
     }
 
@@ -244,12 +403,14 @@ public final class ConfigMigrator {
             if (stream == null) {
                 return null;
             }
-            return new String(stream.readAllBytes(), StandardCharsets.UTF_8)
-                    .replace("\r\n", "\n")
-                    .replace("\r", "\n");
+            return normalize(new String(stream.readAllBytes(), StandardCharsets.UTF_8));
         } catch (IOException e) {
             warn.accept("Failed to read bundled " + fileName + ": " + e.getMessage());
             return null;
         }
+    }
+
+    private static String normalize(String text) {
+        return text.replace("\r\n", "\n").replace("\r", "\n");
     }
 }
