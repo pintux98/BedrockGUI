@@ -79,8 +79,7 @@ public final class BedrockShopGuiService {
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.shopMainTitle());
         form.content(configuration.shopMainContent());
         for (ShopCatalogEntry entry : shops) {
-            String buttonText = entry.getDisplayName() + "\n" + ChatColor.GRAY + entry.getId();
-            form.button(buttonText, formPlayer -> api.executeActionString(
+            form.button(entry.getDisplayName(), formPlayer -> api.executeActionString(
                     formPlayer,
                     "shopgui_shop:" + ShopGuiActionPayloads.encodeShop(entry.getId(), 1),
                     context("shopgui-main", Map.of("shopId", entry.getId()))
