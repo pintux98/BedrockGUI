@@ -1,5 +1,8 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.common.utils.LegacyColors;
+import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
+import it.pintux.life.essentialsaddon.config.ShopCategoryOrder;
 import it.pintux.life.essentialsaddon.model.ShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
 import it.pintux.life.essentialsaddon.util.ShopGuiNames;
@@ -26,10 +29,12 @@ import java.util.logging.Logger;
 
 public final class ShopGuiCatalogService {
     private final Logger logger;
+    private final EssentialsAddonConfiguration configuration;
     private volatile Map<String, ShopCatalogEntry> catalog = Map.of();
 
-    public ShopGuiCatalogService(Logger logger) {
+    public ShopGuiCatalogService(Logger logger, EssentialsAddonConfiguration configuration) {
         this.logger = logger;
+        this.configuration = configuration;
     }
 
     public synchronized void refreshCatalog() {
@@ -44,9 +49,10 @@ public final class ShopGuiCatalogService {
             logger.warning("Unable to refresh ShopGUI+ catalog: " + failure);
             return;
         }
+        int menuOrder = 0;
         for (Shop shop : shops) {
             try {
-                refreshed.put(shop.getId().toLowerCase(Locale.ROOT), snapshot(shop));
+                refreshed.put(shop.getId().toLowerCase(Locale.ROOT), snapshot(shop, menuOrder++));
             } catch (Exception | LinkageError failure) {
                 // one shop built against an incompatible ShopGUI+ signature must not void the whole catalog
                 logger.warning("Skipping ShopGUI+ shop that could not be read: " + failure);
@@ -66,8 +72,16 @@ public final class ShopGuiCatalogService {
                 result.add(entry);
             }
         }
-        result.sort(Comparator.comparing(ShopCatalogEntry::getDisplayName, String.CASE_INSENSITIVE_ORDER));
+        result.sort(order());
         return result;
+    }
+
+    private Comparator<ShopCatalogEntry> order() {
+        Comparator<ShopCatalogEntry> byName =
+                Comparator.comparing(entry -> normalizeTitle(entry.getDisplayName()));
+        return configuration != null && configuration.shopCategoryOrder() == ShopCategoryOrder.NAME
+                ? byName
+                : Comparator.comparingInt(ShopCatalogEntry::getMenuOrder).thenComparing(byName);
     }
 
     public Optional<ShopCatalogEntry> getShop(String shopId) {
@@ -154,7 +168,7 @@ public final class ShopGuiCatalogService {
         return !ShopGuiReflectionSupport.booleanFlag(entry.getShop(), false, "isDenyDirectAccess");
     }
 
-    private ShopCatalogEntry snapshot(Shop shop) {
+    private ShopCatalogEntry snapshot(Shop shop, int menuOrder) {
         NavigableMap<Integer, String> pageTitles = new TreeMap<>();
         Map<Integer, List<ShopItemView>> itemsByPage = new TreeMap<>();
         Map<String, ShopItemView> itemsById = new HashMap<>();
@@ -185,7 +199,7 @@ public final class ShopGuiCatalogService {
 
         // ShopGUI+ shows the first page's name in its own shop selection menu, so mirror that for the category list
         String displayName = ShopGuiNames.resolvePageName(shop.getName(1), 1);
-        return new ShopCatalogEntry(shop, shop.getId(), displayName, pageTitles, itemsByPage, itemsById, liveItemsById);
+        return new ShopCatalogEntry(shop, shop.getId(), displayName, menuOrder, pageTitles, itemsByPage, itemsById, liveItemsById);
     }
 
     /**
@@ -228,7 +242,7 @@ public final class ShopGuiCatalogService {
     }
 
     private String normalizeTitle(String title) {
-        return ChatColor.stripColor(title == null ? "" : title).trim().toLowerCase(Locale.ROOT);
+        return ChatColor.stripColor(LegacyColors.translate(title == null ? "" : title)).trim().toLowerCase(Locale.ROOT);
     }
 
     public record ResolvedTitle(String shopId, int page) { }

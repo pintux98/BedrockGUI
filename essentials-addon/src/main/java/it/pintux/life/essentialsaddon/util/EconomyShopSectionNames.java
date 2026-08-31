@@ -18,7 +18,7 @@ import java.util.Map;
  */
 public final class EconomyShopSectionNames {
 
-    public record Names(String menuName, String title) {
+    public record Names(String menuName, String title, int slot) {
     }
 
     private EconomyShopSectionNames() {
@@ -56,7 +56,8 @@ public final class EconomyShopSectionNames {
             }
             YamlConfiguration section = YamlConfiguration.loadConfiguration(child);
             String id = fileName.substring(0, fileName.length() - ".yml".length()).toLowerCase(Locale.ROOT);
-            names.put(id, new Names(menuName(section), section.getString("title")));
+            names.put(id, new Names(menuName(section), section.getString("title"),
+                    section.getInt("slot", Integer.MAX_VALUE)));
         }
     }
 

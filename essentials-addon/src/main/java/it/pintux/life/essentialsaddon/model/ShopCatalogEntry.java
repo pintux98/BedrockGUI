@@ -13,17 +13,20 @@ public final class ShopCatalogEntry {
     private final Shop shop;
     private final String id;
     private final String displayName;
+    private final int menuOrder;
     private final NavigableMap<Integer, String> pageTitles;
     private final NavigableMap<Integer, List<ShopItemView>> itemsByPage;
     private final Map<String, ShopItemView> itemsById;
     private final Map<String, ShopItem> liveItemsById;
 
-    public ShopCatalogEntry(Shop shop, String id, String displayName, Map<Integer, String> pageTitles,
+    public ShopCatalogEntry(Shop shop, String id, String displayName, int menuOrder,
+                            Map<Integer, String> pageTitles,
                             Map<Integer, List<ShopItemView>> itemsByPage, Map<String, ShopItemView> itemsById,
                             Map<String, ShopItem> liveItemsById) {
         this.shop = shop;
         this.id = id;
         this.displayName = displayName;
+        this.menuOrder = menuOrder;
         this.pageTitles = Collections.unmodifiableNavigableMap(new TreeMap<>(pageTitles));
         this.itemsByPage = Collections.unmodifiableNavigableMap(new TreeMap<>(itemsByPage));
         this.itemsById = Collections.unmodifiableMap(itemsById);
@@ -33,6 +36,7 @@ public final class ShopCatalogEntry {
     public Shop getShop() { return shop; }
     public String getId() { return id; }
     public String getDisplayName() { return displayName; }
+    public int getMenuOrder() { return menuOrder; }
     public NavigableMap<Integer, String> getPageTitles() { return pageTitles; }
     public NavigableMap<Integer, List<ShopItemView>> getItemsByPage() { return itemsByPage; }
     public Map<String, ShopItemView> getItemsById() { return itemsById; }

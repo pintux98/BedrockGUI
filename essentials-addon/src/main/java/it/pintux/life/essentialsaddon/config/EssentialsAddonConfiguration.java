@@ -198,6 +198,7 @@ public final class EssentialsAddonConfiguration {
     private final String shopUnsupportedTransaction;
     private final List<Integer> shopAmountPresets;
     private final boolean shopRequirePurchaseConfirmation;
+    private final ShopCategoryOrder shopCategoryOrder;
     private final String soundShopPurchaseSuccess;
     private final String soundShopPurchaseFailed;
 
@@ -426,6 +427,7 @@ public final class EssentialsAddonConfiguration {
         this.shopUnsupportedTransaction = color(configuration.getString("messages.shop-unsupported-transaction", "&cThis shop backend does not expose a compatible Bedrock transaction bridge."));
         this.shopAmountPresets = normalizePresets(configuration.getIntegerList("ui.shop-amount-presets"));
         this.shopRequirePurchaseConfirmation = configuration.getBoolean("ui.shop-require-purchase-confirmation", true);
+        this.shopCategoryOrder = ShopCategoryOrder.parse(configuration.getString("ui.shop-category-order"));
         this.soundShopPurchaseSuccess = configuration.getString("sounds.shop-purchase-success", "entity.player.levelup");
         this.soundShopPurchaseFailed = configuration.getString("sounds.shop-purchase-failed", "block.note_block.pling");
 
@@ -654,6 +656,7 @@ public final class EssentialsAddonConfiguration {
     public String shopUnsupportedTransaction() { return shopUnsupportedTransaction; }
     public List<Integer> shopAmountPresets() { return shopAmountPresets; }
     public boolean shopRequirePurchaseConfirmation() { return shopRequirePurchaseConfirmation; }
+    public ShopCategoryOrder shopCategoryOrder() { return shopCategoryOrder; }
     public String soundShopPurchaseSuccess() { return soundShopPurchaseSuccess; }
     public String soundShopPurchaseFailed() { return soundShopPurchaseFailed; }
 

@@ -284,7 +284,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     }
 
     private void initShopGuiPlus(PluginManager pluginManager) {
-        shopCatalogService = new ShopGuiCatalogService(getLogger());
+        shopCatalogService = new ShopGuiCatalogService(getLogger(), configuration);
         shopGuiPlusHook = new ShopGuiPlusHook(this, shopCatalogService);
         bedrockShopGuiService = new BedrockShopGuiService(
                 getLogger(), configuration, shopCatalogService, detector,
@@ -317,7 +317,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             return;
         }
 
-        economyShopCatalogService = new EconomyShopCatalogService(getLogger());
+        economyShopCatalogService = new EconomyShopCatalogService(getLogger(), configuration);
         economyShopGuiHook = new EconomyShopGuiHook(this, economyShopCatalogService);
         bedrockEconomyShopService = new BedrockEconomyShopService(
                 getLogger(), configuration, economyShopCatalogService, detector, soundFeedback

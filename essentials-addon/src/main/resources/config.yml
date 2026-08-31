@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 18
+config-version: 19
 
 modules:
   warps: false
@@ -235,6 +235,10 @@ ui:
   shop-decoration-label: '&7Decoration'
   shop-amount-presets: [1, 8, 16, 32, 64]
   shop-require-purchase-confirmation: true
+  # How the shop categories are ordered on Bedrock.
+  # MENU: the order the shop plugin uses on Java, so the two clients match.
+  # NAME: alphabetical, ignoring colour codes.
+  shop-category-order: MENU
 
   # --- MyPet ---
   pet-shop-title: '&dPet Shop'

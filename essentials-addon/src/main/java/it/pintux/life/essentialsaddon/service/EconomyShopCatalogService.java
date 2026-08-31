@@ -3,6 +3,8 @@ package it.pintux.life.essentialsaddon.service;
 import it.pintux.life.essentialsaddon.model.EconomyShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
 import it.pintux.life.common.utils.LegacyColors;
+import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
+import it.pintux.life.essentialsaddon.config.ShopCategoryOrder;
 import it.pintux.life.essentialsaddon.util.EconomyShopSectionNames;
 import it.pintux.life.essentialsaddon.util.ShopGuiReflectionSupport;
 import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
@@ -30,11 +32,13 @@ import java.util.logging.Logger;
 
 public final class EconomyShopCatalogService {
     private final Logger logger;
+    private final EssentialsAddonConfiguration configuration;
     private volatile Map<String, EconomyShopCatalogEntry> catalog = Map.of();
     private volatile Map<String, EconomyShopSectionNames.Names> sectionNames = Map.of();
 
-    public EconomyShopCatalogService(Logger logger) {
+    public EconomyShopCatalogService(Logger logger, EssentialsAddonConfiguration configuration) {
         this.logger = logger;
+        this.configuration = configuration;
     }
 
     public synchronized void refreshCatalog() {
@@ -79,8 +83,16 @@ public final class EconomyShopCatalogService {
                 result.add(entry);
             }
         }
-        result.sort(Comparator.comparing(entry -> normalizeTitle(entry.getDisplayName()), String.CASE_INSENSITIVE_ORDER));
+        result.sort(order());
         return result;
+    }
+
+    private Comparator<EconomyShopCatalogEntry> order() {
+        Comparator<EconomyShopCatalogEntry> byName =
+                Comparator.comparing(entry -> normalizeTitle(entry.getDisplayName()));
+        return configuration != null && configuration.shopCategoryOrder() == ShopCategoryOrder.NAME
+                ? byName
+                : Comparator.comparingInt(EconomyShopCatalogEntry::getMenuOrder).thenComparing(byName);
     }
 
     public Optional<EconomyShopCatalogEntry> getShop(String sectionId) {
@@ -255,7 +267,7 @@ public final class EconomyShopCatalogService {
             displayName = title.isEmpty() ? prettyName(section.getSection()) : title;
         }
         return new EconomyShopCatalogEntry(section, id, displayName, title.isEmpty() ? displayName : title,
-                itemsByPage, itemsById, liveItemsById);
+                names == null ? Integer.MAX_VALUE : names.slot(), itemsByPage, itemsById, liveItemsById);
     }
 
     private ShopItemView toView(ShopItem shopItem, int page, int slot) {
