@@ -11,17 +11,19 @@ public final class EconomyShopCatalogEntry {
     private final ShopSection section;
     private final String id;
     private final String displayName;
+    private final String title;
     private final NavigableMap<Integer, List<ShopItemView>> itemsByPage;
     private final Map<String, ShopItemView> itemsById;
     private final Map<String, ShopItem> liveItemsById;
 
-    public EconomyShopCatalogEntry(ShopSection section, String id, String displayName,
+    public EconomyShopCatalogEntry(ShopSection section, String id, String displayName, String title,
                                    NavigableMap<Integer, List<ShopItemView>> itemsByPage,
                                    Map<String, ShopItemView> itemsById,
                                    Map<String, ShopItem> liveItemsById) {
         this.section = section;
         this.id = id;
         this.displayName = displayName;
+        this.title = title;
         this.itemsByPage = itemsByPage;
         this.itemsById = itemsById;
         this.liveItemsById = liveItemsById;
@@ -37,6 +39,10 @@ public final class EconomyShopCatalogEntry {
 
     public String getDisplayName() {
         return displayName;
+    }
+
+    public String getTitle() {
+        return title;
     }
 
     public NavigableMap<Integer, List<ShopItemView>> getItemsByPage() {

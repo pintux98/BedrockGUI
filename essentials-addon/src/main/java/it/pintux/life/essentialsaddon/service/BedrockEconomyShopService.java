@@ -100,7 +100,7 @@ public final class BedrockEconomyShopService {
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.shopMainTitle());
         form.content(configuration.shopMainContent());
         for (EconomyShopCatalogEntry entry : shops) {
-            form.button(entry.getDisplayName() + "\n" + ChatColor.GRAY + entry.getId(), formPlayer ->
+            form.button(entry.getDisplayName(), formPlayer ->
                     api.executeActionString(
                             formPlayer,
                             "economyshop_shop:" + ShopGuiActionPayloads.encodeShop(entry.getId(), 1),

@@ -2,6 +2,8 @@ package it.pintux.life.essentialsaddon.service;
 
 import it.pintux.life.essentialsaddon.model.EconomyShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
+import it.pintux.life.common.utils.LegacyColors;
+import it.pintux.life.essentialsaddon.util.EconomyShopSectionNames;
 import it.pintux.life.essentialsaddon.util.ShopGuiReflectionSupport;
 import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
 import me.gypopo.economyshopgui.api.objects.BuyPrice;
@@ -29,6 +31,7 @@ import java.util.logging.Logger;
 public final class EconomyShopCatalogService {
     private final Logger logger;
     private volatile Map<String, EconomyShopCatalogEntry> catalog = Map.of();
+    private volatile Map<String, EconomyShopSectionNames.Names> sectionNames = Map.of();
 
     public EconomyShopCatalogService(Logger logger) {
         this.logger = logger;
@@ -37,6 +40,7 @@ public final class EconomyShopCatalogService {
     public synchronized void refreshCatalog() {
         Map<String, EconomyShopCatalogEntry> refreshed = new ConcurrentHashMap<>();
         try {
+            sectionNames = EconomyShopSectionNames.load();
             List<String> sections = EconomyShopGUIHook.getShopSections();
             if (sections == null || sections.isEmpty()) {
                 return;
@@ -75,7 +79,7 @@ public final class EconomyShopCatalogService {
                 result.add(entry);
             }
         }
-        result.sort(Comparator.comparing(EconomyShopCatalogEntry::getDisplayName, String.CASE_INSENSITIVE_ORDER));
+        result.sort(Comparator.comparing(entry -> normalizeTitle(entry.getDisplayName()), String.CASE_INSENSITIVE_ORDER));
         return result;
     }
 
@@ -173,7 +177,9 @@ public final class EconomyShopCatalogService {
     public Optional<String> resolveSectionByInventoryTitle(String rawTitle) {
         String normalized = normalizeTitle(rawTitle);
         for (EconomyShopCatalogEntry entry : catalog.values()) {
-            if (normalizeTitle(entry.getDisplayName()).equals(normalized) || entry.getId().equalsIgnoreCase(normalized)) {
+            if (normalizeTitle(entry.getTitle()).equals(normalized)
+                    || normalizeTitle(entry.getDisplayName()).equals(normalized)
+                    || entry.getId().equalsIgnoreCase(normalized)) {
                 return Optional.of(entry.getId());
             }
         }
@@ -242,7 +248,14 @@ public final class EconomyShopCatalogService {
         }
 
         String id = section.getSection().toLowerCase(Locale.ROOT);
-        return new EconomyShopCatalogEntry(section, id, prettyName(section.getSection()), itemsByPage, itemsById, liveItemsById);
+        EconomyShopSectionNames.Names names = sectionNames.get(id);
+        String displayName = colorize(names == null ? null : names.menuName());
+        String title = colorize(names == null ? null : names.title());
+        if (displayName.isEmpty()) {
+            displayName = title.isEmpty() ? prettyName(section.getSection()) : title;
+        }
+        return new EconomyShopCatalogEntry(section, id, displayName, title.isEmpty() ? displayName : title,
+                itemsByPage, itemsById, liveItemsById);
     }
 
     private ShopItemView toView(ShopItem shopItem, int page, int slot) {
@@ -282,6 +295,10 @@ public final class EconomyShopCatalogService {
                 && expected.getItemPath().equalsIgnoreCase(actual.getItemPath());
     }
 
+    private String colorize(String raw) {
+        return raw == null ? "" : LegacyColors.translate(raw);
+    }
+
     private String prettyName(String id) {
         String lowered = id == null ? "" : id.replace('_', ' ').replace('-', ' ').trim();
         if (lowered.isEmpty()) {
@@ -301,10 +318,10 @@ public final class EconomyShopCatalogService {
                 builder.append(part.substring(1).toLowerCase(Locale.ROOT));
             }
         }
-        return ChatColor.translateAlternateColorCodes('&', builder.toString());
+        return LegacyColors.translate(builder.toString());
     }
 
     private String normalizeTitle(String title) {
-        return ChatColor.stripColor(title == null ? "" : title).trim().toLowerCase(Locale.ROOT);
+        return ChatColor.stripColor(LegacyColors.translate(title == null ? "" : title)).trim().toLowerCase(Locale.ROOT);
     }
 }
