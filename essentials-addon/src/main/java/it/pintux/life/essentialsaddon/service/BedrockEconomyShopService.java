@@ -297,7 +297,7 @@ public final class BedrockEconomyShopService {
         if (!hasFunds(player, prices)) {
             return TransactionResult.failure(Transaction.Result.INSUFFICIENT_FUNDS.name());
         }
-        if (!canFit(player.getInventory(), baseItem, amount, shopItem.getStackSize())) {
+        if (!canFit(player.getInventory(), baseItem, amount)) {
             return TransactionResult.failure(Transaction.Result.NO_INVENTORY_SPACE.name());
         }
 
@@ -309,7 +309,7 @@ public final class BedrockEconomyShopService {
             provider.withdrawBalance(player, entry.getValue());
         }
 
-        player.getInventory().addItem(splitStacks(baseItem, amount, shopItem.getStackSize()));
+        player.getInventory().addItem(splitStacks(baseItem, amount));
         buyPrice.updateLimits();
         Bukkit.getPluginManager().callEvent(createPostEvent(shopItem, player, amount, prices, Transaction.Type.BUY_SCREEN, Transaction.Result.SUCCESS));
         return TransactionResult.success("Bought item");
@@ -363,8 +363,8 @@ public final class BedrockEconomyShopService {
         return true;
     }
 
-    private boolean canFit(Inventory inventory, ItemStack baseItem, int amount, int configuredStackSize) {
-        int maxStack = Math.max(1, Math.min(64, configuredStackSize > 0 ? configuredStackSize : baseItem.getMaxStackSize()));
+    private boolean canFit(Inventory inventory, ItemStack baseItem, int amount) {
+        int maxStack = Math.max(1, baseItem.getMaxStackSize());
         int remaining = amount;
         for (ItemStack content : inventory.getStorageContents()) {
             if (remaining <= 0) {
@@ -381,9 +381,9 @@ public final class BedrockEconomyShopService {
         return remaining <= 0;
     }
 
-    private ItemStack[] splitStacks(ItemStack baseItem, int amount, int configuredStackSize) {
+    private ItemStack[] splitStacks(ItemStack baseItem, int amount) {
         List<ItemStack> stacks = new ArrayList<>();
-        int maxStack = Math.max(1, Math.min(64, configuredStackSize > 0 ? configuredStackSize : baseItem.getMaxStackSize()));
+        int maxStack = Math.max(1, baseItem.getMaxStackSize());
         int remaining = amount;
         while (remaining > 0) {
             ItemStack clone = baseItem.clone();
