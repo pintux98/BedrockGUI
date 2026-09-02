@@ -99,6 +99,10 @@ public class ActionExecutor {
 
         String valueStr = actionValue != null ? actionValue.toString() : "";
 
+        if (!handler.parsesRawActionBlock()) {
+            valueStr = unwrapActionBlock(actionType, valueStr);
+        }
+
         if (!handler.isValidAction(valueStr)) {
             logger.warn("Invalid action value '" + valueStr + "' for action type: " + actionType);
             return ActionSystem.ActionResult.failure("Invalid action value for type: " + actionType);
@@ -232,6 +236,20 @@ public class ActionExecutor {
         ActionSystem.ActionDefinition actionDef = new ActionSystem.ActionDefinition();
         actionDef.addAction("command", trimmed);
         return new ActionSystem.Action(actionDef);
+    }
+
+    private String unwrapActionBlock(String actionType, String actionValue) {
+        if (actionType == null || actionValue == null) {
+            return actionValue;
+        }
+
+        Matcher blockMatcher = NEW_FORMAT_PATTERN.matcher(actionValue.trim());
+        if (!blockMatcher.matches() || !blockMatcher.group(1).equalsIgnoreCase(actionType.trim())) {
+            return actionValue;
+        }
+
+        Matcher valueMatcher = VALUE_PATTERN.matcher(actionValue);
+        return valueMatcher.find() ? valueMatcher.group(1).trim() : "";
     }
 
     /**

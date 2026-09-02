@@ -21,6 +21,11 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
         this.logger = Logger.getLogger(this.getClass().getSimpleName());
     }
 
+    @Override
+    public boolean parsesRawActionBlock() {
+        return true;
+    }
+
 
     protected ActionSystem.ActionResult validateBasicParameters(FormPlayer player, String actionValue) {
         if (player == null) {

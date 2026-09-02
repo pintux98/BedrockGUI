@@ -24,6 +24,10 @@ public class ActionSystem {
         String getDescription();
 
         String[] getUsageExamples();
+
+        default boolean parsesRawActionBlock() {
+            return false;
+        }
     }
 
     // ==================== RESULT CLASSES ====================
