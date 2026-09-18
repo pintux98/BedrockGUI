@@ -16,33 +16,33 @@ import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
-import tfagaming.projects.minecraft.homestead.flags.ControlFlags;
-import tfagaming.projects.minecraft.homestead.flags.PlayerFlags;
-import tfagaming.projects.minecraft.homestead.flags.WorldFlags;
-import tfagaming.projects.minecraft.homestead.managers.BanManager;
-import tfagaming.projects.minecraft.homestead.managers.ChunkManager;
-import tfagaming.projects.minecraft.homestead.managers.InviteManager;
-import tfagaming.projects.minecraft.homestead.managers.LevelManager;
-import tfagaming.projects.minecraft.homestead.managers.LogManager;
-import tfagaming.projects.minecraft.homestead.managers.MemberManager;
-import tfagaming.projects.minecraft.homestead.managers.RateManager;
-import tfagaming.projects.minecraft.homestead.managers.RegionManager;
-import tfagaming.projects.minecraft.homestead.managers.SubAreaManager;
-import tfagaming.projects.minecraft.homestead.models.Level;
-import tfagaming.projects.minecraft.homestead.models.Region;
-import tfagaming.projects.minecraft.homestead.models.RegionBan;
-import tfagaming.projects.minecraft.homestead.models.RegionChunk;
-import tfagaming.projects.minecraft.homestead.models.RegionInvite;
-import tfagaming.projects.minecraft.homestead.models.RegionLog;
-import tfagaming.projects.minecraft.homestead.models.RegionMember;
-import tfagaming.projects.minecraft.homestead.models.RegionRate;
-import tfagaming.projects.minecraft.homestead.models.SubArea;
-import tfagaming.projects.minecraft.homestead.models.serialize.SeLocation;
-import tfagaming.projects.minecraft.homestead.tools.minecraft.plugins.MapColor;
-import tfagaming.projects.minecraft.homestead.tools.minecraft.plugins.MapIcon;
-import tfagaming.projects.minecraft.homestead.tools.minecraft.rewards.Rewards;
-import tfagaming.projects.minecraft.homestead.weatherandtime.RegionTime;
-import tfagaming.projects.minecraft.homestead.weatherandtime.RegionWeather;
+import me.tayebyassine.homestead.flags.ControlFlag;
+import me.tayebyassine.homestead.flags.PlayerFlag;
+import me.tayebyassine.homestead.flags.WorldFlag;
+import me.tayebyassine.homestead.managers.BanManager;
+import me.tayebyassine.homestead.managers.ChunkManager;
+import me.tayebyassine.homestead.managers.InviteManager;
+import me.tayebyassine.homestead.managers.LevelManager;
+import me.tayebyassine.homestead.managers.LogManager;
+import me.tayebyassine.homestead.managers.MemberManager;
+import me.tayebyassine.homestead.managers.RateManager;
+import me.tayebyassine.homestead.managers.RegionManager;
+import me.tayebyassine.homestead.managers.SubAreaManager;
+import me.tayebyassine.homestead.models.Level;
+import me.tayebyassine.homestead.models.Region;
+import me.tayebyassine.homestead.models.RegionBan;
+import me.tayebyassine.homestead.models.RegionChunk;
+import me.tayebyassine.homestead.models.RegionInvite;
+import me.tayebyassine.homestead.models.RegionLog;
+import me.tayebyassine.homestead.models.RegionMember;
+import me.tayebyassine.homestead.models.RegionRate;
+import me.tayebyassine.homestead.models.SubArea;
+import me.tayebyassine.homestead.models.serialize.SeLocation;
+import me.tayebyassine.homestead.util.minecraft.plugins.MapColor;
+import me.tayebyassine.homestead.util.minecraft.plugins.MapIcon;
+import me.tayebyassine.homestead.util.minecraft.rewards.Rewards;
+import me.tayebyassine.homestead.weatherandtime.RegionTime;
+import me.tayebyassine.homestead.weatherandtime.RegionWeather;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -201,7 +201,7 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
 
     @Override
     public boolean hasControlFlag(long regionId, OfflinePlayer player, String controlFlagName) {
-        long bit = ControlFlags.valueOf(controlFlagName);
+        long bit = ControlFlag.parse(controlFlagName);
         return bit != 0L && MemberManager.hasControlFlag(regionId, player, bit);
     }
 
@@ -209,18 +209,18 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
     @Override
     public List<String> flagNames(FlagDomain domain) {
         return switch (domain) {
-            case WORLD_FLAGS -> WorldFlags.getFlags();
-            case PLAYER_FLAGS -> PlayerFlags.getFlags();
-            case CONTROL_FLAGS -> ControlFlags.getFlags();
+            case WORLD_FLAGS -> WorldFlag.getFlags();
+            case PLAYER_FLAGS -> PlayerFlag.getFlags();
+            case CONTROL_FLAGS -> ControlFlag.getFlags();
         };
     }
 
     @Override
     public long flagValue(FlagDomain domain, String name) {
         return switch (domain) {
-            case WORLD_FLAGS -> WorldFlags.valueOf(name);
-            case PLAYER_FLAGS -> PlayerFlags.valueOf(name);
-            case CONTROL_FLAGS -> ControlFlags.valueOf(name);
+            case WORLD_FLAGS -> WorldFlag.parse(name);
+            case PLAYER_FLAGS -> PlayerFlag.parse(name);
+            case CONTROL_FLAGS -> ControlFlag.parse(name);
         };
     }
 
@@ -680,7 +680,7 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
                 subArea.getPlayerFlags(),
                 subArea.getVolume(),
                 subArea.getCreatedAt(),
-                subArea.getRent() != null
+                subArea.getRent().hasRenter()
         );
     }
 

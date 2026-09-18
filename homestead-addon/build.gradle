@@ -1,5 +1,12 @@
 version = homesteadAddonVersion
 
+// Homestead 6.x ships Java 25 class files, so this module needs a Java 25 compiler
+// to read lib/homestead.jar. The emitted bytecode stays at the project-wide release
+// level, so the addon still loads on Java 21 servers when Homestead is absent.
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(homesteadAddonToolchainVersion as Integer)
+}
+
 // Homestead is a soft dependency: compiled against the bundled jar in lib/ and
 // wired at runtime when Homestead is installed (softdepend in plugin.yml).
 dependencies {
