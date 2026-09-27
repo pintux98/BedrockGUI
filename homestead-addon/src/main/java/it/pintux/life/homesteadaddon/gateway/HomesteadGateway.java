@@ -15,11 +15,14 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 
 public interface HomesteadGateway {
 
     boolean isAvailable();
+
+    OptionalLong targetRegionId(Player player);
 
 
     List<RegionView> regionsFor(OfflinePlayer player);
@@ -122,7 +125,7 @@ public interface HomesteadGateway {
 
     boolean transferOwnership(long regionId, String playerName);
 
-    boolean deleteRegion(long regionId, OfflinePlayer performedBy);
+    boolean deleteRegion(long regionId);
 
 
     List<ChunkView> chunksOf(long regionId);

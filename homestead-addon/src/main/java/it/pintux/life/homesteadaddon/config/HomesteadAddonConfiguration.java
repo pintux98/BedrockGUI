@@ -111,4 +111,8 @@ public final class HomesteadAddonConfiguration {
     public boolean registerActionsEnabled() {
         return flag("register-actions", true);
     }
+
+    public boolean interceptMenusEnabled() {
+        return flag("intercept-menus", true);
+    }
 }

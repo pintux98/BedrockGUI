@@ -122,7 +122,7 @@ public final class BedrockMiscService {
         api.createModalForm(config.apply(config.text("misc.delete-title"), ph),
                         config.apply(config.text("misc.delete-content"), ph))
                 .button1(config.text("misc.button-delete"), fp -> {
-                    if (canManage(player, region.id()) && gateway.deleteRegion(region.id(), player)) {
+                    if (canManage(player, region.id()) && gateway.deleteRegion(region.id())) {
                         AddonText.send(player, config.apply(config.text("misc.delete-success"), ph));
                         navigate(new BukkitFormPlayer(player), "hs_regions:");
                     } else {

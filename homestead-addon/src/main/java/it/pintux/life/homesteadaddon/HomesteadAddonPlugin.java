@@ -8,6 +8,7 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGatewayImpl;
 import it.pintux.life.homesteadaddon.listener.HomesteadCommandListener;
+import it.pintux.life.homesteadaddon.listener.HomesteadMenuListener;
 import it.pintux.life.homesteadaddon.service.BedrockChunkService;
 import it.pintux.life.homesteadaddon.service.BedrockFlagService;
 import it.pintux.life.homesteadaddon.service.BedrockLevelService;
@@ -83,6 +84,9 @@ public final class HomesteadAddonPlugin extends JavaPlugin {
 
         if (integratedGui) {
             Bukkit.getPluginManager().registerEvents(new HomesteadCommandListener(regionService, configuration), this);
+            if (configuration.interceptMenusEnabled()) {
+                registerMenuListener();
+            }
         } else {
             getLogger().info("Integrated GUI disabled: not intercepting Homestead commands. "
                     + "Use the hs_* actions from your own forms.");
@@ -92,6 +96,20 @@ public final class HomesteadAddonPlugin extends JavaPlugin {
         if (api != null && (integratedGui || configuration.registerActionsEnabled())) {
             registerActions(api);
         }
+    }
+
+    // MenuOpenEvent only exists in Homestead builds that shipped the menu events API.
+    // Registering a listener against a missing class would abort onEnable, so probe first.
+    private void registerMenuListener() {
+        try {
+            Class.forName("me.tayebyassine.homestead.api.events.menu.MenuOpenEvent");
+        } catch (ClassNotFoundException e) {
+            getLogger().info("This Homestead build has no menu events API: only commands are intercepted. "
+                    + "Update Homestead to also catch menus opened from signs or other plugins.");
+            return;
+        }
+        Bukkit.getPluginManager().registerEvents(new HomesteadMenuListener(gateway, regionService, memberService,
+                flagService, subAreaService, levelService, logService, miscService, chunkService), this);
     }
 
     private void registerActions(BedrockGUIApi api) {

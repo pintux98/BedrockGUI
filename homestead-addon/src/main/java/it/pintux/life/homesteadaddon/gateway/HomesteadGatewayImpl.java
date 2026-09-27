@@ -38,6 +38,7 @@ import me.tayebyassine.homestead.models.RegionMember;
 import me.tayebyassine.homestead.models.RegionRate;
 import me.tayebyassine.homestead.models.SubArea;
 import me.tayebyassine.homestead.models.serialize.SeLocation;
+import me.tayebyassine.homestead.sessions.TargetRegionSession;
 import me.tayebyassine.homestead.util.minecraft.plugins.MapColor;
 import me.tayebyassine.homestead.util.minecraft.plugins.MapIcon;
 import me.tayebyassine.homestead.util.minecraft.rewards.Rewards;
@@ -51,6 +52,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalLong;
 import java.util.UUID;
 import java.util.logging.Logger;
 
@@ -64,6 +66,15 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
     @Override
     public boolean isAvailable() {
         return Bukkit.getPluginManager().getPlugin("Homestead") != null;
+    }
+
+    @Override
+    public OptionalLong targetRegionId(Player player) {
+        if (player == null) {
+            return OptionalLong.empty();
+        }
+        Region region = TargetRegionSession.getRegion(player);
+        return region == null ? OptionalLong.empty() : OptionalLong.of(region.getUniqueId());
     }
 
 
@@ -479,8 +490,8 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
     }
 
     @Override
-    public boolean deleteRegion(long regionId, OfflinePlayer performedBy) {
-        RegionManager.deleteRegion(regionId, performedBy);
+    public boolean deleteRegion(long regionId) {
+        RegionManager.deleteRegion(regionId);
         return true;
     }
 
