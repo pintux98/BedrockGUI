@@ -6,6 +6,7 @@ import it.pintux.life.paper.utils.PaperPlayer;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
+import org.bukkit.plugin.messaging.Messenger;
 
 import java.util.UUID;
 
@@ -43,6 +44,10 @@ public class PaperPlayerManager implements PlatformPlayerManager {
         if (player instanceof PaperPlayer) {
             Player bukkitPlayer = ((PaperPlayer) player).getBukkitPlayer();
             if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
+                Messenger messenger = Bukkit.getMessenger();
+                if (!messenger.isOutgoingChannelRegistered(plugin, channel)) {
+                    messenger.registerOutgoingPluginChannel(plugin, channel);
+                }
                 bukkitPlayer.sendPluginMessage(plugin, channel, data);
             }
         }
