@@ -1,9 +1,8 @@
 package it.pintux.life.paper.utils;
 
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
-
-import java.util.function.Consumer;
 
 public final class SchedulerAdapter {
     private static final boolean FOLIA = detectFolia();
@@ -12,60 +11,26 @@ public final class SchedulerAdapter {
 
     private static boolean detectFolia() {
         try {
-            if (Class.forName("io.papermc.paper.threadedregions.RegionizedServer") != null) {
-                return true;
-            }
-        } catch (Throwable ignored) {}
-        try {
-            if (Class.forName("io.papermc.paper.threadedregions.scheduler.GlobalRegionScheduler") != null) {
-                return true;
-            }
-        } catch (Throwable ignored) {}
-        try {
-            return Bukkit.class.getMethod("getGlobalRegionScheduler") != null;
-        } catch (Throwable ignored) {}
-        return false;
+            Class.forName("io.papermc.paper.threadedregions.RegionizedServer");
+            return true;
+        } catch (ClassNotFoundException e) {
+            return false;
         }
-
-    public static void runSync(Plugin plugin, Runnable task) {
-        if (FOLIA) {
-            try {
-                Object grs = Bukkit.class.getMethod("getGlobalRegionScheduler").invoke(null);
-                Consumer<Object> consumer = st -> task.run();
-                grs.getClass().getMethod("run", Plugin.class, Consumer.class).invoke(grs, plugin, consumer);
-                return;
-            } catch (Throwable ignored) {}
-        }
-        Bukkit.getScheduler().runTask(plugin, task);
     }
 
     public static void runSyncLater(Plugin plugin, Runnable task, long delay) {
         if (FOLIA) {
-            try {
-                Object grs = Bukkit.class
-                        .getMethod("getGlobalRegionScheduler")
-                        .invoke(null);
-                Consumer<Object> consumer = st -> task.run();
-                grs.getClass()
-                        .getMethod("runDelayed", Plugin.class, Consumer.class, long.class)
-                        .invoke(grs, plugin, consumer, delay);
-                return;
-            } catch (Throwable ignored) {
-            }
+            Bukkit.getGlobalRegionScheduler().runDelayed(plugin, scheduled -> task.run(), Math.max(1L, delay));
+            return;
         }
-
         Bukkit.getScheduler().runTaskLater(plugin, task, delay);
     }
 
-    public static void runAsync(Plugin plugin, Runnable task) {
-        if (FOLIA) {
-            try {
-                Object as = Bukkit.class.getMethod("getAsyncScheduler").invoke(null);
-                Consumer<Object> consumer = st -> task.run();
-                as.getClass().getMethod("runNow", Plugin.class, Consumer.class).invoke(as, plugin, consumer);
-                return;
-            } catch (Throwable ignored) {}
+    public static void runForEntity(Plugin plugin, Entity entity, Runnable task) {
+        if (!FOLIA || Bukkit.isOwnedByCurrentRegion(entity)) {
+            task.run();
+            return;
         }
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, task);
+        entity.getScheduler().execute(plugin, task, null, 1L);
     }
 }

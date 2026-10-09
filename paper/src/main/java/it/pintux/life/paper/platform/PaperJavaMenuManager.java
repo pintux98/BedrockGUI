@@ -7,6 +7,7 @@ import it.pintux.life.common.platform.PlatformJavaMenuManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperPlayer;
+import it.pintux.life.paper.utils.SchedulerAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.enchantments.Enchantment;
@@ -60,7 +61,10 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
         }
         Player bukkitPlayer = ((PaperPlayer) player).getBukkitPlayer();
         if (bukkitPlayer == null || !bukkitPlayer.isOnline()) return;
+        SchedulerAdapter.runForEntity(plugin, bukkitPlayer, () -> open(bukkitPlayer, player, menu, placeholders, util));
+    }
 
+    private void open(Player bukkitPlayer, FormPlayer player, FormMenu menu, Map<String, String> placeholders, FormMenuUtil util) {
         JavaMenuDefinition jdef = menu.getJavaMenu();
         if (jdef == null) return;
 
