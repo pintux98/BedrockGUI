@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 20
+config-version: 21
 
 modules:
   warps: false
@@ -268,6 +268,11 @@ ui:
 
   # --- MCPets ---
   mcpets-pet-info-content: "&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%"
+  pet-option-rename: '&bRename'
+  pet-option-mount: '&aMount'
+  pet-option-inventory: '&6Inventory'
+  pet-option-skins: '&dSkins'
+  pet-option-signal-stick: '&eSignal Stick'
 
 # ─────────────────────────────────────────────
 # Messages — system-level feedback

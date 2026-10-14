@@ -73,6 +73,14 @@ public final class PetCatalogService {
         return provider != null && provider.supportsShop();
     }
 
+    public List<String> petOptions(Player player, String petId) {
+        return provider == null ? List.of() : provider.petOptions(player, petId);
+    }
+
+    public boolean runPetOption(Player player, String petId, String option) {
+        return provider != null && provider.runPetOption(player, petId, option);
+    }
+
     public List<SkilltreeView> listSkilltrees(Player player) {
         return provider == null ? List.of() : provider.listSkilltrees(player);
     }

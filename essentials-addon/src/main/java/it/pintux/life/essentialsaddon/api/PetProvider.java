@@ -27,6 +27,14 @@ public interface PetProvider {
         return false;
     }
 
+    default List<String> petOptions(Player player, String petId) {
+        return List.of();
+    }
+
+    default boolean runPetOption(Player player, String petId, String option) {
+        return false;
+    }
+
     /** Async: a player's full pet list (active + stored). Callback runs on the main thread. */
     void listOwnedPets(Player player, Consumer<List<PetView>> callback);
 

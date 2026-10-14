@@ -27,6 +27,17 @@ public final class PetActionPayloads {
         return payload.split("\\|", 2);
     }
 
+    public static String encodeOption(String petId, String option) {
+        return petId + "|" + option;
+    }
+
+    public static String[] decodeOption(String payload) {
+        if (payload == null || !payload.contains("|")) {
+            throw new IllegalArgumentException("Invalid pet option payload: " + payload);
+        }
+        return payload.split("\\|", 2);
+    }
+
     public static String encodeShop(String shopId, String petId) {
         return (shopId == null ? "" : shopId) + "|" + petId;
     }

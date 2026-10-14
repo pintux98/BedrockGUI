@@ -369,6 +369,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
 
         if (configuration.moduleMcPets() && configuration.integratedGuiEnabled()) {
             pluginManager.registerEvents(new McPetsCommandListener(bedrockPetService, configuration), this);
+            pluginManager.registerEvents(new McPetsMenuListener(this, bedrockPetService), this);
         }
     }
 
@@ -472,6 +473,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new PetInfoAction(bedrockPetService));
             api.registerActionHandler(new PetCallAction(bedrockPetService));
             api.registerActionHandler(new PetSendAwayAction(bedrockPetService));
+            api.registerActionHandler(new PetOptionAction(bedrockPetService));
             api.registerActionHandler(new OpenPetSkilltreeAction(bedrockPetService));
             api.registerActionHandler(new PetSetSkilltreeAction(bedrockPetService));
             api.registerActionHandler(new BuyPetShopAction(bedrockPetService));

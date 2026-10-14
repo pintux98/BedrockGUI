@@ -89,6 +89,21 @@ public final class BedrockPetService {
                     "skilltree", safe(pet.skilltreeName())
             ));
             String title = configuration.render(configuration.petInfoTitle(), Map.of("pet_name", safe(pet.name())));
+            List<String> options = pet.active() ? petCatalog.petOptions(player, pet.id()) : List.of();
+            if (!options.isEmpty()) {
+                BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(title);
+                form.content(content);
+                form.button(configuration.petPutAwayButton(), fp -> api.executeActionString(fp,
+                        "essentials_pet_sendaway:" + PetActionPayloads.encodePet(pet.id()), context("pet-modal", pet.id())));
+                for (String option : options) {
+                    form.button(configuration.petOptionButton(option), fp -> api.executeActionString(fp,
+                            "essentials_pet_option:" + PetActionPayloads.encodeOption(pet.id(), option),
+                            context("pet-modal", pet.id())));
+                }
+                form.button(configuration.backButton(), fp -> openPetList(player));
+                form.send(new BukkitFormPlayer(player));
+                return;
+            }
             String firstButton = pet.active() ? configuration.petPutAwayButton() : configuration.petCallButton();
 
             api.createModalForm(title)
@@ -135,6 +150,11 @@ public final class BedrockPetService {
             AddonText.send(player, configuration.petPutAwayFailed());
             playSound(player, configuration.soundActionFailed());
         }
+    }
+
+    public void runPetOption(Player player, String petId, String option) {
+        boolean ok = petCatalog.runPetOption(player, petId, option);
+        playSound(player, ok ? configuration.soundFormOpen() : configuration.soundActionFailed());
     }
 
     // ---------------- Skilltree ----------------

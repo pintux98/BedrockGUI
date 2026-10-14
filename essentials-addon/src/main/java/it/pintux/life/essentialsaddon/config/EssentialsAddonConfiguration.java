@@ -220,6 +220,7 @@ public final class EssentialsAddonConfiguration {
     private final String petInfoTitle;
     private final String petInfoContent;
     private final String mcPetsInfoContent;
+    private final Map<String, String> petOptionButtons;
     private final String petCallButton;
     private final String petPutAwayButton;
     private final String petSkilltreeButton;
@@ -453,6 +454,12 @@ public final class EssentialsAddonConfiguration {
         this.petInfoTitle = color(configuration.getString("ui.pet-info-title", "&d%pet_name%"));
         this.petInfoContent = color(configuration.getString("ui.pet-info-content",
                 "&7Type: &f%pet_type%\n&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%\n&7Hunger: &f%hunger%\n&7Skilltree: &f%skilltree%"));
+        this.petOptionButtons = Map.of(
+                "rename", color(configuration.getString("ui.pet-option-rename", "&bRename")),
+                "mount", color(configuration.getString("ui.pet-option-mount", "&aMount")),
+                "inventory", color(configuration.getString("ui.pet-option-inventory", "&6Inventory")),
+                "skins", color(configuration.getString("ui.pet-option-skins", "&dSkins")),
+                "signal-stick", color(configuration.getString("ui.pet-option-signal-stick", "&eSignal Stick")));
         this.mcPetsInfoContent = color(configuration.getString("ui.mcpets-pet-info-content",
                 "&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%"));
         this.petCallButton = color(configuration.getString("ui.pet-call-button", "&aCall Pet"));
@@ -761,6 +768,7 @@ public final class EssentialsAddonConfiguration {
     public String petInfoTitle() { return petInfoTitle; }
     public String petInfoContent() { return petInfoContent; }
     public String mcPetsInfoContent() { return mcPetsInfoContent; }
+    public String petOptionButton(String option) { return petOptionButtons.getOrDefault(option, option); }
     public String petCallButton() { return petCallButton; }
     public String petPutAwayButton() { return petPutAwayButton; }
     public String petSkilltreeButton() { return petSkilltreeButton; }

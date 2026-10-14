@@ -3,8 +3,10 @@ package it.pintux.life.essentialsaddon.provider;
 import fr.nocsy.mcpets.api.MCPetsAPI;
 import fr.nocsy.mcpets.data.Pet;
 import fr.nocsy.mcpets.data.PetDespawnReason;
+import fr.nocsy.mcpets.data.config.GlobalConfig;
 import fr.nocsy.mcpets.data.config.Language;
 import fr.nocsy.mcpets.data.livingpets.PetStats;
+import fr.nocsy.mcpets.listeners.PetInteractionMenuListener;
 import it.pintux.life.essentialsaddon.api.PetProvider;
 import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.PetView;
@@ -143,6 +145,62 @@ public final class McPetsProvider implements PetProvider {
             return active != null && active.despawn(PetDespawnReason.REVOKE);
         } catch (Throwable t) {
             logger.warning("MCPets despawn failed: " + t.getMessage());
+            return false;
+        }
+    }
+
+    @Override
+    public List<String> petOptions(Player player, String petId) {
+        try {
+            Pet pet = findActive(MCPetsAPI.getActivePetsForPlayer(player.getUniqueId()), petId);
+            if (pet == null) {
+                return List.of();
+            }
+            GlobalConfig config = GlobalConfig.getInstance();
+            List<String> options = new ArrayList<>();
+            if (config.isNameable()) {
+                options.add("rename");
+            }
+            if (config.isMountable() && pet.isMountable()) {
+                options.add("mount");
+            }
+            if (pet.getInventorySize() > 0) {
+                options.add("inventory");
+            }
+            if (pet.hasSkins()) {
+                options.add("skins");
+            }
+            if (!pet.getSignals().isEmpty() && pet.isEnableSignalStickFromMenu()) {
+                options.add("signal-stick");
+            }
+            return options;
+        } catch (Throwable t) {
+            logger.warning("MCPets petOptions failed: " + t.getMessage());
+            return List.of();
+        }
+    }
+
+    @Override
+    public boolean runPetOption(Player player, String petId, String option) {
+        if (!petOptions(player, petId).contains(option)) {
+            return false;
+        }
+        try {
+            Pet pet = findActive(MCPetsAPI.getActivePetsForPlayer(player.getUniqueId()), petId);
+            pet.setLastInteractedWith(player);
+            switch (option) {
+                case "rename" -> PetInteractionMenuListener.changeName(player);
+                case "mount" -> PetInteractionMenuListener.mount(player, pet);
+                case "inventory" -> PetInteractionMenuListener.inventory(player, pet);
+                case "skins" -> PetInteractionMenuListener.skins(player, pet);
+                case "signal-stick" -> pet.giveStickSignals(player);
+                default -> {
+                    return false;
+                }
+            }
+            return true;
+        } catch (Throwable t) {
+            logger.warning("MCPets " + option + " failed: " + t.getMessage());
             return false;
         }
     }
