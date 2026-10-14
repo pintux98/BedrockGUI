@@ -16,7 +16,6 @@ import org.bukkit.entity.Player;
 
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.logging.Logger;
 
 public final class BedrockPetService {
@@ -59,8 +58,8 @@ public final class BedrockPetService {
                     label = label + configuration.petActiveSuffix();
                 }
                 form.button(label, fp -> api.executeActionString(fp,
-                        "essentials_pet_info:" + PetActionPayloads.encodePet(pet.uuid()),
-                        context("pet-list", pet.uuid().toString())));
+                        "essentials_pet_info:" + PetActionPayloads.encodePet(pet.id()),
+                        context("pet-list", pet.id())));
             }
             form.send(new BukkitFormPlayer(player));
             playSound(player, configuration.soundFormOpen());
@@ -69,20 +68,22 @@ public final class BedrockPetService {
 
     // ---------------- Pet modal ----------------
 
-    public void openPetModal(Player player, UUID petUuid) {
+    public void openPetModal(Player player, String petId) {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
 
         petCatalog.listOwnedPets(player, pets -> {
-            PetView pet = pets.stream().filter(p -> p.uuid().equals(petUuid)).findFirst().orElse(null);
+            PetView pet = pets.stream().filter(p -> p.id().equals(petId)).findFirst().orElse(null);
             if (pet == null) {
                 AddonText.send(player, configuration.petNoPets());
                 return;
             }
-            String content = configuration.render(configuration.petInfoContent(), Map.of(
+            boolean skilltrees = petCatalog.supportsSkilltrees();
+            String template = skilltrees ? configuration.petInfoContent() : configuration.mcPetsInfoContent();
+            String content = configuration.render(template, Map.of(
                     "pet_type", prettyType(pet.petType()),
                     "level", pet.hasLevel() ? String.valueOf(pet.level()) : "—",
-                    "hp", trim(pet.health()),
+                    "hp", pet.health() >= 0 ? trim(pet.health()) : "?",
                     "max_hp", pet.maxHealth() >= 0 ? trim(pet.maxHealth()) : "?",
                     "hunger", trim(pet.hunger()),
                     "skilltree", safe(pet.skilltreeName())
@@ -93,23 +94,28 @@ public final class BedrockPetService {
             api.createModalForm(title)
                     .button1(firstButton, fp -> {
                         if (pet.active()) {
-                            api.executeActionString(fp, "essentials_pet_sendaway:" + PetActionPayloads.encodePet(pet.uuid()),
-                                    context("pet-modal", pet.uuid().toString()));
+                            api.executeActionString(fp, "essentials_pet_sendaway:" + PetActionPayloads.encodePet(pet.id()),
+                                    context("pet-modal", pet.id()));
                         } else {
-                            api.executeActionString(fp, "essentials_pet_call:" + PetActionPayloads.encodePet(pet.uuid()),
-                                    context("pet-modal", pet.uuid().toString()));
+                            api.executeActionString(fp, "essentials_pet_call:" + PetActionPayloads.encodePet(pet.id()),
+                                    context("pet-modal", pet.id()));
                         }
                     })
-                    .button2(configuration.petSkilltreeButton(), fp ->
-                            api.executeActionString(fp, "essentials_pet_skilltree_menu:" + PetActionPayloads.encodePet(pet.uuid()),
-                                    context("pet-modal", pet.uuid().toString())))
+                    .button2(skilltrees ? configuration.petSkilltreeButton() : configuration.backButton(), fp -> {
+                        if (skilltrees) {
+                            api.executeActionString(fp, "essentials_pet_skilltree_menu:" + PetActionPayloads.encodePet(pet.id()),
+                                    context("pet-modal", pet.id()));
+                        } else {
+                            openPetList(player);
+                        }
+                    })
                     .content(content)
                     .send(new BukkitFormPlayer(player));
         });
     }
 
-    public void callPet(Player player, UUID petUuid) {
-        petCatalog.call(player, petUuid, success -> {
+    public void callPet(Player player, String petId) {
+        petCatalog.call(player, petId, success -> {
             if (success) {
                 AddonText.send(player, configuration.petCallSuccess());
                 playSound(player, configuration.soundFormOpen());
@@ -120,8 +126,8 @@ public final class BedrockPetService {
         });
     }
 
-    public void putAwayPet(Player player, UUID petUuid) {
-        boolean ok = petCatalog.putAway(player, petUuid);
+    public void putAwayPet(Player player, String petId) {
+        boolean ok = petCatalog.putAway(player, petId);
         if (ok) {
             AddonText.send(player, configuration.petPutAwaySuccess());
             playSound(player, configuration.soundFormOpen());
@@ -137,6 +143,10 @@ public final class BedrockPetService {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!ensureReady(player)) return;
+        if (!petCatalog.supportsSkilltrees()) {
+            AddonText.send(player, configuration.providerUnavailable());
+            return;
+        }
 
         // Text comes from MyPet's own localized messages, not the addon config.
         String petName = petCatalog.activePetName(player);
@@ -181,6 +191,10 @@ public final class BedrockPetService {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!ensureReady(player)) return;
+        if (!petCatalog.supportsShop()) {
+            AddonText.send(player, configuration.providerUnavailable());
+            return;
+        }
 
         petCatalog.listShopEntries(player, shopId, entries -> {
             if (entries.isEmpty()) {
@@ -216,6 +230,10 @@ public final class BedrockPetService {
     }
 
     public void buyPet(Player player, String shopId, String petId) {
+        if (!petCatalog.supportsShop()) {
+            AddonText.send(player, configuration.providerUnavailable());
+            return;
+        }
         // The purchase runs fully in-process and sends MyPet's own localized messages
         // (success/stored/no-money); here we only add the matching sound.
         petCatalog.buyShopEntry(player, shopId, petId, result ->

@@ -41,6 +41,6 @@ public final class PetSendAwayAction implements ActionSystem.ActionHandler {
 
     @Override
     public String[] getUsageExamples() {
-        return new String[]{"essentials_pet_sendaway:<uuid>"};
+        return new String[]{"essentials_pet_sendaway:<pet-id>"};
     }
 }

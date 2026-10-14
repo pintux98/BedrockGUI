@@ -20,6 +20,9 @@ dependencies {
     compileOnly("com.github.MyPetORG.MyPet:mypet-api:${myPetVersion}") {
         exclude group: "org.spigotmc", module: "spigot-api"
     }
+    compileOnly("com.github.Nocsy-Workshop:mcpets:${mcPetsVersion}") {
+        transitive = false
+    }
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"

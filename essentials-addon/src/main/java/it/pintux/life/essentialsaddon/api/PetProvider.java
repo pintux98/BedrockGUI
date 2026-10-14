@@ -7,13 +7,11 @@ import it.pintux.life.essentialsaddon.model.SkilltreeView;
 import org.bukkit.entity.Player;
 
 import java.util.List;
-import java.util.UUID;
 import java.util.function.Consumer;
 
 /**
- * Contract for pet providers. Only MyPet is implemented today; the interface
- * exists for consistency with the other addon modules and to keep the MyPet
- * API out of the service/form layer.
+ * Contract for pet providers (MyPet, MCPets). Keeps each plugin's API out of the
+ * service/form layer.
  */
 public interface PetProvider {
 
@@ -21,14 +19,22 @@ public interface PetProvider {
 
     boolean isReady();
 
+    default boolean supportsSkilltrees() {
+        return false;
+    }
+
+    default boolean supportsShop() {
+        return false;
+    }
+
     /** Async: a player's full pet list (active + stored). Callback runs on the main thread. */
     void listOwnedPets(Player player, Consumer<List<PetView>> callback);
 
-    /** Async: activate + spawn the stored pet with this UUID. Callback runs on the main thread. */
-    void call(Player player, UUID petUuid, Consumer<Boolean> callback);
+    /** Async: activate + spawn the pet with this id. Callback runs on the main thread. */
+    void call(Player player, String petId, Consumer<Boolean> callback);
 
     /** Despawn the player's active pet (keeps it active, just not in the world). */
-    boolean putAway(Player player, java.util.UUID petUuid);
+    boolean putAway(Player player, String petId);
 
     /** Display name of the player's active pet, or {@code null} if there is none. */
     String activePetName(Player player);

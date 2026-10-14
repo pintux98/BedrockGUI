@@ -59,6 +59,16 @@ public final class MyPetProvider implements PetProvider {
     }
 
     @Override
+    public boolean supportsSkilltrees() {
+        return true;
+    }
+
+    @Override
+    public boolean supportsShop() {
+        return true;
+    }
+
+    @Override
     public boolean isReady() {
         try {
             return MyPetApi.getPlugin() != null;
@@ -137,7 +147,7 @@ public final class MyPetProvider implements PetProvider {
         }
         String skilltree = pet.getSkilltree() != null ? pet.getSkilltree().getName() : "None";
         return new PetView(
-                pet.getUUID(),
+                pet.getUUID().toString(),
                 pet.getPetName(),
                 pet.getPetType() != null ? pet.getPetType().name() : "Unknown",
                 level,
@@ -150,9 +160,10 @@ public final class MyPetProvider implements PetProvider {
     }
 
     @Override
-    public void call(Player player, UUID petUuid, Consumer<Boolean> callback) {
+    public void call(Player player, String petId, Consumer<Boolean> callback) {
         MyPetPlayer owner = myPetPlayer(player);
-        if (owner == null) {
+        UUID petUuid = parseUuid(petId);
+        if (owner == null || petUuid == null) {
             runMain(() -> callback.accept(false));
             return;
         }
@@ -204,12 +215,12 @@ public final class MyPetProvider implements PetProvider {
     }
 
     @Override
-    public boolean putAway(Player player, java.util.UUID petUuid) {
+    public boolean putAway(Player player, String petId) {
         MyPet active = activePet(player);
         if (active == null) {
             return false;
         }
-        if (petUuid != null && !petUuid.equals(active.getUUID())) {
+        if (petId != null && !active.getUUID().equals(parseUuid(petId))) {
             return false;
         }
         try {
@@ -342,6 +353,14 @@ public final class MyPetProvider implements PetProvider {
     @Override
     public PetBuyResult buyShopEntry(Player player, String shopId, String petId) {
         return PetBuyResult.fail("handled by catalog bridge");
+    }
+
+    private static UUID parseUuid(String petId) {
+        try {
+            return petId == null ? null : UUID.fromString(petId);
+        } catch (IllegalArgumentException e) {
+            return null;
+        }
     }
 
     private void runMain(Runnable runnable) {

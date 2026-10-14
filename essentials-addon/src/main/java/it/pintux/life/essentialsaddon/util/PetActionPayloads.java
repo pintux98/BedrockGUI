@@ -1,21 +1,19 @@
 package it.pintux.life.essentialsaddon.util;
 
-import java.util.UUID;
-
 public final class PetActionPayloads {
 
     private PetActionPayloads() {
     }
 
-    public static String encodePet(UUID petUuid) {
-        return petUuid.toString();
+    public static String encodePet(String petId) {
+        return petId;
     }
 
-    public static UUID decodePet(String payload) {
+    public static String decodePet(String payload) {
         if (payload == null || payload.isBlank()) {
             throw new IllegalArgumentException("Invalid pet payload: " + payload);
         }
-        return UUID.fromString(payload.trim());
+        return payload.trim();
     }
 
     public static String encodeSkilltree(String petUuid, String skilltreeName) {

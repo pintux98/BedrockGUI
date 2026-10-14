@@ -110,6 +110,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
                 || configuration.actionsHomes() || configuration.actionsTpa()
                 || configuration.actionsShopGuiPlus() || configuration.actionsEconomyShopGui()
                 || configuration.moduleMyPet() || configuration.actionsMyPet()
+                || configuration.moduleMcPets() || configuration.actionsMcPets()
                 || configuration.moduleDeathMenu();
 
         if (!anyModule) {
@@ -141,6 +142,9 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
         if (configuration.moduleMyPet() || configuration.actionsMyPet()) {
             initMyPet(pluginManager);
+        }
+        if (configuration.moduleMcPets() || configuration.actionsMcPets()) {
+            initMcPets(pluginManager);
         }
         if (configuration.moduleDeathMenu()) {
             initDeathMenu(pluginManager);
@@ -349,6 +353,25 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         }
     }
 
+    private void initMcPets(PluginManager pluginManager) {
+        if (petCatalogService != null) {
+            getLogger().warning("Both the MyPet and MCPets modules are enabled; using MyPet. Disable one in config.yml.");
+            return;
+        }
+        if (!McPetsProvider.isAvailable(this)) {
+            getLogger().info("MCPets module enabled but the MCPets API is not present. Skipping.");
+            return;
+        }
+        petCatalogService = new PetCatalogService(this, getLogger());
+        petCatalogService.setProvider(new McPetsProvider(this));
+        bedrockPetService = new BedrockPetService(getLogger(), configuration, petCatalogService, detector);
+        getLogger().info("Pet provider: mcpets");
+
+        if (configuration.moduleMcPets() && configuration.integratedGuiEnabled()) {
+            pluginManager.registerEvents(new McPetsCommandListener(bedrockPetService, configuration), this);
+        }
+    }
+
     /**
      * Registers a provider factory only when its plugin is installed.
      *
@@ -442,8 +465,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
             api.registerActionHandler(new OpenEconomyShopItemAction(bedrockEconomyShopService));
             api.registerActionHandler(new ExecuteEconomyShopTransactionAction(bedrockEconomyShopService));
         }
-        if ((configuration.moduleMyPet() || configuration.actionsMyPet()) && bedrockPetService != null
-                && petCatalogService != null && petCatalogService.getProvider() != null) {
+        if (bedrockPetService != null && petCatalogService != null && petCatalogService.getProvider() != null) {
             api.registerActionHandler(new HubPetAction(bedrockPetService));
             api.registerActionHandler(new OpenPetListAction(bedrockPetService));
             api.registerActionHandler(new OpenPetShopAction(bedrockPetService));

@@ -13,6 +13,7 @@ softdepend:
   - EconomyShopGUI-Premium
   - HuskHomes
   - MyPet
+  - MCPets
 commands:
   essentialsaddon:
     description: Reload EssentialsAddon configuration

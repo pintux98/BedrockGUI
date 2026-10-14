@@ -25,6 +25,7 @@ public final class EssentialsAddonConfiguration {
     private final boolean moduleShopGuiPlus;
     private final boolean moduleEconomyShopGui;
     private final boolean moduleMyPet;
+    private final boolean moduleMcPets;
     private final boolean moduleDeathMenu;
     private final boolean homeManageMenu;
     private final boolean homePublicHomes;
@@ -42,6 +43,7 @@ public final class EssentialsAddonConfiguration {
     private final CommandAliases commandPets;
     private final CommandAliases commandPetShop;
     private final CommandAliases commandPetSkilltree;
+    private final CommandAliases commandMcPets;
     private final CommandAliases commandShop;
     private final CommandAliases commandSellAll;
 
@@ -62,6 +64,7 @@ public final class EssentialsAddonConfiguration {
     private final boolean actionsShopGuiPlus;
     private final boolean actionsEconomyShopGui;
     private final boolean actionsMyPet;
+    private final boolean actionsMcPets;
 
     // Global master switches (apply on top of the per-module toggles above)
     private final boolean integratedGui;
@@ -216,6 +219,7 @@ public final class EssentialsAddonConfiguration {
     private final String petActiveSuffix;
     private final String petInfoTitle;
     private final String petInfoContent;
+    private final String mcPetsInfoContent;
     private final String petCallButton;
     private final String petPutAwayButton;
     private final String petSkilltreeButton;
@@ -256,6 +260,7 @@ public final class EssentialsAddonConfiguration {
         this.moduleShopGuiPlus = configuration.getBoolean("modules.shopgui-plus", false);
         this.moduleEconomyShopGui = configuration.getBoolean("modules.economyshop-gui", false);
         this.moduleMyPet = configuration.getBoolean("modules.mypet", false);
+        this.moduleMcPets = configuration.getBoolean("modules.mcpets", false);
         this.moduleDeathMenu = configuration.getBoolean("modules.death-menu", false);
         this.homeManageMenu = configuration.getBoolean("homes.manage-menu", true);
         this.homePublicHomes = configuration.getBoolean("homes.public-homes", true);
@@ -274,6 +279,7 @@ public final class EssentialsAddonConfiguration {
         this.commandPets = aliases(configuration, "commands.pets", "pet", "pets");
         this.commandPetShop = aliases(configuration, "commands.pet-shop", "petshop");
         this.commandPetSkilltree = aliases(configuration, "commands.pet-skilltree", "pcst", "petskilltree");
+        this.commandMcPets = aliases(configuration, "commands.mcpets", "mcpets", "pets");
         this.commandShop = aliases(configuration, "commands.shop", "shop", "shopgui", "guishop");
         this.commandSellAll = aliases(configuration, "commands.sell-all", "sellall", "sell");
 
@@ -291,6 +297,7 @@ public final class EssentialsAddonConfiguration {
         this.actionsShopGuiPlus = configuration.getBoolean("actions-only.shopgui-plus", false);
         this.actionsEconomyShopGui = configuration.getBoolean("actions-only.economyshop-gui", false);
         this.actionsMyPet = configuration.getBoolean("actions-only.mypet", false);
+        this.actionsMcPets = configuration.getBoolean("actions-only.mcpets", false);
 
         this.integratedGui = configuration.getBoolean("integrated-gui", true);
         this.registerActions = configuration.getBoolean("register-actions", true);
@@ -446,6 +453,8 @@ public final class EssentialsAddonConfiguration {
         this.petInfoTitle = color(configuration.getString("ui.pet-info-title", "&d%pet_name%"));
         this.petInfoContent = color(configuration.getString("ui.pet-info-content",
                 "&7Type: &f%pet_type%\n&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%\n&7Hunger: &f%hunger%\n&7Skilltree: &f%skilltree%"));
+        this.mcPetsInfoContent = color(configuration.getString("ui.mcpets-pet-info-content",
+                "&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%"));
         this.petCallButton = color(configuration.getString("ui.pet-call-button", "&aCall Pet"));
         this.petPutAwayButton = color(configuration.getString("ui.pet-put-away-button", "&6Put Away"));
         this.petSkilltreeButton = color(configuration.getString("ui.pet-skilltree-button", "&bSkilltree"));
@@ -455,7 +464,7 @@ public final class EssentialsAddonConfiguration {
         this.petSkilltreeCurrentSuffix = color(configuration.getString("ui.pet-skilltree-current-suffix", " &a(Current)"));
         this.petNoPets = color(configuration.getString("messages.pet-no-pets", "&cYou have no pets."));
         this.petNoActivePet = color(configuration.getString("messages.pet-no-active-pet", "&cYou need an active pet first."));
-        this.petNotReady = color(configuration.getString("messages.pet-not-ready", "&eMyPet is not loaded yet."));
+        this.petNotReady = color(configuration.getString("messages.pet-not-ready", "&eThe pet plugin is not loaded yet."));
         this.petBuySuccess = color(configuration.getString("messages.pet-buy-success", "&aPet purchased!"));
         this.petBuyFailed = color(configuration.getString("messages.pet-buy-failed", "&cPurchase failed: %reason%"));
         this.petCannotAfford = color(configuration.getString("messages.pet-cannot-afford", "&cYou cannot afford this pet."));
@@ -680,6 +689,7 @@ public final class EssentialsAddonConfiguration {
     public boolean moduleShopGuiPlus() { return moduleShopGuiPlus; }
     public boolean moduleEconomyShopGui() { return moduleEconomyShopGui; }
     public boolean moduleMyPet() { return moduleMyPet; }
+    public boolean moduleMcPets() { return moduleMcPets; }
     public boolean moduleDeathMenu() { return moduleDeathMenu; }
 
     // Home extras
@@ -699,6 +709,7 @@ public final class EssentialsAddonConfiguration {
     public CommandAliases commandPets() { return commandPets; }
     public CommandAliases commandPetShop() { return commandPetShop; }
     public CommandAliases commandPetSkilltree() { return commandPetSkilltree; }
+    public CommandAliases commandMcPets() { return commandMcPets; }
     public CommandAliases commandShop() { return commandShop; }
     public CommandAliases commandSellAll() { return commandSellAll; }
 
@@ -716,6 +727,7 @@ public final class EssentialsAddonConfiguration {
     public boolean actionsShopGuiPlus() { return actionsShopGuiPlus && !moduleShopGuiPlus; }
     public boolean actionsEconomyShopGui() { return actionsEconomyShopGui && !moduleEconomyShopGui; }
     public boolean actionsMyPet() { return actionsMyPet && !moduleMyPet; }
+    public boolean actionsMcPets() { return actionsMcPets && !moduleMcPets; }
 
     /** Master switch: serve built-in forms and intercept commands/menus. */
     public boolean integratedGuiEnabled() { return integratedGui; }
@@ -748,6 +760,7 @@ public final class EssentialsAddonConfiguration {
     public String petActiveSuffix() { return petActiveSuffix; }
     public String petInfoTitle() { return petInfoTitle; }
     public String petInfoContent() { return petInfoContent; }
+    public String mcPetsInfoContent() { return mcPetsInfoContent; }
     public String petCallButton() { return petCallButton; }
     public String petPutAwayButton() { return petPutAwayButton; }
     public String petSkilltreeButton() { return petSkilltreeButton; }

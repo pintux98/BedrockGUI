@@ -14,7 +14,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
-import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
@@ -54,16 +53,24 @@ public final class PetCatalogService {
         provider.listOwnedPets(player, callback);
     }
 
-    public void call(Player player, UUID petUuid, Consumer<Boolean> callback) {
+    public void call(Player player, String petId, Consumer<Boolean> callback) {
         if (provider == null) {
             callback.accept(false);
             return;
         }
-        provider.call(player, petUuid, callback);
+        provider.call(player, petId, callback);
     }
 
-    public boolean putAway(Player player, java.util.UUID petUuid) {
-        return provider != null && provider.putAway(player, petUuid);
+    public boolean putAway(Player player, String petId) {
+        return provider != null && provider.putAway(player, petId);
+    }
+
+    public boolean supportsSkilltrees() {
+        return provider != null && provider.supportsSkilltrees();
+    }
+
+    public boolean supportsShop() {
+        return provider != null && provider.supportsShop();
     }
 
     public List<SkilltreeView> listSkilltrees(Player player) {

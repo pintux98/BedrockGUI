@@ -41,6 +41,6 @@ public final class PetCallAction implements ActionSystem.ActionHandler {
 
     @Override
     public String[] getUsageExamples() {
-        return new String[]{"essentials_pet_call:<uuid>"};
+        return new String[]{"essentials_pet_call:<pet-id>"};
     }
 }

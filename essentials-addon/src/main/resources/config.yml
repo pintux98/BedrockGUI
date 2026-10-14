@@ -6,7 +6,7 @@
 # to activate only the features you need.
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 19
+config-version: 20
 
 modules:
   warps: false
@@ -16,6 +16,7 @@ modules:
   shopgui-plus: false
   economyshop-gui: false
   mypet: false
+  mcpets: false
   # Respawn menu shown to Bedrock players after they die.
   death-menu: false
 
@@ -40,6 +41,7 @@ commands:
   pets: [pet, pets]
   pet-shop: [petshop]
   pet-skilltree: [pcst, petskilltree]
+  mcpets: [mcpets, pets]
   shop: [shop, shopgui, guishop]
   sell-all: [sellall, sell]
 
@@ -72,6 +74,7 @@ actions-only:
   shopgui-plus: false
   economyshop-gui: false
   mypet: false
+  mcpets: false
 
 # Master switches (apply on top of the per-module toggles above).
 # integrated-gui: serve the built-in forms AND intercept commands / shop menus for
@@ -263,6 +266,9 @@ ui:
   pet-skilltree-option: '&e%skilltree%'
   pet-skilltree-current-suffix: ' &a(Current)'
 
+  # --- MCPets ---
+  mcpets-pet-info-content: "&7Level: &f%level%\n&7Health: &f%hp%/%max_hp%"
+
 # ─────────────────────────────────────────────
 # Messages — system-level feedback
 # ─────────────────────────────────────────────
@@ -277,7 +283,7 @@ messages:
   shop-unsupported-transaction: '&cThis shop backend does not expose a compatible Bedrock transaction bridge.'
   pet-no-pets: '&cYou have no pets.'
   pet-no-active-pet: '&cYou need an active pet first.'
-  pet-not-ready: '&eMyPet is not loaded yet.'
+  pet-not-ready: '&eThe pet plugin is not loaded yet.'
   pet-buy-success: '&aPet purchased!'
   pet-buy-failed: '&cPurchase failed: %reason%'
   pet-cannot-afford: '&cYou cannot afford this pet.'

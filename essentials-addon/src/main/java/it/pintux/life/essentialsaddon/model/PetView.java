@@ -1,10 +1,8 @@
 package it.pintux.life.essentialsaddon.model;
 
-import java.util.UUID;
-
 /** Immutable snapshot of one owned pet for Bedrock forms. */
 public record PetView(
-        UUID uuid,
+        String id,
         String name,
         String petType,
         int level,
