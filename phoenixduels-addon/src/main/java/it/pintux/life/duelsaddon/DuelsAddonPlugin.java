@@ -56,7 +56,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
     public void onEnable() {
         configuration = DuelsAddonConfiguration.load(this);
         detector = new FloodgateBedrockPlayerDetector();
-        gateway = new DuelsGatewayImpl(getLogger());
+        gateway = phoenixDuelsInstalled() ? new DuelsGatewayImpl(getLogger()) : unavailableGateway();
 
         PluginCommand command = getCommand("duelsaddon");
         if (command != null) {
@@ -82,6 +82,29 @@ public final class DuelsAddonPlugin extends JavaPlugin {
                         + "in config.yml to log every menu open.");
             }
         }
+    }
+
+    private boolean phoenixDuelsInstalled() {
+        return getServer().getPluginManager().getPlugin("PhoenixDuels") != null
+                || getServer().getPluginManager().getPlugin("PhoenixDuelsLite") != null;
+    }
+
+    private static DuelsGateway unavailableGateway() {
+        return (DuelsGateway) java.lang.reflect.Proxy.newProxyInstance(DuelsGateway.class.getClassLoader(),
+                new Class<?>[]{DuelsGateway.class}, (proxy, method, args) -> switch (method.getName()) {
+                    case "commandName" -> args[1];
+                    case "hashCode" -> System.identityHashCode(proxy);
+                    case "equals" -> proxy == args[0];
+                    case "toString" -> "unavailable DuelsGateway";
+                    default -> {
+                        Class<?> type = method.getReturnType();
+                        if (type == boolean.class) yield false;
+                        if (type == int.class) yield 0;
+                        if (type == java.util.List.class) yield java.util.List.of();
+                        if (type == java.util.Optional.class) yield java.util.Optional.empty();
+                        yield null;
+                    }
+                });
     }
 
     @Override
@@ -114,24 +137,26 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         invitationService = new BedrockInvitationService(this, configuration, gateway, detector);
         duelService.setInvitationService(invitationService);
 
-        menuInterceptListener = new MenuInterceptListener(this, configuration, detector, gateway,
-                new MenuInterceptListener.Services(queueService, duelService, partyService,
-                        settingsService, statsService, spectatorService, kitService,
-                        confirmationService));
-
         boolean integratedGui = configuration.integratedGuiEnabled();
 
-        if (integratedGui) {
-            Bukkit.getPluginManager().registerEvents(menuInterceptListener, this);
-        } else {
-            getLogger().info("Integrated GUI disabled: PhoenixDuels menus are not intercepted. "
-                    + "Use the pd_* actions from your own forms.");
-        }
+        if (gateway.isAvailable()) {
+            menuInterceptListener = new MenuInterceptListener(this, configuration, detector, gateway,
+                    new MenuInterceptListener.Services(queueService, duelService, partyService,
+                            settingsService, statsService, spectatorService, kitService,
+                            confirmationService));
 
-        if (configuration.partyInviteFormsEnabled() || configuration.duelInviteFormsEnabled()) {
-            Bukkit.getPluginManager().registerEvents(
-                    new InvitationListener(this, configuration, gateway, invitationService, duelService),
-                    this);
+            if (integratedGui) {
+                Bukkit.getPluginManager().registerEvents(menuInterceptListener, this);
+            } else {
+                getLogger().info("Integrated GUI disabled: PhoenixDuels menus are not intercepted. "
+                        + "Use the pd_* actions from your own forms.");
+            }
+
+            if (configuration.partyInviteFormsEnabled() || configuration.duelInviteFormsEnabled()) {
+                Bukkit.getPluginManager().registerEvents(
+                        new InvitationListener(this, configuration, gateway, invitationService, duelService),
+                        this);
+            }
         }
 
         BedrockGUIApi api = getApiSafely();
