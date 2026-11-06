@@ -7,7 +7,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.PotionData;
+import org.bukkit.potion.PotionType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -195,36 +195,8 @@ public final class ShopGuiReflectionSupport {
     }
 
     private static String basePotionType(PotionMeta potionMeta) {
-        if (BasePotionTypeGetter.METHOD != null) {
-            try {
-                Object type = BasePotionTypeGetter.METHOD.invoke(potionMeta);
-                return type instanceof Enum<?> potionType ? potionType.name() : null;
-            } catch (ReflectiveOperationException | RuntimeException e) {
-                return null;
-            }
-        }
-        try {
-            PotionData data = potionMeta.getBasePotionData();
-            if (data == null || data.getType() == null) {
-                return null;
-            }
-            String name = data.getType().name();
-            return data.isUpgraded() ? "STRONG_" + name : data.isExtended() ? "LONG_" + name : name;
-        } catch (Throwable e) {
-            return null;
-        }
-    }
-
-    private static final class BasePotionTypeGetter {
-        private static final Method METHOD = find();
-
-        private static Method find() {
-            try {
-                return PotionMeta.class.getMethod("getBasePotionType");
-            } catch (NoSuchMethodException e) {
-                return null;
-            }
-        }
+        PotionType type = potionMeta.getBasePotionType();
+        return type == null ? null : type.name();
     }
 
     public static String prettify(String value) {

@@ -1,7 +1,7 @@
 name: BedrockGUI-BedwarsAddon
 version: '${version}'
 main: it.pintux.life.bedwarsaddon.BedrockBedwarsAddonPlugin
-api-version: '1.20'
+api-version: '1.20.6'
 author: pintux
 depend:
   - BedrockGUI

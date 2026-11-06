@@ -25,7 +25,7 @@ bedrock:
             - "basic_actions"
           }
     economy_shop:
-      text: "§6Economy Shop\n§8Bedrock form + Java chest"
+      text: "§6Economy Shop\n§8Vault buy and sell"
       image: "GOLD_INGOT"
       onClick:
         - |

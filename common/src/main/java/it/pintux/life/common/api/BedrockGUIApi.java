@@ -30,7 +30,6 @@ public class BedrockGUIApi {
     private final MessageData messageData;
     private final PlatformTitleManager platformTitleManager;
     private AssetServer assetServer;
-    private it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager;
 
 
     private final Map<String, FormTemplate> formTemplates = new HashMap<>();
@@ -98,13 +97,6 @@ public class BedrockGUIApi {
         }
     }
 
-    public void setJavaMenuManager(it.pintux.life.common.platform.PlatformJavaMenuManager javaMenuManager) {
-        this.javaMenuManager = javaMenuManager;
-        if (formMenuUtil != null) {
-            formMenuUtil.setJavaMenuManager(javaMenuManager);
-        }
-    }
-
     public AssetServer getAssetServer() {
         return assetServer;
     }
@@ -123,10 +115,6 @@ public class BedrockGUIApi {
             return assetServer.getAssetUrl(resolved);
         }
         return resolved;
-    }
-
-    public it.pintux.life.common.platform.PlatformJavaMenuManager getJavaMenuManager() {
-        return javaMenuManager;
     }
 
     /**

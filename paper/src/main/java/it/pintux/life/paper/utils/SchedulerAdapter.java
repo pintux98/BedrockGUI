@@ -1,7 +1,6 @@
 package it.pintux.life.paper.utils;
 
 import org.bukkit.Bukkit;
-import org.bukkit.entity.Entity;
 import org.bukkit.plugin.Plugin;
 
 public final class SchedulerAdapter {
@@ -24,13 +23,5 @@ public final class SchedulerAdapter {
             return;
         }
         Bukkit.getScheduler().runTaskLater(plugin, task, delay);
-    }
-
-    public static void runForEntity(Plugin plugin, Entity entity, Runnable task) {
-        if (!FOLIA || Bukkit.isOwnedByCurrentRegion(entity)) {
-            task.run();
-            return;
-        }
-        entity.getScheduler().execute(plugin, task, null, 1L);
     }
 }

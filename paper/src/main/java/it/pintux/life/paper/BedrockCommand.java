@@ -229,14 +229,11 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                         }
 
                         String bedrockBase = root + "." + key;
-                        String javaBase = bedrockBase + ".java";
+                        cfg.set(bedrockBase + ".java", null);
 
                         org.bukkit.configuration.file.YamlConfiguration out = new org.bukkit.configuration.file.YamlConfiguration();
 
                         copySection(cfg, bedrockBase, out, "bedrock");
-                        if (cfg.getConfigurationSection(javaBase) != null) {
-                            copySection(cfg, javaBase, out, "java");
-                        }
 
                         String rel = key + ".yml";
                         java.io.File outFile = new java.io.File(formsDir, rel);
@@ -252,7 +249,6 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
                             }
                         }
 
-                        cfg.set(javaBase, null);
                         cfg.set("forms." + key + ".file", rel);
                         converted++;
                     }

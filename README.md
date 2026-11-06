@@ -16,7 +16,6 @@ BedrockGUI is a powerful utility for **Paper**, **Velocity** and **Bungeecord** 
 - **Modal Forms**: Simple Yes/No confirmation dialogs.
 - **Custom Forms**: Complex data entry with Text Inputs, Sliders, Dropdowns, and Toggles.
 - **Dynamic Forms**: Runtime-conditional components based on permissions or player state.
-- **Java Menus**: Early support for traditional chest-based GUIs.
 
 ### ⚡ Unified Action System
 Execute complex logic using a modern curly-brace syntax. Chain actions together to create guided player flows.
@@ -60,7 +59,7 @@ Execute complex logic using a modern curly-brace syntax. Chain actions together 
 ## 🛠️ Building from Source
 
 ### Prerequisites
-- **Java 21** or higher
+- **JDK 25** (Paper modules target Java 21, the Velocity module targets Java 25)
 - **Gradle** (or use the included `gradlew` wrapper)
 
 ### Build Commands

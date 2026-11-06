@@ -85,20 +85,10 @@ public class ConfigConverter {
             // Prepare new form content
             Map<String, Object> newFormConfig = new LinkedHashMap<>();
 
-            Object javaValue = menuData.get("java");
-            String siblingJavaKey = key + ".java";
-            if (!(javaValue instanceof Map) && rootSection.get(siblingJavaKey) instanceof Map) {
-                javaValue = rootSection.get(siblingJavaKey);
-            }
-
             Map<String, Object> bedrockSource = new LinkedHashMap<>(menuData);
             bedrockSource.remove("java");
             newFormConfig.put("bedrock", deepCopyAndProcess(bedrockSource));
-
-            if (javaValue instanceof Map) {
-                newFormConfig.put("java", deepCopyAndProcess((Map<String, Object>) javaValue));
-                rootSection.remove(siblingJavaKey);
-            }
+            rootSection.remove(key + ".java");
 
             // Save to new file
             String filename = key + ".yml";

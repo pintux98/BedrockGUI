@@ -1,6 +1,5 @@
 dependencies {
     implementation project(':common')
-    compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly "me.clip:placeholderapi:${placeholderApiVersion}"
     compileOnly "net.milkbowl.vault:VaultUnlockedAPI:${vaultUnlockedApiVersion}"
     compileOnly "dev.folia:folia-api:${paperApiVersion}"
