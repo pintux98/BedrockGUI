@@ -5,7 +5,6 @@ repositories {
     mavenCentral()
     maven { url = "https://repo.papermc.io/repository/maven-public/" }
     maven { url = "https://repo.opencollab.dev/main/" }
-    maven { url = "https://repo.tomkeuper.com/repository/releases/" }
     maven { url = "https://repo.codemc.io/repository/maven-public/" }
     maven { url = "https://repo.screamingsandals.org/public/" }
     maven { url = "https://jitpack.io" }
@@ -15,10 +14,7 @@ dependencies {
     compileOnly project(':common')
     compileOnly project(':paper')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
-    compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
-        exclude group: "org.spigotmc", module: "spigot-api"
-        exclude group: "io.papermc.paper", module: "paper-api"
-    }
+    compileOnly files('lib/bedwars2023-api.jar')
     compileOnly("com.andrei1058.bedwars:bedwars-api:${bedWars1058Version}") {
         transitive = false
     }
