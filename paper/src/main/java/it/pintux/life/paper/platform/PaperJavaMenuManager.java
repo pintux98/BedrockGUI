@@ -10,6 +10,8 @@ import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.paper.utils.SchedulerAdapter;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -171,8 +173,11 @@ public class PaperJavaMenuManager implements PlatformJavaMenuManager, Listener {
                 meta.setLore(colored);
             }
             if (item.isGlow()) {
-                meta.addEnchant(Enchantment.LUCK, 1, true);
-                meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                Enchantment glow = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("luck_of_the_sea"));
+                if (glow != null) {
+                    meta.addEnchant(glow, 1, true);
+                    meta.addItemFlags(ItemFlag.HIDE_ENCHANTS);
+                }
             }
             stack.setItemMeta(meta);
         }

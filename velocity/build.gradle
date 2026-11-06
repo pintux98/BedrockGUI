@@ -1,3 +1,15 @@
+def velocityJava = velocityJavaVersion as Integer
+
+java {
+    toolchain.languageVersion = JavaLanguageVersion.of(velocityJava)
+    sourceCompatibility = JavaVersion.toVersion(velocityJava)
+    targetCompatibility = JavaVersion.toVersion(velocityJava)
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.release.set(velocityJava)
+}
+
 dependencies {
     implementation project(':common')
     compileOnly "com.velocitypowered:velocity-api:${velocityApiVersion}"

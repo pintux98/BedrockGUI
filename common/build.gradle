@@ -1,5 +1,5 @@
 dependencies {
-    compileOnly 'com.google.guava:guava:33.6.0-jre'
+    compileOnly "com.google.guava:guava:${guavaVersion}"
     implementation "org.yaml:snakeyaml:${snakeyamlVersion}"
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"

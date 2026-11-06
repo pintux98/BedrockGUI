@@ -3,11 +3,34 @@ package it.pintux.life.paper.platform;
 import it.pintux.life.common.platform.PlatformSoundManager;
 import it.pintux.life.common.utils.FormPlayer;
 import org.bukkit.Bukkit;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
+import java.util.HashMap;
+import java.util.Locale;
+import java.util.Map;
+
 
 public class PaperSoundManager implements PlatformSoundManager {
+
+    private static final Map<String, String> LEGACY_NAMES = Map.ofEntries(
+            Map.entry("RANDOM_LEVELUP", "ENTITY_PLAYER_LEVELUP"),
+            Map.entry("RANDOM_CLICK", "UI_BUTTON_CLICK"),
+            Map.entry("RANDOM_POP", "ENTITY_ITEM_PICKUP"),
+            Map.entry("RANDOM_ORB", "ENTITY_EXPERIENCE_ORB_PICKUP"),
+            Map.entry("MOB_VILLAGER_YES", "ENTITY_VILLAGER_YES"),
+            Map.entry("MOB_VILLAGER_NO", "ENTITY_VILLAGER_NO"),
+            Map.entry("NOTE_PLING", "BLOCK_NOTE_BLOCK_PLING"),
+            Map.entry("NOTE_HARP", "BLOCK_NOTE_BLOCK_HARP"),
+            Map.entry("RANDOM_BREAK", "ENTITY_ITEM_BREAK"),
+            Map.entry("DIG_STONE", "BLOCK_STONE_BREAK"),
+            Map.entry("STEP_STONE", "BLOCK_STONE_STEP")
+    );
+    private static final String[] PREFIXES = {"", "ENTITY_", "BLOCK_", "UI_"};
+
+    private static volatile Map<String, Sound> soundsByName;
 
     @Override
     public boolean playSound(FormPlayer player, String soundName, float volume, float pitch) {
@@ -17,7 +40,7 @@ public class PaperSoundManager implements PlatformSoundManager {
                 return false;
             }
 
-            Sound sound = parseSound(soundName);
+            Sound sound = resolve(soundName);
             if (sound == null) {
                 return false;
             }
@@ -29,95 +52,50 @@ public class PaperSoundManager implements PlatformSoundManager {
         }
     }
 
-    private Sound parseSound(String soundName) {
-        if (soundName == null || soundName.isEmpty()) {
+    public static Sound resolve(String soundName) {
+        if (soundName == null || soundName.isBlank()) {
             return null;
         }
-
-
-        Sound legacySound = parseLegacySound(soundName);
-        if (legacySound != null) {
-            return legacySound;
+        NamespacedKey key = NamespacedKey.fromString(soundName.trim().toLowerCase(Locale.ROOT));
+        Sound direct = key != null ? Registry.SOUNDS.get(key) : null;
+        if (direct != null) {
+            return direct;
         }
-
-        try {
-
-            return Sound.valueOf(soundName.toUpperCase());
-        } catch (IllegalArgumentException e) {
-
-            String normalizedName = soundName.toUpperCase().replace(".", "_");
-
-            try {
-                return Sound.valueOf(normalizedName);
-            } catch (IllegalArgumentException e2) {
-
-                if (!normalizedName.startsWith("ENTITY_")) {
-                    try {
-                        return Sound.valueOf("ENTITY_" + normalizedName);
-                    } catch (IllegalArgumentException e3) {
-
-                        if (!normalizedName.startsWith("BLOCK_")) {
-                            try {
-                                return Sound.valueOf("BLOCK_" + normalizedName);
-                            } catch (IllegalArgumentException e4) {
-
-                                if (!normalizedName.startsWith("UI_")) {
-                                    try {
-                                        return Sound.valueOf("UI_" + normalizedName);
-                                    } catch (IllegalArgumentException e5) {
-                                        return null;
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                return null;
+        Map<String, Sound> sounds = soundsByName();
+        String name = normalize(soundName);
+        name = LEGACY_NAMES.getOrDefault(name, name);
+        for (String prefix : PREFIXES) {
+            Sound sound = sounds.get(name.startsWith(prefix) ? name : prefix + name);
+            if (sound != null) {
+                return sound;
             }
         }
+        return null;
     }
 
+    public static Sound resolve(String soundName, Sound fallback) {
+        Sound sound = resolve(soundName);
+        return sound != null ? sound : fallback;
+    }
 
-    private Sound parseLegacySound(String soundName) {
-        String lowerName = soundName.toLowerCase();
-
-
-        switch (lowerName) {
-            case "random.levelup":
-            case "entity.player.levelup":
-                return Sound.ENTITY_PLAYER_LEVELUP;
-            case "random.click":
-            case "ui.button.click":
-                return Sound.UI_BUTTON_CLICK;
-            case "random.pop":
-            case "entity.item.pickup":
-                return Sound.ENTITY_ITEM_PICKUP;
-            case "random.orb":
-            case "entity.experience_orb.pickup":
-                return Sound.ENTITY_EXPERIENCE_ORB_PICKUP;
-            case "mob.villager.yes":
-            case "entity.villager.yes":
-                return Sound.ENTITY_VILLAGER_YES;
-            case "mob.villager.no":
-            case "entity.villager.no":
-                return Sound.ENTITY_VILLAGER_NO;
-            case "note.pling":
-            case "block.note_block.pling":
-                return Sound.BLOCK_NOTE_BLOCK_PLING;
-            case "note.harp":
-            case "block.note_block.harp":
-                return Sound.BLOCK_NOTE_BLOCK_HARP;
-            case "random.break":
-            case "entity.item.break":
-                return Sound.ENTITY_ITEM_BREAK;
-            case "dig.stone":
-            case "block.stone.break":
-                return Sound.BLOCK_STONE_BREAK;
-            case "step.stone":
-            case "block.stone.step":
-                return Sound.BLOCK_STONE_STEP;
-            default:
-                return null;
+    private static Map<String, Sound> soundsByName() {
+        Map<String, Sound> sounds = soundsByName;
+        if (sounds == null) {
+            sounds = new HashMap<>();
+            for (Sound sound : Registry.SOUNDS) {
+                sounds.put(normalize(sound.getKey().getKey()), sound);
+            }
+            soundsByName = sounds;
         }
+        return sounds;
+    }
+
+    private static String normalize(String name) {
+        String normalized = name.trim().toUpperCase(Locale.ROOT);
+        int colon = normalized.indexOf(':');
+        if (colon >= 0) {
+            normalized = normalized.substring(colon + 1);
+        }
+        return normalized.replace('.', '_');
     }
 }

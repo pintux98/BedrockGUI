@@ -1,6 +1,7 @@
 package it.pintux.life.essentialsaddon.util;
 
 import org.bukkit.Bukkit;
+import it.pintux.life.paper.platform.PaperSoundManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -66,13 +67,6 @@ public final class BedrockSoundFeedback {
     }
 
     private static Sound parseSound(String name, Sound fallback) {
-        if (name == null || name.isBlank()) {
-            return fallback;
-        }
-        try {
-            return Sound.valueOf(name.toUpperCase().replace('.', '_'));
-        } catch (IllegalArgumentException e) {
-            return fallback;
-        }
+        return PaperSoundManager.resolve(name, fallback);
     }
 }

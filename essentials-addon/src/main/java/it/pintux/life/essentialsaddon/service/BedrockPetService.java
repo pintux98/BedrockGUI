@@ -11,6 +11,7 @@ import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.MyPetMessages;
 import it.pintux.life.essentialsaddon.util.PetActionPayloads;
+import it.pintux.life.paper.platform.PaperSoundManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
 
@@ -312,10 +313,9 @@ public final class BedrockPetService {
 
     private void playSound(Player player, String soundName) {
         if (!configuration.soundsEnabled() || player == null || !player.isOnline()) return;
-        try {
-            Sound sound = Sound.valueOf(soundName.toUpperCase().replace('.', '_'));
+        Sound sound = PaperSoundManager.resolve(soundName);
+        if (sound != null) {
             player.playSound(player.getLocation(), sound, configuration.soundVolume(), configuration.soundPitch());
-        } catch (IllegalArgumentException ignored) {
         }
     }
 }

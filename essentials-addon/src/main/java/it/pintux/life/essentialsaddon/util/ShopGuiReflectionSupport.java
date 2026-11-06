@@ -145,14 +145,12 @@ public final class ShopGuiReflectionSupport {
             return itemMeta.getDisplayName();
         }
         if (itemMeta instanceof PotionMeta potionMeta) {
-            try {
-                PotionData data = potionMeta.getBasePotionData();
-                if (data != null && data.getType() != null) {
-                    return composePotionName(itemStack.getType().name(), data.getType().name(),
-                            data.isUpgraded(), data.isExtended());
-                }
-            } catch (Throwable ignored) {
-                // fall through to generic prettify below
+            String type = basePotionType(potionMeta);
+            if (type != null) {
+                boolean upgraded = type.startsWith("STRONG_");
+                boolean extended = type.startsWith("LONG_");
+                String effect = upgraded ? type.substring(7) : extended ? type.substring(5) : type;
+                return composePotionName(itemStack.getType().name(), effect, upgraded, extended);
             }
         }
         return prettify(itemStack.getType().name());
@@ -193,16 +191,40 @@ public final class ShopGuiReflectionSupport {
         if (!(itemStack.getItemMeta() instanceof PotionMeta potionMeta)) {
             return null;
         }
-        String type = null;
+        return IconResolver.resolvePotion(itemStack.getType().name(), basePotionType(potionMeta));
+    }
+
+    private static String basePotionType(PotionMeta potionMeta) {
+        if (BasePotionTypeGetter.METHOD != null) {
+            try {
+                Object type = BasePotionTypeGetter.METHOD.invoke(potionMeta);
+                return type instanceof Enum<?> potionType ? potionType.name() : null;
+            } catch (ReflectiveOperationException | RuntimeException e) {
+                return null;
+            }
+        }
         try {
             PotionData data = potionMeta.getBasePotionData();
-            if (data != null && data.getType() != null) {
-                type = data.getType().name();
+            if (data == null || data.getType() == null) {
+                return null;
             }
-        } catch (Throwable ignored) {
-            // removed on newer APIs; the plain container texture is a fine fallback
+            String name = data.getType().name();
+            return data.isUpgraded() ? "STRONG_" + name : data.isExtended() ? "LONG_" + name : name;
+        } catch (Throwable e) {
+            return null;
         }
-        return IconResolver.resolvePotion(itemStack.getType().name(), type);
+    }
+
+    private static final class BasePotionTypeGetter {
+        private static final Method METHOD = find();
+
+        private static Method find() {
+            try {
+                return PotionMeta.class.getMethod("getBasePotionType");
+            } catch (NoSuchMethodException e) {
+                return null;
+            }
+        }
     }
 
     public static String prettify(String value) {

@@ -13,6 +13,7 @@ repositories {
 
 dependencies {
     compileOnly project(':common')
+    compileOnly project(':paper')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly("com.tomkeuper.bedwars:bedwars-api:${bedWars2023Version}") {
         exclude group: "org.spigotmc", module: "spigot-api"
