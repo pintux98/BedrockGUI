@@ -21,10 +21,13 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.function.Consumer;
 import java.util.logging.Logger;
 
 public final class McPetsProvider implements PetProvider {
+
+    private static final boolean MULTI_PET_API = hasMultiPetApi();
 
     private final JavaPlugin plugin;
     private final Logger logger;
@@ -47,6 +50,24 @@ public final class McPetsProvider implements PetProvider {
         }
     }
 
+    private static boolean hasMultiPetApi() {
+        try {
+            MCPetsAPI.class.getMethod("getActivePetsForPlayer", UUID.class);
+            return true;
+        } catch (NoSuchMethodException e) {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static List<Pet> activePets(UUID owner) {
+        if (MULTI_PET_API) {
+            return MCPetsAPI.getActivePetsForPlayer(owner);
+        }
+        Pet pet = MCPetsAPI.getActivePet(owner);
+        return pet == null ? List.of() : List.of(pet);
+    }
+
     @Override
     public String getProviderId() {
         return "mcpets";
@@ -66,7 +87,7 @@ public final class McPetsProvider implements PetProvider {
         runMain(() -> {
             List<PetView> views = new ArrayList<>();
             try {
-                List<Pet> active = MCPetsAPI.getActivePetsForPlayer(player.getUniqueId());
+                List<Pet> active = activePets(player.getUniqueId());
                 for (Pet pet : MCPetsAPI.getAvailablePets(player)) {
                     views.add(toView(pet, findActive(active, pet.getId())));
                 }
@@ -141,7 +162,7 @@ public final class McPetsProvider implements PetProvider {
     @Override
     public boolean putAway(Player player, String petId) {
         try {
-            Pet active = findActive(MCPetsAPI.getActivePetsForPlayer(player.getUniqueId()), petId);
+            Pet active = findActive(activePets(player.getUniqueId()), petId);
             return active != null && active.despawn(PetDespawnReason.REVOKE);
         } catch (Throwable t) {
             logger.warning("MCPets despawn failed: " + t.getMessage());
@@ -152,7 +173,7 @@ public final class McPetsProvider implements PetProvider {
     @Override
     public List<String> petOptions(Player player, String petId) {
         try {
-            Pet pet = findActive(MCPetsAPI.getActivePetsForPlayer(player.getUniqueId()), petId);
+            Pet pet = findActive(activePets(player.getUniqueId()), petId);
             if (pet == null) {
                 return List.of();
             }
@@ -186,7 +207,7 @@ public final class McPetsProvider implements PetProvider {
             return false;
         }
         try {
-            Pet pet = findActive(MCPetsAPI.getActivePetsForPlayer(player.getUniqueId()), petId);
+            Pet pet = findActive(activePets(player.getUniqueId()), petId);
             pet.setLastInteractedWith(player);
             switch (option) {
                 case "rename" -> PetInteractionMenuListener.changeName(player);
@@ -207,7 +228,7 @@ public final class McPetsProvider implements PetProvider {
 
     @Override
     public String activePetName(Player player) {
-        List<Pet> active = MCPetsAPI.getActivePetsForPlayer(player.getUniqueId());
+        List<Pet> active = activePets(player.getUniqueId());
         return active == null || active.isEmpty() ? null : displayName(active.get(0));
     }
 
