@@ -1,6 +1,5 @@
-package it.pintux.life.essentialsaddon.service;
+package it.pintux.life.paper.addon;
 
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import org.bukkit.entity.Player;
 import org.geysermc.floodgate.api.FloodgateApi;
 

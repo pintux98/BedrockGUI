@@ -11,6 +11,7 @@ java {
 // wired at runtime when Homestead is installed (softdepend in plugin.yml).
 dependencies {
     compileOnly project(':common')
+    compileOnly project(':paper')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly files('lib/homestead.jar')
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"

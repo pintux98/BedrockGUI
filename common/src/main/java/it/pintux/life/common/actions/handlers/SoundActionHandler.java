@@ -2,12 +2,9 @@ package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
 
-
-
 import it.pintux.life.common.platform.PlatformSoundManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,8 +42,7 @@ public class SoundActionHandler extends BaseActionHandler {
             List<String> sounds = parseActionData(actionData, context, player);
 
             if (sounds.isEmpty()) {
-                Map<String, Object> errorReplacements = createReplacements("error", "No valid sounds found");
-                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
+                return emptyFailure(player);
             }
 
 
@@ -59,8 +55,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logError("sound execution", actionData, player, e);
-            Map<String, Object> errorReplacements = createReplacements("error", "Error executing sound: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
+            return errorFailure(player, e);
         }
     }
 
@@ -70,7 +65,7 @@ public class SoundActionHandler extends BaseActionHandler {
             List<String> sounds = parseNewFormatValues(actionData);
 
             if (sounds.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No sounds found in new format"), player);
+                return emptyFailure(player);
             }
 
 
@@ -90,7 +85,7 @@ public class SoundActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format sound action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new sound format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -118,12 +113,6 @@ public class SoundActionHandler extends BaseActionHandler {
                 if (i < sounds.size() - 1) {
                     results.append("\n");
 
-                    try {
-                        Thread.sleep(300);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
                 }
 
             } catch (Exception e) {
@@ -148,7 +137,7 @@ public class SoundActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
+            return failure(player, "action.all_failed");
         }
     }
 
@@ -158,7 +147,7 @@ public class SoundActionHandler extends BaseActionHandler {
         String processedData = processPlaceholders(soundData.trim(), context, player);
 
 
-        String[] parts = processedData.split(":");
+        String[] parts = splitSound(processedData);
         String soundName = parts[0];
         float volume = 1.0f;
         float pitch = 1.0f;
@@ -238,31 +227,18 @@ public class SoundActionHandler extends BaseActionHandler {
     }
 
     private boolean isValidSingleSound(String soundData) {
-        if (soundData.isEmpty()) return false;
+        return !soundData.isEmpty() && !splitSound(soundData)[0].trim().isEmpty();
+    }
 
+    static String[] splitSound(String soundData) {
         String[] parts = soundData.split(":");
-        if (parts.length == 0 || parts[0].trim().isEmpty()) {
-            return false;
+        if (parts.length > 1 && !parts[1].trim().matches("-?[0-9.]+")) {
+            String[] merged = new String[parts.length - 1];
+            merged[0] = parts[0] + ":" + parts[1];
+            System.arraycopy(parts, 2, merged, 1, parts.length - 2);
+            return merged;
         }
-
-
-        if (parts.length > 1) {
-            try {
-                Float.parseFloat(parts[1]);
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-
-        if (parts.length > 2) {
-            try {
-                Float.parseFloat(parts[2]);
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-
-        return true;
+        return parts;
     }
 
     @Override

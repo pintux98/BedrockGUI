@@ -2,17 +2,13 @@ package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
 
-
-
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.ErrorHandlingUtil;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,7 +33,7 @@ public class EconomyActionHandler extends BaseActionHandler {
                 "Economy",
                 player)) {
             MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", messageData.getValue(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player)), player);
+            return createFailureResult(MessageData.ACTION_ECONOMY_NOT_AVAILABLE, null, player);
         }
 
         ActionSystem.ActionResult validationResult = validateBasicParameters(player, actionValue);
@@ -59,8 +55,7 @@ public class EconomyActionHandler extends BaseActionHandler {
             }
         } catch (Exception e) {
             logger.error("Error executing economy action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Error executing economy action: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -70,7 +65,7 @@ public class EconomyActionHandler extends BaseActionHandler {
             List<String> operations = parseNewFormatValues(actionValue);
 
             if (operations.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No economy operations found in new format"), player);
+                return emptyFailure(player);
             }
 
 
@@ -90,7 +85,7 @@ public class EconomyActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format economy action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new economy format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -103,12 +98,6 @@ public class EconomyActionHandler extends BaseActionHandler {
             }
 
 
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
         }
 
         logSuccess("economy", "Executed " + operations.size() + " operations", player);
@@ -122,8 +111,7 @@ public class EconomyActionHandler extends BaseActionHandler {
         String[] parts = processedData.split(":");
 
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Invalid economy operation format. Expected: operation:amount"), player);
+            return usageFailure(player, "operation:amount");
         }
 
         String operation = parts[0].toLowerCase().trim();
@@ -140,8 +128,7 @@ public class EconomyActionHandler extends BaseActionHandler {
             case "pay":
                 return handlePay(player, parts, context);
             default:
-                return createFailureResult(MessageData.EXECUTION_ERROR,
-                        createReplacements("error", "Unknown economy operation: " + operation), player);
+                return failure(player, "action.unknown_operation", "operation", operation);
         }
     }
 
@@ -158,12 +145,6 @@ public class EconomyActionHandler extends BaseActionHandler {
             }
 
 
-            try {
-                Thread.sleep(50);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
         }
 
         logSuccess("economy", "Executed " + operations.length + " operations", player);
@@ -173,13 +154,13 @@ public class EconomyActionHandler extends BaseActionHandler {
 
     private ActionSystem.ActionResult handleAdd(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Add operation requires amount"), player);
+            return usageFailure(player, "add:amount");
         }
 
         try {
             BigDecimal amount = new BigDecimal(parts[1]);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Amount must be positive"), player);
+                return failure(player, "action.amount_positive");
             }
 
             boolean success = economyManager.addMoney(player, amount);
@@ -187,22 +168,22 @@ public class EconomyActionHandler extends BaseActionHandler {
                 logSuccess("economy", "Added " + amount + " to balance", player);
                 return createSuccessResult("ACTION_ECONOMY_SUCCESS", createReplacements("amount", amount.toString()), player);
             } else {
-                return createFailureResult("ACTION_ECONOMY_FAILED", createReplacements("error", "Failed to add money"), player);
+                return createFailureResult("ACTION_ECONOMY_FAILED", null, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Invalid amount: " + parts[1]), player);
+            return failure(player, "action.invalid_amount", "amount", parts[1]);
         }
     }
 
     private ActionSystem.ActionResult handleRemove(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Remove operation requires amount"), player);
+            return usageFailure(player, "remove:amount");
         }
 
         try {
             BigDecimal amount = new BigDecimal(parts[1]);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Amount must be positive"), player);
+                return failure(player, "action.amount_positive");
             }
 
 
@@ -218,22 +199,22 @@ public class EconomyActionHandler extends BaseActionHandler {
                 logSuccess("economy", "Removed " + amount + " from balance", player);
                 return createSuccessResult("ACTION_ECONOMY_SUCCESS", createReplacements("amount", amount.toString()), player);
             } else {
-                return createFailureResult("ACTION_ECONOMY_FAILED", createReplacements("error", "Failed to remove money"), player);
+                return createFailureResult("ACTION_ECONOMY_FAILED", null, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Invalid amount: " + parts[1]), player);
+            return failure(player, "action.invalid_amount", "amount", parts[1]);
         }
     }
 
     private ActionSystem.ActionResult handleSet(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Set operation requires amount"), player);
+            return usageFailure(player, "set:amount");
         }
 
         try {
             BigDecimal amount = new BigDecimal(parts[1]);
             if (amount.compareTo(BigDecimal.ZERO) < 0) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Amount cannot be negative"), player);
+                return failure(player, "action.invalid_amount", "amount", parts[1]);
             }
 
             boolean success = economyManager.setBalance(player, amount);
@@ -241,16 +222,16 @@ public class EconomyActionHandler extends BaseActionHandler {
                 logSuccess("economy", "Set balance to " + amount, player);
                 return createSuccessResult("ACTION_ECONOMY_SUCCESS", createReplacements("amount", amount.toString()), player);
             } else {
-                return createFailureResult("ACTION_ECONOMY_FAILED", createReplacements("error", "Failed to set money"), player);
+                return createFailureResult("ACTION_ECONOMY_FAILED", null, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Invalid amount: " + parts[1]), player);
+            return failure(player, "action.invalid_amount", "amount", parts[1]);
         }
     }
 
     private ActionSystem.ActionResult handleCheck(FormPlayer player, String[] parts) {
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Check operation requires amount"), player);
+            return usageFailure(player, "check:amount");
         }
 
         try {
@@ -268,13 +249,13 @@ public class EconomyActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_ECONOMY_CHECK_FAILED", replacements, player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Invalid amount: " + parts[1]), player);
+            return failure(player, "action.invalid_amount", "amount", parts[1]);
         }
     }
 
     private ActionSystem.ActionResult handlePay(FormPlayer player, String[] parts, ActionSystem.ActionContext context) {
         if (parts.length < 3) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Pay operation requires target and amount"), player);
+            return usageFailure(player, "pay:player:amount");
         }
 
         String targetPlayerName = processPlaceholders(parts[1], context, player);
@@ -282,9 +263,13 @@ public class EconomyActionHandler extends BaseActionHandler {
         try {
             BigDecimal amount = new BigDecimal(parts[2]);
             if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Amount must be positive"), player);
+                return failure(player, "action.amount_positive");
             }
 
+
+            if (targetPlayerName.equalsIgnoreCase(player.getName())) {
+                return createFailureResult("ACTION_ECONOMY_PAY_FAILED", createReplacements("target", targetPlayerName), player);
+            }
 
             BigDecimal currentBalance = economyManager.getBalance(player);
             if (currentBalance.compareTo(amount) < 0) {
@@ -293,8 +278,11 @@ public class EconomyActionHandler extends BaseActionHandler {
                 return createFailureResult("ACTION_ECONOMY_INSUFFICIENT_FUNDS", replacements, player);
             }
 
-
             boolean success = economyManager.removeMoney(player, amount);
+            if (success && !economyManager.addMoney(targetPlayerName, amount)) {
+                economyManager.addMoney(player, amount);
+                success = false;
+            }
             if (success) {
                 logSuccess("economy", "Paid " + amount + " to " + targetPlayerName, player);
                 Map<String, Object> replacements = createReplacements("amount", amount.toString());
@@ -305,7 +293,7 @@ public class EconomyActionHandler extends BaseActionHandler {
                         createReplacements("target", targetPlayerName), player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult("MessageData.EXECUTION_ERROR", createReplacements("error", "Invalid amount: " + parts[2]), player);
+            return failure(player, "action.invalid_amount", "amount", parts[2]);
         }
     }
 
@@ -361,19 +349,7 @@ public class EconomyActionHandler extends BaseActionHandler {
             return false;
         }
 
-
-        try {
-            new BigDecimal(parts[1]);
-        } catch (NumberFormatException e) {
-            return false;
-        }
-
-
-        if ("pay".equals(operation) && parts.length < 3) {
-            return false;
-        }
-
-        return true;
+        return !"pay".equals(operation) || parts.length >= 3;
     }
 
     @Override

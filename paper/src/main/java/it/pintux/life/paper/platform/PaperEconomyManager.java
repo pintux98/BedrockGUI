@@ -4,8 +4,8 @@ import it.pintux.life.common.platform.PlatformEconomyManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.paper.BedrockGUI;
 import net.milkbowl.vault.economy.Economy;
-import net.milkbowl.vault.economy.EconomyResponse;
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.bukkit.plugin.RegisteredServiceProvider;
 
 import java.math.BigDecimal;
@@ -66,6 +66,22 @@ public class PaperEconomyManager implements PlatformEconomyManager {
     }
 
     @Override
+    public boolean addMoney(String onlinePlayerName, BigDecimal amount) {
+        if (!isEconomyAvailable() || amount.doubleValue() <= 0) {
+            return false;
+        }
+        Player target = Bukkit.getPlayerExact(onlinePlayerName);
+        if (target == null) {
+            return false;
+        }
+        try {
+            return economy.depositPlayer(target, amount.doubleValue()).transactionSuccess();
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    @Override
     public boolean removeMoney(FormPlayer player, BigDecimal amount) {
         if (!isEconomyAvailable() || amount.doubleValue() <= 0) {
             return false;
@@ -83,7 +99,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
             return false;
         }
         try {
-            return economy.has(plugin.getName(), amount.doubleValue());
+            return economy.has(player.getName(), amount.doubleValue());
         } catch (Exception e) {
             return false;
         }

@@ -4,7 +4,7 @@
 #  players in place of Homestead's chest GUIs. Java players are
 #  untouched. All text supports & colour codes and %placeholders%.
 # ============================================================
-config-version: 3
+config-version: 4
 
 # Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
 # Homestead GUI commands (/region, /rg, /hs, /homestead, /homesteadadmin) for
@@ -36,22 +36,12 @@ general:
   # Buttons per page for long lists (regions, members, chunks, ...).
   items-per-page: 18
 
-sounds:
-  enabled: true
-  form-open: "ui.button.click"
-  action-success: "random.orb"
-  action-failed: "note.bass"
-  volume: 1.0
-  pitch: 1.0
-
 messages:
   homestead-unavailable: "&cHomestead is not available right now."
   region-not-found: "&cThat region no longer exists."
   no-permission: "&cYou don't have permission to do that."
   member-not-found: "&cThat player is not a member."
   sub-area-not-found: "&cThat sub-area no longer exists."
-  action-failed: "&cSomething went wrong. Try again."
-  no-regions: "&eYou don't have any regions yet."
   teleport-success: "&aTeleported to &f%name%&a."
   teleport-failed: "&cCouldn't teleport to that region."
   left-region: "&aYou left &f%name%&a."
@@ -155,7 +145,6 @@ players:
   unban-content: "&7They will be able to join the region again."
   button-unban: "&aUnban"
 
-  confirm-yes: "&aConfirm"
   confirm-no: "&7Cancel"
 
 # ---- Flags (world / global player / member / control) ----

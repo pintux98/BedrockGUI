@@ -4,11 +4,9 @@ import it.pintux.life.common.platform.PlatformPlayerManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.paper.utils.PaperPlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.plugin.messaging.Messenger;
 
-import java.util.UUID;
 
 
 public class PaperPlayerManager implements PlatformPlayerManager {
@@ -35,12 +33,43 @@ public class PaperPlayerManager implements PlatformPlayerManager {
     }
 
     @Override
+    public boolean broadcast(FormPlayer source, String audience, String target, String message) {
+        Player origin = source instanceof PaperPlayer paperPlayer ? paperPlayer.getBukkitPlayer() : null;
+        java.util.function.Predicate<Player> filter;
+        switch (audience) {
+            case "permission" -> filter = p -> p.hasPermission(target);
+            case "world" -> filter = p -> p.getWorld().getName().equalsIgnoreCase(target);
+            case "radius" -> {
+                double radius;
+                try {
+                    radius = Double.parseDouble(target);
+                } catch (NumberFormatException e) {
+                    return false;
+                }
+                if (origin == null) {
+                    return false;
+                }
+                double squared = radius * radius;
+                filter = p -> p.getWorld().equals(origin.getWorld()) && p.getLocation().distanceSquared(origin.getLocation()) <= squared;
+            }
+            default -> filter = p -> true;
+        }
+        Bukkit.getOnlinePlayers().stream().filter(filter).forEach(p -> p.sendMessage(message));
+        return true;
+    }
+
+    @Override
+    public java.util.List<String> getOnlinePlayerNames() {
+        return Bukkit.getOnlinePlayers().stream().map(Player::getName).toList();
+    }
+
+    @Override
     public Object getPlayer(String playerName) {
         return Bukkit.getPlayerExact(playerName);
     }
 
     @Override
-    public void sendByteArray(FormPlayer player, String channel, byte[] data) {
+    public boolean sendByteArray(FormPlayer player, String channel, byte[] data) {
         if (player instanceof PaperPlayer) {
             Player bukkitPlayer = ((PaperPlayer) player).getBukkitPlayer();
             if (bukkitPlayer != null && bukkitPlayer.isOnline()) {
@@ -49,7 +78,9 @@ public class PaperPlayerManager implements PlatformPlayerManager {
                     messenger.registerOutgoingPluginChannel(plugin, channel);
                 }
                 bukkitPlayer.sendPluginMessage(plugin, channel, data);
+                return true;
             }
         }
+        return false;
     }
 }

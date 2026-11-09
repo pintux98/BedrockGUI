@@ -1,89 +1,32 @@
 package it.pintux.life.common.form.obj;
 
-import it.pintux.life.common.actions.ActionSystem;
-
-import it.pintux.life.common.actions.ActionSystem.ActionDefinition;
-import it.pintux.life.common.actions.ActionParser;
-
 import java.util.Map;
 import java.util.HashMap;
 import java.util.StringJoiner;
 
 
 public class ConditionalButton extends FormButton {
-    private String showCondition;
+    private final String showCondition;
     private String alternativeText;
     private String alternativeImage;
     private String alternativeOnClick;
-    private Map<String, ConditionalProperty> conditionalProperties;
-    private int priority;
-    private String priorityCondition;
-    private ActionSystem.ActionDefinition actionDefinition;
-    private ActionSystem.ActionDefinition alternativeActionDefinition;
-    private Map<String, ActionSystem.ActionDefinition> conditionalActions;
-
-    public ConditionalButton(String text, String image, String onClick) {
-        super(text, image, onClick);
-        this.conditionalProperties = new HashMap<>();
-        this.conditionalActions = new HashMap<>();
-        this.priority = 0;
-
-        this.actionDefinition = ActionParser.parse(onClick);
-    }
+    private final Map<String, ConditionalProperty> conditionalProperties = new HashMap<>();
 
     public ConditionalButton(String text, String image, String onClick, String showCondition) {
         super(text, image, onClick);
         this.showCondition = showCondition;
-        this.conditionalProperties = new HashMap<>();
-        this.conditionalActions = new HashMap<>();
-        this.priority = 0;
-
-        this.actionDefinition = ActionParser.parse(onClick);
-    }
-
-    public ConditionalButton(String text, String image, ActionSystem.ActionDefinition actionDefinition) {
-        super(text, image, actionDefinition);
-        this.conditionalProperties = new HashMap<>();
-        this.conditionalActions = new HashMap<>();
-        this.priority = 0;
-        this.actionDefinition = actionDefinition;
-    }
-
-    public ConditionalButton(String text, String image, ActionSystem.ActionDefinition actionDefinition, String showCondition, int priority) {
-        super(text, image, actionDefinition);
-        this.showCondition = showCondition;
-        this.conditionalProperties = new HashMap<>();
-        this.conditionalActions = new HashMap<>();
-        this.priority = priority;
-        this.actionDefinition = actionDefinition;
     }
 
     public String getShowCondition() {
         return showCondition;
     }
 
-    public void setShowCondition(String showCondition) {
-        this.showCondition = showCondition;
-    }
-
-    public String getAlternativeText() {
-        return alternativeText;
-    }
-
     public void setAlternativeText(String alternativeText) {
         this.alternativeText = alternativeText;
     }
 
-    public String getAlternativeImage() {
-        return alternativeImage;
-    }
-
     public void setAlternativeImage(String alternativeImage) {
         this.alternativeImage = alternativeImage;
-    }
-
-    public String getAlternativeOnClick() {
-        return alternativeOnClick;
     }
 
     public void setAlternativeOnClick(String alternativeOnClick) {
@@ -97,55 +40,6 @@ public class ConditionalButton extends FormButton {
     public void addConditionalProperty(String condition, String property, String value) {
         String key = createConditionalPropertyKey(condition, property);
         conditionalProperties.put(key, new ConditionalProperty(condition, property, value));
-    }
-
-
-    public int getPriority() {
-        return priority;
-    }
-
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
-
-    public String getPriorityCondition() {
-        return priorityCondition;
-    }
-
-    public void setPriorityCondition(String priorityCondition) {
-        this.priorityCondition = priorityCondition;
-    }
-
-
-    public ActionSystem.ActionDefinition getActionDefinition() {
-        return actionDefinition;
-    }
-
-    public void setActionDefinition(ActionSystem.ActionDefinition actionDefinition) {
-        this.actionDefinition = actionDefinition;
-    }
-
-    public ActionSystem.ActionDefinition getAlternativeActionDefinition() {
-        return alternativeActionDefinition;
-    }
-
-    public void setAlternativeActionDefinition(ActionSystem.ActionDefinition alternativeActionDefinition) {
-        this.alternativeActionDefinition = alternativeActionDefinition;
-    }
-
-    public Map<String, ActionSystem.ActionDefinition> getConditionalActions() {
-        return conditionalActions;
-    }
-
-    public void addConditionalAction(String condition, ActionSystem.ActionDefinition action) {
-        conditionalActions.put(condition, action);
-    }
-
-    public void addConditionalAction(String condition, String actionString) {
-        ActionSystem.ActionDefinition action = ActionParser.parse(actionString);
-        if (action != null) {
-            conditionalActions.put(condition, action);
-        }
     }
 
 
@@ -225,46 +119,6 @@ public class ConditionalButton extends FormButton {
     }
 
 
-    public ActionSystem.ActionDefinition getEffectiveActionDefinition(String condition) {
-
-        if (condition != null) {
-            ActionSystem.ActionDefinition conditionalAction = conditionalActions.get(condition);
-            if (conditionalAction != null) {
-                return conditionalAction;
-            }
-
-
-        }
-
-
-        if (alternativeActionDefinition != null) {
-            return alternativeActionDefinition;
-        }
-
-
-        return actionDefinition;
-    }
-
-
-    public boolean hasPriority() {
-        return priority != 0 || (priorityCondition != null && !priorityCondition.trim().isEmpty());
-    }
-
-
-    public int getEffectivePriority() {
-
-
-        return priority;
-    }
-
-
-    @Override
-    public void setOnClick(String onClick) {
-        super.setOnClick(onClick);
-        this.actionDefinition = ActionParser.parse(onClick);
-    }
-
-
     public static class ConditionalProperty {
         private final String condition;
         private final String property;
@@ -318,11 +172,6 @@ public class ConditionalButton extends FormButton {
                 .add("alternativeImage='" + alternativeImage + "'")
                 .add("alternativeOnClick='" + alternativeOnClick + "'")
                 .add("conditionalProperties=" + conditionalProperties)
-                .add("priority=" + priority)
-                .add("priorityCondition='" + priorityCondition + "'")
-                .add("actionDefinition=" + actionDefinition)
-                .add("alternativeActionDefinition=" + alternativeActionDefinition)
-                .add("conditionalActions=" + conditionalActions)
                 .toString();
     }
 }

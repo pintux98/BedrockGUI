@@ -100,9 +100,6 @@ public class AssetServer {
         return port;
     }
 
-    public File getAssetsFolder() {
-        return assetsFolder;
-    }
 
     public String getAssetUrl(String filename) {
         String safe = filename.replace("\\", "/");

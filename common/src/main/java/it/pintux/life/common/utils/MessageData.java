@@ -4,27 +4,25 @@ import java.util.Map;
 
 public class MessageData {
 
-    public static String NO_PEX = "noPex";
 
     public static String MENU_NOPEX = "menu.no_permission";
     public static String MENU_NOJAVA = "menu.noJava";
     public static String MENU_ARGS = "menu.arguments";
     public static String MENU_NOT_FOUND = "menu.notFound";
+    public static String MENU_COOLDOWN = "menu.cooldown";
+    public static String MENU_REQUIREMENTS = "menu.requirements";
 
     public static String ACTION_SUCCESS = "action.success";
     public static String ACTION_INVALID_PARAMETERS = "action.invalid_parameters";
     public static String ACTION_INVALID_FORMAT = "action.invalid_format";
-    public static String EXECUTION_ERROR = "action.execution_error";
     public static String ACTION_COMMAND_SUCCESS = "action.command_success";
     public static String ACTION_COMMAND_FAILED = "action.command_failed";
-    public static String ACTION_MESSAGE_SENT = "action.message_sent";
     public static String ACTION_ECONOMY_NOT_AVAILABLE = "action.economy.not_available";
+    public static String ACTION_INVENTORY_MISSING = "action.inventory_missing";
     public static String PLAYER_NOT_FOUND = "player.not_found";
 
     public static String SYSTEM_SERVICE_UNAVAILABLE = "system.service_unavailable";
     public static String SYSTEM_SERVICE_STATUS_CHECK_FAILED = "system.service_status_check_failed";
-    public static String SYSTEM_COMMAND_EXECUTION_FAILED = "system.command_execution_failed";
-    public static String SYSTEM_OPERATION_INTERRUPTED = "system.operation_interrupted";
 
     public static String VALIDATION_INVALID_MENU_NAME = "validation.invalid_menu_name";
     public static String VALIDATION_INVALID_FORM_TYPE = "validation.invalid_form_type";
@@ -32,7 +30,6 @@ public class MessageData {
 
     public static String FORMS_SYSTEM_UNAVAILABLE = "forms.system_unavailable";
     public static String FORMS_INVALID_ACTION_FORMAT = "forms.invalid_action_format";
-    public static String FORMS_ACTION_FAILED = "forms.action_failed";
     public static String FORMS_INVALID_ACTION_SEQUENCE = "forms.invalid_action_sequence";
     public static String FORMS_SEQUENCE_PARTIAL_FAILURE = "forms.sequence_partial_failure";
     public static String FORMS_SEQUENCE_ERROR = "forms.sequence_error";
@@ -58,6 +55,7 @@ public class MessageData {
     public static String VALIDATION_BUTTON_NO_TEXT = "validation.button_no_text";
     public static String VALIDATION_BUTTON_INVALID_IMAGE = "validation.button_invalid_image";
     public static String VALIDATION_UNKNOWN_ACTION_TYPE = "validation.unknown_action_type";
+    public static String VALIDATION_UNAVAILABLE_ACTION = "validation.unavailable_action";
     public static String VALIDATION_LEGACY_FORMAT_DETECTED = "validation.legacy_format_detected";
 
     private final MessageConfig config;

@@ -1,8 +1,8 @@
 package it.pintux.life.duelsaddon.listener;
 
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
 import com.phoenixplugins.phoenixduels.lib.common.uicomponents.newest.container.holders.ContainerView;
 import com.phoenixplugins.phoenixduels.lib.common.uicomponents.newest.layout.ContainerLayout;
-import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
 import it.pintux.life.duelsaddon.model.StatsKind;
@@ -149,11 +149,7 @@ public final class MenuInterceptListener implements Listener {
             case "ongoing_matches", "spectator_players" ->
                     (player, view) -> services.spectator().openMatches(player, 1);
             case "kit_preview" -> (player, view) -> services.kit().openKitList(player);
-            case "confirmation_menu" -> (player, view) -> {
-                if (!services.confirmation().open(player, view)) {
-                    view.getViewer().openInventory(view.getInventory());
-                }
-            };
+            case "confirmation_menu" -> (player, view) -> services.confirmation().open(player, view);
             default -> null;
         };
     }
@@ -186,6 +182,9 @@ public final class MenuInterceptListener implements Listener {
                         + ": layoutClass=" + PhoenixMenuResolver.describe(layout)
                         + " key=" + key + " title=" + event.getView().getTitle());
             }
+            return;
+        }
+        if ("confirmation_menu".equals(key) && gateway.confirmation(view).isEmpty()) {
             return;
         }
         event.setCancelled(true);

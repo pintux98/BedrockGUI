@@ -1,8 +1,8 @@
 package it.pintux.life.bedwarsaddon.action;
 
+import it.pintux.life.paper.addon.FormPlayerResolver;
 import it.pintux.life.bedwarsaddon.service.BedrockPartyService;
 import it.pintux.life.bedwarsaddon.util.BedwarsActionPayloads;
-import it.pintux.life.bedwarsaddon.util.FormPlayerResolver;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.utils.FormPlayer;
 import org.bukkit.entity.Player;

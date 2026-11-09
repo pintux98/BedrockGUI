@@ -119,9 +119,6 @@ public final class YamlDocument implements ConfigLineMerger.ValueSource {
         }
     }
 
-    public Map<String, Object> asMap() {
-        return root;
-    }
 
     public YamlDocument copy() {
         return new YamlDocument(normalizeSection(root));

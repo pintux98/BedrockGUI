@@ -1,10 +1,7 @@
 package it.pintux.life.common.utils;
 
-import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Supplier;
 import java.util.Map;
 import java.util.HashMap;
@@ -69,72 +66,6 @@ public class ErrorHandlingUtil {
     }
 
 
-    public static <T> CompletableFuture<T> executeWithTimeout(Supplier<CompletableFuture<T>> operation,
-                                                              Supplier<T> fallback,
-                                                              String operationName,
-                                                              long timeoutMs) {
-        CompletableFuture<T> future = new CompletableFuture<>();
-
-        try {
-            CompletableFuture<T> operationFuture = operation.get();
-
-            operationFuture.orTimeout(timeoutMs, TimeUnit.MILLISECONDS)
-                    .whenComplete((result, throwable) -> {
-                        if (throwable != null) {
-                            logger.warn("Operation '{}' failed or timed out: {}", operationName, throwable.getMessage());
-                            try {
-                                T fallbackResult = fallback.get();
-                                future.complete(fallbackResult);
-                            } catch (Exception e) {
-                                logger.error("Fallback for operation '{}' failed: {}", operationName, e.getMessage());
-                                future.completeExceptionally(e);
-                            }
-                        } else {
-                            future.complete(result);
-                        }
-                    });
-        } catch (Exception e) {
-            logger.error("Failed to start operation '{}': {}", operationName, e.getMessage());
-            try {
-                T fallbackResult = fallback.get();
-                future.complete(fallbackResult);
-            } catch (Exception fe) {
-                future.completeExceptionally(fe);
-            }
-        }
-
-        return future;
-    }
-
-
-    public static ActionSystem.ActionResult createSafeActionResult(Supplier<ActionSystem.ActionResult> operation,
-                                                      FormPlayer player, String actionType) {
-        try {
-            ActionSystem.ActionResult result = operation.get();
-            return result != null ? result : createFallbackFailureResult(player, actionType, "Operation returned null");
-        } catch (Exception e) {
-            logger.error("Error creating ActionResult for {} action: {}", actionType, e.getMessage(), e);
-            return createFallbackFailureResult(player, actionType, e.getMessage());
-        }
-    }
-
-
-    private static ActionSystem.ActionResult createFallbackFailureResult(FormPlayer player, String actionType, String error) {
-        try {
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            Map<String, Object> replacements = new HashMap<>();
-            replacements.put("error", error);
-            replacements.put("action", actionType);
-
-            return ActionSystem.ActionResult.failure(messageData.getValue(MessageData.EXECUTION_ERROR, replacements, player));
-        } catch (Exception e) {
-
-            logger.error("Failed to create proper error message, using basic fallback", e);
-            return ActionSystem.ActionResult.failure("Action failed: " + error);
-        }
-    }
-
-
     public static boolean validateServiceAvailability(Supplier<Boolean> serviceCheck,
                                                       String serviceName,
                                                       FormPlayer player) {
@@ -195,31 +126,5 @@ public class ErrorHandlingUtil {
     }
 
 
-    public static boolean executeCommandWithFallback(Supplier<Boolean> commandExecutor,
-                                                     String commandDescription,
-                                                     FormPlayer player) {
-        try {
-            boolean success = executeWithRetry(
-                    commandExecutor,
-                    () -> false,
-                    commandDescription,
-                    DEFAULT_MAX_RETRIES
-            );
-
-            if (!success) {
-                MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-                Map<String, Object> replacements = new HashMap<>();
-                replacements.put("description", commandDescription);
-                player.sendMessage(messageData.getValue(MessageData.SYSTEM_COMMAND_EXECUTION_FAILED, replacements, player));
-            }
-
-            return success;
-        } catch (Exception e) {
-            logger.error("Error executing command '{}': {}", commandDescription, e.getMessage());
-            MessageData messageData = BedrockGUIApi.getInstance().getMessageData();
-            player.sendMessage(messageData.getValue(MessageData.SYSTEM_OPERATION_INTERRUPTED, null, player));
-            return false;
-        }
-    }
 }
 

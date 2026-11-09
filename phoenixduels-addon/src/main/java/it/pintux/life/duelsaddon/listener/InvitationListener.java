@@ -1,5 +1,6 @@
 package it.pintux.life.duelsaddon.listener;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import com.phoenixplugins.phoenixduels.api.events.party.PartyDisbandEvent;
 import com.phoenixplugins.phoenixduels.api.events.party.PartyParticipantAcceptedEvent;
 import com.phoenixplugins.phoenixduels.api.events.party.PartyParticipantAddedEvent;
@@ -12,7 +13,6 @@ import it.pintux.life.duelsaddon.model.InviteView;
 import it.pintux.life.duelsaddon.model.ModeView;
 import it.pintux.life.duelsaddon.service.BedrockDuelService;
 import it.pintux.life.duelsaddon.service.BedrockInvitationService;
-import it.pintux.life.duelsaddon.util.CommandAliases;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;

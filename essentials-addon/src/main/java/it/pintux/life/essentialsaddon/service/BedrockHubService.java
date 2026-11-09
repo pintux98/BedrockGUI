@@ -1,10 +1,10 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
 import org.bukkit.entity.Player;
 
@@ -55,7 +55,7 @@ public final class BedrockHubService {
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(configuration.hubTitle());
         form.content(configuration.hubContent());
 
-        if (configuration.moduleWarps()) {
+        if (configuration.moduleWarps() && has(api, "essentials_hub_warp")) {
             form.button(configuration.hubButtonWarps(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "essentials_hub_warp:",
@@ -64,7 +64,7 @@ public final class BedrockHubService {
                 } catch (IllegalStateException ignored) {}
             });
         }
-        if (configuration.moduleKits()) {
+        if (configuration.moduleKits() && has(api, "essentials_hub_kit")) {
             form.button(configuration.hubButtonKits(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "essentials_hub_kit:",
@@ -73,7 +73,7 @@ public final class BedrockHubService {
                 } catch (IllegalStateException ignored) {}
             });
         }
-        if (configuration.moduleHomes()) {
+        if (configuration.moduleHomes() && has(api, "essentials_hub_home")) {
             form.button(configuration.hubButtonHomes(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "essentials_hub_home:",
@@ -91,7 +91,7 @@ public final class BedrockHubService {
                 } catch (IllegalStateException ignored) {}
             });
         }
-        if (configuration.moduleTpa()) {
+        if (configuration.moduleTpa() && has(api, "essentials_hub_tpa")) {
             form.button(configuration.hubButtonTpa(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "essentials_hub_tpa:",
@@ -100,7 +100,7 @@ public final class BedrockHubService {
                 } catch (IllegalStateException ignored) {}
             });
         }
-        if (configuration.moduleShopGuiPlus()) {
+        if (configuration.moduleShopGuiPlus() && has(api, "shopgui_main")) {
             form.button(configuration.hubButtonShopGuiPlus(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "shopgui_main:",
@@ -109,7 +109,7 @@ public final class BedrockHubService {
                 } catch (IllegalStateException ignored) {}
             });
         }
-        if (configuration.moduleEconomyShopGui()) {
+        if (configuration.moduleEconomyShopGui() && has(api, "economyshop_main")) {
             form.button(configuration.hubButtonEconomyShopGui(), formPlayer -> {
                 try {
                     api.executeActionString(formPlayer, "economyshop_main:",
@@ -119,9 +119,23 @@ public final class BedrockHubService {
             });
         }
 
-        form.send(new BukkitFormPlayer(player));
+        if ((configuration.moduleMyPet() || configuration.moduleMcPets()) && has(api, "essentials_pet_hub")) {
+            form.button(configuration.hubButtonMyPet(), formPlayer -> {
+                try {
+                    api.executeActionString(formPlayer, "essentials_pet_hub:",
+                            api.createActionContext(java.util.Map.of(), java.util.Map.of(),
+                                    java.util.Map.of("source", "hub", "feature", "pets"), "hub", "simple"));
+                } catch (IllegalStateException ignored) {}
+            });
+        }
+
+        form.send(new PaperPlayer(player));
         if (!openedByButton) {
             soundFeedback.playFormOpen(player);
         }
+    }
+
+    private static boolean has(BedrockGUIApi api, String actionType) {
+        return api.getActionRegistry().hasHandler(actionType);
     }
 }

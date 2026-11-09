@@ -65,15 +65,8 @@ public final class EssentialsXKitProvider implements KitProvider {
         if (!isReady()) {
             return false;
         }
-        // EssentialsX kit permission: essentials.kits.<kitname> or essentials.kit.*
-        if (player.hasPermission("essentials.kits.*") || player.hasPermission("essentials.kits." + kitName)) {
-            return true;
-        }
-        // Fallback: essentials.kit.<kitname>
-        if (player.hasPermission("essentials.kit." + kitName)) {
-            return true;
-        }
-        return true;
+        String key = kitName.toLowerCase(Locale.ROOT);
+        return player.hasPermission("essentials.kits.*") || player.hasPermission("essentials.kits." + key);
     }
 
     @Override
@@ -86,8 +79,17 @@ public final class EssentialsXKitProvider implements KitProvider {
             if (user == null) {
                 return false;
             }
-            Kit kit = new Kit(kitName, essentials);
-            return kit.expandItems(user);
+            Kit kit = new Kit(kitName.toLowerCase(Locale.ROOT), essentials);
+            kit.checkPerms(user);
+            kit.checkDelay(user);
+            kit.checkAffordable(user);
+            kit.setTime(user);
+            if (!kit.expandItems(user)) {
+                kit.resetTime(user);
+                return false;
+            }
+            kit.chargeUser(user);
+            return true;
         } catch (Exception e) {
             return false;
         }

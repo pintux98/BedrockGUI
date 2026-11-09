@@ -5,7 +5,7 @@ api-version: '1.20.6'
 author: pintux
 depend:
   - BedrockGUI
-softdepend: [BedWars2023, floodgate]
+softdepend: [BedWars2023, BedWars1058, BedWars, floodgate]
 commands:
   bedwarsaddon:
     description: Bedwars addon admin command

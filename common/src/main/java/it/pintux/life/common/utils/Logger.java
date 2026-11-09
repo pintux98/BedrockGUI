@@ -1,6 +1,5 @@
 package it.pintux.life.common.utils;
 
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.logging.Level;
 
@@ -56,10 +55,6 @@ public class Logger {
         log(Level.FINE, message, args);
     }
 
-
-    public boolean isDebugEnabled() {
-        return platformLogger.isLoggable(Level.FINE);
-    }
 
     private void log(Level level, String message, Object... args) {
         if (platformLogger.isLoggable(level)) {

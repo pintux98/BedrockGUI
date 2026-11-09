@@ -1,13 +1,13 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.homesteadaddon.api.BedrockPlayerDetector;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.RegionView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -82,7 +82,7 @@ public final class BedrockRegionService {
             form.button(config.text("common.next-button"), fp -> openRegionList(player, all, next));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -133,7 +133,7 @@ public final class BedrockRegionService {
         }
 
         form.button(config.text("common.regions-button"), fp -> openRegionList(player, false, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -153,7 +153,7 @@ public final class BedrockRegionService {
         form.button(config.text("region.info.button-rate"), fp ->
                 api.executeActionString(fp, "hs_rate:" + regionId, menuContext()));
         form.button(config.text("common.back-button"), fp -> openRegionMenu(player, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -192,7 +192,7 @@ public final class BedrockRegionService {
                     }
                 })
                 .button2(config.text("region.menu.leave-no"), fp -> openRegionMenu(player, region.id()))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 
@@ -225,7 +225,7 @@ public final class BedrockRegionService {
         form.button(config.text("top.sort-rating"), fp -> openTopRegions(player, "RATING"));
         form.button(config.text("top.sort-created"), fp -> openTopRegions(player, "CREATION_DATE"));
         form.button(config.text("common.regions-button"), fp -> openRegionList(player, false, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private String topValue(String sorting, RegionView region) {
@@ -274,7 +274,7 @@ public final class BedrockRegionService {
             form.button(config.text("common.next-button"), fp -> openWelcomeSigns(player, next));
         }
         form.button(config.text("common.regions-button"), fp -> openRegionList(player, false, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -308,7 +308,7 @@ public final class BedrockRegionService {
             });
         }
         form.button(config.text("common.back-button"), fp -> openRegionMenu(player, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 

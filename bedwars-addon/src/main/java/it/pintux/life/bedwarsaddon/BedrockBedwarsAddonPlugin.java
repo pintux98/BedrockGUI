@@ -1,5 +1,8 @@
 package it.pintux.life.bedwarsaddon;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FloodgateBedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.action.ArenaJoinAction;
 import it.pintux.life.bedwarsaddon.action.OpenArenaMainAction;
 import it.pintux.life.bedwarsaddon.action.OpenPartyMainAction;
@@ -17,7 +20,6 @@ import it.pintux.life.bedwarsaddon.action.NoOpAction;
 import it.pintux.life.bedwarsaddon.action.OpenUpgradeMainAction;
 import it.pintux.life.bedwarsaddon.action.ShopBuyAction;
 import it.pintux.life.bedwarsaddon.action.UpgradeBuyAction;
-import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.command.BedwarsAddonCommand;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.listener.BedwarsCommandListener;
@@ -38,13 +40,10 @@ import it.pintux.life.bedwarsaddon.provider.BedWars2023SpectatorProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023StatsProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWars2023UpgradeProvider;
 import it.pintux.life.bedwarsaddon.provider.BedWarsApiAccess;
-import it.pintux.life.bedwarsaddon.provider.FloodgateBedrockPlayerDetector;
 import it.pintux.life.bedwarsaddon.provider.SbwApiAccess;
 import it.pintux.life.bedwarsaddon.provider.SbwArenaProvider;
 import it.pintux.life.bedwarsaddon.provider.SbwSpectatorProvider;
 import it.pintux.life.bedwarsaddon.provider.SbwStatsProvider;
-import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
-import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.ArenaCatalogService;
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.BedrockPartyService;
@@ -57,7 +56,6 @@ import it.pintux.life.bedwarsaddon.service.ShopCatalogService;
 import it.pintux.life.bedwarsaddon.service.SpectatorCatalogService;
 import it.pintux.life.bedwarsaddon.service.StatsCatalogService;
 import it.pintux.life.bedwarsaddon.service.UpgradeCatalogService;
-import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.Bukkit;
@@ -91,7 +89,14 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        BedwarsAddonCommand command = new BedwarsAddonCommand(this);
+        getCommand("bedwarsaddon").setExecutor(command);
+        getCommand("bedwarsaddon").setTabCompleter(command);
         configuration = BedwarsAddonConfiguration.load(this);
+        setupModules();
+    }
+
+    private void setupModules() {
         if (!configuration.moduleShop() && !configuration.moduleUpgrades() && !configuration.moduleArena()
                 && !configuration.moduleStats() && !configuration.moduleSpectator() && !configuration.moduleParty()) {
             getLogger().info("All modules disabled. Enable one in config.yml then /bedwarsaddon reload.");
@@ -100,9 +105,7 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
         detector = new FloodgateBedrockPlayerDetector();
         soundFeedback = new BedrockSoundFeedback();
-        soundFeedback.configure(configuration.soundsEnabled(), configuration.soundFormOpen(),
-                configuration.soundPurchaseSuccess(), configuration.soundPurchaseFailed(),
-                configuration.soundVolume(), configuration.soundPitch());
+        soundFeedback.configure(configuration.soundsEnabled(), configuration.soundFormOpen(), configuration.soundVolume(), configuration.soundPitch());
 
         apiAccess = new BedWarsApiAccess();
         apiAccess1058 = new BedWars1058ApiAccess();
@@ -195,9 +198,6 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
         }
 
         registerInterceptListeners(pm);
-
-        getCommand("bedwarsaddon").setExecutor(new BedwarsAddonCommand(this));
-        getCommand("bedwarsaddon").setTabCompleter(new BedwarsAddonCommand(this));
 
         // Actions register when explicitly enabled, or whenever the integrated GUI
         // is on (its buttons run the same action strings).
@@ -316,31 +316,16 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
     }
 
     public void reloadConfiguration() {
+        HandlerList.unregisterAll(this);
+        menuInterceptListener = null;
+        bedwarsCommandListener = null;
+        BedrockGUIApi api = getApiSafely();
+        if (api != null) {
+            api.getActionRegistry().unregisterHandlersFrom(getClass().getClassLoader());
+        }
+        onDisable();
         configuration = BedwarsAddonConfiguration.load(this);
-        if (soundFeedback != null) {
-            soundFeedback.configure(configuration.soundsEnabled(), configuration.soundFormOpen(),
-                    configuration.soundPurchaseSuccess(), configuration.soundPurchaseFailed(),
-                    configuration.soundVolume(), configuration.soundPitch());
-        }
-        if (shopCatalogService != null) {
-            bedrockShopService = new BedrockShopService(configuration, shopCatalogService, detector, soundFeedback);
-        }
-        if (upgradeCatalogService != null) {
-            bedrockUpgradeService = new BedrockUpgradeService(configuration, upgradeCatalogService, detector, soundFeedback);
-        }
-        if (arenaCatalogService != null) {
-            bedrockArenaService = new BedrockArenaService(configuration, arenaCatalogService, detector, soundFeedback);
-        }
-        if (statsCatalogService != null) {
-            bedrockStatsService = new BedrockStatsService(configuration, statsCatalogService, detector, soundFeedback);
-        }
-        if (spectatorCatalogService != null) {
-            bedrockSpectatorService = new BedrockSpectatorService(configuration, spectatorCatalogService, detector, soundFeedback);
-        }
-        if (partyCatalogService != null) {
-            bedrockPartyService = new BedrockPartyService(configuration, partyCatalogService, detector, soundFeedback);
-        }
-        registerInterceptListeners(Bukkit.getPluginManager());
+        setupModules();
     }
 
     /**
@@ -349,8 +334,6 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
      * service instance from the previous config.
      */
     private void registerInterceptListeners(PluginManager pm) {
-        // Only these two are re-registered on reload; the backend event listeners registered in
-        // onEnable stay as they are, so they must not be torn down here.
         if (menuInterceptListener != null) {
             HandlerList.unregisterAll(menuInterceptListener);
             menuInterceptListener = null;

@@ -1,14 +1,14 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.PetView;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
 import it.pintux.life.essentialsaddon.model.SkilltreeView;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.MyPetMessages;
 import it.pintux.life.essentialsaddon.util.PetActionPayloads;
 import it.pintux.life.paper.platform.PaperSoundManager;
@@ -62,7 +62,7 @@ public final class BedrockPetService {
                         "essentials_pet_info:" + PetActionPayloads.encodePet(pet.id()),
                         context("pet-list", pet.id())));
             }
-            form.send(new BukkitFormPlayer(player));
+            form.send(new PaperPlayer(player));
             playSound(player, configuration.soundFormOpen());
         });
     }
@@ -102,7 +102,7 @@ public final class BedrockPetService {
                             context("pet-modal", pet.id())));
                 }
                 form.button(configuration.backButton(), fp -> openPetList(player));
-                form.send(new BukkitFormPlayer(player));
+                form.send(new PaperPlayer(player));
                 return;
             }
             String firstButton = pet.active() ? configuration.petPutAwayButton() : configuration.petCallButton();
@@ -126,7 +126,7 @@ public final class BedrockPetService {
                         }
                     })
                     .content(content)
-                    .send(new BukkitFormPlayer(player));
+                    .send(new PaperPlayer(player));
         });
     }
 
@@ -191,7 +191,7 @@ public final class BedrockPetService {
                     "essentials_pet_skilltree_set:" + PetActionPayloads.encodeSkilltree("active", tree.name()),
                     context("pet-skilltree", tree.name())));
         }
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         playSound(player, configuration.soundFormOpen());
     }
 
@@ -233,7 +233,7 @@ public final class BedrockPetService {
                 final ShopPetView fixed = entry;
                 form.button(label, fp -> openBuyConfirm(player, api, fixed));
             }
-            form.send(new BukkitFormPlayer(player));
+            form.send(new PaperPlayer(player));
             playSound(player, configuration.soundFormOpen());
         });
     }
@@ -247,7 +247,7 @@ public final class BedrockPetService {
                         context("pet-buy", entry.petId())))
                 .button2(configuration.petBuyConfirmNo(), fp -> openPetShop(player, entry.shopId()))
                 .content(content)
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     public void buyPet(Player player, String shopId, String petId) {

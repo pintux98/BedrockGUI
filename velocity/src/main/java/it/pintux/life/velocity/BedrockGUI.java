@@ -15,7 +15,6 @@ import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.velocity.platform.*;
 import it.pintux.life.velocity.utils.VelocityConfig;
 import it.pintux.life.velocity.utils.VelocityMessageConfig;
-import it.pintux.life.velocity.utils.DependencyValidator;
 import org.slf4j.Logger;
 
 import java.io.File;
@@ -33,6 +32,7 @@ public class BedrockGUI {
     private BedrockGUIApi api;
     private VelocityConfig config;
     private AssetServer assetServer;
+    private final java.util.Set<String> formCommands = new java.util.HashSet<>();
 
     @Inject
     public BedrockGUI(ProxyServer server, Logger logger, @DataDirectory Path dataDirectory, Metrics.Factory metricsFactory) {
@@ -61,7 +61,7 @@ public class BedrockGUI {
 
         metricsFactory.make(this, 23364);
 
-        server.getCommandManager().register("bedrockgui", new BedrockCommand(this));
+        server.getCommandManager().register("bedrockgui", new BedrockCommand(this), "bgui");
 
         logger.info("BedrockGUI for Velocity enabled successfully!");
     }
@@ -100,10 +100,6 @@ public class BedrockGUI {
     }
 
     public void reloadData() {
-        if (!DependencyValidator.validateDependencies()) {
-            logger.warn("Some dependencies have compatibility issues. Plugin will continue but some features may not work properly.");
-        }
-
         File dataFolder = dataDirectory.toFile();
         config = new VelocityConfig(dataFolder);
 
@@ -132,8 +128,8 @@ public class BedrockGUI {
             assetServer.start();
         }
 
-        api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
-                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler(getServer()));
+        api = new BedrockGUIApi(config, messageData, commandExecutor, new VelocitySoundManager(), null,
+                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.velocity.platform.VelocityScheduler(getServer(), this), null);
 
         it.pintux.life.velocity.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry(), getServer());
 
@@ -143,16 +139,16 @@ public class BedrockGUI {
 
         logger.info("BedrockGUI for Velocity loaded and enabled");
 
-        try {
-            formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
-                String formCmd = formMenu.getFormCommand();
-                if (formCmd != null && !formCmd.isEmpty()) {
-                    String base = formCmd.trim().split("\\s+")[0].toLowerCase();
-                    server.getCommandManager().register(base, new FormCommand(this, key));
-                }
-            });
-        } catch (Exception ignored) {
-        }
+        formCommands.forEach(server.getCommandManager()::unregister);
+        formCommands.clear();
+        formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
+            String formCmd = formMenu.getFormCommand();
+            if (formCmd != null && !formCmd.isEmpty()) {
+                String base = formCmd.trim().split("\\s+")[0].toLowerCase();
+                server.getCommandManager().register(base, new FormCommand(this, key, formMenu.getPermission()));
+                formCommands.add(base);
+            }
+        });
     }
 
     public ProxyServer getServer() {

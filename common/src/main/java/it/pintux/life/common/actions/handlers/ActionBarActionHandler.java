@@ -6,7 +6,6 @@ import it.pintux.life.common.actions.ActionSystem;
 
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.MessageData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -44,8 +43,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
             List<String> messages = parseActionData(actionData, context, player);
 
             if (messages.isEmpty()) {
-                Map<String, Object> errorReplacements = createReplacements("error", "No valid action bar messages found");
-                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
+                return emptyFailure(player);
             }
 
 
@@ -58,8 +56,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logError("action bar execution", actionData, player, e);
-            Map<String, Object> errorReplacements = createReplacements("error", "Error executing action bar: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
+            return errorFailure(player, e);
         }
     }
 
@@ -69,7 +66,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
             List<String> messages = parseNewFormatValues(actionData);
 
             if (messages.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No action bar messages found in new format"), player);
+                return emptyFailure(player);
             }
 
 
@@ -89,7 +86,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format action bar action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new action bar format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -117,12 +114,6 @@ public class ActionBarActionHandler extends BaseActionHandler {
                 if (i < messages.size() - 1) {
                     results.append("\n");
 
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
                 }
 
             } catch (Exception e) {
@@ -147,7 +138,7 @@ public class ActionBarActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
+            return failure(player, "action.all_failed");
         }
     }
 

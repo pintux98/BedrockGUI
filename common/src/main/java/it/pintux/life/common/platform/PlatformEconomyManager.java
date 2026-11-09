@@ -17,6 +17,9 @@ public interface PlatformEconomyManager {
     boolean addMoney(FormPlayer player, BigDecimal amount);
 
 
+    boolean addMoney(String onlinePlayerName, BigDecimal amount);
+
+
     boolean removeMoney(FormPlayer player, BigDecimal amount);
 
 

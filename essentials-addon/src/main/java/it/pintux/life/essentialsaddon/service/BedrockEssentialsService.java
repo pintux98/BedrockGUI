@@ -1,11 +1,11 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import it.pintux.life.paper.platform.PaperSoundManager;
@@ -74,7 +74,7 @@ public final class BedrockEssentialsService {
                             context("warp-menu", warpName)));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         if (!openedByButton) {
             playSound(player, configuration.soundFormOpen());
         }
@@ -131,7 +131,7 @@ public final class BedrockEssentialsService {
                             context("kit-menu", kitName)));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         if (!openedByButton) {
             playSound(player, configuration.soundFormOpen());
         }

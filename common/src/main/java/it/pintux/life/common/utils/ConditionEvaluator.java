@@ -3,9 +3,6 @@ package it.pintux.life.common.utils;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.actions.ActionSystem.ActionContext;
 import it.pintux.life.common.platform.PlatformPluginManager;
-import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.common.utils.Logger;
-import it.pintux.life.common.utils.MessageData;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -47,10 +44,9 @@ public class ConditionEvaluator {
     private static boolean evaluateSingle(FormPlayer player, String condition, ActionSystem.ActionContext context, MessageData messageData) {
         try {
 
-            String processedCondition = PlaceholderUtil.processPlaceholders(condition.trim(), context.getPlaceholders(), player, messageData);
-            String[] parts = processedCondition.split(":");
+            List<String> parts = splitParts(condition.trim());
 
-            if (parts.length < 2) {
+            if (parts.size() < 2) {
                 logger.warn("Invalid condition format: " + condition);
                 return false;
             }
@@ -59,41 +55,34 @@ public class ConditionEvaluator {
             int offset = 0;
 
 
-            if ("not".equals(parts[0])) {
+            if ("not".equals(parts.get(0))) {
                 negate = true;
                 offset = 1;
-                if (parts.length < 3) {
+                if (parts.size() < 3) {
                     logger.warn("Invalid condition format with 'not': " + condition);
                     return false;
                 }
             }
 
-            String conditionType = parts[offset];
-            String conditionValue = parts[offset + 1];
+            String conditionType = parts.get(offset);
 
             boolean conditionMet = false;
 
             switch (conditionType.toLowerCase()) {
                 case "permission":
-                    conditionMet = evaluatePermissionCondition(player, conditionValue);
+                    conditionMet = evaluatePermissionCondition(player, resolveTail(parts, offset + 1, context, player, messageData));
                     break;
                 case "placeholder":
-                    if (parts.length < offset + 4) {
-                        logger.warn("Placeholder condition requires operator and expected value: " + condition);
+                    if (parts.size() < offset + 3) {
+                        logger.warn("Placeholder condition requires an operator: " + condition);
                         return false;
                     }
-                    String operator = parts[offset + 2];
-                    String expectedValue = parts[offset + 3];
-                    conditionMet = evaluatePlaceholderCondition(conditionValue, operator, expectedValue, context, player, messageData);
+                    String operator = parts.get(offset + 2);
+                    String expectedValue = String.join(":", parts.subList(Math.min(offset + 3, parts.size()), parts.size()));
+                    conditionMet = evaluatePlaceholderCondition(parts.get(offset + 1), operator, expectedValue, context, player, messageData);
                     break;
                 case "plugin":
-                    conditionMet = evaluatePluginCondition(conditionValue);
-                    break;
-                case "bedrock_player":
-                    conditionMet = evaluateBedrockPlayerCondition(player);
-                    break;
-                case "java_player":
-                    conditionMet = evaluateJavaPlayerCondition(player);
+                    conditionMet = evaluatePluginCondition(resolveTail(parts, offset + 1, context, player, messageData));
                     break;
                 default:
                     logger.warn("Unknown condition type: " + conditionType);
@@ -207,25 +196,41 @@ public class ConditionEvaluator {
     }
 
 
-    private static boolean evaluateBedrockPlayerCondition(FormPlayer player) {
-        try {
-
-            return false;
-        } catch (Exception e) {
-            logger.warn("Error checking if player is Bedrock player: " + e.getMessage());
-            return false;
+    static List<String> splitParts(String condition) {
+        List<String> parts = new ArrayList<>();
+        StringBuilder current = new StringBuilder();
+        boolean inPlaceholder = false;
+        for (int i = 0; i < condition.length(); i++) {
+            char c = condition.charAt(i);
+            if (c == '%') {
+                inPlaceholder = !inPlaceholder && opensPlaceholder(condition, i);
+            } else if (c == ':' && !inPlaceholder) {
+                parts.add(current.toString());
+                current.setLength(0);
+                continue;
+            }
+            current.append(c);
         }
+        parts.add(current.toString());
+        return parts;
     }
 
-
-    private static boolean evaluateJavaPlayerCondition(FormPlayer player) {
-        try {
-
-            return true;
-        } catch (Exception e) {
-            logger.warn("Error checking if player is Java player: " + e.getMessage());
+    public static boolean opensPlaceholder(String text, int index) {
+        int close = text.indexOf('%', index + 1);
+        if (close <= index + 1) {
             return false;
         }
+        for (int i = index + 1; i < close; i++) {
+            if (Character.isWhitespace(text.charAt(i))) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static String resolveTail(List<String> parts, int from, ActionSystem.ActionContext context, FormPlayer player, MessageData messageData) {
+        String tail = String.join(":", parts.subList(from, parts.size()));
+        return PlaceholderUtil.processPlaceholders(tail, context.getPlaceholders(), player, messageData);
     }
 
 

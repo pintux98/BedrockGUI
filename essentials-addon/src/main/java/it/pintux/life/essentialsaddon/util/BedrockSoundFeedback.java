@@ -1,6 +1,5 @@
 package it.pintux.life.essentialsaddon.util;
 
-import org.bukkit.Bukkit;
 import it.pintux.life.paper.platform.PaperSoundManager;
 import org.bukkit.Sound;
 import org.bukkit.entity.Player;
@@ -29,13 +28,6 @@ public final class BedrockSoundFeedback {
         this.defaultPitch = pitch;
     }
 
-    public void setVolume(float volume) {
-        this.defaultVolume = volume;
-    }
-
-    public void setPitch(float pitch) {
-        this.defaultPitch = pitch;
-    }
 
     public void playFormOpen(Player player) {
         play(player, formOpenSound);

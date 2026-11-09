@@ -1,8 +1,8 @@
 package it.pintux.life.duelsaddon.action;
 
+import it.pintux.life.paper.addon.FormPlayerResolver;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.utils.FormPlayer;
-import it.pintux.life.duelsaddon.util.FormPlayerResolver;
 import org.bukkit.entity.Player;
 
 /**

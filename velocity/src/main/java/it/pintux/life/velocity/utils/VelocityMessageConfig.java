@@ -46,23 +46,11 @@ public class VelocityMessageConfig implements MessageConfig {
         try {
             messageFile.getParentFile().mkdirs();
             
-            // Copy default messages from common module
             InputStream defaultMessages = getClass().getResourceAsStream("/" + fileName);
-            if (defaultMessages != null) {
-                Files.copy(defaultMessages, messageFile.toPath());
-            } else {
-                // Create minimal default messages
-                String defaultContent = """
-                    # BedrockGUI Messages
-                    prefix: "&8[&6BedrockGUI&8] &f"
-                    no-permission: "{prefix}&cYou don't have permission to use this command."
-                    menu-not-found: "{prefix}&cMenu not found: {menu}"
-                    player-not-found: "{prefix}&cPlayer not found: {player}"
-                    menu-opened: "{prefix}&aMenu opened successfully!"
-                    reload-success: "{prefix}&aConfiguration reloaded successfully!"
-                    """;
-                Files.write(messageFile.toPath(), defaultContent.getBytes());
+            if (defaultMessages == null) {
+                throw new IOException("Bundled " + fileName + " is missing from the jar");
             }
+            Files.copy(defaultMessages, messageFile.toPath());
         } catch (IOException e) {
             throw new RuntimeException("Failed to create default messages", e);
         }

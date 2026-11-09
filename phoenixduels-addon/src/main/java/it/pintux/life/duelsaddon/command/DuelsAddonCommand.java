@@ -1,11 +1,11 @@
 package it.pintux.life.duelsaddon.command;
 
+import it.pintux.life.paper.addon.AddonText;
 import it.pintux.life.duelsaddon.DuelsAddonPlugin;
 import it.pintux.life.duelsaddon.listener.DuelsMenus;
 import it.pintux.life.duelsaddon.listener.MenuInterceptListener;
 import it.pintux.life.duelsaddon.listener.PhoenixMenuResolver;
 import it.pintux.life.duelsaddon.model.StatsKind;
-import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

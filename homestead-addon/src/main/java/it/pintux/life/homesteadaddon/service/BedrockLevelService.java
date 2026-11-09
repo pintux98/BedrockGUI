@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -8,8 +10,6 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.LevelView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.RewardsView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -51,7 +51,7 @@ public final class BedrockLevelService {
                 config.apply(config.text("levels.title"), Map.of("name", region.name())));
         form.content(content);
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void openRewards(Player player, long regionId) {
@@ -72,7 +72,7 @@ public final class BedrockLevelService {
                 "chunks_playtime", String.valueOf(rewards.chunksByPlaytime()),
                 "subareas_playtime", String.valueOf(rewards.subAreasByPlaytime()))));
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void navigate(FormPlayer fp, String actionString) {

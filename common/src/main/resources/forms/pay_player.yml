@@ -1,0 +1,37 @@
+bedrock:
+  type: "CUSTOM"
+  title: "§a§lPay a Player"
+  open_condition: "plugin:Vault"
+  open_condition_message: "§cPaying players needs Vault and an economy plugin."
+  cooldown: "3s"
+  on_close: |
+    open {
+      - "main_menu"
+    }
+  components:
+    info:
+      type: "label"
+      text: "§7Send money to anyone online. Closing this form takes you back to the menu."
+    target:
+      type: "dropdown"
+      text: "§fPlayer"
+      options: "{online_players}"
+    amount:
+      type: "step_slider"
+      text: "§fAmount"
+      steps:
+        - "10"
+        - "50"
+        - "100"
+        - "500"
+        - "1000"
+      default: 1
+  global_actions:
+    - |
+      economy {
+        - "pay:$target:$amount"
+      }
+    - |
+      message {
+        - "§aSent §f$$amount §ato §f$target§a."
+      }

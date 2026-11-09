@@ -1,17 +1,13 @@
 package it.pintux.life.common.actions.handlers;
 import it.pintux.life.common.actions.ActionSystem;
 
-import it.pintux.life.common.actions.ActionSystem;
-
 import it.pintux.life.common.actions.*;
-import it.pintux.life.common.actions.ActionRegistry;
 import it.pintux.life.common.utils.ConditionEvaluator;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
 
 import java.util.*;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class ConditionalActionHandler extends BaseActionHandler {
@@ -31,7 +27,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
     );
 
     private static final Pattern ACTION_LINE_PATTERN = Pattern.compile(
-            "-\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
+            "-\\s*\"([^\"\\\\]*+(?:\\\\.[^\"\\\\]*+)*+)\""
     );
 
     private static final String[] BRANCH_KEYS = {"check:", "true:", "false:"};
@@ -268,16 +264,15 @@ public class ConditionalActionHandler extends BaseActionHandler {
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (actionData == null || actionData.trim().isEmpty()) {
             logger.warn("Conditional action called with empty data for player: " + player.getName());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No conditional data specified"), player);
+            return emptyFailure(player);
         }
 
         try {
-            String processedData = processPlaceholders(actionData.trim(), context, player);
-            return executeNewFormat(player, processedData, context);
+            return executeNewFormat(player, actionData.trim(), context);
 
         } catch (Exception e) {
             logger.error("Error executing conditional action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error executing conditional action: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -287,7 +282,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
             Branches branches = splitBranches(actionData);
             if (branches.check == null || branches.check.trim().isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No check condition found in conditional"), player);
+                return usageFailure(player, "check: <condition>");
             }
 
             String checkCondition = branches.check;
@@ -307,28 +302,23 @@ public class ConditionalActionHandler extends BaseActionHandler {
             }
 
 
-            ActionSystem.ActionResult lastResult = null;
+            List<ActionSystem.Action> actions = new java.util.ArrayList<>();
             for (String action : actionsToExecute) {
                 ActionSystem.Action parsed = actionExecutor.parseAction(action);
-                ActionSystem.ActionDefinition actionDef = parsed != null ? parsed.getActionDefinition() : parseActionString(action);
-                ActionSystem.ActionResult result = actionExecutor.executeAction(player, actionDef, context);
-                lastResult = result;
-
-                if (!result.isSuccess()) {
-                    logger.warn("Action failed during conditional execution: " + action + " - " + result.message());
-
-                }
+                actions.add(parsed != null ? parsed : new ActionSystem.Action(parseActionString(action)));
             }
+            List<ActionSystem.ActionResult> results = actionExecutor.executeActions(player, actions, context);
+            ActionSystem.ActionResult lastResult = results.isEmpty() ? null : results.get(results.size() - 1);
 
             if (lastResult != null && lastResult.isSuccess()) {
                 return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Conditional actions executed successfully"), player);
             } else {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Some conditional actions failed"), player);
+                return lastResult != null ? lastResult : emptyFailure(player);
             }
 
         } catch (Exception e) {
             logger.error("Error executing new format conditional for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new conditional format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -444,12 +434,8 @@ public class ConditionalActionHandler extends BaseActionHandler {
 
         if (condition.startsWith("placeholder:")) {
             return evaluatePlaceholderCondition(player, condition, context);
-        } else if (condition.startsWith("permission:")) {
-            return evaluatePermissionCondition(player, condition, context);
-        } else {
-            logger.warn("Unknown condition type in: " + condition);
-            return false;
         }
+        return ConditionEvaluator.evaluateCondition(player, condition, context, BedrockGUIApi.getInstance().getMessageData());
     }
 
 
@@ -471,8 +457,7 @@ public class ConditionalActionHandler extends BaseActionHandler {
         }
 
         if (operator == null || parts == null || parts.length != 2) {
-            logger.warn("Invalid placeholder condition format: " + condition);
-            return false;
+            return ConditionEvaluator.evaluateCondition(player, condition, context, BedrockGUIApi.getInstance().getMessageData());
         }
 
         String placeholder = parts[0].trim();
@@ -484,102 +469,6 @@ public class ConditionalActionHandler extends BaseActionHandler {
     }
 
 
-    private boolean evaluatePermissionCondition(FormPlayer player, String condition, ActionSystem.ActionContext context) {
-        String permission = condition.substring("permission:".length()).trim();
-        String conditionString = "permission:" + permission;
-        return ConditionEvaluator.evaluateCondition(player, conditionString, context, BedrockGUIApi.getInstance().getMessageData());
-    }
-
-
-    private List<String> parseActionList(String actionData, Pattern pattern) {
-        List<String> actions = new ArrayList<>();
-        Matcher matcher = pattern.matcher(actionData);
-
-        if (matcher.find()) {
-            String actionsBlock = matcher.group(1);
-            // First, handle multiple inline '- |' actions on a single line
-            java.util.regex.Matcher inlineMulti = java.util.regex.Pattern.compile("-\\s*\\|\\s*").matcher(actionsBlock);
-            if (inlineMulti.find()) {
-                java.util.regex.Matcher splitter = java.util.regex.Pattern.compile("-\\s*\\|\\s*(.+?)(?=\\s*-\\s*\\||\\Z)", java.util.regex.Pattern.DOTALL).matcher(actionsBlock);
-                while (splitter.find()) {
-                    String content = splitter.group(1).trim();
-                    if (!content.isEmpty()) {
-                        actions.add(content);
-                    }
-                }
-                return actions;
-            }
-
-            // Handle inline actions without '|', e.g., "- message { ... } - server { ... }"
-            java.util.regex.Matcher inlineNoPipe = java.util.regex.Pattern.compile("-\\s+(\\w+[^\\{]*\\{[\\s\\S]*?\\})(?=\\s*-\\s+|\\Z)", java.util.regex.Pattern.DOTALL).matcher(actionsBlock);
-            boolean anyNoPipe = false;
-            while (inlineNoPipe.find()) {
-                String content = inlineNoPipe.group(1).trim();
-                if (!content.isEmpty()) {
-                    actions.add(content);
-                    anyNoPipe = true;
-                }
-            }
-            if (anyNoPipe) {
-                return actions;
-            }
-
-            String[] lines = actionsBlock.split("\\r?\\n");
-            int i = 0;
-            while (i < lines.length) {
-                String line = lines[i];
-                if (line.trim().isEmpty()) { i++; continue; }
-
-                Matcher pipeMatcher = Pattern.compile("^\\s*-\\s*\\|\\s*$").matcher(line);
-                if (pipeMatcher.matches()) {
-                    int dashIndex = line.indexOf('-');
-                    String indent = dashIndex > 0 ? line.substring(0, dashIndex) : "";
-                    StringBuilder block = new StringBuilder();
-                    i++;
-                    while (i < lines.length) {
-                        String next = lines[i];
-                        if (next.startsWith(indent + "-")) {
-                            break;
-                        }
-                        block.append(next).append("\n");
-                        i++;
-                    }
-                    String content = block.toString().trim();
-                    if (!content.isEmpty()) {
-                        actions.add(content);
-                    }
-                    continue;
-                }
-
-                Matcher simpleMatcher = ACTION_LINE_PATTERN.matcher(line);
-                if (simpleMatcher.find()) {
-                    String value = simpleMatcher.group(1).trim();
-                    if (!value.isEmpty()) {
-                        actions.add(value);
-                    }
-                } else {
-                    Matcher inlinePipe = Pattern.compile("^\\s*-\\s*\\|\\s*(.+)$").matcher(line);
-                    if (inlinePipe.find()) {
-                        String content = inlinePipe.group(1).trim();
-                        if (!content.isEmpty()) {
-                            actions.add(content);
-                        }
-                    }
-                }
-                // Fallback: action line without '|', capture single-line action
-                Matcher plainMatcher = Pattern.compile("^\\s*-\\s*(.+)$").matcher(line);
-                if (plainMatcher.matches()) {
-                    String content = plainMatcher.group(1).trim();
-                    if (!content.isEmpty()) {
-                        actions.add(content);
-                    }
-                }
-                i++;
-            }
-        }
-
-        return actions;
-    }
 
 
     private ActionSystem.ActionDefinition parseActionString(String actionString) {

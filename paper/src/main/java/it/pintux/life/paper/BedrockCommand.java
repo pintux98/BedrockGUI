@@ -1,10 +1,8 @@
 package it.pintux.life.paper;
 
-import it.pintux.life.paper.platform.PaperPlayerChecker;
 import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.paper.utils.PaperPlayer;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -18,7 +16,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class BedrockCommand implements CommandExecutor, TabCompleter {
 
@@ -167,7 +164,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
         String arg = args[0];
         if (arg.equalsIgnoreCase("reload")) {
             if (player != null && !player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null));
                 return true;
             }
             plugin.reloadData();
@@ -177,7 +174,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
 
         if (arg.equalsIgnoreCase("convert") || arg.equalsIgnoreCase("convertforms")) {
             if (player != null && !player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null));
                 return true;
             }
             try {
@@ -286,7 +283,7 @@ public class BedrockCommand implements CommandExecutor, TabCompleter {
 
         if (arg.equalsIgnoreCase("openfor")) {
             if (player != null && !player.hasPermission("bedrockgui.openfor")) {
-                sender.sendMessage(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null));
+                sender.sendMessage(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null));
                 return true;
             }
             if (args.length < 3) {

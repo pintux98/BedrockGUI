@@ -73,6 +73,7 @@ bedrock:
     sell_all:
       text: "§eSell 32 stone §8- §a+$40"
       image: "STONE"
+      cooldown: "2s"
       onClick:
         - |
           inventory {

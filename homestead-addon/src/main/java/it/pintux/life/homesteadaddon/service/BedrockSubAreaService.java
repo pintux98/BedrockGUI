@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -8,8 +10,6 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.SubAreaView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import it.pintux.life.homesteadaddon.util.HomesteadActionPayloads;
 import org.bukkit.entity.Player;
@@ -59,7 +59,7 @@ public final class BedrockSubAreaService {
         }
         pagination.addNav(form, p -> openSubAreasList(player, regionId, p));
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -92,7 +92,7 @@ public final class BedrockSubAreaService {
         }
         form.button(config.text("common.back-button"),
                 fp -> openSubAreasList(player, subArea.regionId(), 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void showRenameForm(Player player, long subAreaId) {
@@ -115,7 +115,7 @@ public final class BedrockSubAreaService {
                     }
                     openSubAreaMenu(player, subAreaId);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void endRent(Player player, long subAreaId) {
@@ -143,7 +143,7 @@ public final class BedrockSubAreaService {
                     openSubAreasList(player, subArea.regionId(), 1);
                 })
                 .button2(config.text("subareas.confirm-no"), fp -> openSubAreaMenu(player, subArea.id()))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 
@@ -176,7 +176,7 @@ public final class BedrockSubAreaService {
             form.button(config.text("subareas.button-add-member"), fp -> showAddMemberForm(player, subAreaId));
         }
         form.button(config.text("common.back-button"), fp -> openSubAreaMenu(player, subAreaId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void openSubAreaMemberActions(Player player, long subAreaId, UUID memberId) {
@@ -202,7 +202,7 @@ public final class BedrockSubAreaService {
             form.button(config.text("subareas.button-remove-member"), fp -> confirmRemoveMember(player, subAreaId, member));
         }
         form.button(config.text("common.back-button"), fp -> openSubAreaMembers(player, subAreaId, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void showAddMemberForm(Player player, long subAreaId) {
@@ -227,7 +227,7 @@ public final class BedrockSubAreaService {
                     }
                     openSubAreaMembers(player, subAreaId, 1);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void confirmRemoveMember(Player player, long subAreaId, MemberView member) {
@@ -247,7 +247,7 @@ public final class BedrockSubAreaService {
                     openSubAreaMembers(player, subAreaId, 1);
                 })
                 .button2(config.text("subareas.confirm-no"), fp -> openSubAreaMemberActions(player, subAreaId, member.playerId()))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 

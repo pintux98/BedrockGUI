@@ -11,7 +11,6 @@ import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.RewardsView;
 import it.pintux.life.homesteadaddon.model.SubAreaView;
 import org.bukkit.Bukkit;
-import org.bukkit.Chunk;
 import org.bukkit.Location;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.World;
@@ -711,6 +710,6 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
             return null;
         }
         Player online = Bukkit.getPlayerExact(name.trim());
-        return online != null ? online : Bukkit.getOfflinePlayer(name.trim());
+        return online != null ? online : Bukkit.getOfflinePlayerIfCached(name.trim());
     }
 }

@@ -1,16 +1,15 @@
 package it.pintux.life.common.actions;
-import it.pintux.life.common.actions.ActionSystem;
 
+import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformScheduler;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.Logger;
+import it.pintux.life.common.utils.MessageData;
 import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.regex.Matcher;
 
@@ -19,7 +18,6 @@ public class ActionExecutor {
 
     private static final Logger logger = Logger.getLogger(ActionExecutor.class.getSimpleName());
     private final ActionRegistry registry;
-    private final ExecutorService executorService;
     private PlatformScheduler scheduler;
 
 
@@ -29,16 +27,11 @@ public class ActionExecutor {
 
 
     private static final Pattern VALUE_PATTERN = Pattern.compile(
-            "-\\s*\"((?:[^\"\\\\]|\\\\.)*)\""
+            "-\\s*\"([^\"\\\\]*+(?:\\\\.[^\"\\\\]*+)*+)\""
     );
 
     public ActionExecutor(ActionRegistry registry) {
         this.registry = registry;
-        this.executorService = Executors.newCachedThreadPool(r -> {
-            Thread thread = new Thread(r, "ActionExecutor-" + System.currentTimeMillis());
-            thread.setDaemon(true);
-            return thread;
-        });
     }
 
     /**
@@ -55,7 +48,7 @@ public class ActionExecutor {
         }
 
         if (action == null || action.isEmpty()) {
-            return ActionSystem.ActionResult.failure("Action cannot be null or empty");
+            return fail(player, MessageData.ACTION_INVALID_FORMAT, null, null);
         }
 
         List<ActionSystem.ActionResult> results = new ArrayList<>();
@@ -87,14 +80,16 @@ public class ActionExecutor {
         }
 
         if (ValidationUtils.isNullOrEmpty(actionType)) {
-            return ActionSystem.ActionResult.failure("Action type cannot be null or empty");
+            return fail(player, MessageData.ACTION_INVALID_FORMAT, null, null);
         }
 
         ActionSystem.ActionHandler handler = registry.getHandler(actionType);
         if (handler == null) {
-            System.out.println("[BedrockGUI] Invalid action type '" + actionType + "' - not registered. Available actions: " + registry.getRegisteredActionTypes());
-            logger.warn("No handler found for action type: " + actionType);
-            return ActionSystem.ActionResult.failure("Unknown action type: " + actionType);
+            if (ActionRegistry.isPlatformAction(actionType)) {
+                return fail(player, "action.unavailable", "type", actionType);
+            }
+            logger.warn("Unknown action type '" + actionType + "'. Available actions: " + registry.getRegisteredActionTypes());
+            return fail(player, "action.unknown_type", "type", actionType);
         }
 
         String valueStr = actionValue != null ? actionValue.toString() : "";
@@ -105,7 +100,7 @@ public class ActionExecutor {
 
         if (!handler.isValidAction(valueStr)) {
             logger.warn("Invalid action value '" + valueStr + "' for action type: " + actionType);
-            return ActionSystem.ActionResult.failure("Invalid action value for type: " + actionType);
+            return fail(player, MessageData.ACTION_INVALID_FORMAT, null, null);
         }
 
         try {
@@ -113,21 +108,10 @@ public class ActionExecutor {
             return handler.execute(player, valueStr, context);
         } catch (Exception e) {
             logger.error("Error executing action: " + actionType + " with value: " + actionValue, e);
-            return ActionSystem.ActionResult.failure("Action execution failed: " + e.getMessage());
+            return fail(player, "action.failed", "action", actionType);
         }
     }
 
-    /**
-     * Executes a single action asynchronously
-     *
-     * @param player  the player executing the action
-     * @param action  the action definition to execute
-     * @param context the action context
-     * @return CompletableFuture with the action result
-     */
-    public CompletableFuture<ActionSystem.ActionResult> executeActionAsync(FormPlayer player, ActionSystem.ActionDefinition action, ActionSystem.ActionContext context) {
-        return CompletableFuture.supplyAsync(() -> executeAction(player, action, context), executorService);
-    }
 
     /**
      * Executes multiple actions in sequence
@@ -147,7 +131,7 @@ public class ActionExecutor {
         for (int i = 0; i < actions.size(); i++) {
             ActionSystem.Action action = actions.get(i);
             if (action == null) {
-                results.add(ActionSystem.ActionResult.failure("Action cannot be null"));
+                results.add(fail(player, MessageData.ACTION_INVALID_FORMAT, null, null));
                 continue;
             }
 
@@ -162,8 +146,7 @@ public class ActionExecutor {
             ActionSystem.ActionResult result = executeAction(player, action.getActionDefinition(), context);
             results.add(result);
 
-            if (result.isFailure() && action.isCritical()) {
-                logger.warn("Critical action failed, stopping execution chain");
+            if (result.isFailure()) {
                 break;
             }
         }
@@ -191,17 +174,6 @@ public class ActionExecutor {
         this.scheduler = scheduler;
     }
 
-    /**
-     * Executes multiple actions asynchronously
-     *
-     * @param player  the player executing the actions
-     * @param actions list of actions to execute
-     * @param context the action context
-     * @return CompletableFuture with list of action results
-     */
-    public CompletableFuture<List<ActionSystem.ActionResult>> executeActionsAsync(FormPlayer player, List<ActionSystem.Action> actions, ActionSystem.ActionContext context) {
-        return CompletableFuture.supplyAsync(() -> executeActions(player, actions, context), executorService);
-    }
 
     /**
      * Parses an action string in the format "type:value" or just "value" (defaults to command)
@@ -280,16 +252,14 @@ public class ActionExecutor {
         return new ActionSystem.Action(actionDef);
     }
 
-    /**
-     * Shuts down the executor service
-     */
-    public void shutdown() {
-        if (executorService != null && !executorService.isShutdown()) {
-            executorService.shutdown();
-            logger.info("ActionExecutor shutdown completed");
+    private ActionSystem.ActionResult fail(FormPlayer player, String key, String name, Object value) {
+        MessageData messageData;
+        try {
+            messageData = BedrockGUIApi.getInstance().getMessageData();
+        } catch (IllegalStateException e) {
+            return ActionSystem.ActionResult.failure(key);
         }
+        Map<String, Object> replacements = name == null ? null : Map.of(name, value);
+        return ActionSystem.ActionResult.failure(messageData.getValue(key, replacements, player));
     }
-
-
 }
-

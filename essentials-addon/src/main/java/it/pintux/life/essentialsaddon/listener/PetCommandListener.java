@@ -1,8 +1,8 @@
 package it.pintux.life.essentialsaddon.listener;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.BedrockPetService;
-import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;

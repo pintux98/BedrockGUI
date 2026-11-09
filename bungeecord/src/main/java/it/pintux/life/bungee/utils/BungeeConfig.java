@@ -37,19 +37,10 @@ public class BungeeConfig implements FormConfig {
         try {
             configFile.getParentFile().mkdirs();
             InputStream defaultConfig = getClass().getResourceAsStream("/config.yml");
-            if (defaultConfig != null) { Files.copy(defaultConfig, configFile.toPath()); }
-            else {
-                String defaultContent = """
-                    debug: false
-                    forms:
-                      main_hub:
-                        type: "SIMPLE"
-                        title: "Main Hub"
-                        content: "Welcome!"
-                        buttons: {}
-                    """;
-                Files.write(configFile.toPath(), defaultContent.getBytes());
+            if (defaultConfig == null) {
+                throw new IOException("Bundled " + "config.yml" + " is missing from the jar");
             }
+            Files.copy(defaultConfig, configFile.toPath());
         } catch (IOException e) { throw new RuntimeException("Failed to create default config", e); }
     }
 
@@ -60,7 +51,7 @@ public class BungeeConfig implements FormConfig {
     }
 
     @Override
-    public String getString(String path) { return getString(path, ""); }
+    public String getString(String path) { return getString(path, null); }
 
     @Override
     public List<String> getStringList(String path) {

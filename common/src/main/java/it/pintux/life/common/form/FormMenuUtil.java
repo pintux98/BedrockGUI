@@ -21,6 +21,7 @@ import java.util.stream.Collectors;
 public class FormMenuUtil {
 
     private static final Logger logger = Logger.getLogger(FormMenuUtil.class.getSimpleName());
+    private static final String ONLINE_PLAYERS_TOKEN = "{online_players}";
     private final Map<String, FormMenu> formMenus;
     private final FormConfig config;
     protected final MessageData messageData;
@@ -34,10 +35,10 @@ public class FormMenuUtil {
     private final PlatformTitleManager titleManager;
     private final PlatformPluginManager pluginManager;
     private final PlatformPlayerManager playerManager;
+    private final PlatformInventoryManager inventoryManager;
     private AssetServer assetServer;
+    private final Map<String, Long> cooldowns = new java.util.concurrent.ConcurrentHashMap<>();
 
-
-    private DelayActionHandler delayActionHandler;
 
     public FormConfig getConfig() {
         return config;
@@ -51,7 +52,8 @@ public class FormMenuUtil {
                         PlatformTitleManager titleManager,
                         PlatformPluginManager pluginManager,
                         PlatformPlayerManager playerManager,
-                        PlatformScheduler scheduler) {
+                        PlatformScheduler scheduler,
+                        PlatformInventoryManager inventoryManager) {
         this.config = config;
         formMenus = new HashMap<>();
         this.messageData = messageData;
@@ -63,6 +65,7 @@ public class FormMenuUtil {
         this.pluginManager = pluginManager;
         this.playerManager = playerManager;
         this.scheduler = scheduler;
+        this.inventoryManager = inventoryManager;
         this.actionRegistry = ActionRegistry.getInstance();
         this.actionExecutor = new ActionExecutor(actionRegistry);
         this.actionExecutor.setScheduler(scheduler);
@@ -83,13 +86,18 @@ public class FormMenuUtil {
         actionRegistry.registerHandler(new CommandActionHandler(commandExecutor));
         actionRegistry.registerHandler(new OpenFormActionHandler(this));
         actionRegistry.registerHandler(new MessageActionHandler(playerManager));
-        this.delayActionHandler = new DelayActionHandler(actionExecutor, scheduler);
-        actionRegistry.registerHandler(delayActionHandler);
+        actionRegistry.registerHandler(new DelayActionHandler(actionExecutor, scheduler));
 
         if (commandExecutor != null) {
             actionRegistry.registerHandler(new ServerActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new BroadcastActionHandler(commandExecutor));
-            actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor));
+        }
+
+        if (playerManager != null) {
+            actionRegistry.registerHandler(new BroadcastActionHandler(playerManager));
+        }
+
+        if (commandExecutor != null && inventoryManager != null) {
+            actionRegistry.registerHandler(new InventoryActionHandler(commandExecutor, inventoryManager));
         }
 
         if (soundManager != null) {
@@ -121,7 +129,13 @@ public class FormMenuUtil {
                 source = config.loadFormFile(filePath.trim());
                 bedrockBase = "bedrock";
             }
-            FormMenu menu = buildFormMenuFromPaths(key, bedrockBase, source);
+            FormMenu menu;
+            try {
+                menu = buildFormMenuFromPaths(key, bedrockBase, source);
+            } catch (Exception e) {
+                logger.warn("Skipping form '" + key + "': " + e.getMessage());
+                continue;
+            }
             if (menu != null) {
                 formMenus.put(key.toLowerCase(), menu);
             }
@@ -130,11 +144,11 @@ public class FormMenuUtil {
     }
 
     private FormMenu buildFormMenuFromPaths(String key, String bedrockBase, FormConfig cfg) {
-        String command = cfg.getString(bedrockBase + ".command");
-        String commandIntercept = cfg.getString(bedrockBase + ".command_intercept");
-        String permission = cfg.getString(bedrockBase + ".permission");
+        String command = blankToNull(cfg.getString(bedrockBase + ".command"));
+        String commandIntercept = blankToNull(cfg.getString(bedrockBase + ".command_intercept"));
+        String permission = blankToNull(cfg.getString(bedrockBase + ".permission"));
         String type = cfg.getString(bedrockBase + ".type", "SIMPLE");
-        String title = cfg.getString(bedrockBase + ".title", "Unknown");
+        String title = cfg.getString(bedrockBase + ".title", "");
         String contentVal = readMultilineText(cfg, bedrockBase + ".content");
         String description = readMultilineText(cfg, bedrockBase + ".description");
         String resolvedContent = contentVal != null ? contentVal : description;
@@ -147,7 +161,50 @@ public class FormMenuUtil {
         Map<String, Map<String, Object>> components = readBedrockComponents(cfg, bedrockBase, type);
         List<String> globalActions = cfg.getStringList(bedrockBase + ".global_actions");
 
-        return new FormMenu(command, commandIntercept, permission, title, resolvedContent, type, buttons, components, globalActions);
+        FormMenu menu = new FormMenu(command, commandIntercept, permission, title, resolvedContent, type, buttons, components, globalActions);
+        menu.setCloseActions(readActions(cfg, bedrockBase + ".on_close"));
+        menu.setOpenCondition(blankToNull(cfg.getString(bedrockBase + ".open_condition")),
+                blankToNull(cfg.getString(bedrockBase + ".open_condition_message")));
+        menu.setCooldownSeconds(ValidationUtils.parseSeconds(cfg.getString(bedrockBase + ".cooldown")));
+        return menu;
+    }
+
+    private String readActions(FormConfig cfg, String path) {
+        try {
+            List<String> list = cfg.getStringList(path);
+            if (list != null && !list.isEmpty()) {
+                return "[" + String.join(", ", list) + "]";
+            }
+        } catch (Exception ignored) {
+        }
+        return blankToNull(cfg.getString(path));
+    }
+
+    private static String blankToNull(String value) {
+        return value == null || value.isBlank() ? null : value;
+    }
+
+    private int remainingCooldown(FormPlayer player, String key, int seconds) {
+        if (seconds <= 0 || key == null) {
+            return 0;
+        }
+        String id = player.getUniqueId() + "|" + key;
+        long now = System.currentTimeMillis();
+        Long until = cooldowns.get(id);
+        if (until != null && until > now) {
+            return (int) Math.ceil((until - now) / 1000.0);
+        }
+        cooldowns.put(id, now + seconds * 1000L);
+        return 0;
+    }
+
+    private boolean onCooldown(FormPlayer player, String key, int seconds) {
+        int remaining = remainingCooldown(player, key, seconds);
+        if (remaining > 0) {
+            player.sendMessage(messageData.getValue(MessageData.MENU_COOLDOWN, Map.of("seconds", remaining), player));
+            return true;
+        }
+        return false;
     }
 
     private String readMultilineText(FormConfig cfg, String path) {
@@ -182,18 +239,8 @@ public class FormMenuUtil {
                 String text = cfg.getString(base + ".buttons." + button + ".text");
                 String image = cfg.getString(base + ".buttons." + button + ".image");
 
-                String onClick = null;
-                try {
-                    List<String> onClickList = cfg.getStringList(base + ".buttons." + button + ".onClick");
-                    if (onClickList != null && !onClickList.isEmpty()) {
-                        onClick = "[" + String.join(", ", onClickList) + "]";
-                    }
-                } catch (Exception e) {
-                    onClick = cfg.getString(base + ".buttons." + button + ".onClick");
-                }
-                if (onClick == null) {
-                    onClick = cfg.getString(base + ".buttons." + button + ".onClick");
-                }
+                String onClick = readActions(cfg, base + ".buttons." + button + ".onClick");
+                int cooldown = ValidationUtils.parseSeconds(cfg.getString(base + ".buttons." + button + ".cooldown"));
 
                 String showCondition = cfg.getString(base + ".buttons." + button + ".show_condition");
                 String alternativeText = cfg.getString(base + ".buttons." + button + ".alternative_text");
@@ -219,6 +266,7 @@ public class FormMenuUtil {
                             conditionalButton.addConditionalProperty(condition, property, value);
                         }
                     }
+                    conditionalButton.setCooldown(key + "." + button, cooldown);
                     buttons.add(conditionalButton);
                 } else {
                     FormButton formButton = new FormButton(text, image, onClick);
@@ -226,6 +274,7 @@ public class FormMenuUtil {
                         ActionSystem.ActionDefinition actionDef = convertOnClickToActionDefinition(onClick);
                         formButton.setAction(actionDef);
                     }
+                    formButton.setCooldown(key + "." + button, cooldown);
                     buttons.add(formButton);
                 }
             }
@@ -258,58 +307,11 @@ public class FormMenuUtil {
         logger.info("Successfully reloaded " + formMenus.size() + " form menus");
     }
 
-    /**
-     * Updates the MessageData instance used by this FormMenuUtil.
-     * This is called during reload to ensure the FormMenuUtil uses the latest message configuration.
-     *
-     * @param newMessageData The new MessageData instance with reloaded configuration
-     */
-    public void updateMessageData(MessageData newMessageData) {
-        if (newMessageData != null) {
-            try {
-                // Use reflection to update the final messageData field
-                java.lang.reflect.Field messageDataField = this.getClass().getDeclaredField("messageData");
-                messageDataField.setAccessible(true);
-
-                // Remove the final modifier temporarily
-                java.lang.reflect.Field modifiersField = java.lang.reflect.Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-                modifiersField.setInt(messageDataField, messageDataField.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
-
-                // Set the new MessageData instance
-                messageDataField.set(this, newMessageData);
-
-                logger.info("MessageData updated successfully in FormMenuUtil during reload");
-            } catch (Exception e) {
-                logger.warn("Failed to update MessageData in FormMenuUtil: " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Updates the FormConfig instance used by this FormMenuUtil.
-     * This allows reloading fresh configuration without recreating the FormMenuUtil.
-     */
-    public void updateFormConfig(FormConfig newConfig) {
-        if (newConfig != null) {
-            try {
-                java.lang.reflect.Field configField = this.getClass().getDeclaredField("config");
-                configField.setAccessible(true);
-                java.lang.reflect.Field modifiersField = java.lang.reflect.Field.class.getDeclaredField("modifiers");
-                modifiersField.setAccessible(true);
-                modifiersField.setInt(configField, configField.getModifiers() & ~java.lang.reflect.Modifier.FINAL);
-                configField.set(this, newConfig);
-                logger.info("FormConfig updated successfully in FormMenuUtil during reload");
-            } catch (Exception e) {
-                logger.warn("Failed to update FormConfig in FormMenuUtil: " + e.getMessage());
-            }
-        }
-    }
 
     public void openForm(FormPlayer player, String menuName, String[] args) {
         FormMenu menu = formMenus.get(menuName.toLowerCase());
         if (menu == null) {
-            player.sendMessage(messageData.getValue(MessageData.MENU_NOT_FOUND, Map.of("{menu}", menuName), null));
+            player.sendMessage(messageData.getValue(MessageData.MENU_NOT_FOUND, Map.of("menu", menuName), null));
             return;
         }
 
@@ -327,6 +329,20 @@ public class FormMenuUtil {
         Map<String, String> placeholders = new HashMap<>();
         for (int i = 0; i < args.length; i++) {
             placeholders.put(String.valueOf(i + 1), args[i]);
+        }
+
+        if (menu.getOpenCondition() != null) {
+            ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
+            if (!ConditionEvaluator.evaluateCondition(player, menu.getOpenCondition(), context, messageData)) {
+                player.sendMessage(menu.getOpenConditionMessage() != null
+                        ? messageData.applyColor(PlaceholderUtil.processPlaceholders(menu.getOpenConditionMessage(), context.getPlaceholders(), player, messageData))
+                        : messageData.getValue(MessageData.MENU_REQUIREMENTS, null, player));
+                return;
+            }
+        }
+
+        if (onCooldown(player, menuName.toLowerCase(), menu.getCooldownSeconds())) {
+            return;
         }
 
         switch (type.toUpperCase()) {
@@ -399,17 +415,14 @@ public class FormMenuUtil {
                 .button1(button1Text)
                 .button2(button2Text)
                 .validResultHandler((formResponse, modalResponse) -> {
-                    if (modalResponse.clickedButtonId() == 0) {
-                        if (button1OnClick != null) {
-                            handleOnClick(player, button1OnClick, placeholders, messageData);
-                        }
-                    } else {
-                        if (button2OnClick != null) {
-                            handleOnClick(player, button2OnClick, placeholders, messageData);
-                        }
+                    boolean first = modalResponse.clickedButtonId() == 0;
+                    FormButton clicked = first ? b1 : b2;
+                    String action = first ? button1OnClick : button2OnClick;
+                    if (action != null && !onCooldown(player, clicked.getCooldownKey(), clicked.getCooldownSeconds())) {
+                        handleOnClick(player, action, placeholders, messageData);
                     }
-                })
-                .build();
+                });
+        addCloseActions(formBuilder, player, formMenu, placeholders);
 
         if (formSender != null) {
             ErrorHandlingUtil.sendFormWithFallback(
@@ -435,6 +448,7 @@ public class FormMenuUtil {
         }
 
         List<String> onClickActions = new ArrayList<>();
+        List<FormButton> shownButtons = new ArrayList<>();
 
 
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
@@ -473,9 +487,8 @@ public class FormMenuUtil {
                     formBuilder.button(effectiveText);
                 }
 
-                if (effectiveOnClick != null) {
-                    onClickActions.add(effectiveOnClick);
-                }
+                onClickActions.add(effectiveOnClick);
+                shownButtons.add(button);
             } else {
 
                 String buttonText = replacePlaceholders(button.getText(), placeholders, player, messageData);
@@ -483,23 +496,32 @@ public class FormMenuUtil {
                     String srcRaw = button.getImage();
                     String srcProcessed = replacePlaceholders(srcRaw, placeholders, player, messageData);
                     String src = mapImageSource(srcProcessed);
-                    FormImage.Type type = it.pintux.life.common.utils.IconResolver.isUrl(src) ? FormImage.Type.URL : FormImage.Type.PATH;
-                    formBuilder.button(buttonText, type, src);
+                    if (src != null) {
+                        FormImage.Type type = it.pintux.life.common.utils.IconResolver.isUrl(src) ? FormImage.Type.URL : FormImage.Type.PATH;
+                        formBuilder.button(buttonText, type, src);
+                    } else {
+                        formBuilder.button(buttonText);
+                    }
                 } else {
                     formBuilder.button(buttonText);
                 }
-                if (button.getOnClick() != null) {
-                    onClickActions.add(button.getOnClick());
-                }
+                onClickActions.add(button.getOnClick());
+                shownButtons.add(button);
             }
         }
 
         formBuilder.validResultHandler((form, response) -> {
             int clickedButtonId = response.clickedButtonId();
+            if (clickedButtonId < 0 || clickedButtonId >= onClickActions.size()) {
+                return;
+            }
             String action = onClickActions.get(clickedButtonId);
-
-            handleOnClick(player, action, placeholders, messageData);
+            FormButton clicked = shownButtons.get(clickedButtonId);
+            if (action != null && !onCooldown(player, clicked.getCooldownKey(), clicked.getCooldownSeconds())) {
+                handleOnClick(player, action, placeholders, messageData);
+            }
         });
+        addCloseActions(formBuilder, player, formMenu, placeholders);
 
         SimpleForm form = formBuilder.build();
         if (formSender != null) {
@@ -534,8 +556,8 @@ public class FormMenuUtil {
                 case "input":
                     String inputTextRaw = (String) component.get("text");
                     String inputText = inputTextRaw != null ? replacePlaceholders(inputTextRaw, placeholders, player, messageData) : "";
-                    String placeholder = (String) component.get("placeholder");
-                    String defaultValue = (String) component.get("default");
+                    String placeholder = component.get("placeholder") != null ? replacePlaceholders(String.valueOf(component.get("placeholder")), placeholders, player, messageData) : "";
+                    String defaultValue = component.get("default") != null ? replacePlaceholders(String.valueOf(component.get("default")), placeholders, player, messageData) : "";
                     formBuilder.input(inputText, placeholder, defaultValue);
                     Object inputAction = component.get("action");
                     if (inputAction instanceof List) {
@@ -623,6 +645,28 @@ public class FormMenuUtil {
                     }
                     componentResults.put(componentKey, false);
                     break;
+                case "label":
+                    Object labelRaw = component.get("text");
+                    formBuilder.label(labelRaw != null ? replacePlaceholders(String.valueOf(labelRaw), placeholders, player, messageData) : "");
+                    break;
+                case "step_slider":
+                    String stepTextRaw = (String) component.get("text");
+                    String stepText = stepTextRaw != null ? replacePlaceholders(stepTextRaw, placeholders, player, messageData) : "";
+                    List<String> steps = resolveDropdownOptions(component.get("steps"), placeholders, player, messageData);
+                    resolvedDropdownOptions.put(componentKey, steps);
+                    int defaultStep = component.get("default") instanceof Number number ? number.intValue() : 0;
+                    if (defaultStep < 0 || defaultStep >= steps.size()) {
+                        defaultStep = 0;
+                    }
+                    formBuilder.stepSlider(stepText, steps, defaultStep);
+                    Object stepAction = component.get("action");
+                    if (stepAction instanceof List) {
+                        componentActions.put(componentIndex[0], "[" + String.join(", ", (List<String>) stepAction) + "]");
+                    } else {
+                        componentActions.put(componentIndex[0], (String) stepAction);
+                    }
+                    componentResults.put(componentKey, "");
+                    break;
             }
 
             componentIndex[0]++;
@@ -639,7 +683,7 @@ public class FormMenuUtil {
                 String result = "";
                 switch (type.toLowerCase()) {
                     case "input":
-                        result = customFormResponse.asInput(componentIndex[0]);
+                        result = PlaceholderUtil.sanitizeInput(customFormResponse.asInput(componentIndex[0]));
                         componentResults.put(componentKey, result);
                         break;
                     case "slider":
@@ -654,7 +698,7 @@ public class FormMenuUtil {
                             options = resolveDropdownOptions(component.get("options"), placeholders, player, messageData);
                         }
                         if (dropdownResult >= 0 && dropdownResult < options.size()) {
-                            result = options.get(dropdownResult);
+                            result = PlaceholderUtil.sanitizeInput(options.get(dropdownResult));
                         } else {
                             result = "";
                         }
@@ -664,6 +708,13 @@ public class FormMenuUtil {
                         boolean toggleResult = customFormResponse.asToggle(componentIndex[0]);
                         result = String.valueOf(toggleResult);
                         componentResults.put(componentKey, toggleResult);
+                        break;
+                    case "step_slider":
+                        int stepResult = customFormResponse.asStepSlider(componentIndex[0]);
+                        List<String> stepOptions = resolvedDropdownOptions.get(componentKey);
+                        result = stepOptions != null && stepResult >= 0 && stepResult < stepOptions.size()
+                                ? PlaceholderUtil.sanitizeInput(stepOptions.get(stepResult)) : "";
+                        componentResults.put(componentKey, result);
                         break;
                 }
 
@@ -675,17 +726,15 @@ public class FormMenuUtil {
             }
 
             List<String> globalActions = formMenu.getGlobalActions();
-            if (globalActions != null) {
-                for (String globalAction : globalActions) {
-                    String finalAction = globalAction;
-                    for (Map.Entry<String, Object> entry : componentResults.entrySet()) {
-                        finalAction = finalAction.replace("$" + entry.getKey(), entry.getValue().toString());
-                    }
-
-                    handleCustomAction(player, finalAction, null);
-                }
+            if (globalActions != null && !globalActions.isEmpty()) {
+                Map<String, String> results = new HashMap<>();
+                componentResults.forEach((k, v) -> results.put(k, String.valueOf(v)));
+                String sequence = "[" + String.join(", ", globalActions) + "]";
+                handleCustomAction(player, PlaceholderUtil.processDynamicPlaceholders(sequence, results), null);
             }
         });
+
+        addCloseActions(formBuilder, player, formMenu, placeholders);
 
         CustomForm form = formBuilder.build();
         if (formSender != null) {
@@ -700,13 +749,21 @@ public class FormMenuUtil {
         }
     }
 
+    private void addCloseActions(org.geysermc.cumulus.form.util.FormBuilder<?, ?, ?> builder, FormPlayer player, FormMenu formMenu, Map<String, String> placeholders) {
+        String closeActions = formMenu.getCloseActions();
+        if (closeActions != null) {
+            builder.closedResultHandler(() -> handleOnClick(player, closeActions, placeholders, messageData));
+        }
+    }
+
     protected void handleOnClick(FormPlayer player, String onClickAction, Map<String, String> placeholders, MessageData messageData) {
         if (onClickAction == null || onClickAction.trim().isEmpty()) {
             logger.warn("Empty onClick action for player: " + player.getName());
             return;
         }
 
-        onClickAction = replacePlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders, player, messageData);
+        placeholders = PlaceholderUtil.sanitizeInputs(placeholders);
+        onClickAction = messageData.applyColor(PlaceholderUtil.processDynamicPlaceholders(onClickAction.trim().replaceAll("\\s+", " "), placeholders));
 
 
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData);
@@ -735,7 +792,7 @@ public class FormMenuUtil {
         if (result.isFailure()) {
             logger.warn("Action execution failed for player " + player.getName() + ": " + result.message());
             if (result.message() != null) {
-                player.sendMessage(messageData.getValue(MessageData.FORMS_ACTION_FAILED, Map.of("message", result.message()), player));
+                player.sendMessage(result.message());
             }
         } else {
             logger.debug("Successfully executed action for player " + player.getName() + ": " + onClickAction);
@@ -775,24 +832,19 @@ public class FormMenuUtil {
             List<ActionSystem.ActionResult> results = actionExecutor.executeActions(player, actions, context);
 
 
-            boolean hasFailures = false;
             for (int i = 0; i < results.size(); i++) {
                 ActionSystem.ActionResult result = results.get(i);
                 if (result.isFailure()) {
-                    hasFailures = true;
                     logger.warn("Action " + (i + 1) + " failed for player " + player.getName() + ": " + result.message());
+                    player.sendMessage(result.message() != null ? result.message()
+                            : messageData.getValue(MessageData.FORMS_SEQUENCE_PARTIAL_FAILURE, null, player));
+                    break;
                 }
-            }
-
-            if (hasFailures) {
-                player.sendMessage(messageData.getValue(MessageData.FORMS_SEQUENCE_PARTIAL_FAILURE, null, player));
-            } else {
-                logger.debug("Successfully executed all actions in sequence for player " + player.getName());
             }
 
         } catch (Exception e) {
             logger.error("Error executing multi-action sequence for player " + player.getName(), e);
-            player.sendMessage(messageData.getValue(MessageData.FORMS_SEQUENCE_ERROR, Map.of("error", e.getMessage()), player));
+            player.sendMessage(messageData.getValue(MessageData.FORMS_SEQUENCE_ERROR, null, player));
         }
     }
 
@@ -816,19 +868,21 @@ public class FormMenuUtil {
         }
 
 
-        if (value != null) {
-            action = action.replace("$1", value);
-        }
-
-
         Map<String, String> customPlaceholders = new HashMap<>();
         if (value != null) {
+            value = PlaceholderUtil.sanitizeInput(value);
             customPlaceholders.put("value", value);
             customPlaceholders.put("1", value);
+            action = PlaceholderUtil.processDynamicPlaceholders(action, Map.of("1", value));
         }
 
         ActionSystem.ActionContext context = PlaceholderUtil.createContextWithBuiltinPlaceholders(player, customPlaceholders, messageData);
 
+        String trimmedAction = action.trim();
+        if (trimmedAction.startsWith("[") && trimmedAction.endsWith("]")) {
+            handleMultipleActions(player, trimmedAction, context);
+            return;
+        }
 
         ActionSystem.Action parsedAction = actionExecutor.parseAction(action);
         if (parsedAction == null) {
@@ -842,7 +896,7 @@ public class FormMenuUtil {
         if (result.isFailure()) {
             logger.warn("Custom action execution failed for player " + player.getName() + ": " + result.message());
             if (result.message() != null) {
-                player.sendMessage(messageData.getValue(MessageData.FORMS_ACTION_FAILED, Map.of("message", result.message()), player));
+                player.sendMessage(result.message());
             }
         } else {
             logger.debug("Successfully executed custom action for player " + player.getName() + ": " + action);
@@ -861,9 +915,8 @@ public class FormMenuUtil {
         String result = text;
 
 
-        if (placeholders != null && !placeholders.isEmpty()) {
-            result = PlaceholderUtil.processDynamicPlaceholders(result, placeholders);
-        }
+        result = PlaceholderUtil.processDynamicPlaceholders(result,
+                PlaceholderUtil.createContextWithBuiltinPlaceholders(player, placeholders, messageData).getPlaceholders());
 
 
         if (messageData != null && result.contains("%")) {
@@ -905,6 +958,15 @@ public class FormMenuUtil {
             }
 
             String rawTrimmed = raw.trim();
+            if (ONLINE_PLAYERS_TOKEN.equalsIgnoreCase(rawTrimmed)) {
+                if (playerManager != null) {
+                    playerManager.getOnlinePlayerNames().stream()
+                            .filter(name -> !name.equalsIgnoreCase(player.getName()))
+                            .sorted(String.CASE_INSENSITIVE_ORDER)
+                            .forEach(resolved::add);
+                }
+                continue;
+            }
             String processed = replacePlaceholders(raw, placeholders, player, messageData);
 
             boolean splitAsCsv = isSinglePercentPlaceholderToken(rawTrimmed) || (rawIsString && rawTrimmed.contains(","));
@@ -953,15 +1015,6 @@ public class FormMenuUtil {
     }
 
 
-    public boolean unregisterActionHandler(String actionType) {
-        boolean removed = actionRegistry.unregisterHandler(actionType);
-        if (removed) {
-            logger.info("Unregistered action handler: " + actionType);
-        }
-        return removed;
-    }
-
-
     public ActionRegistry getActionRegistry() {
         return actionRegistry;
     }
@@ -973,14 +1026,6 @@ public class FormMenuUtil {
 
 
     public void shutdown() {
-        if (actionExecutor != null) {
-            actionExecutor.shutdown();
-        }
-
-
-        if (delayActionHandler != null) {
-            delayActionHandler.shutdown();
-        }
         if (assetServer != null) {
             try {
                 assetServer.shutdown();
@@ -991,6 +1036,10 @@ public class FormMenuUtil {
     }
 
 
+    private static String stripColors(String text) {
+        return text == null ? null : text.replaceAll("(?i)[§&]([0-9a-fk-orx]|#[0-9a-f]{6})", "").trim();
+    }
+
     private void validateConfiguration() {
         ConfigValidator validator = new ConfigValidator(messageData, actionRegistry);
         ConfigValidator.ValidationResult result = validator.validateConfiguration(formMenus);
@@ -998,14 +1047,14 @@ public class FormMenuUtil {
         if (result.hasErrors()) {
             logger.warn("Configuration validation found " + result.getErrors().size() + " errors:");
             for (String error : result.getErrors()) {
-                logger.warn("  - " + error);
+                logger.warn("  - " + stripColors(error));
             }
         }
 
         if (result.hasWarnings()) {
             logger.info("Configuration validation found " + result.getWarnings().size() + " warnings:");
             for (String warning : result.getWarnings()) {
-                logger.info("  - " + warning);
+                logger.info("  - " + stripColors(warning));
             }
         }
 
@@ -1233,30 +1282,10 @@ public class FormMenuUtil {
             }
         }
 
-        // Real URLs pass through untouched (rendered as FormImage.Type.URL).
-        // Must short-circuit BEFORE IconResolver.resolve(), which is a total
-        // function that maps any non-blank input to a "textures/..." path and
-        // would otherwise mangle a URL into "textures/items/https://..." (PATH).
-        if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
-            return trimmed;
+        String resolved = it.pintux.life.common.utils.IconResolver.resolveImage(trimmed);
+        if (resolved != null && it.pintux.life.common.utils.IconResolver.isLocalImageFile(resolved)) {
+            return assetServer != null && assetServer.isAvailable() ? assetServer.getAssetUrl(resolved) : resolved;
         }
-
-        if (trimmed.startsWith("textures/")) {
-            return it.pintux.life.common.utils.IconResolver.remapTexturePath(trimmed);
-        }
-
-        String resolved = it.pintux.life.common.utils.IconResolver.resolveIcon(trimmed);
-        if (resolved != null) return resolved;
-
-        if (it.pintux.life.common.utils.IconResolver.isLocalImageFile(trimmed)) {
-            return assetServer != null && assetServer.isAvailable() ? assetServer.getAssetUrl(trimmed) : trimmed;
-        }
-
-        if (trimmed.matches("^[A-Za-z0-9_.\\-]+$")) {
-            return "https://mc-heads.net/head/" + trimmed + "/64";
-        }
-
-        return trimmed;
+        return resolved;
     }
 }
-

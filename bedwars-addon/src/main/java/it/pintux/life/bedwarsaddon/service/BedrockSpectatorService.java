@@ -1,13 +1,13 @@
 package it.pintux.life.bedwarsaddon.service;
 
-import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.SpectatorMenuModel;
 import it.pintux.life.bedwarsaddon.model.SpectateTarget;
-import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
-import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.entity.Player;
@@ -59,7 +59,7 @@ public final class BedrockSpectatorService {
             form.button(button.label(), fp -> api.executeActionString(fp, action, ctx()));
         }
         sound.playFormOpen(player);
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void teleport(Player player, String targetUuid) {

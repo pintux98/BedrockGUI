@@ -1,5 +1,6 @@
 package it.pintux.life.bedwarsaddon.listener;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.service.BedrockArenaService;
 import it.pintux.life.bedwarsaddon.service.BedrockPartyService;
@@ -7,7 +8,6 @@ import it.pintux.life.bedwarsaddon.service.BedrockShopService;
 import it.pintux.life.bedwarsaddon.service.BedrockSpectatorService;
 import it.pintux.life.bedwarsaddon.service.BedrockStatsService;
 import it.pintux.life.bedwarsaddon.service.BedrockUpgradeService;
-import it.pintux.life.bedwarsaddon.util.CommandAliases;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

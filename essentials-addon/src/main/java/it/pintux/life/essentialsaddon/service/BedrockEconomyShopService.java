@@ -1,17 +1,16 @@
 package it.pintux.life.essentialsaddon.service;
-import it.pintux.life.common.utils.IconResolver;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FormPlayerResolver;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.EconomyShopCatalogEntry;
 import it.pintux.life.essentialsaddon.model.ShopItemView;
-import it.pintux.life.essentialsaddon.util.AddonText;
 import it.pintux.life.essentialsaddon.util.BedrockSoundFeedback;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.ShopGuiActionPayloads;
 import me.gypopo.economyshopgui.api.EconomyShopGUIHook;
 import me.gypopo.economyshopgui.api.events.PostTransactionEvent;
@@ -107,7 +106,7 @@ public final class BedrockEconomyShopService {
                             context("economyshop-main", Map.of("shopId", entry.getId()))
                     ));
         }
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         soundFeedback.playFormOpen(player);
     }
 
@@ -174,7 +173,7 @@ public final class BedrockEconomyShopService {
                             context("economyshop-next", Map.of("shopId", sectionId))
                     ));
         }
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         soundFeedback.playFormOpen(player);
     }
 
@@ -245,7 +244,7 @@ public final class BedrockEconomyShopService {
             form.button(configuration.shopDecorationLabel(), ignored -> player.sendMessage(configuration.shopUnavailableItemMessage()));
         }
         form.button(configuration.backButton(), ignored -> openShop(player, sectionId, page));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
         soundFeedback.playFormOpen(player);
     }
 

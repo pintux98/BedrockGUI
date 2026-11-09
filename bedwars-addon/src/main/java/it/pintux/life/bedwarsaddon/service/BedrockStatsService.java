@@ -1,12 +1,12 @@
 package it.pintux.life.bedwarsaddon.service;
 
-import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.StatsMenuModel;
 import it.pintux.life.bedwarsaddon.model.PlayerStatsInfo;
-import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
-import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.entity.Player;
 
@@ -53,7 +53,7 @@ public final class BedrockStatsService {
         form.button1(config.statsCloseButton(), fp -> { /* no-op: dismisses */ });
         form.button2(config.statsRefreshButton(), fp -> openStats(player));
         sound.playFormOpen(player);
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private BedrockGUIApi requireApi(Player player) {

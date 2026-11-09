@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
@@ -8,8 +10,6 @@ import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
 import it.pintux.life.homesteadaddon.model.SubAreaView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.HomesteadActionPayloads;
 import org.bukkit.entity.Player;
 
@@ -59,7 +59,7 @@ public final class BedrockFlagService {
         }
         form.button(config.text("common.back-button"),
                 fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -105,7 +105,7 @@ public final class BedrockFlagService {
                 mask -> {
                     gateway.setMemberPlayerFlags(regionId, memberId, mask);
                     AddonText.send(player, config.text("messages.flags-updated"));
-                    navigate(new BukkitFormPlayer(player),
+                    navigate(new PaperPlayer(player),
                             "hs_player_info:" + HomesteadActionPayloads.regionMember(regionId, memberId));
                 });
     }
@@ -121,7 +121,7 @@ public final class BedrockFlagService {
                 mask -> {
                     gateway.setMemberControlFlags(regionId, memberId, mask);
                     AddonText.send(player, config.text("messages.flags-updated"));
-                    navigate(new BukkitFormPlayer(player),
+                    navigate(new PaperPlayer(player),
                             "hs_player_info:" + HomesteadActionPayloads.regionMember(regionId, memberId));
                 });
     }
@@ -147,7 +147,7 @@ public final class BedrockFlagService {
                 mask -> {
                     gateway.setSubAreaFlags(subAreaId, mask);
                     AddonText.send(player, config.text("messages.flags-updated"));
-                    navigate(new BukkitFormPlayer(player), "hs_subarea_menu:" + subAreaId);
+                    navigate(new PaperPlayer(player), "hs_subarea_menu:" + subAreaId);
                 });
     }
 
@@ -183,7 +183,7 @@ public final class BedrockFlagService {
                 mask -> {
                     gateway.setSubAreaMemberFlags(subAreaId, memberId, mask);
                     AddonText.send(player, config.text("messages.flags-updated"));
-                    navigate(new BukkitFormPlayer(player),
+                    navigate(new PaperPlayer(player),
                             "hs_subarea_member:" + HomesteadActionPayloads.regionMember(subAreaId, memberId));
                 });
     }
@@ -216,7 +216,7 @@ public final class BedrockFlagService {
             }
             persist.accept(newMask);
         });
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private String flagLabel(String flagName) {

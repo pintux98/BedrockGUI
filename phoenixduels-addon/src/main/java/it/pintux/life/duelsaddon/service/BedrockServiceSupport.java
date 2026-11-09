@@ -1,11 +1,11 @@
 package it.pintux.life.duelsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
-import it.pintux.life.duelsaddon.util.AddonText;
-import it.pintux.life.duelsaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -53,8 +53,8 @@ public abstract class BedrockServiceSupport {
         return true;
     }
 
-    protected BukkitFormPlayer wrap(Player player) {
-        return new BukkitFormPlayer(player);
+    protected PaperPlayer wrap(Player player) {
+        return new PaperPlayer(player);
     }
 
     protected String text(String path) {

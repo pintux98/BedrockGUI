@@ -1,7 +1,7 @@
 # BedrockGUI Bedwars Addon
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 1
+config-version: 2
 
 # Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
 # Bedwars menus (shop open, arena/upgrade/stats/spectator GUIs) for Bedrock
@@ -42,8 +42,6 @@ shop:
   item-button-unaffordable: "&c{item}\n&7{cost} {currency}"
   back-button: "&7Back"
   close-button: "&cClose"
-  purchase-success: "&aPurchased {item}."
-  purchase-failed: "&cCould not purchase {item}: {reason}"
   not-in-game: "&cYou must be in a game to use the shop."
   provider-unavailable: "&cThe shop is currently unavailable."
 
@@ -122,7 +120,5 @@ command:
 sounds:
   enabled: true
   form-open: "UI_BUTTON_CLICK"
-  purchase-success: "ENTITY_PLAYER_LEVELUP"
-  purchase-failed: "BLOCK_NOTE_BLOCK_PLING"
   volume: 1.0
   pitch: 1.0

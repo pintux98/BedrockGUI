@@ -33,7 +33,7 @@ public class BungeeActionHandler extends BaseActionHandler {
     @Override
     public ActionSystem.ActionResult execute(FormPlayer player, String actionData, ActionSystem.ActionContext context) {
         if (ValidationUtils.isNullOrEmpty(actionData)) {
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Action data cannot be empty"), player);
+            return emptyFailure(player);
         }
 
         try {
@@ -46,7 +46,7 @@ public class BungeeActionHandler extends BaseActionHandler {
                  if (matcher.find()) {
                      subchannel = matcher.group(1);
                  } else {
-                     return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No subchannel specified"), player);
+                     return usageFailure(player, "<subchannel> [args]");
                  }
                  args = parseNewFormatValues(actionData);
             } else {
@@ -54,7 +54,7 @@ public class BungeeActionHandler extends BaseActionHandler {
                 String processed = processPlaceholders(actionData, context, player);
                 String[] parts = processed.split(" ");
                 if (parts.length == 0) {
-                     return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No subchannel specified"), player);
+                     return usageFailure(player, "<subchannel> [args]");
                 }
                 subchannel = parts[0];
                 args = new java.util.ArrayList<>();
@@ -75,13 +75,15 @@ public class BungeeActionHandler extends BaseActionHandler {
                 out.writeUTF(arg);
             }
 
-            playerManager.sendByteArray(player, CHANNEL, out.toByteArray());
-            
+            if (!playerManager.sendByteArray(player, CHANNEL, out.toByteArray())) {
+                return failure(player, "action.failed");
+            }
+
             return createSuccessResult(MessageData.ACTION_SUCCESS, createReplacements("message", "Sent BungeeCord message: " + subchannel), player);
 
         } catch (Exception e) {
             logger.error("Error executing bungee action: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 

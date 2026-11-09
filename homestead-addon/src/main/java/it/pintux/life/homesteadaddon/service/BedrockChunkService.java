@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -7,8 +9,6 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.ChunkView;
 import it.pintux.life.homesteadaddon.model.RegionView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.List;
@@ -67,7 +67,7 @@ public final class BedrockChunkService {
             form.button(config.text("common.next-button"), fp -> openClaimedChunks(player, regionId, next));
         }
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void openChunkActions(Player player, long regionId, ChunkView chunk) {
@@ -91,7 +91,7 @@ public final class BedrockChunkService {
             form.button(config.text("chunks.button-unclaim"), fp -> confirmUnclaim(player, regionId, chunk));
         }
         form.button(config.text("common.back-button"), fp -> openClaimedChunks(player, regionId, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void confirmUnclaim(Player player, long regionId, ChunkView chunk) {
@@ -112,7 +112,7 @@ public final class BedrockChunkService {
                     openClaimedChunks(player, regionId, 1);
                 })
                 .button2(config.text("chunks.confirm-no"), fp -> openChunkActions(player, regionId, chunk))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 
@@ -140,9 +140,9 @@ public final class BedrockChunkService {
                     if (value != null && gateway.setMapColor(regionId, value.toString())) {
                         AddonText.send(player, config.apply(config.text("map.color-success"), Map.of("value", value.toString())));
                     }
-                    navigate(new BukkitFormPlayer(player), "hs_misc:" + regionId);
+                    navigate(new PaperPlayer(player), "hs_misc:" + regionId);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     public void openMapIcon(Player player, long regionId) {
@@ -168,9 +168,9 @@ public final class BedrockChunkService {
                     if (value != null && gateway.setMapIcon(regionId, value.toString())) {
                         AddonText.send(player, config.apply(config.text("map.icon-success"), Map.of("value", value.toString())));
                     }
-                    navigate(new BukkitFormPlayer(player), "hs_misc:" + regionId);
+                    navigate(new PaperPlayer(player), "hs_misc:" + regionId);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 

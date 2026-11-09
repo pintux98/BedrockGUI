@@ -1,10 +1,10 @@
 package it.pintux.life.duelsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
-import it.pintux.life.duelsaddon.util.AddonText;
 import org.bukkit.entity.Player;
 
 /**

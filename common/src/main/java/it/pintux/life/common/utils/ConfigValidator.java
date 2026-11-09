@@ -4,10 +4,8 @@ import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.form.obj.FormMenu;
 import it.pintux.life.common.form.obj.FormButton;
 import it.pintux.life.common.form.obj.ConditionalButton;
-import it.pintux.life.common.utils.ValidationUtils;
 import it.pintux.life.common.actions.ActionRegistry;
 import it.pintux.life.common.actions.ActionSystem.ActionDefinition;
-import it.pintux.life.common.actions.ActionParser;
 
 import java.util.*;
 import java.util.regex.Pattern;
@@ -138,29 +136,8 @@ public class ConfigValidator {
 
     private void validateButtonActions(String menuName, int buttonIndex, FormButton button) {
 
-        ActionSystem.ActionDefinition actionDef = null;
-
-        if (button.hasActions()) {
-
-            actionDef = button.getPrimaryAction();
-        } else if (button instanceof ConditionalButton) {
-
-            ConditionalButton conditionalButton = (ConditionalButton) button;
-            actionDef = conditionalButton.getActionDefinition();
-        }
-
-        if (actionDef == null) {
-            return;
-        }
-
-
-        validateActionDefinition(menuName, buttonIndex, actionDef);
-
-
-        if (button.hasActions()) {
-            for (ActionSystem.ActionDefinition action : button.getAllActions()) {
-                validateActionDefinition(menuName, buttonIndex, action);
-            }
+        for (ActionSystem.ActionDefinition action : button.getAllActions()) {
+            validateActionDefinition(menuName, buttonIndex, action);
         }
     }
 
@@ -171,7 +148,7 @@ public class ConfigValidator {
         }
 
 
-        if (!ActionParser.isValid(actionDef)) {
+        if (actionDef.isEmpty()) {
             Map<String, Object> replacements = Map.of("menu", menuName, "button", buttonIndex);
             validationErrors.add(messageData.getValue(MessageData.VALIDATION_INVALID_ACTION_FORMAT, replacements, null));
             return;
@@ -200,6 +177,10 @@ public class ConfigValidator {
 
                 if (!actionRegistry.getRegisteredActionTypes().contains(actionType.toLowerCase())) {
                     Map<String, Object> replacements = Map.of("type", actionType, "menu", menuName, "index", buttonIndex);
+                    if (ActionRegistry.isPlatformAction(actionType)) {
+                        validationWarnings.add(messageData.getValue(MessageData.VALIDATION_UNAVAILABLE_ACTION, replacements, null));
+                        continue;
+                    }
                     validationErrors.add(messageData.getValue(MessageData.VALIDATION_UNKNOWN_ACTION_TYPE, replacements, null));
                 }
 
@@ -248,28 +229,6 @@ public class ConfigValidator {
         if (button.hasShowCondition()) {
             validateActionCondition(menuName, buttonIndex, button.getShowCondition());
         }
-
-
-        if (button.getPriorityCondition() != null && !button.getPriorityCondition().trim().isEmpty()) {
-            validateActionCondition(menuName, buttonIndex, button.getPriorityCondition());
-        }
-
-
-        if (button.getAlternativeActionDefinition() != null) {
-            validateActionDefinition(menuName, buttonIndex, button.getAlternativeActionDefinition());
-        }
-
-
-        for (Map.Entry<String, ActionSystem.ActionDefinition> entry : button.getConditionalActions().entrySet()) {
-            validateActionCondition(menuName, buttonIndex, entry.getKey());
-            validateActionDefinition(menuName, buttonIndex, entry.getValue());
-        }
-
-
-        int priority = button.getPriority();
-        if (priority < -1000 || priority > 1000) {
-            validationWarnings.add("Priority value " + priority + " may be out of reasonable range in menu '" + menuName + "' button " + buttonIndex);
-        }
     }
 
 
@@ -313,12 +272,14 @@ public class ConfigValidator {
                     }
                     break;
                 case "placeholder":
-                    if (!conditionValue.contains("=")) {
+                    if (ConditionEvaluator.splitParts(conditionValue).size() < 2) {
                         validationWarnings.add("Placeholder condition may be missing comparison operator in menu '" + menuName + "' button " + buttonIndex);
                     }
                     break;
-                case "economy":
-
+                case "plugin":
+                    if (ValidationUtils.isNullOrEmpty(conditionValue)) {
+                        validationErrors.add("Empty plugin condition in menu '" + menuName + "' button " + buttonIndex);
+                    }
                     break;
                 default:
                     validationWarnings.add("Unknown condition type '" + conditionType + "' in menu '" + menuName + "' button " + buttonIndex);
@@ -409,20 +370,8 @@ public class ConfigValidator {
                 ConditionalButton conditionalButton = (ConditionalButton) button;
 
 
-                if (checkActionForCircularReference(conditionalButton.getActionDefinition(), formMenus, visited)) {
+                if (checkActionForCircularReference(conditionalButton.getAction(), formMenus, visited)) {
                     return true;
-                }
-
-
-                if (checkActionForCircularReference(conditionalButton.getAlternativeActionDefinition(), formMenus, visited)) {
-                    return true;
-                }
-
-
-                for (ActionSystem.ActionDefinition conditionalAction : conditionalButton.getConditionalActions().values()) {
-                    if (checkActionForCircularReference(conditionalAction, formMenus, visited)) {
-                        return true;
-                    }
                 }
             }
         }

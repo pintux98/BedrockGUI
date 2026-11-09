@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
 import de.Keyle.MyPet.MyPetApi;
 import de.Keyle.MyPet.api.WorldGroup;
 import de.Keyle.MyPet.api.entity.MyPet;
@@ -11,7 +12,6 @@ import de.Keyle.MyPet.api.util.hooks.types.EconomyHook;
 import de.Keyle.MyPet.api.util.locale.Translation;
 import it.pintux.life.essentialsaddon.model.PetBuyResult;
 import it.pintux.life.essentialsaddon.model.ShopPetView;
-import it.pintux.life.essentialsaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;

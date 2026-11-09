@@ -2,23 +2,22 @@ package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
 
-
-
-import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.platform.PlatformCommandExecutor;
+import it.pintux.life.common.platform.PlatformInventoryManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
 
-import java.util.HashMap;
 import java.util.Map;
 
 
 public class InventoryActionHandler extends BaseActionHandler {
 
     private final PlatformCommandExecutor commandExecutor;
+    private final PlatformInventoryManager inventoryManager;
 
-    public InventoryActionHandler(PlatformCommandExecutor commandExecutor) {
+    public InventoryActionHandler(PlatformCommandExecutor commandExecutor, PlatformInventoryManager inventoryManager) {
         this.commandExecutor = commandExecutor;
+        this.inventoryManager = inventoryManager;
     }
 
     @Override
@@ -34,8 +33,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
 
         try {
-            // Check if it's the new YAML format with curly braces
-            if (actionValue.trim().startsWith("{") && actionValue.trim().endsWith("}")) {
+            if (isNewCurlyBraceFormat(actionValue, "inventory")) {
                 return executeNewFormatInventoryOperations(player, actionValue, context);
             }
             // Legacy format support
@@ -46,8 +44,7 @@ public class InventoryActionHandler extends BaseActionHandler {
             }
         } catch (Exception e) {
             logger.error("Error executing inventory action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Error executing inventory action: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -58,8 +55,7 @@ public class InventoryActionHandler extends BaseActionHandler {
             java.util.List<String> operations = parseNewFormatValues(actionValue);
             
             if (operations.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR,
-                        createReplacements("error", "No inventory operations found in new format"), player);
+                return emptyFailure(player);
             }
 
             // Execute each operation
@@ -76,8 +72,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                     createReplacements("message", "Executed " + operations.size() + " inventory operations"), player);
         } catch (Exception e) {
             logger.error("Error parsing new format inventory action: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Error parsing new format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -87,8 +82,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         String[] parts = processedData.split(":", 3);
 
         if (parts.length < 2) {
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Invalid inventory format. Expected: operation:item[:amount]"), player);
+            return usageFailure(player, "operation:item[:amount]");
         }
 
         String operation = parts[0].toLowerCase();
@@ -103,10 +97,9 @@ public class InventoryActionHandler extends BaseActionHandler {
             case "clear":
                 return handleClearInventory(player, itemData);
             case "check":
-                return handleCheckInventory(player, itemData);
+                return handleCheckInventory(player, itemData, amount);
             default:
-                return createFailureResult(MessageData.EXECUTION_ERROR,
-                        createReplacements("error", "Unknown inventory operation: " + operation), player);
+                return failure(player, "action.unknown_operation", "operation", operation);
         }
     }
 
@@ -152,38 +145,30 @@ public class InventoryActionHandler extends BaseActionHandler {
                         createReplacements("operation", "give " + itemData), player);
             }
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Invalid amount: " + amountStr), player);
+            return failure(player, "action.invalid_amount", "amount", amountStr);
         }
     }
 
     private ActionSystem.ActionResult handleRemoveItem(FormPlayer player, String itemData, String amountStr) {
+        int amount;
         try {
-            int amount = Integer.parseInt(amountStr);
-            String command = "clear " + player.getName() + " " + itemData + " " + amount;
-
-            boolean success = executeWithErrorHandling(
-                    () -> {
-                        commandExecutor.executeAsConsole(command);
-                        return true;
-                    },
-                    "Inventory remove command: " + command,
-                    player
-            );
-
-            if (success) {
-                logSuccess("inventory", "Removed " + amount + " " + itemData + " from " + player.getName(), player);
-                Map<String, Object> replacements = createReplacements("item", itemData);
-                replacements.put("amount", String.valueOf(amount));
-                return createSuccessResult("ACTION_INVENTORY_SUCCESS", replacements, player);
-            } else {
-                return createFailureResult("ACTION_INVENTORY_FAILED",
-                        createReplacements("operation", "remove " + itemData), player);
-            }
+            amount = Integer.parseInt(amountStr.trim());
         } catch (NumberFormatException e) {
-            return createFailureResult(MessageData.EXECUTION_ERROR,
-                    createReplacements("error", "Invalid amount: " + amountStr), player);
+            return failure(player, "action.invalid_amount", "amount", amountStr);
         }
+        if (amount <= 0 || !inventoryManager.removeItem(player, itemData, amount)) {
+            return missingItems(player, itemData, amount);
+        }
+        logSuccess("inventory", "Removed " + amount + " " + itemData + " from " + player.getName(), player);
+        Map<String, Object> replacements = createReplacements("item", itemData);
+        replacements.put("amount", String.valueOf(amount));
+        return createSuccessResult("ACTION_INVENTORY_SUCCESS", replacements, player);
+    }
+
+    private ActionSystem.ActionResult missingItems(FormPlayer player, String itemData, int amount) {
+        Map<String, Object> replacements = createReplacements("item", itemData);
+        replacements.put("amount", String.valueOf(amount));
+        return createFailureResult(MessageData.ACTION_INVENTORY_MISSING, replacements, player);
     }
 
     private ActionSystem.ActionResult handleClearInventory(FormPlayer player, String target) {
@@ -213,27 +198,17 @@ public class InventoryActionHandler extends BaseActionHandler {
         }
     }
 
-    private ActionSystem.ActionResult handleCheckInventory(FormPlayer player, String itemData) {
-
-        String command = "testfor " + player.getName() + " {Inventory:[{id:\"" + itemData + "\"}]}";
-
-        boolean success = executeWithErrorHandling(
-                () -> {
-                    commandExecutor.executeAsConsole(command);
-                    return true;
-                },
-                "Inventory check command: " + command,
-                player
-        );
-
-        if (success) {
-            logSuccess("inventory", "Checked inventory for " + itemData, player);
-            return createSuccessResult("ACTION_INVENTORY_SUCCESS",
-                    createReplacements("item", itemData), player);
-        } else {
-            return createFailureResult("ACTION_INVENTORY_FAILED",
-                    createReplacements("operation", "check " + itemData), player);
+    private ActionSystem.ActionResult handleCheckInventory(FormPlayer player, String itemData, String amountStr) {
+        int amount;
+        try {
+            amount = Integer.parseInt(amountStr.trim());
+        } catch (NumberFormatException e) {
+            return failure(player, "action.invalid_amount", "amount", amountStr);
         }
+        if (inventoryManager.countItem(player, itemData) < amount) {
+            return missingItems(player, itemData, amount);
+        }
+        return createSuccessResult("ACTION_INVENTORY_SUCCESS", createReplacements("item", itemData), player);
     }
 
     @Override
@@ -282,20 +257,7 @@ public class InventoryActionHandler extends BaseActionHandler {
         String operation = parts[0].toLowerCase();
 
 
-        if (!operation.matches("give|remove|clear|check")) {
-            return false;
-        }
-
-
-        if (parts.length > 2) {
-            try {
-                Integer.parseInt(parts[2]);
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-
-        return true;
+        return operation.matches("give|remove|clear|check");
     }
 
     @Override
@@ -311,7 +273,7 @@ public class InventoryActionHandler extends BaseActionHandler {
                 "inventory { - \"remove:stone:32\" }",
                 "inventory { - \"clear:all\" }",
                 "inventory { - \"give:diamond:1\" - \"give:emerald:5\" - \"give:gold_ingot:10\" }",
-                "inventory { - \"check:diamond\" - \"give:diamond:1\" }"
+                "inventory { - \"check:stone:32\" - \"remove:stone:32\" }"
         };
     }
 }

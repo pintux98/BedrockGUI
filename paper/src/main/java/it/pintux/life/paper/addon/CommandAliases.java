@@ -1,4 +1,4 @@
-package it.pintux.life.bedwarsaddon.util;
+package it.pintux.life.paper.addon;
 
 import java.util.Collection;
 import java.util.LinkedHashSet;

@@ -1,15 +1,15 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FormPlayerResolver;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.model.HomeView;
 import it.pintux.life.essentialsaddon.model.PublicHomeView;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.entity.Player;
 
@@ -100,7 +100,7 @@ public final class BedrockHomeService {
                             context("home-next", "")));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     /** Public homes need both the provider's support and the config switch. */
@@ -171,7 +171,7 @@ public final class BedrockHomeService {
                             context("public-home-next", "")));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void teleportPublicHome(Player player, String identifier) {
@@ -233,7 +233,7 @@ public final class BedrockHomeService {
             form.button(configuration.backButton(), formPlayer ->
                     api.executeActionString(formPlayer, "home_main:1", context("home-manage-back", "")));
 
-            form.send(new BukkitFormPlayer(player));
+            form.send(new PaperPlayer(player));
         });
     }
 
@@ -295,7 +295,7 @@ public final class BedrockHomeService {
         form.button(configuration.backButton(), formPlayer ->
                 api.executeActionString(formPlayer, "home_manage_main:", context("home-manage-back", "")));
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void showRenameHomeForm(Player player, String homeName) {
@@ -323,7 +323,7 @@ public final class BedrockHomeService {
                     }
                     renameHome(bukkitPlayer, homeName, newName);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     public void renameHome(Player player, String homeName, String newName) {
@@ -450,7 +450,7 @@ public final class BedrockHomeService {
                     setHomePrivacy(bukkitPlayer, trimmed, true);
                 }
             });
-        }).send(new BukkitFormPlayer(player));
+        }).send(new PaperPlayer(player));
     }
 
     /** The toggle is the only boolean on the set-home form, so its answer is found by type. */
@@ -497,7 +497,7 @@ public final class BedrockHomeService {
             });
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private BedrockGUIApi requireApi(Player player) {

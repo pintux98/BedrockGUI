@@ -1,8 +1,9 @@
 package it.pintux.life.duelsaddon;
 
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FloodgateBedrockPlayerDetector;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.duelsaddon.action.DuelsFormAction;
-import it.pintux.life.duelsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.duelsaddon.command.DuelsAddonCommand;
 import it.pintux.life.duelsaddon.config.DuelsAddonConfiguration;
 import it.pintux.life.duelsaddon.gateway.DuelsGateway;
@@ -20,7 +21,6 @@ import it.pintux.life.duelsaddon.service.BedrockQueueService;
 import it.pintux.life.duelsaddon.service.BedrockSettingsService;
 import it.pintux.life.duelsaddon.service.BedrockSpectatorService;
 import it.pintux.life.duelsaddon.service.BedrockStatsService;
-import it.pintux.life.duelsaddon.service.FloodgateBedrockPlayerDetector;
 import it.pintux.life.duelsaddon.util.DuelsActionPayloads;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -133,7 +133,7 @@ public final class DuelsAddonPlugin extends JavaPlugin {
         settingsService = new BedrockSettingsService(configuration, gateway, detector);
         spectatorService = new BedrockSpectatorService(configuration, gateway, detector);
         kitService = new BedrockKitService(configuration, gateway, detector);
-        confirmationService = new BedrockConfirmationService(this, configuration, gateway, detector);
+        confirmationService = new BedrockConfirmationService(configuration, gateway, detector);
         invitationService = new BedrockInvitationService(this, configuration, gateway, detector);
         duelService.setInvitationService(invitationService);
 

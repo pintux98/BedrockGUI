@@ -2,12 +2,9 @@ package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
 
-
-
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
-import it.pintux.life.common.utils.ValidationUtils;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -45,8 +42,7 @@ public class TitleActionHandler extends BaseActionHandler {
             List<String> titles = parseActionData(actionData, context, player);
 
             if (titles.isEmpty()) {
-                Map<String, Object> errorReplacements = createReplacements("error", "No valid titles found");
-                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
+                return emptyFailure(player);
             }
 
 
@@ -55,12 +51,11 @@ public class TitleActionHandler extends BaseActionHandler {
             }
 
 
-            return executeMultipleTitlesFromList(titles, player);
+            return executeMultipleTitlesFromList(titles, player, null);
 
         } catch (Exception e) {
             logError("title execution", actionData, player, e);
-            Map<String, Object> errorReplacements = createReplacements("error", "Error executing title: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
+            return errorFailure(player, e);
         }
     }
 
@@ -70,32 +65,25 @@ public class TitleActionHandler extends BaseActionHandler {
             List<String> titles = parseNewFormatValues(actionData);
 
             if (titles.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No titles found in new format"), player);
+                return emptyFailure(player);
             }
 
 
-            List<String> processedTitles = new ArrayList<>();
-            for (String title : titles) {
-                String processedTitle = processPlaceholders(title, context, player);
-                processedTitles.add(processedTitle);
+            if (titles.size() == 1) {
+                return executeSingleTitle(player, titles.get(0), context);
             }
 
 
-            if (processedTitles.size() == 1) {
-                return executeSingleTitle(player, processedTitles.get(0), null);
-            }
-
-
-            return executeMultipleTitlesFromList(processedTitles, player);
+            return executeMultipleTitlesFromList(titles, player, context);
 
         } catch (Exception e) {
             logger.error("Error executing new format title action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new title format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
 
-    private ActionSystem.ActionResult executeMultipleTitlesFromList(List<String> titles, FormPlayer player) {
+    private ActionSystem.ActionResult executeMultipleTitlesFromList(List<String> titles, FormPlayer player, ActionSystem.ActionContext context) {
         int successCount = 0;
         int totalCount = titles.size();
         StringBuilder results = new StringBuilder();
@@ -106,7 +94,7 @@ public class TitleActionHandler extends BaseActionHandler {
             try {
                 logger.info("Showing title " + (i + 1) + "/" + totalCount + " to player " + player.getName() + ": " + title);
 
-                ActionSystem.ActionResult result = executeSingleTitle(player, title, null);
+                ActionSystem.ActionResult result = executeSingleTitle(player, title, context);
 
                 if (result.isSuccess()) {
                     successCount++;
@@ -118,12 +106,6 @@ public class TitleActionHandler extends BaseActionHandler {
                 if (i < titles.size() - 1) {
                     results.append("\n");
 
-                    try {
-                        Thread.sleep(1000);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
                 }
 
             } catch (Exception e) {
@@ -148,20 +130,18 @@ public class TitleActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult("ACTION_PARTIAL_SUCCESS", replacements, player);
         } else {
-            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
+            return failure(player, "action.all_failed");
         }
     }
 
 
     private ActionSystem.ActionResult executeSingleTitle(FormPlayer player, String titleData, ActionSystem.ActionContext context) {
-        String processedData = processPlaceholders(titleData.trim(), context, player);
-        String[] parts = processedData.split(":");
-
-        String title = parts.length > 0 ? parts[0] : "";
-        String subtitle = parts.length > 1 ? parts[1] : "";
-        int fadeIn = parts.length > 2 ? parseIntSafe(parts[2], 10) : 10;
-        int stay = parts.length > 3 ? parseIntSafe(parts[3], 60) : 60;
-        int fadeOut = parts.length > 4 ? parseIntSafe(parts[4], 10) : 10;
+        TitleParts parsed = TitleParts.parse(titleData.trim());
+        String title = processPlaceholders(parsed.title(), context, player);
+        String subtitle = processPlaceholders(parsed.subtitle(), context, player);
+        int fadeIn = parsed.fadeIn();
+        int stay = parsed.stay();
+        int fadeOut = parsed.fadeOut();
 
         boolean success = titleManager.sendTitle(player, title, subtitle, fadeIn, stay, fadeOut);
 
@@ -177,10 +157,6 @@ public class TitleActionHandler extends BaseActionHandler {
         }
     }
 
-
-    private boolean validateParameters(FormPlayer player, String actionValue) {
-        return player != null && actionValue != null && !actionValue.trim().isEmpty();
-    }
 
     @Override
     public boolean isValidAction(String actionValue) {
@@ -220,23 +196,49 @@ public class TitleActionHandler extends BaseActionHandler {
     }
 
     private boolean isValidSingleTitle(String titleData) {
-        if (titleData.isEmpty()) return false;
+        return !titleData.isEmpty();
+    }
 
-        String[] parts = titleData.split(":");
+    record TitleParts(String title, String subtitle, int fadeIn, int stay, int fadeOut) {
 
-
-        if (parts.length > 2) {
-            for (int i = 2; i < parts.length && i < 5; i++) {
-                try {
-                    int value = Integer.parseInt(parts[i]);
-                    if (value < 0) return false;
-                } catch (NumberFormatException e) {
-                    return false;
+        static TitleParts parse(String data) {
+            List<String> parts = new ArrayList<>();
+            StringBuilder current = new StringBuilder();
+            boolean inPlaceholder = false;
+            for (int i = 0; i < data.length(); i++) {
+                char c = data.charAt(i);
+                if (c == '%') {
+                    inPlaceholder = !inPlaceholder && it.pintux.life.common.utils.ConditionEvaluator.opensPlaceholder(data, i);
+                    current.append(c);
+                } else if (c == '\\' && i + 1 < data.length() && data.charAt(i + 1) == ':') {
+                    current.append(':');
+                    i++;
+                } else if (c == ':' && !inPlaceholder) {
+                    parts.add(current.toString());
+                    current.setLength(0);
+                } else {
+                    current.append(c);
                 }
             }
+            parts.add(current.toString());
+
+            int fadeIn = 10;
+            int stay = 60;
+            int fadeOut = 10;
+            int size = parts.size();
+            if (size >= 5 && isTiming(parts.get(size - 3)) && isTiming(parts.get(size - 2)) && isTiming(parts.get(size - 1))) {
+                fadeIn = Integer.parseInt(parts.get(size - 3).trim());
+                stay = Integer.parseInt(parts.get(size - 2).trim());
+                fadeOut = Integer.parseInt(parts.get(size - 1).trim());
+                parts = parts.subList(0, size - 3);
+            }
+            String subtitle = parts.size() > 1 ? String.join(":", parts.subList(1, parts.size())) : "";
+            return new TitleParts(parts.get(0), subtitle, fadeIn, stay, fadeOut);
         }
 
-        return true;
+        private static boolean isTiming(String value) {
+            return value.trim().matches("\\d{1,6}");
+        }
     }
 
     @Override
@@ -255,13 +257,6 @@ public class TitleActionHandler extends BaseActionHandler {
         };
     }
 
-    private int parseIntSafe(String s, int defaultValue) {
-        try {
-            return Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-            return defaultValue;
-        }
-    }
 }
 
 

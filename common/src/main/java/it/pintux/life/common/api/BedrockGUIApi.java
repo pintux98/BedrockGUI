@@ -42,11 +42,12 @@ public class BedrockGUIApi {
                          PlatformTitleManager platformTitleManager,
                          PlatformPluginManager pluginManager,
                          PlatformPlayerManager playerManager,
-                         it.pintux.life.common.platform.PlatformScheduler scheduler) {
+                         it.pintux.life.common.platform.PlatformScheduler scheduler,
+                         it.pintux.life.common.platform.PlatformInventoryManager inventoryManager) {
         this.messageData = messageData;
         this.formSender = formSender;
         this.platformTitleManager = platformTitleManager;
-        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager, pluginManager, playerManager, scheduler);
+        this.formMenuUtil = new FormMenuUtil(config, messageData, commandExecutor, soundManager, economyManager, formSender, platformTitleManager, pluginManager, playerManager, scheduler, inventoryManager);
         this.actionExecutor = formMenuUtil.getActionExecutor();
         this.actionRegistry = formMenuUtil.getActionRegistry();
 
@@ -115,48 +116,6 @@ public class BedrockGUIApi {
             return assetServer.getAssetUrl(resolved);
         }
         return resolved;
-    }
-
-    /**
-     * Updates the MessageData instance used by this API.
-     * This is called during reload to ensure the API uses the latest message configuration.
-     * 
-     * @param newMessageData The new MessageData instance with reloaded configuration
-     */
-    public void updateMessageData(MessageData newMessageData) {
-        if (newMessageData != null) {
-            // Update the messageData field to use the new instance
-            java.lang.reflect.Field messageDataField;
-            try {
-                messageDataField = this.getClass().getDeclaredField("messageData");
-                messageDataField.setAccessible(true);
-                messageDataField.set(this, newMessageData);
-                
-                // Also update the FormMenuUtil with the new MessageData
-                if (formMenuUtil != null) {
-                    formMenuUtil.updateMessageData(newMessageData);
-                }
-                
-                logger.info("MessageData updated successfully during reload");
-            } catch (Exception e) {
-                logger.warn("Failed to update MessageData: " + e.getMessage());
-            }
-        }
-    }
-
-    /**
-     * Updates the underlying FormConfig used by the FormMenuUtil so subsequent reloads
-     * read the latest configuration from disk.
-     */
-    public void updateFormConfig(FormConfig newConfig) {
-        try {
-            if (newConfig != null && formMenuUtil != null) {
-                formMenuUtil.updateFormConfig(newConfig);
-                logger.info("FormConfig updated successfully during reload");
-            }
-        } catch (Exception e) {
-            logger.warn("Failed to update FormConfig: " + e.getMessage());
-        }
     }
 
 
@@ -601,8 +560,8 @@ public class BedrockGUIApi {
 
 
     public class ModalFormBuilder extends FormBuilder {
-        private String button1Text = "Yes";
-        private String button2Text = "No";
+        private String button1Text = getMessageData().getValueNoPrefix("forms.modal_yes", null, null);
+        private String button2Text = getMessageData().getValueNoPrefix("forms.modal_no", null, null);
         private Consumer<FormPlayer> onButton1;
         private Consumer<FormPlayer> onButton2;
         private BiConsumer<FormPlayer, Boolean> onSubmitHandler;

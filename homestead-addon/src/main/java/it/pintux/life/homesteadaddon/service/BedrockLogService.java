@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -7,8 +9,6 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.LogView;
 import it.pintux.life.homesteadaddon.model.RegionView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import org.bukkit.entity.Player;
 
@@ -77,7 +77,7 @@ public final class BedrockLogService {
             form.button(config.text("logs.button-clear"), fp -> confirmClear(player, region));
         }
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void confirmClear(Player player, RegionView region) {
@@ -94,7 +94,7 @@ public final class BedrockLogService {
                     openLogs(player, region.id(), 1);
                 })
                 .button2(config.text("logs.confirm-no"), fp -> openLogs(player, region.id(), 1))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private boolean canManage(Player player, long regionId) {

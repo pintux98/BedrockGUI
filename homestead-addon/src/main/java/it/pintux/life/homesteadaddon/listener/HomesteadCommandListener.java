@@ -1,8 +1,8 @@
 package it.pintux.life.homesteadaddon.listener;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.service.BedrockRegionService;
-import it.pintux.life.homesteadaddon.util.CommandAliases;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;

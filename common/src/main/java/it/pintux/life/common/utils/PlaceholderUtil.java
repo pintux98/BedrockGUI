@@ -5,7 +5,6 @@ import it.pintux.life.common.actions.ActionSystem;
 import java.time.LocalTime;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 
@@ -39,13 +38,7 @@ public class PlaceholderUtil {
         String result = text;
 
 
-        if (dynamicPlaceholders != null && !dynamicPlaceholders.isEmpty()) {
-            for (Map.Entry<String, String> entry : dynamicPlaceholders.entrySet()) {
-                String value = entry.getValue() != null ? entry.getValue() : "";
-                result = result.replace("$" + entry.getKey(), value);
-                result = result.replace("{" + entry.getKey() + "}", value);
-            }
-        }
+        result = processDynamicPlaceholders(result, dynamicPlaceholders);
 
 
         if (messageData != null && result.contains("%")) {
@@ -64,14 +57,46 @@ public class PlaceholderUtil {
         String result = text;
         for (Map.Entry<String, String> entry : dynamicPlaceholders.entrySet()) {
             String value = entry.getValue() != null ? entry.getValue() : "";
-
-            String dollarPlaceholder = "$" + entry.getKey();
-            String bracePlaceholder = "{" + entry.getKey() + "}";
-            result = result.replace(dollarPlaceholder, value);
-            result = result.replace(bracePlaceholder, value);
+            result = replaceDollar(result, entry.getKey(), value);
+            result = result.replace("{" + entry.getKey() + "}", value);
         }
 
         return result;
+    }
+
+    public static String sanitizeInput(String value) {
+        if (value == null) {
+            return null;
+        }
+        return value.replace("\\", "").replace('"', '\'').replace('\n', ' ').replace('\r', ' ');
+    }
+
+    public static Map<String, String> sanitizeInputs(Map<String, String> values) {
+        if (values == null) {
+            return null;
+        }
+        Map<String, String> out = new HashMap<>();
+        values.forEach((k, v) -> out.put(k, sanitizeInput(v)));
+        return out;
+    }
+
+    private static String replaceDollar(String text, String key, String value) {
+        String token = "$" + key;
+        int idx = text.indexOf(token);
+        if (idx < 0) {
+            return text;
+        }
+        StringBuilder out = new StringBuilder(text.length());
+        int from = 0;
+        while (idx >= 0) {
+            int end = idx + token.length();
+            boolean partOfLongerName = end < text.length()
+                    && (Character.isLetterOrDigit(text.charAt(end)) || text.charAt(end) == '_');
+            out.append(text, from, idx).append(partOfLongerName ? token : value);
+            from = end;
+            idx = text.indexOf(token, from);
+        }
+        return out.append(text, from, text.length()).toString();
     }
 
 
@@ -82,9 +107,8 @@ public class PlaceholderUtil {
 
         String result = text;
         for (Map.Entry<String, Object> entry : formResults.entrySet()) {
-            String placeholder = "$" + entry.getKey();
             String value = entry.getValue() != null ? entry.getValue().toString() : "";
-            result = result.replace(placeholder, value);
+            result = replaceDollar(result, entry.getKey(), value);
         }
 
         return result;
@@ -109,19 +133,6 @@ public class PlaceholderUtil {
             count++;
         }
         return count;
-    }
-
-
-    public static void logMissingPlaceholders(String text, Logger logger) {
-        if (text == null || logger == null) {
-            return;
-        }
-
-        Matcher matcher = DYNAMIC_PLACEHOLDER_PATTERN.matcher(text);
-        while (matcher.find()) {
-            String placeholder = matcher.group(1);
-            logger.warn("Missing replacement value for placeholder: $" + placeholder);
-        }
     }
 
 
@@ -186,15 +197,6 @@ public class PlaceholderUtil {
                 .placeholders(placeholders)
                 .metadata(metadata)
                 .build();
-    }
-
-
-    public static ActionSystem.ActionContext addBuiltinPlaceholders(ActionSystem.ActionContext context, FormPlayer player) {
-        if (context == null) {
-            return createContextWithBuiltinPlaceholders(player, null);
-        }
-
-        return createContextWithBuiltinPlaceholders(player, context.getPlaceholders());
     }
 
 

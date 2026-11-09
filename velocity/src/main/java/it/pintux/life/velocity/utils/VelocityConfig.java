@@ -5,8 +5,6 @@ import org.yaml.snakeyaml.Yaml;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 public class VelocityConfig implements FormConfig {
@@ -49,25 +47,11 @@ public class VelocityConfig implements FormConfig {
         try {
             configFile.getParentFile().mkdirs();
             
-            // Copy default config from common module
             InputStream defaultConfig = getClass().getResourceAsStream("/config.yml");
-            if (defaultConfig != null) {
-                Files.copy(defaultConfig, configFile.toPath());
-            } else {
-                // Create minimal default config
-                String defaultContent = """
-                    # BedrockGUI Configuration
-                    debug: false
-                    
-                    # Menu settings
-                    menus:
-                      example:
-                        title: "Example Menu"
-                        type: "simple"
-                        content: "Welcome to the example menu!"
-                    """;
-                Files.write(configFile.toPath(), defaultContent.getBytes());
+            if (defaultConfig == null) {
+                throw new IOException("Bundled " + "config.yml" + " is missing from the jar");
             }
+            Files.copy(defaultConfig, configFile.toPath());
         } catch (IOException e) {
             throw new RuntimeException("Failed to create default config", e);
         }
@@ -81,7 +65,7 @@ public class VelocityConfig implements FormConfig {
 
     @Override
     public String getString(String path) {
-        return getString(path, "");
+        return getString(path, null);
     }
 
     @Override

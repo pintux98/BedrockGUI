@@ -22,8 +22,7 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 
 import org.bukkit.event.server.ServerCommandEvent;
-import org.bukkit.event.server.ServerLoadEvent;
-import org.bukkit.event.server.PluginEnableEvent;
+import org.bukkit.event.server.PluginDisableEvent;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
@@ -121,7 +120,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             assetServer.start();
         }
 
-        api = new BedrockGUIApi(paperConfig, messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this));
+        api = new BedrockGUIApi(paperConfig, messageData, commandExecutor, soundManager, economyManager, formSender, titleManager, pluginManager, playerManager, new it.pintux.life.paper.platform.PaperScheduler(this), new it.pintux.life.paper.platform.PaperInventoryManager());
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
@@ -138,9 +137,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         getLogger().info("Loaded and enabled");
 
         try {
-            org.bukkit.command.SimpleCommandMap commandMap = (org.bukkit.command.SimpleCommandMap)
-                    org.bukkit.Bukkit.getServer().getClass().getMethod("getCommandMap").invoke(org.bukkit.Bukkit.getServer());
-            if (commandMap == null) return;
+            org.bukkit.command.CommandMap commandMap = Bukkit.getCommandMap();
 
             formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
                 String formCmd = formMenu.getFormCommand();
@@ -149,15 +146,25 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                     org.bukkit.command.Command formCommand = new org.bukkit.command.Command(base) {
                         @Override
                         public boolean execute(@NotNull CommandSender sender, @NotNull String commandLabel, @NotNull String[] args) {
+                            if (sender instanceof Player player) {
+                                api.openMenu(new PaperPlayer(player), key, args);
+                            }
                             return true;
                         }
                     };
-                    formCommand.setPermission("bedrockgui.form." + key);
+                    formCommand.setPermission(formMenu.getPermission());
                     commandMap.register("bedrockgui-form", formCommand);
                 }
             });
         } catch (Exception e) {
             getLogger().warning("Failed to auto-register form commands: " + e.getMessage());
+        }
+    }
+
+    @EventHandler
+    public void onPluginDisable(PluginDisableEvent event) {
+        if (api != null && event.getPlugin() != this) {
+            api.getActionRegistry().unregisterHandlersFrom(event.getPlugin().getClass().getClassLoader());
         }
     }
 
@@ -183,19 +190,32 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             String intercept = formMenu.getCommandIntercept();
             if (intercept != null && matchesInterceptPattern(command.toLowerCase(), intercept.toLowerCase())) {
                 event.setCancelled(true);
-                String[] parts = command.split(" ");
-                String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+                String[] args = consoleArgs(command.trim().split("\\s+"),senderPlayer == null ? targetPlayer.getName() : null);
                 api.openMenu(paperPlayer, key, args);
                 return;
             }
 
-            if (formMenu.getFormCommand() != null && command.startsWith(formMenu.getFormCommand())) {
+            String[] parts = command.trim().split("\\s+");
+            if (formMenu.getFormCommand() != null
+                    && parts[0].equalsIgnoreCase(formMenu.getFormCommand().trim().split("\\s+")[0])) {
                 event.setCancelled(true);
-                String[] parts = command.split(" ");
-                String[] args = Arrays.copyOfRange(parts, 1, parts.length);
+                String[] args = consoleArgs(parts, senderPlayer == null ? targetPlayer.getName() : null);
                 api.openMenu(paperPlayer, key, args);
             }
         });
+    }
+
+    private static String[] consoleArgs(String[] parts, String targetName) {
+        java.util.List<String> args = new java.util.ArrayList<>(Arrays.asList(parts).subList(1, parts.length));
+        if (targetName != null) {
+            for (int i = 0; i < args.size(); i++) {
+                if (args.get(i).equalsIgnoreCase(targetName)) {
+                    args.remove(i);
+                    break;
+                }
+            }
+        }
+        return args.toArray(new String[0]);
     }
 
     private Player findTargetPlayerFromCommand(String commandLine) {
@@ -219,7 +239,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         String commandWithoutSlash = message.substring(1).toLowerCase();
 
-        String[] parts = commandWithoutSlash.split(" ");
+        String[] parts = message.substring(1).trim().split("\\s+");
         String commandName = parts[0];
         String[] args = Arrays.copyOfRange(parts, 1, parts.length);
 
@@ -227,7 +247,8 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
             if (event.isCancelled()) return;
 
             String intercept = formMenu.getCommandIntercept();
-            if (intercept != null && matchesInterceptPattern(commandWithoutSlash, intercept.toLowerCase())) {
+            if (intercept != null && matchesInterceptPattern(commandWithoutSlash, intercept.toLowerCase())
+                    && (formMenu.getPermission() == null || player.hasPermission(formMenu.getPermission()))) {
                 event.setCancelled(true);
                 PaperPlayer player1 = new PaperPlayer(event.getPlayer());
                 api.openMenu(player1, key, args);
@@ -246,6 +267,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
                         PaperPlayer player1 = new PaperPlayer(event.getPlayer());
                         api.openMenu(player1, key, args);
                     } else {
+                        event.setCancelled(true);
                         player.sendMessage(messageData.getValue(MessageData.MENU_ARGS, Map.of("args", requiredArgs), null));
                     }
                 }
@@ -273,7 +295,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         } else if (leadingWildcard) {
             return c.endsWith(core);
         } else {
-            return c.equals(core);
+            return c.equals(core) || c.startsWith(core + " ");
         }
     }
 

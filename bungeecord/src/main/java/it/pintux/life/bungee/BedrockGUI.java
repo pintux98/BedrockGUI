@@ -20,6 +20,7 @@ public class BedrockGUI extends Plugin {
     private BedrockGUIApi api;
     private BungeeConfig config;
     private AssetServer assetServer;
+    private final java.util.List<BungeeFormCommand> formCommands = new java.util.ArrayList<>();
 
     @Override
     public void onEnable() {
@@ -89,23 +90,24 @@ public class BedrockGUI extends Plugin {
         }
 
         api = new BedrockGUIApi(config, messageData, commandExecutor, null, null,
-                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this));
+                formSender, titleManager, pluginManager, playerManager, new it.pintux.life.bungee.platform.BungeeScheduler(this), null);
 
         it.pintux.life.bungee.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry(), getProxy());
 
         formMenuUtil = api.getFormMenuUtil();
         formMenuUtil.setAssetServer(assetServer);
 
-        try {
-            formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
-                String formCmd = formMenu.getFormCommand();
-                if (formCmd != null && !formCmd.isEmpty()) {
-                    String base = formCmd.trim().split("\\s+")[0];
-                    getProxy().getPluginManager().registerCommand(this, new BungeeFormCommand(this, key, "bedrockgui.form." + key));
-                }
-            });
-        } catch (Exception ignored) {
-        }
+        formCommands.forEach(getProxy().getPluginManager()::unregisterCommand);
+        formCommands.clear();
+        formMenuUtil.getFormMenus().forEach((key, formMenu) -> {
+            String formCmd = formMenu.getFormCommand();
+            if (formCmd != null && !formCmd.isEmpty()) {
+                String base = formCmd.trim().split("\\s+")[0];
+                BungeeFormCommand command = new BungeeFormCommand(this, base, key, formMenu.getPermission());
+                getProxy().getPluginManager().registerCommand(this, command);
+                formCommands.add(command);
+            }
+        });
     }
 
     public FormMenuUtil getFormMenuUtil() {

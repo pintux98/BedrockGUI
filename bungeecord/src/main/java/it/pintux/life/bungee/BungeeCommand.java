@@ -7,16 +7,14 @@ import net.md_5.bungee.api.CommandSender;
 import net.md_5.bungee.api.connection.ProxiedPlayer;
 import net.md_5.bungee.api.plugin.Command;
 import net.md_5.bungee.api.plugin.TabExecutor;
-import net.md_5.bungee.api.chat.TextComponent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 public class BungeeCommand extends Command implements TabExecutor {
     private final BedrockGUI plugin;
-    public BungeeCommand(BedrockGUI plugin) { super("bedrockgui", "bedrockgui.admin", new String[]{"bgui"}); this.plugin = plugin; }
+    public BungeeCommand(BedrockGUI plugin) { super("bedrockgui", null, "bgui"); this.plugin = plugin; }
 
     @Override
     public Iterable<String> onTabComplete(CommandSender sender, String[] args) {
@@ -80,30 +78,30 @@ public class BungeeCommand extends Command implements TabExecutor {
     public void execute(CommandSender sender, String[] args) {
         ProxiedPlayer player = sender instanceof ProxiedPlayer ? (ProxiedPlayer) sender : null;
         if (args.length == 0) {
-            if (player != null && player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null)));
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null)));
+            if (sender.hasPermission("bedrockgui.admin")) {
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null)));
             }
-            sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
+            sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
 
             return;
         }
         String arg = args[0];
         
         if (arg.equalsIgnoreCase("reload")) {
-            if (player != null && !player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null)));
+            if (!sender.hasPermission("bedrockgui.admin")) {
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null)));
                 return;
             }
             plugin.reloadData();
-            sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_RELOAD_SUCCESS, null, null)));
+            sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_RELOAD_SUCCESS, null, null)));
             return;
         }
         
         if (arg.equalsIgnoreCase("convert") || arg.equalsIgnoreCase("convertforms")) {
-            if (player != null && !player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null)));
+            if (!sender.hasPermission("bedrockgui.admin")) {
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null)));
                 return;
             }
             try {
@@ -117,11 +115,11 @@ public class BungeeCommand extends Command implements TabExecutor {
                 replacements.put("count", converted);
                 replacements.put("backup", backup != null ? backup : "unknown");
                 
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_SUCCESS, replacements, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_SUCCESS, replacements, null)));
             } catch (Exception e) {
                 java.util.Map<String, Object> replacements = new java.util.HashMap<>();
                 replacements.put("error", e.getMessage());
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_FAILED, replacements, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_FAILED, replacements, null)));
                 plugin.getLogger().warning("Form conversion error: " + e.getMessage());
             }
             return;
@@ -129,11 +127,11 @@ public class BungeeCommand extends Command implements TabExecutor {
 
         if (arg.equalsIgnoreCase("open")) {
             if (player == null) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_PLAYER_ONLY, null, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_PLAYER_ONLY, null, null)));
                 return;
             }
             if (args.length < 2) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
                 return;
             }
             String menuName = args[1];
@@ -143,12 +141,12 @@ public class BungeeCommand extends Command implements TabExecutor {
         }
         
         if (arg.equalsIgnoreCase("openfor")) {
-            if (player != null && !player.hasPermission("bedrockgui.admin")) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.NO_PEX, null, null)));
+            if (!sender.hasPermission("bedrockgui.admin")) {
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null)));
                 return;
             }
             if (args.length < 3) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
                 return;
             }
 
@@ -158,13 +156,18 @@ public class BungeeCommand extends Command implements TabExecutor {
             
             ProxiedPlayer target = plugin.getProxy().getPlayer(playerName);
             if (target == null) {
-                sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.PLAYER_NOT_FOUND, java.util.Map.of("player", playerName), null)));
+                sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.PLAYER_NOT_FOUND, java.util.Map.of("player", playerName), null)));
                 return;
             }
             
             plugin.getApi().openMenu(new BungeePlayer(target), menuName, menuArgs);
-            sender.sendMessage(TextComponent.fromLegacyText(plugin.getMessageData().getValue(MessageData.COMMAND_OPENED_FOR, java.util.Map.of("menu", menuName, "player", target.getName()), null)));
+            sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_OPENED_FOR, java.util.Map.of("menu", menuName, "player", target.getName()), null)));
             return;
+        }
+
+        for (String key : new String[]{MessageData.COMMAND_USAGE_RELOAD, MessageData.COMMAND_USAGE_OPEN,
+                MessageData.COMMAND_USAGE_OPENFOR, MessageData.COMMAND_USAGE_CONVERT}) {
+            sender.sendMessage(BungeePlayer.text(plugin.getMessageData().getValue(key, null, null)));
         }
     }
 }

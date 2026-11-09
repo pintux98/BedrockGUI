@@ -1,10 +1,10 @@
 package it.pintux.life.essentialsaddon.action;
 
+import it.pintux.life.paper.addon.FormPlayerResolver;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.essentialsaddon.service.BedrockHomeService;
 import it.pintux.life.essentialsaddon.util.EssentialsActionPayloads;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import org.bukkit.entity.Player;
 
 public final class OpenHomeRenameAction implements ActionSystem.ActionHandler {

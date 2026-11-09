@@ -42,7 +42,7 @@ bedrock:
           }
     confirm_reset:
       text: "§cConfirm Dialog\n§8a two-button MODAL"
-      image: "BARRIER"
+      image: "TNT"
       onClick:
         - |
           open {
@@ -55,4 +55,12 @@ bedrock:
         - |
           open {
             - "advanced_flow"
+          }
+    pay_player:
+      text: "§aPay a Player\n§8label, step slider, player list"
+      image: "EMERALD"
+      onClick:
+        - |
+          open {
+            - "pay_player"
           }

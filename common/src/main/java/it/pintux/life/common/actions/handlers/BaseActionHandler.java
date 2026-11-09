@@ -66,6 +66,28 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     }
 
 
+    protected ActionSystem.ActionResult failure(FormPlayer player, String messageKey, Object... keyValues) {
+        Map<String, Object> replacements = new HashMap<>();
+        replacements.put("action", getActionType());
+        for (int i = 0; i + 1 < keyValues.length; i += 2) {
+            replacements.put(String.valueOf(keyValues[i]), keyValues[i + 1]);
+        }
+        return createFailureResult(messageKey, replacements, player);
+    }
+
+    protected ActionSystem.ActionResult emptyFailure(FormPlayer player) {
+        return failure(player, "action.empty");
+    }
+
+    protected ActionSystem.ActionResult usageFailure(FormPlayer player, String usage) {
+        return failure(player, "action.usage", "usage", usage);
+    }
+
+    protected ActionSystem.ActionResult errorFailure(FormPlayer player, Throwable exception) {
+        logger.error("Error running " + getActionType() + " action for player " + (player != null ? player.getName() : "unknown"), exception);
+        return failure(player, "action.failed");
+    }
+
     protected void logSuccess(String actionType, String actionValue, FormPlayer player) {
         logger.debug("Successfully executed " + actionType + " action '" + actionValue + "' for player " + player.getName());
     }
@@ -156,7 +178,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
     private String normalizeMessageKey(String key) {
         if (key == null) return null;
         if (key.matches("^[A-Z0-9_\\.]+$")) {
-            return key.toLowerCase().replace('_', '.');
+            return key.toLowerCase().replaceFirst("_", ".");
         }
         return key;
     }
@@ -170,7 +192,7 @@ public abstract class BaseActionHandler implements ActionSystem.ActionHandler {
         }
 
 
-        java.util.regex.Pattern valuePattern = java.util.regex.Pattern.compile("-\\s*\"((?:[^\"\\\\]|\\\\.)*)\"");
+        java.util.regex.Pattern valuePattern = java.util.regex.Pattern.compile("-\\s*\"([^\"\\\\]*+(?:\\\\.[^\"\\\\]*+)*+)\"");
         java.util.regex.Matcher matcher = valuePattern.matcher(actionData);
 
         while (matcher.find()) {

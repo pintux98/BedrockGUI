@@ -1,7 +1,7 @@
 package it.pintux.life.homesteadaddon.config;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.common.config.ConfigMigrator;
-import it.pintux.life.homesteadaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;

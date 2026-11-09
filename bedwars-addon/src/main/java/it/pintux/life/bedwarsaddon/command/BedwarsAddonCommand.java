@@ -1,7 +1,7 @@
 package it.pintux.life.bedwarsaddon.command;
 
+import it.pintux.life.paper.addon.AddonText;
 import it.pintux.life.bedwarsaddon.BedrockBedwarsAddonPlugin;
-import it.pintux.life.bedwarsaddon.util.AddonText;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;

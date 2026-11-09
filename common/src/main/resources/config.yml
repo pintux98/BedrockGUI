@@ -20,3 +20,5 @@ forms:
     file: "confirm_reset.yml"
   advanced_flow:
     file: "advanced_flow.yml"
+  pay_player:
+    file: "pay_player.yml"

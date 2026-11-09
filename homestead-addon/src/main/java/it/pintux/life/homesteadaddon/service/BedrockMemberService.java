@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
@@ -8,8 +10,6 @@ import it.pintux.life.homesteadaddon.model.BanView;
 import it.pintux.life.homesteadaddon.model.InviteView;
 import it.pintux.life.homesteadaddon.model.MemberView;
 import it.pintux.life.homesteadaddon.model.RegionView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import it.pintux.life.homesteadaddon.util.Formatting;
 import org.bukkit.entity.Player;
 
@@ -62,7 +62,7 @@ public final class BedrockMemberService {
         }
 
         form.button(config.text("common.back-button"), fp -> backToRegionMenu(api, fp, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -94,7 +94,7 @@ public final class BedrockMemberService {
         }
         pagination.addNav(form, p -> openMembersList(player, regionId, p));
         form.button(config.text("common.back-button"), fp -> openPlayersManagement(player, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -132,7 +132,7 @@ public final class BedrockMemberService {
             form.button(config.text("players.button-kick"), fp -> confirmKick(player, regionId, member));
         }
         form.button(config.text("common.back-button"), fp -> openMembersList(player, regionId, 1));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private static ActionSystem.ActionContext menuContext() {
@@ -167,7 +167,7 @@ public final class BedrockMemberService {
         }
         pagination.addNav(form, p -> openInvitesList(player, regionId, p));
         form.button(config.text("common.back-button"), fp -> openPlayersManagement(player, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -200,7 +200,7 @@ public final class BedrockMemberService {
         pagination.addNav(form, p -> openBansList(player, regionId, p));
         form.button(config.text("players.button-ban"), fp -> showBanForm(player, regionId, null));
         form.button(config.text("common.back-button"), fp -> openPlayersManagement(player, regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
 
@@ -224,7 +224,7 @@ public final class BedrockMemberService {
                         AddonText.send(player, config.text("messages.invite-failed"));
                     }
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void showBanForm(Player player, long regionId, String playerName) {
@@ -250,7 +250,7 @@ public final class BedrockMemberService {
                         AddonText.send(player, config.text("messages.ban-failed"));
                     }
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 
@@ -269,7 +269,7 @@ public final class BedrockMemberService {
                     openMembersList(player, regionId, 1);
                 })
                 .button2(config.text("players.confirm-no"), fp -> openPlayerInfo(player, regionId, member.playerId()))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void confirmRevoke(Player player, long regionId, InviteView invite) {
@@ -287,7 +287,7 @@ public final class BedrockMemberService {
                     openInvitesList(player, regionId, 1);
                 })
                 .button2(config.text("players.confirm-no"), fp -> openInvitesList(player, regionId, 1))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void confirmUnban(Player player, long regionId, BanView ban) {
@@ -305,7 +305,7 @@ public final class BedrockMemberService {
                     openBansList(player, regionId, 1);
                 })
                 .button2(config.text("players.confirm-no"), fp -> openBansList(player, regionId, 1))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 

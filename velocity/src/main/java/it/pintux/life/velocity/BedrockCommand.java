@@ -2,8 +2,6 @@ package it.pintux.life.velocity;
 
 import com.velocitypowered.api.command.CommandSource;
 import com.velocitypowered.api.command.SimpleCommand;
-import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import it.pintux.life.velocity.utils.VelocityPlayer;
 
 import it.pintux.life.common.utils.ConfigConverter;
@@ -27,11 +25,11 @@ public class BedrockCommand implements SimpleCommand {
 
         if (args.length == 0) {
             if(source.hasPermission("bedrockgui.admin")) {
-                source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null)));
-                source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
-                source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null)));
+                source.sendMessage(VelocityPlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_RELOAD, null, null)));
+                source.sendMessage(VelocityPlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null)));
+                source.sendMessage(VelocityPlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_CONVERT, null, null)));
             }
-            source.sendMessage(Component.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
+            source.sendMessage(VelocityPlayer.text(plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null)));
             return;
         }
 
@@ -41,14 +39,14 @@ public class BedrockCommand implements SimpleCommand {
             case "reload": {
                 if (!source.hasPermission("bedrockgui.admin")) {
                     String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(msg));
                     return;
                 }
                 
                 plugin.getLogger().info("Reloading BedrockGUI...");
                 plugin.reloadData();
                 String msg = plugin.getMessageData().getValue(MessageData.COMMAND_RELOAD_SUCCESS, null, null);
-                source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.GREEN));
+                source.sendMessage(VelocityPlayer.text(msg));
                 break;
             }
             
@@ -56,7 +54,7 @@ public class BedrockCommand implements SimpleCommand {
             case "convertforms": {
                 if (!source.hasPermission("bedrockgui.admin")) {
                     String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(msg));
                     return;
                 }
                 try {
@@ -69,12 +67,12 @@ public class BedrockCommand implements SimpleCommand {
                     replacements.put("count", converted);
                     replacements.put("backup", backup != null ? backup : "unknown");
                     String msg = plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_SUCCESS, replacements, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.GREEN));
+                    source.sendMessage(VelocityPlayer.text(msg));
                 } catch (Exception e) {
                     java.util.Map<String, Object> replacements = new java.util.HashMap<>();
                     replacements.put("error", e.getMessage());
                     String msg = plugin.getMessageData().getValue(MessageData.FORMS_CONVERSION_FAILED, replacements, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(msg));
                     plugin.getLogger().error("Form conversion error: " + e.getMessage(), e);
                 }
                 break;
@@ -83,7 +81,7 @@ public class BedrockCommand implements SimpleCommand {
             case "open": {
                 if (args.length < 2) {
                     String umsg = plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPEN, null, null);
-                    source.sendMessage(Component.text(umsg.isEmpty() ? "Usage: /bedrockgui open <menu> [args...]" : umsg, NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(umsg));
                     return;
                 }
                 
@@ -98,7 +96,7 @@ public class BedrockCommand implements SimpleCommand {
                     // Message handled by API usually, or we can send success
                 } else {
                     String cmsg = plugin.getMessageData().getValue(MessageData.COMMAND_PLAYER_ONLY, null, null);
-                    source.sendMessage(Component.text(cmsg.isEmpty() ? "You must specify a player when running from console." : cmsg, NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(cmsg));
                 }
                 break;
             }
@@ -106,12 +104,12 @@ public class BedrockCommand implements SimpleCommand {
             case "openfor": {
                 if (!source.hasPermission("bedrockgui.admin")) {
                     String msg = plugin.getMessageData().getValue(MessageData.COMMAND_NO_PERMISSION, null, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(msg));
                     return;
                 }
                 if (args.length < 3) {
                     String msg = plugin.getMessageData().getValue(MessageData.COMMAND_USAGE_OPENFOR, null, null);
-                    source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.RED));
+                    source.sendMessage(VelocityPlayer.text(msg));
                     return;
                 }
                 
@@ -127,19 +125,21 @@ public class BedrockCommand implements SimpleCommand {
                         replacements.put("menu", targetMenu);
                         replacements.put("player", player.getUsername());
                         String msg = plugin.getMessageData().getValue(MessageData.COMMAND_OPENED_FOR, replacements, null);
-                        source.sendMessage(Component.text(msg.replace("§", ""), NamedTextColor.GREEN));
+                        source.sendMessage(VelocityPlayer.text(msg));
                     },
                     () -> {
                         String nf = plugin.getMessageData().getValue(MessageData.PLAYER_NOT_FOUND, java.util.Map.of("player", targetName), null);
-                        source.sendMessage(Component.text(nf.replace("§", ""), NamedTextColor.RED));
+                        source.sendMessage(VelocityPlayer.text(nf));
                     }
                 );
                 break;
             }
                 
             default:
-                String umsg2 = plugin.getMessageData().getValue("usage", null, null);
-                source.sendMessage(Component.text(umsg2.isEmpty() ? "Unknown subcommand. Usage: /bedrockgui <reload | open | openfor | convert>" : umsg2, NamedTextColor.RED));
+                for (String key : new String[]{MessageData.COMMAND_USAGE_RELOAD, MessageData.COMMAND_USAGE_OPEN,
+                        MessageData.COMMAND_USAGE_OPENFOR, MessageData.COMMAND_USAGE_CONVERT}) {
+                    source.sendMessage(VelocityPlayer.text(plugin.getMessageData().getValue(key, null, null)));
+                }
                 break;
         }
     }

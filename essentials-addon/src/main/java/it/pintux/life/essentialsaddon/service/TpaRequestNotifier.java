@@ -1,6 +1,6 @@
 package it.pintux.life.essentialsaddon.service;
 
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.api.TpaProvider;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.plugin.Plugin;

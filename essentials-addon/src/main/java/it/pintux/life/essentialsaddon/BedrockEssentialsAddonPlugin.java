@@ -1,5 +1,7 @@
 package it.pintux.life.essentialsaddon;
 
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FloodgateBedrockPlayerDetector;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.essentialsaddon.action.*;
 import it.pintux.life.essentialsaddon.api.*;
@@ -288,6 +290,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     }
 
     private void initShopGuiPlus(PluginManager pluginManager) {
+        if (pluginManager.getPlugin("ShopGUIPlus") == null) {
+            getLogger().info("ShopGUI+ backend disabled because ShopGUIPlus is not installed.");
+            return;
+        }
         shopCatalogService = new ShopGuiCatalogService(getLogger(), configuration);
         shopGuiPlusHook = new ShopGuiPlusHook(this, shopCatalogService);
         bedrockShopGuiService = new BedrockShopGuiService(
@@ -485,6 +491,10 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
         // Tear down the existing module graph: drop every listener this plugin registered
         // (they hold references to the old service instances) and null the wiring fields.
         HandlerList.unregisterAll(this);
+        try {
+            BedrockGUIApi.getInstance().getActionRegistry().unregisterHandlersFrom(getClass().getClassLoader());
+        } catch (IllegalStateException ignored) {
+        }
         resetModuleState();
 
         // Reload config + sounds, then rebuild every enabled module from scratch. This makes
@@ -509,6 +519,4 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     public KitCatalogService getKitCatalogService() { return kitCatalogService; }
     public HomeCatalogService getHomeCatalogService() { return homeCatalogService; }
     public TpaCatalogService getTpaCatalogService() { return tpaCatalogService; }
-    public BedrockHubService getHubService() { return hubService; }
-    public BedrockPetService getBedrockPetService() { return bedrockPetService; }
 }

@@ -65,6 +65,13 @@ public class ActionRegistry {
     }
 
 
+    public int unregisterHandlersFrom(ClassLoader loader) {
+        int before = handlers.size();
+        handlers.values().removeIf(handler -> handler.getClass().getClassLoader() == loader);
+        return before - handlers.size();
+    }
+
+
     public ActionSystem.ActionHandler getHandler(String actionType) {
         if (ValidationUtils.isNullOrEmpty(actionType)) {
             return null;
@@ -82,6 +89,12 @@ public class ActionRegistry {
         return handlers.containsKey(actionType.toLowerCase().trim());
     }
 
+
+    public static final Set<String> PLATFORM_ACTIONS = Set.of("economy", "inventory", "sound");
+
+    public static boolean isPlatformAction(String actionType) {
+        return actionType != null && PLATFORM_ACTIONS.contains(actionType.toLowerCase().trim());
+    }
 
     public Set<String> getRegisteredActionTypes() {
         return Set.copyOf(handlers.keySet());

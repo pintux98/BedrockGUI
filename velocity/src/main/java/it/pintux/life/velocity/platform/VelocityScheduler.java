@@ -8,16 +8,18 @@ import java.util.concurrent.TimeUnit;
 public class VelocityScheduler implements PlatformScheduler {
 
     private final ProxyServer proxyServer;
+    private final Object plugin;
 
-    public VelocityScheduler(ProxyServer proxyServer) {
+    public VelocityScheduler(ProxyServer proxyServer, Object plugin) {
         this.proxyServer = proxyServer;
+        this.plugin = plugin;
     }
 
 
     @Override
     public void runLaterSync(long delayMillis, Runnable task) {
         proxyServer.getScheduler()
-                .buildTask(this, task)
+                .buildTask(plugin, task)
                 .delay(delayMillis, TimeUnit.MILLISECONDS)
                 .schedule();
     }

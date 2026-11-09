@@ -1,14 +1,14 @@
 package it.pintux.life.bedwarsaddon.service;
 
-import it.pintux.life.bedwarsaddon.api.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FormPlayerResolver;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.bedwarsaddon.config.BedwarsAddonConfiguration;
 import it.pintux.life.bedwarsaddon.menu.MenuButton;
 import it.pintux.life.bedwarsaddon.menu.PartyMenuModel;
 import it.pintux.life.bedwarsaddon.model.PartyInfo;
-import it.pintux.life.bedwarsaddon.util.AddonText;
 import it.pintux.life.bedwarsaddon.util.BedrockSoundFeedback;
-import it.pintux.life.bedwarsaddon.util.BukkitFormPlayer;
-import it.pintux.life.bedwarsaddon.util.FormPlayerResolver;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import org.bukkit.entity.Player;
@@ -57,7 +57,7 @@ public final class BedrockPartyService {
             form.button(button.label(), fp -> api.executeActionString(fp, action, ctx()));
         }
         sound.playFormOpen(player);
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void showAddInput(Player player) {
@@ -78,7 +78,7 @@ public final class BedrockPartyService {
                             Map.of("player", name)));
                     openMain(bp);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     public void leave(Player player) {
@@ -116,7 +116,7 @@ public final class BedrockPartyService {
             String action = button.actionString();
             form.button(button.label(), fp -> api.executeActionString(fp, action, ctx()));
         }
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void kick(Player player, String targetName) {

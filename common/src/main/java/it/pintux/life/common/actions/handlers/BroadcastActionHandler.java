@@ -2,9 +2,6 @@ package it.pintux.life.common.actions.handlers;
 
 import it.pintux.life.common.actions.ActionSystem;
 
-
-
-import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.common.utils.MessageData;
 
@@ -13,14 +10,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import it.pintux.life.common.platform.PlatformCommandExecutor;
+import it.pintux.life.common.platform.PlatformPlayerManager;
 
 
 public class BroadcastActionHandler extends BaseActionHandler {
-    private final PlatformCommandExecutor commandExecutor;
+    private final PlatformPlayerManager playerManager;
 
-    public BroadcastActionHandler(PlatformCommandExecutor commandExecutor) {
-        this.commandExecutor = commandExecutor;
+    public BroadcastActionHandler(PlatformPlayerManager playerManager) {
+        this.playerManager = playerManager;
     }
 
     @Override
@@ -45,8 +42,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
             List<String> broadcasts = parseActionData(actionData, context, player);
 
             if (broadcasts.isEmpty()) {
-                Map<String, Object> errorReplacements = createReplacements("error", "No valid broadcasts found");
-                return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player);
+                return emptyFailure(player);
             }
 
 
@@ -58,8 +54,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logError("broadcast execution", actionData, player, e);
-            Map<String, Object> errorReplacements = createReplacements("error", "Error executing broadcast: " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, errorReplacements, player, e);
+            return errorFailure(player, e);
         }
     }
 
@@ -69,7 +64,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
             List<String> broadcasts = parseNewFormatValues(actionData);
 
             if (broadcasts.isEmpty()) {
-                return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "No broadcasts found in new format"), player);
+                return emptyFailure(player);
             }
 
 
@@ -89,7 +84,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
 
         } catch (Exception e) {
             logger.error("Error executing new format broadcast action for player " + player.getName() + ": " + e.getMessage());
-            return createFailureResult(MessageData.EXECUTION_ERROR, createReplacements("error", "Error parsing new broadcast format: " + e.getMessage()), player);
+            return errorFailure(player, e);
         }
     }
 
@@ -117,12 +112,6 @@ public class BroadcastActionHandler extends BaseActionHandler {
                 if (i < broadcasts.size() - 1) {
                     results.append("\n");
 
-                    try {
-                        Thread.sleep(500);
-                    } catch (InterruptedException e) {
-                        Thread.currentThread().interrupt();
-                        break;
-                    }
                 }
 
             } catch (Exception e) {
@@ -147,7 +136,7 @@ public class BroadcastActionHandler extends BaseActionHandler {
         } else if (successCount > 0) {
             return createSuccessResult(MessageData.ACTION_SUCCESS, replacements, player);
         } else {
-            return createFailureResult(MessageData.EXECUTION_ERROR, replacements, player);
+            return failure(player, "action.all_failed");
         }
     }
 
@@ -157,45 +146,21 @@ public class BroadcastActionHandler extends BaseActionHandler {
         String processedData = processPlaceholders(broadcastData.trim(), context, player);
         String[] parts = processedData.split(":", 3);
 
-        String message;
-        String broadcastCommand;
-
-        if (parts.length == 1) {
-
-            message = parts[0];
-            broadcastCommand = "say " + message;
-        } else if (parts.length == 3) {
-
-            String type = parts[0];
-            String target = parts[1];
+        String audience = "all";
+        String target = "";
+        String message = processedData;
+        if (parts.length == 3 && isBroadcastType(parts[0])) {
+            audience = parts[0].toLowerCase();
+            target = parts[1];
             message = parts[2];
-
-            switch (type.toLowerCase()) {
-                case "permission":
-                    broadcastCommand = "broadcast permission " + target + " " + message;
-                    break;
-                case "world":
-                    broadcastCommand = "broadcast world " + target + " " + message;
-                    break;
-                case "radius":
-                    broadcastCommand = "broadcast radius " + target + " " + player.getName() + " " + message;
-                    break;
-                default:
-                    return createFailureResult("ACTION_INVALID_PARAMETERS", createReplacements("type", type), player);
-            }
-        } else {
-
-            message = parts[0] + ":" + parts[1];
-            broadcastCommand = "say " + message;
         }
 
-
+        String finalAudience = audience;
+        String finalTarget = target;
+        String finalMessage = message;
         boolean success = executeWithErrorHandling(
-                () -> {
-                    commandExecutor.executeAsConsole(broadcastCommand);
-                    return true;
-                },
-                "Broadcast command: " + broadcastCommand,
+                () -> playerManager.broadcast(player, finalAudience, finalTarget, finalMessage),
+                "Broadcast to " + audience + " " + target,
                 player
         );
 
@@ -210,31 +175,6 @@ public class BroadcastActionHandler extends BaseActionHandler {
         }
     }
 
-
-    private ActionSystem.ActionResult executeMultipleBroadcasts(FormPlayer player, String multiValue, ActionSystem.ActionContext context) {
-
-        String listContent = multiValue.trim().substring(1, multiValue.trim().length() - 1);
-        String[] broadcasts = listContent.split(",\\s*");
-
-        for (String broadcast : broadcasts) {
-            ActionSystem.ActionResult result = executeSingleBroadcast(player, broadcast.trim(), context);
-            if (result.isFailure()) {
-                return result;
-            }
-
-
-            try {
-                Thread.sleep(500);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
-            }
-        }
-
-        logSuccess("broadcast", "Sent " + broadcasts.length + " broadcasts", player);
-        return createSuccessResult("ACTION_BROADCAST_SUCCESS",
-                createReplacements("message", "Sent " + broadcasts.length + " broadcasts"), player);
-    }
 
     @Override
     public boolean isValidAction(String actionValue) {
@@ -263,20 +203,12 @@ public class BroadcastActionHandler extends BaseActionHandler {
     }
 
     private boolean isValidSingleBroadcast(String broadcastData) {
-        if (broadcastData.isEmpty()) return false;
+        return !broadcastData.isEmpty();
+    }
 
-        String[] parts = broadcastData.split(":");
-
-
-        if (parts.length <= 2) return true;
-
-
-        if (parts.length == 3) {
-            String type = parts[0].toLowerCase();
-            return type.equals("permission") || type.equals("world") || type.equals("radius");
-        }
-
-        return false;
+    private static boolean isBroadcastType(String type) {
+        String lower = type.toLowerCase();
+        return lower.equals("permission") || lower.equals("world") || lower.equals("radius");
     }
 
     @Override

@@ -14,6 +14,10 @@ public class FormMenu {
     private List<FormButton> formButtons;
     private Map<String, Map<String, Object>> components;
     private List<String> globalActions;
+    private String closeActions;
+    private String openCondition;
+    private String openConditionMessage;
+    private int cooldownSeconds;
 
     public FormMenu(String formCommand, String commandIntercept, String permission, String formTitle, String formContent, String formType, List<FormButton> formButtons, Map<String, Map<String, Object>> components, List<String> globalActions) {
         this.formCommand = formCommand;
@@ -28,22 +32,19 @@ public class FormMenu {
     }
 
 
-
     public String getFormCommand() {
         return formCommand;
     }
 
-    public void setFormCommand(String formCommand) {
-        this.formCommand = formCommand;
+    public int getRequiredArgs() {
+        return formCommand == null || formCommand.isBlank() ? 0 : formCommand.trim().split("\\s+").length - 1;
     }
+
 
     public String getCommandIntercept() {
         return commandIntercept;
     }
 
-    public void setCommandIntercept(String commandIntercept) {
-        this.commandIntercept = commandIntercept;
-    }
 
     public String getPermission() {
         return permission;
@@ -57,49 +58,60 @@ public class FormMenu {
         return formTitle;
     }
 
-    public void setFormTitle(String formTitle) {
-        this.formTitle = formTitle;
-    }
 
     public String getFormContent() {
         return formContent;
     }
 
-    public void setFormContent(String formContent) {
-        this.formContent = formContent;
-    }
 
     public String getFormType() {
         return formType;
     }
 
-    public void setFormType(String formType) {
-        this.formType = formType;
-    }
 
     public List<FormButton> getFormButtons() {
         return formButtons;
     }
 
-    public void setFormButtons(List<FormButton> formButtons) {
-        this.formButtons = formButtons;
-    }
 
     public Map<String, Map<String, Object>> getComponents() {
         return components;
     }
 
-    public void setComponents(Map<String, Map<String, Object>> components) {
-        this.components = components;
-    }
 
     public List<String> getGlobalActions() {
         return globalActions;
     }
 
-    public void setGlobalActions(List<String> globalActions) {
-        this.globalActions = globalActions;
+    public String getCloseActions() {
+        return closeActions;
     }
+
+    public void setCloseActions(String closeActions) {
+        this.closeActions = closeActions;
+    }
+
+    public String getOpenCondition() {
+        return openCondition;
+    }
+
+    public String getOpenConditionMessage() {
+        return openConditionMessage;
+    }
+
+    public void setOpenCondition(String openCondition, String openConditionMessage) {
+        this.openCondition = openCondition;
+        this.openConditionMessage = openConditionMessage;
+    }
+
+    public int getCooldownSeconds() {
+        return cooldownSeconds;
+    }
+
+    public void setCooldownSeconds(int cooldownSeconds) {
+        this.cooldownSeconds = cooldownSeconds;
+    }
+
 
     @Override
     public String toString() {

@@ -25,6 +25,7 @@ dependencies {
         transitive = false
     }
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"
+    testImplementation project(':paper')
     testRuntimeOnly "org.junit.platform:junit-platform-launcher"
     testImplementation "org.mockito:mockito-core:${mockitoVersion}"
 }

@@ -4,7 +4,6 @@ import com.velocitypowered.api.proxy.Player;
 import it.pintux.life.common.platform.PlatformTitleManager;
 import it.pintux.life.common.utils.FormPlayer;
 import it.pintux.life.velocity.utils.VelocityPlayer;
-import net.kyori.adventure.text.Component;
 import net.kyori.adventure.title.Title;
 
 import java.time.Duration;
@@ -30,8 +29,8 @@ public class VelocityTitleManager implements PlatformTitleManager {
         );
 
         Title adventureTitle = Title.title(
-                Component.text(title),
-                Component.text(subtitle),
+                VelocityPlayer.text(title),
+                VelocityPlayer.text(subtitle),
                 times
         );
 
@@ -51,7 +50,7 @@ public class VelocityTitleManager implements PlatformTitleManager {
             return false;
         }
 
-        velocityPlayer.getPlayer().sendActionBar(Component.text(message));
+        velocityPlayer.getPlayer().sendActionBar(VelocityPlayer.text(message));
 
         return true;
     }

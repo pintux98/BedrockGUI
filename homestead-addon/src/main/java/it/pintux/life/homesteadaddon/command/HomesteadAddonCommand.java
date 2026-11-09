@@ -1,8 +1,8 @@
 package it.pintux.life.homesteadaddon.command;
 
+import it.pintux.life.paper.addon.AddonText;
 import it.pintux.life.homesteadaddon.HomesteadAddonPlugin;
 import it.pintux.life.homesteadaddon.service.BedrockRegionService;
-import it.pintux.life.homesteadaddon.util.AddonText;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;

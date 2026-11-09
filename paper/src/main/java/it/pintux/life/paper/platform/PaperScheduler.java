@@ -2,7 +2,6 @@ package it.pintux.life.paper.platform;
 
 import it.pintux.life.common.platform.PlatformScheduler;
 import it.pintux.life.paper.utils.SchedulerAdapter;
-import org.bukkit.Bukkit;
 import org.bukkit.plugin.Plugin;
 
 public class PaperScheduler implements PlatformScheduler {

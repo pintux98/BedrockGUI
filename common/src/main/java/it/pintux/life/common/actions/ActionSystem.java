@@ -64,9 +64,6 @@ public class ActionSystem {
             return new ActionResult(Status.FAILURE, message, exception, null);
         }
 
-        public static ActionResult partialSuccess(String message) {
-            return new ActionResult(Status.PARTIAL_SUCCESS, message, null, null);
-        }
 
         public static ActionResult skipped(String message) {
             return new ActionResult(Status.SKIPPED, message, null, null);
@@ -80,9 +77,6 @@ public class ActionSystem {
             return status == Status.FAILURE;
         }
 
-        public boolean hasException() {
-            return exception != null;
-        }
 
         @Override
         public String toString() {
@@ -241,13 +235,6 @@ public class ActionSystem {
             this.actions = actions != null ? new LinkedHashMap<>(actions) : new LinkedHashMap<>();
         }
 
-        public Map<String, Object> getActions() {
-            return actions;
-        }
-
-        public void setActions(Map<String, Object> actions) {
-            this.actions = actions != null ? new LinkedHashMap<>(actions) : new LinkedHashMap<>();
-        }
 
         public void addAction(String actionType, Object value) {
             actions.put(actionType, value);
@@ -261,9 +248,6 @@ public class ActionSystem {
             return actions.containsKey(actionType);
         }
 
-        public void removeAction(String actionType) {
-            actions.remove(actionType);
-        }
 
         public Set<String> getActionTypes() {
             return actions.keySet();
@@ -273,9 +257,6 @@ public class ActionSystem {
             return hasAction("conditional");
         }
 
-        public boolean isMultiAction() {
-            return actions.size() > 1 || (actions.size() == 1 && !isConditional());
-        }
 
         public boolean isEmpty() {
             return actions.isEmpty();
@@ -316,29 +297,19 @@ public class ActionSystem {
      * Represents a single action with metadata
      */
     public static class Action {
-        private final ActionDefinition ActionDefinition;
-        private final boolean critical;
+        private final ActionDefinition actionDefinition;
 
-        public Action(ActionDefinition ActionDefinition) {
-            this(ActionDefinition, false);
-        }
-
-        public Action(ActionDefinition ActionDefinition, boolean critical) {
-            this.ActionDefinition = ActionDefinition;
-            this.critical = critical;
+        public Action(ActionDefinition actionDefinition) {
+            this.actionDefinition = actionDefinition;
         }
 
         public ActionDefinition getActionDefinition() {
-            return ActionDefinition;
-        }
-
-        public boolean isCritical() {
-            return critical;
+            return actionDefinition;
         }
 
         @Override
         public String toString() {
-            return "Action{ActionDefinition=" + ActionDefinition + ", critical=" + critical + "}";
+            return "Action{actionDefinition=" + actionDefinition + "}";
         }
     }
 }

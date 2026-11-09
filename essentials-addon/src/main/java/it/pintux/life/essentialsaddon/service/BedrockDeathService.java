@@ -1,11 +1,11 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FormPlayerResolver;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.entity.Player;
 
@@ -58,7 +58,7 @@ public final class BedrockDeathService {
         }
         form.button(configuration.deathCloseButton(), ignored -> { });
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private boolean hasBackAccess(Player player) {

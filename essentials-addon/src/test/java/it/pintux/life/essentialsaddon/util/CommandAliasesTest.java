@@ -1,5 +1,6 @@
 package it.pintux.life.essentialsaddon.util;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import org.junit.jupiter.api.Test;
 
 import java.util.Arrays;

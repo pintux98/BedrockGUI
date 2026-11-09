@@ -1,8 +1,8 @@
 package it.pintux.life.essentialsaddon.backend;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
 import it.pintux.life.essentialsaddon.service.BedrockEconomyShopService;
-import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.InventoryOpenEvent;

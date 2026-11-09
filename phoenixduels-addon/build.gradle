@@ -6,6 +6,7 @@ repositories {
 
 dependencies {
     compileOnly project(':common')
+    compileOnly project(':paper')
     compileOnly "io.papermc.paper:paper-api:${paperApiVersion}"
     compileOnly files('lib/phoenixduels.jar')
     testImplementation "org.junit.jupiter:junit-jupiter:${junitVersion}"

@@ -1,8 +1,9 @@
 package it.pintux.life.homesteadaddon;
 
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FloodgateBedrockPlayerDetector;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.homesteadaddon.action.HomesteadFormAction;
-import it.pintux.life.homesteadaddon.api.BedrockPlayerDetector;
 import it.pintux.life.homesteadaddon.command.HomesteadAddonCommand;
 import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
@@ -17,7 +18,6 @@ import it.pintux.life.homesteadaddon.service.BedrockMemberService;
 import it.pintux.life.homesteadaddon.service.BedrockMiscService;
 import it.pintux.life.homesteadaddon.service.BedrockRegionService;
 import it.pintux.life.homesteadaddon.service.BedrockSubAreaService;
-import it.pintux.life.homesteadaddon.service.FloodgateBedrockPlayerDetector;
 import it.pintux.life.homesteadaddon.util.HomesteadActionPayloads;
 import org.bukkit.Bukkit;
 import org.bukkit.command.PluginCommand;
@@ -198,6 +198,10 @@ public final class HomesteadAddonPlugin extends JavaPlugin {
 
     public void reloadConfiguration() {
         HandlerList.unregisterAll(this);
+        try {
+            BedrockGUIApi.getInstance().getActionRegistry().unregisterHandlersFrom(getClass().getClassLoader());
+        } catch (IllegalStateException ignored) {
+        }
         configuration = HomesteadAddonConfiguration.load(this);
         setupModules();
     }

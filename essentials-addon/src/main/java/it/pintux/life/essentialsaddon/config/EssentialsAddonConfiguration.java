@@ -1,13 +1,12 @@
 package it.pintux.life.essentialsaddon.config;
 
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.common.config.ConfigMigrator;
 import it.pintux.life.essentialsaddon.provider.ProviderSelector;
-import it.pintux.life.essentialsaddon.util.CommandAliases;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

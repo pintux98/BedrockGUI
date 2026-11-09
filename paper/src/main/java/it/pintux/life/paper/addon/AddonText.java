@@ -1,7 +1,8 @@
-package it.pintux.life.duelsaddon.util;
+package it.pintux.life.paper.addon;
 
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
+import it.pintux.life.paper.utils.PaperPlayer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
@@ -20,7 +21,7 @@ public final class AddonText {
         } catch (IllegalStateException ignored) {
             return text;
         }
-        FormPlayer formPlayer = receiver instanceof Player ? new BukkitFormPlayer((Player) receiver) : null;
+        FormPlayer formPlayer = receiver instanceof Player player ? new PaperPlayer(player) : null;
         return api.formatText(formPlayer, text);
     }
 

@@ -1,5 +1,7 @@
 package it.pintux.life.homesteadaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.actions.ActionSystem;
 import it.pintux.life.common.api.BedrockGUIApi;
 import it.pintux.life.common.utils.FormPlayer;
@@ -7,8 +9,6 @@ import it.pintux.life.homesteadaddon.config.HomesteadAddonConfiguration;
 import it.pintux.life.homesteadaddon.gateway.HomesteadGateway;
 import it.pintux.life.homesteadaddon.model.RatingView;
 import it.pintux.life.homesteadaddon.model.RegionView;
-import it.pintux.life.homesteadaddon.util.AddonText;
-import it.pintux.life.homesteadaddon.util.BukkitFormPlayer;
 import org.bukkit.entity.Player;
 
 import java.util.Map;
@@ -65,7 +65,7 @@ public final class BedrockMiscService {
         form.button(config.text("misc.button-map-icon"), fp -> navigate(fp, "hs_map_icon:" + regionId));
         form.button(config.text("misc.button-delete"), fp -> confirmDelete(player, region));
         form.button(config.text("common.back-button"), fp -> navigate(fp, "hs_region_menu:" + regionId));
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     private void showTextForm(Player player, long regionId, String titleKey, String labelKey, String current, Applier applier) {
@@ -85,7 +85,7 @@ public final class BedrockMiscService {
                     }
                     openMiscSettings(player, regionId);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void showTransferForm(Player player, long regionId) {
@@ -110,7 +110,7 @@ public final class BedrockMiscService {
                         openMiscSettings(player, regionId);
                     }
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void confirmDelete(Player player, RegionView region) {
@@ -124,13 +124,13 @@ public final class BedrockMiscService {
                 .button1(config.text("misc.button-delete"), fp -> {
                     if (canManage(player, region.id()) && gateway.deleteRegion(region.id())) {
                         AddonText.send(player, config.apply(config.text("misc.delete-success"), ph));
-                        navigate(new BukkitFormPlayer(player), "hs_regions:");
+                        navigate(new PaperPlayer(player), "hs_regions:");
                     } else {
                         openMiscSettings(player, region.id());
                     }
                 })
                 .button2(config.text("misc.confirm-no"), fp -> openMiscSettings(player, region.id()))
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 
@@ -157,7 +157,7 @@ public final class BedrockMiscService {
                         AddonText.send(player, config.apply(config.text("rating.success"), Map.of("score", String.valueOf(score))));
                     }
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
 

@@ -1,8 +1,5 @@
 package it.pintux.life.common.utils;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Set;
 import java.util.UUID;
 import java.util.regex.Pattern;
 
@@ -29,53 +26,27 @@ public final class ValidationUtils {
     }
 
 
-    public static boolean isValidUUID(UUID uuid) {
-        return uuid != null;
-    }
-
-
-    public static boolean isSafeFilePath(String filePath) {
-        if (isNullOrEmpty(filePath)) {
-            return false;
+    public static int parseSeconds(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return 0;
         }
-
-
-        if (filePath.contains("..") || filePath.contains("~")) {
-            return false;
+        String value = raw.trim().toLowerCase();
+        int multiplier = 1;
+        if (value.endsWith("s")) {
+            value = value.substring(0, value.length() - 1);
+        } else if (value.endsWith("m")) {
+            multiplier = 60;
+            value = value.substring(0, value.length() - 1);
+        } else if (value.endsWith("h")) {
+            multiplier = 3600;
+            value = value.substring(0, value.length() - 1);
         }
-
         try {
-            Path path = Paths.get(filePath);
-            Path normalizedPath = path.normalize();
-
-
-            return !normalizedPath.toString().contains("..");
-        } catch (Exception e) {
-            return false;
+            return Math.max(0, Integer.parseInt(value.trim()) * multiplier);
+        } catch (NumberFormatException e) {
+            return 0;
         }
     }
-
-
-    public static String sanitizeString(String input) {
-        if (input == null) {
-            return "";
-        }
-
-
-        return input.replaceAll("[\\p{Cntrl}&&[^\\r\\n\\t]]", "")
-                .replaceAll("\\s+", " ")
-                .trim();
-    }
-
-
-    public static boolean isValidConfigValue(Object value, Class<?> expectedType) {
-        if (value == null) {
-            return false;
-        }
-
-        return expectedType.isAssignableFrom(value.getClass());
-    }
-
 
     public static boolean isNullOrEmpty(String str) {
         return str == null || str.trim().isEmpty();
@@ -90,8 +61,7 @@ public final class ValidationUtils {
         String trimmed = imageSource.trim();
         if (trimmed.isEmpty()) return false;
 
-        // Placeholders are resolved at runtime
-        if (trimmed.contains("%")) {
+        if (trimmed.contains("%") || trimmed.contains("{") || trimmed.contains("$")) {
             return true;
         }
 
@@ -132,16 +102,6 @@ public final class ValidationUtils {
     }
 
 
-    public static boolean isValidActionFormat(String actionValue, int minParts) {
-        if (isNullOrEmpty(actionValue)) {
-            return false;
-        }
-
-        String[] parts = actionValue.split(":");
-        return parts.length >= minParts;
-    }
-
-
     public static boolean isValidCommand(String command) {
         if (isNullOrEmpty(command)) {
             return false;
@@ -164,72 +124,5 @@ public final class ValidationUtils {
     }
 
 
-    public static boolean isValidNumericRange(String value, double min, double max) {
-        if (isNullOrEmpty(value)) {
-            return false;
-        }
-
-        try {
-            double numValue = Double.parseDouble(value);
-            return numValue >= min && numValue <= max;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-
-    public static boolean isValidPlayerName(String playerName) {
-        if (isNullOrEmpty(playerName)) {
-            return false;
-        }
-
-
-        return playerName.matches("^[a-zA-Z0-9_]{3,16}$");
-    }
-
-
-    public static boolean isValidCoordinates(String x, String y, String z) {
-        try {
-            Double.parseDouble(x);
-            Double.parseDouble(y);
-            Double.parseDouble(z);
-            return true;
-        } catch (NumberFormatException e) {
-            return false;
-        }
-    }
-
-
-    public static boolean isValidGameMode(String gameMode) {
-        if (isNullOrEmpty(gameMode)) {
-            return false;
-        }
-
-        String mode = gameMode.toLowerCase();
-        return mode.equals("survival") || mode.equals("creative") ||
-               mode.equals("adventure") || mode.equals("spectator") ||
-               mode.equals("0") || mode.equals("1") || mode.equals("2") || mode.equals("3") ||
-               mode.equals("s") || mode.equals("c") || mode.equals("a") || mode.equals("sp");
-    }
-
-
-    public static boolean isValidItemId(String itemId) {
-        if (isNullOrEmpty(itemId)) {
-            return false;
-        }
-
-
-        return itemId.matches("^[a-z0-9_:]+$") && !itemId.startsWith(":") && !itemId.endsWith(":");
-    }
-
-
-    public static boolean isValidPotionEffect(String effectName) {
-        if (isNullOrEmpty(effectName)) {
-            return false;
-        }
-
-
-        return effectName.matches("^[a-z0-9_:]+$");
-    }
 }
 

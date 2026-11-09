@@ -1,11 +1,11 @@
 package it.pintux.life.essentialsaddon.service;
 
+import it.pintux.life.paper.addon.AddonText;
+import it.pintux.life.paper.addon.BedrockPlayerDetector;
+import it.pintux.life.paper.addon.FormPlayerResolver;
+import it.pintux.life.paper.utils.PaperPlayer;
 import it.pintux.life.common.api.BedrockGUIApi;
-import it.pintux.life.essentialsaddon.api.BedrockPlayerDetector;
 import it.pintux.life.essentialsaddon.config.EssentialsAddonConfiguration;
-import it.pintux.life.essentialsaddon.util.AddonText;
-import it.pintux.life.essentialsaddon.util.BukkitFormPlayer;
-import it.pintux.life.essentialsaddon.util.FormPlayerResolver;
 import it.pintux.life.essentialsaddon.util.MainThread;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
@@ -81,7 +81,7 @@ public final class BedrockTpaService {
                     Map.of("players", String.join(", ", requests))));
         }
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     public void showTpaTargetForm(Player player, boolean here) {
@@ -124,7 +124,7 @@ public final class BedrockTpaService {
             });
         });
 
-        form.send(new BukkitFormPlayer(player));
+        form.send(new PaperPlayer(player));
     }
 
     /**
@@ -147,7 +147,7 @@ public final class BedrockTpaService {
                     Player bukkitPlayer = FormPlayerResolver.resolve(formPlayer);
                     if (bukkitPlayer != null) denyPending(bukkitPlayer);
                 })
-                .send(new BukkitFormPlayer(player));
+                .send(new PaperPlayer(player));
     }
 
     private void acceptPending(Player player) {

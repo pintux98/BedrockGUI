@@ -1,12 +1,11 @@
 package it.pintux.life.bedwarsaddon.config;
 
-import it.pintux.life.bedwarsaddon.util.CommandAliases;
+import it.pintux.life.paper.addon.CommandAliases;
 import it.pintux.life.common.config.ConfigMigrator;
 import org.bukkit.ChatColor;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.util.Map;
 
 public final class BedwarsAddonConfiguration {
@@ -27,8 +26,6 @@ public final class BedwarsAddonConfiguration {
     private final String shopItemButtonUnaffordable;
     private final String shopBackButton;
     private final String shopCloseButton;
-    private final String shopPurchaseSuccess;
-    private final String shopPurchaseFailed;
     private final String shopNotInGame;
     private final String shopProviderUnavailable;
 
@@ -92,8 +89,6 @@ public final class BedwarsAddonConfiguration {
 
     private final boolean soundsEnabled;
     private final String soundFormOpen;
-    private final String soundPurchaseSuccess;
-    private final String soundPurchaseFailed;
     private final float soundVolume;
     private final float soundPitch;
 
@@ -116,8 +111,6 @@ public final class BedwarsAddonConfiguration {
         this.shopItemButtonUnaffordable = c.getString("shop.item-button-unaffordable", "&c{item}\n&7{cost} {currency}");
         this.shopBackButton = color(c.getString("shop.back-button", "&7Back"));
         this.shopCloseButton = color(c.getString("shop.close-button", "&cClose"));
-        this.shopPurchaseSuccess = c.getString("shop.purchase-success", "&aPurchased {item}.");
-        this.shopPurchaseFailed = c.getString("shop.purchase-failed", "&cCould not purchase {item}: {reason}");
         this.shopNotInGame = color(c.getString("shop.not-in-game", "&cYou must be in a game to use the shop."));
         this.shopProviderUnavailable = color(c.getString("shop.provider-unavailable", "&cThe shop is currently unavailable."));
 
@@ -184,8 +177,6 @@ public final class BedwarsAddonConfiguration {
 
         this.soundsEnabled = c.getBoolean("sounds.enabled", true);
         this.soundFormOpen = c.getString("sounds.form-open", "UI_BUTTON_CLICK");
-        this.soundPurchaseSuccess = c.getString("sounds.purchase-success", "ENTITY_PLAYER_LEVELUP");
-        this.soundPurchaseFailed = c.getString("sounds.purchase-failed", "BLOCK_NOTE_BLOCK_PLING");
         this.soundVolume = (float) c.getDouble("sounds.volume", 1.0);
         this.soundPitch = (float) c.getDouble("sounds.pitch", 1.0);
     }
@@ -281,8 +272,6 @@ public final class BedwarsAddonConfiguration {
     public String shopItemButtonUnaffordable() { return shopItemButtonUnaffordable; }
     public String shopBackButton() { return shopBackButton; }
     public String shopCloseButton() { return shopCloseButton; }
-    public String shopPurchaseSuccess() { return shopPurchaseSuccess; }
-    public String shopPurchaseFailed() { return shopPurchaseFailed; }
     public String shopNotInGame() { return shopNotInGame; }
     public String shopProviderUnavailable() { return shopProviderUnavailable; }
     public String commandNoPermission() { return commandNoPermission; }
@@ -293,8 +282,6 @@ public final class BedwarsAddonConfiguration {
     public String commandModuleDisabled() { return commandModuleDisabled; }
     public boolean soundsEnabled() { return soundsEnabled; }
     public String soundFormOpen() { return soundFormOpen; }
-    public String soundPurchaseSuccess() { return soundPurchaseSuccess; }
-    public String soundPurchaseFailed() { return soundPurchaseFailed; }
     public float soundVolume() { return soundVolume; }
     public float soundPitch() { return soundPitch; }
 }
