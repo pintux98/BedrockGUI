@@ -58,4 +58,5 @@ jobs:
           allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
+          removeArtifacts: true
           artifacts: "release-artifacts/*"
