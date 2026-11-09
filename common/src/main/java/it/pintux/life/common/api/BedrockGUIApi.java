@@ -149,7 +149,7 @@ public class BedrockGUIApi {
     public FormComponentBuilder createComponent(String type, String text, String defaultValue) {
         switch (type.toLowerCase()) {
             case "input":
-                return new InputComponentBuilder(text, defaultValue, "");
+                return new InputComponentBuilder(text, "", defaultValue);
             default:
                 throw new IllegalArgumentException("Unknown component type: " + type);
         }
@@ -170,13 +170,15 @@ public class BedrockGUIApi {
         switch (type.toLowerCase()) {
             case "dropdown":
                 return new DropdownComponentBuilder(text, options, 0);
+            case "step_slider":
+                return new StepSliderComponentBuilder(text, options, 0);
             default:
                 throw new IllegalArgumentException("Unknown component type: " + type);
         }
     }
 
 
-    public FormBuilder createFromTemplate(String templateName, Map<String, Object> parameters) {
+    public FormBuilder<?> createFromTemplate(String templateName, Map<String, Object> parameters) {
         FormTemplate template = formTemplates.get(templateName);
         if (template == null) {
             throw new IllegalArgumentException("Template not found: " + templateName);
@@ -317,11 +319,14 @@ public class BedrockGUIApi {
     public void shutdown() {
         formMenuUtil.shutdown();
         formTemplates.clear();
+        if (instance == this) {
+            instance = null;
+        }
         logger.info("BedrockGUIApi shutdown completed");
     }
 
 
-    public abstract class FormBuilder {
+    public abstract class FormBuilder<B extends FormBuilder<B>> {
         protected String title;
         protected String content;
         protected Map<String, String> placeholders = new HashMap<>();
@@ -334,38 +339,43 @@ public class BedrockGUIApi {
             this.title = title;
         }
 
+        @SuppressWarnings("unchecked")
+        protected B self() {
+            return (B) this;
+        }
+
         public String getTitle() {
             return title;
         }
 
-        public FormBuilder content(String content) {
+        public B content(String content) {
             this.content = content;
-            return this;
+            return self();
         }
 
-        public FormBuilder placeholder(String key, String value) {
+        public B placeholder(String key, String value) {
             this.placeholders.put(key, value);
-            return this;
+            return self();
         }
 
-        public FormBuilder placeholders(Map<String, String> placeholders) {
+        public B placeholders(Map<String, String> placeholders) {
             this.placeholders.putAll(placeholders);
-            return this;
+            return self();
         }
 
-        public FormBuilder requirePermission(String permission) {
+        public B requirePermission(String permission) {
             this.permissions.add(permission);
-            return this;
+            return self();
         }
 
-        public FormBuilder onOpen(Consumer<FormPlayer> callback) {
+        public B onOpen(Consumer<FormPlayer> callback) {
             this.onOpen = callback;
-            return this;
+            return self();
         }
 
-        public FormBuilder onClose(Consumer<FormPlayer> callback) {
+        public B onClose(Consumer<FormPlayer> callback) {
             this.onClose = callback;
-            return this;
+            return self();
         }
 
         protected boolean hasPermission(FormPlayer player) {
@@ -405,32 +415,37 @@ public class BedrockGUIApi {
             return null;
         }
 
-        protected void registerCloseHandler(org.geysermc.cumulus.form.util.FormBuilder<?, ?, ?> builder) {
-            if (onClose == null) {
+        protected void registerCloseHandler(org.geysermc.cumulus.form.util.FormBuilder<?, ?, ?> builder, FormPlayer player) {
+            if (onClose == null || player == null) {
                 return;
             }
-            builder.closedResultHandler(() -> {
-                if (currentPlayer != null) {
-                    onClose.accept(currentPlayer);
-                }
-            });
+            Consumer<FormPlayer> handler = onClose;
+            builder.closedResultHandler(() -> handler.accept(player));
         }
 
-        public abstract Form build();
+        public Form build() {
+            return build(currentPlayer);
+        }
+
+        public Form build(FormPlayer player) {
+            this.currentPlayer = player;
+            return buildFor(player);
+        }
+
+        protected abstract Form buildFor(FormPlayer player);
 
         public CompletableFuture<FormResult> send(FormPlayer player) {
             FormResult rejection = beforeSend(player);
             if (rejection != null) {
                 return CompletableFuture.completedFuture(rejection);
             }
-
-            return openForm(player, build());
+            return openForm(player, buildFor(player));
         }
     }
 
 
-    public class SimpleFormBuilder extends FormBuilder {
-        private List<FormButtonBuilder> buttons = new ArrayList<>();
+    public class SimpleFormBuilder extends FormBuilder<SimpleFormBuilder> {
+        private final List<FormButtonBuilder> buttons = new ArrayList<>();
 
         public SimpleFormBuilder(String title) {
             super(title);
@@ -446,13 +461,6 @@ public class BedrockGUIApi {
             return this;
         }
 
-        private boolean isVisible(FormButtonData buttonData, FormPlayer player) {
-            if (buttonData.condition == null) {
-                return true;
-            }
-            return player != null && buttonData.condition.test(player);
-        }
-
         public FormButtonBuilder addButton(String text) {
             FormButtonBuilder button = new FormButtonBuilder(text);
             buttons.add(button);
@@ -461,78 +469,27 @@ public class BedrockGUIApi {
 
         @Override
         public SimpleForm build() {
-            SimpleForm.Builder builder = SimpleForm.builder()
-                    .title(resolveText(title));
-
-            if (content != null) {
-                builder.content(resolveText(content));
-            }
-
-            List<Consumer<FormPlayer>> clickHandlers = new ArrayList<>();
-
-            for (FormButtonBuilder buttonBuilder : buttons) {
-                FormButtonData buttonData = buttonBuilder.build();
-                if (!isVisible(buttonData, currentPlayer)) {
-                    continue;
-                }
-
-                String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
-                if (resolved != null) {
-                    FormImage.Type type = IconResolver.isUrl(resolved) ? FormImage.Type.URL : FormImage.Type.PATH;
-                    builder.button(resolveText(buttonData.text), type, resolved);
-                } else {
-                    builder.button(resolveText(buttonData.text));
-                }
-
-                clickHandlers.add(buttonData.onClick);
-            }
-
-            builder.validResultHandler((form, response) -> {
-                int buttonId = response.clickedButtonId();
-                if (buttonId >= 0 && buttonId < clickHandlers.size()) {
-                    Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
-                    if (handler != null && currentPlayer != null) {
-                        handler.accept(currentPlayer);
-                    } else if (handler != null) {
-                        logger.warn("Button clicked but FormPlayer context not available");
-                    }
-                }
-            });
-
-            registerCloseHandler(builder);
-
-            return builder.build();
+            return (SimpleForm) super.build();
         }
 
         @Override
-        public CompletableFuture<FormResult> send(FormPlayer player) {
-            FormResult rejection = beforeSend(player);
-            if (rejection != null) {
-                return CompletableFuture.completedFuture(rejection);
-            }
+        public SimpleForm build(FormPlayer player) {
+            return (SimpleForm) super.build(player);
+        }
 
-
-            List<FormButtonData> visible = new ArrayList<>();
-            for (FormButtonBuilder buttonBuilder : buttons) {
-                FormButtonData buttonData = buttonBuilder.build();
-                if (isVisible(buttonData, player)) {
-                    visible.add(buttonData);
-                }
-            }
-
-            List<Consumer<FormPlayer>> clickHandlers = new ArrayList<>();
-            for (FormButtonData buttonData : visible) {
-                clickHandlers.add(buttonData.onClick);
-            }
-
-
-            SimpleForm.Builder builder = SimpleForm.builder();
-            builder.title(resolveText(title));
+        @Override
+        protected SimpleForm buildFor(FormPlayer player) {
+            SimpleForm.Builder builder = SimpleForm.builder().title(resolveText(title));
             if (content != null) {
                 builder.content(resolveText(content));
             }
 
-            for (FormButtonData buttonData : visible) {
+            List<Consumer<FormPlayer>> clickHandlers = new ArrayList<>();
+            for (FormButtonBuilder buttonBuilder : buttons) {
+                FormButtonData buttonData = buttonBuilder.build();
+                if (buttonData.condition != null && (player == null || !buttonData.condition.test(player))) {
+                    continue;
+                }
                 String resolved = buttonData.image != null ? resolveButtonImage(buttonData.image) : null;
                 if (resolved != null) {
                     FormImage.Type type = IconResolver.isUrl(resolved) ? FormImage.Type.URL : FormImage.Type.PATH;
@@ -540,26 +497,32 @@ public class BedrockGUIApi {
                 } else {
                     builder.button(resolveText(buttonData.text));
                 }
+                clickHandlers.add(buttonData.onClick);
             }
 
             builder.validResultHandler((form, response) -> {
                 int buttonId = response.clickedButtonId();
-                if (buttonId >= 0 && buttonId < clickHandlers.size()) {
-                    Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
-                    if (handler != null) {
-                        handler.accept(player);
-                    }
+                if (buttonId < 0 || buttonId >= clickHandlers.size()) {
+                    return;
                 }
+                Consumer<FormPlayer> handler = clickHandlers.get(buttonId);
+                if (handler == null) {
+                    return;
+                }
+                if (player == null) {
+                    logger.warn("Button clicked on a form built without a player; use build(player) or send(player)");
+                    return;
+                }
+                handler.accept(player);
             });
 
-            registerCloseHandler(builder);
-
-            return openForm(player, builder.build());
+            registerCloseHandler(builder, player);
+            return builder.build();
         }
     }
 
 
-    public class ModalFormBuilder extends FormBuilder {
+    public class ModalFormBuilder extends FormBuilder<ModalFormBuilder> {
         private String button1Text = getMessageData().getValueNoPrefix("forms.modal_yes", null, null);
         private String button2Text = getMessageData().getValueNoPrefix("forms.modal_no", null, null);
         private Consumer<FormPlayer> onButton1;
@@ -595,59 +558,50 @@ public class BedrockGUIApi {
 
         @Override
         public ModalForm build() {
-            ModalForm.Builder builder = ModalForm.builder()
-                    .title(resolveText(title))
-                    .button1(resolveText(button1Text))
-                    .button2(resolveText(button2Text));
-
-            if (content != null) {
-                builder.content(resolveText(content));
-            }
-
-            builder.validResultHandler((form, response) -> {});
-
-            registerCloseHandler(builder);
-
-            return builder.build();
+            return (ModalForm) super.build();
         }
 
         @Override
-        public CompletableFuture<FormResult> send(FormPlayer player) {
-            FormResult rejection = beforeSend(player);
-            if (rejection != null) {
-                return CompletableFuture.completedFuture(rejection);
-            }
+        public ModalForm build(FormPlayer player) {
+            return (ModalForm) super.build(player);
+        }
 
+        @Override
+        protected ModalForm buildFor(FormPlayer player) {
             ModalForm.Builder builder = ModalForm.builder()
                     .title(resolveText(title))
                     .button1(resolveText(button1Text))
                     .button2(resolveText(button2Text));
-
             if (content != null) {
                 builder.content(resolveText(content));
             }
 
+            Consumer<FormPlayer> first = onButton1;
+            Consumer<FormPlayer> second = onButton2;
+            BiConsumer<FormPlayer, Boolean> submit = onSubmitHandler;
             builder.validResultHandler((form, response) -> {
-                if (response.clickedButtonId() == 0 && onButton1 != null) {
-                    onButton1.accept(player);
-                } else if (response.clickedButtonId() == 1 && onButton2 != null) {
-                    onButton2.accept(player);
+                if (player == null) {
+                    logger.warn("Modal answered on a form built without a player; use build(player) or send(player)");
+                    return;
                 }
-                if (onSubmitHandler != null) {
-                    boolean first = response.clickedButtonId() == 0;
-                    onSubmitHandler.accept(player, first);
+                boolean firstClicked = response.clickedButtonId() == 0;
+                Consumer<FormPlayer> handler = firstClicked ? first : second;
+                if (handler != null) {
+                    handler.accept(player);
+                }
+                if (submit != null) {
+                    submit.accept(player, firstClicked);
                 }
             });
 
-            registerCloseHandler(builder);
-
-            return openForm(player, builder.build());
+            registerCloseHandler(builder, player);
+            return builder.build();
         }
     }
 
 
-    public class CustomFormBuilder extends FormBuilder {
-        private List<FormComponentBuilder> components = new ArrayList<>();
+    public class CustomFormBuilder extends FormBuilder<CustomFormBuilder> {
+        private final List<FormComponentBuilder> components = new ArrayList<>();
         private Consumer<Map<String, Object>> onSubmit;
         private BiConsumer<FormPlayer, Map<String, Object>> onSubmitWithPlayer;
 
@@ -660,10 +614,6 @@ public class BedrockGUIApi {
             return this;
         }
 
-        /**
-         * An input whose result key is given explicitly, for handlers that read
-         * {@code results.get(name)} rather than iterating the values.
-         */
         public CustomFormBuilder namedInput(String name, String text, String placeholder, String defaultValue) {
             InputComponentBuilder component = new InputComponentBuilder(text, placeholder, defaultValue);
             component.name(name);
@@ -686,6 +636,21 @@ public class BedrockGUIApi {
             return this;
         }
 
+        public CustomFormBuilder label(String text) {
+            components.add(new LabelComponentBuilder(text));
+            return this;
+        }
+
+        public CustomFormBuilder stepSlider(String text, List<String> steps, int defaultIndex) {
+            components.add(new StepSliderComponentBuilder(text, steps, defaultIndex));
+            return this;
+        }
+
+        public CustomFormBuilder component(FormComponentBuilder component) {
+            components.add(component);
+            return this;
+        }
+
         public CustomFormBuilder onSubmit(Consumer<Map<String, Object>> callback) {
             this.onSubmit = callback;
             return this;
@@ -698,44 +663,56 @@ public class BedrockGUIApi {
 
         @Override
         public CustomForm build() {
-            CustomForm.Builder builder = CustomForm.builder()
-                    .title(resolveText(title));
+            return (CustomForm) super.build();
+        }
 
+        @Override
+        public CustomForm build(FormPlayer player) {
+            return (CustomForm) super.build(player);
+        }
+
+        @Override
+        protected CustomForm buildFor(FormPlayer player) {
+            CustomForm.Builder builder = CustomForm.builder().title(resolveText(title));
+
+            List<FormComponentBuilder> snapshot = new ArrayList<>(components);
             UnaryOperator<String> resolver = textResolver();
-            for (FormComponentBuilder component : components) {
+            for (FormComponentBuilder component : snapshot) {
                 component.addToForm(builder, resolver);
             }
 
+            Consumer<Map<String, Object>> plain = onSubmit;
+            BiConsumer<FormPlayer, Map<String, Object>> withPlayer = onSubmitWithPlayer;
             builder.validResultHandler((form, response) -> {
-                if (onSubmit == null && onSubmitWithPlayer == null) {
+                if (plain == null && withPlayer == null) {
                     return;
                 }
                 Map<String, Object> results = new LinkedHashMap<>();
-                for (int i = 0; i < components.size(); i++) {
-                    FormComponentBuilder component = components.get(i);
+                for (int i = 0; i < snapshot.size(); i++) {
+                    FormComponentBuilder component = snapshot.get(i);
+                    if (component instanceof LabelComponentBuilder) {
+                        continue;
+                    }
                     Object value = component.extractValue(response, i);
                     String key = component.getName();
-                    // Two components can derive the same key from similar labels; keep both so a
-                    // handler reading the values positionally still sees every answer.
                     if (results.containsKey(key)) {
                         key = key + "_" + i;
                     }
                     results.put(key, value);
                 }
-                if (onSubmit != null) {
-                    onSubmit.accept(results);
+                if (plain != null) {
+                    plain.accept(results);
                 }
-                if (onSubmitWithPlayer != null) {
-                    if (currentPlayer != null) {
-                        onSubmitWithPlayer.accept(currentPlayer, results);
+                if (withPlayer != null) {
+                    if (player != null) {
+                        withPlayer.accept(player, results);
                     } else {
-                        logger.warn("Custom form submitted but FormPlayer context not available");
+                        logger.warn("Custom form submitted on a form built without a player; use build(player) or send(player)");
                     }
                 }
             });
 
-            registerCloseHandler(builder);
-
+            registerCloseHandler(builder, player);
             return builder.build();
         }
     }
@@ -820,8 +797,8 @@ public class BedrockGUIApi {
 
 
     public class InputComponentBuilder extends FormComponentBuilder {
-        private String placeholder;
-        private String defaultValue;
+        private final String placeholder;
+        private final String defaultValue;
 
         public InputComponentBuilder(String text, String placeholder, String defaultValue) {
             super(text);
@@ -847,7 +824,10 @@ public class BedrockGUIApi {
 
 
     public class SliderComponentBuilder extends FormComponentBuilder {
-        private int min, max, step, defaultValue;
+        private final int min;
+        private final int max;
+        private final int step;
+        private final int defaultValue;
 
         public SliderComponentBuilder(String text, int min, int max, int step, int defaultValue) {
             super(text);
@@ -875,8 +855,8 @@ public class BedrockGUIApi {
 
 
     public class DropdownComponentBuilder extends FormComponentBuilder {
-        private List<String> options;
-        private int defaultIndex;
+        private final List<String> options;
+        private final int defaultIndex;
 
         public DropdownComponentBuilder(String text, List<String> options, int defaultIndex) {
             super(text);
@@ -907,7 +887,7 @@ public class BedrockGUIApi {
 
 
     public class ToggleComponentBuilder extends FormComponentBuilder {
-        private boolean defaultValue;
+        private final boolean defaultValue;
 
         public ToggleComponentBuilder(String text, boolean defaultValue) {
             super(text);
@@ -931,9 +911,64 @@ public class BedrockGUIApi {
     }
 
 
-    public class DynamicFormBuilder extends FormBuilder {
-        private Map<String, Predicate<Map<String, Object>>> conditions = new HashMap<>();
-        private Map<String, List<FormComponentBuilder>> conditionalComponents = new HashMap<>();
+    public class LabelComponentBuilder extends FormComponentBuilder {
+
+        public LabelComponentBuilder(String text) {
+            super(text);
+        }
+
+        @Override
+        public void addToForm(CustomForm.Builder builder) {
+            builder.label(text);
+        }
+
+        @Override
+        public void addToForm(CustomForm.Builder builder, UnaryOperator<String> resolver) {
+            builder.label(resolve(resolver, text));
+        }
+
+        @Override
+        public Object extractValue(org.geysermc.cumulus.response.CustomFormResponse response, int index) {
+            return null;
+        }
+    }
+
+
+    public class StepSliderComponentBuilder extends FormComponentBuilder {
+        private final List<String> steps;
+        private final int defaultIndex;
+
+        public StepSliderComponentBuilder(String text, List<String> steps, int defaultIndex) {
+            super(text);
+            this.steps = steps;
+            this.defaultIndex = defaultIndex >= 0 && defaultIndex < steps.size() ? defaultIndex : 0;
+        }
+
+        @Override
+        public void addToForm(CustomForm.Builder builder) {
+            builder.stepSlider(text, steps, defaultIndex);
+        }
+
+        @Override
+        public void addToForm(CustomForm.Builder builder, UnaryOperator<String> resolver) {
+            List<String> labels = new ArrayList<>(steps.size());
+            for (String step : steps) {
+                labels.add(resolve(resolver, step));
+            }
+            builder.stepSlider(resolve(resolver, text), labels, defaultIndex);
+        }
+
+        @Override
+        public Object extractValue(org.geysermc.cumulus.response.CustomFormResponse response, int index) {
+            int selected = response.asStepSlider(index);
+            return selected >= 0 && selected < steps.size() ? steps.get(selected) : null;
+        }
+    }
+
+
+    public class DynamicFormBuilder extends FormBuilder<DynamicFormBuilder> {
+        private final Map<String, Predicate<Map<String, Object>>> conditions = new LinkedHashMap<>();
+        private final Map<String, List<FormComponentBuilder>> conditionalComponents = new LinkedHashMap<>();
         private BiConsumer<FormPlayer, Map<String, Object>> onSubmitCallback;
 
         public DynamicFormBuilder(String title) {
@@ -956,56 +991,32 @@ public class BedrockGUIApi {
         }
 
         @Override
-        public Form build() {
-
+        protected Form buildFor(FormPlayer player) {
             CustomFormBuilder builder = createCustomForm(title);
-            builder.currentPlayer = this.currentPlayer;
             builder.placeholders(this.placeholders);
             if (onClose != null) {
                 builder.onClose(onClose);
             }
 
-
             for (Map.Entry<String, List<FormComponentBuilder>> entry : conditionalComponents.entrySet()) {
                 String conditionName = entry.getKey();
-                List<FormComponentBuilder> components = entry.getValue();
-
-
-                if ("always".equals(conditionName) ||
-                    (conditions.containsKey(conditionName) && conditions.get(conditionName).test(new HashMap<>()))) {
-                    for (FormComponentBuilder component : components) {
-                        if (component instanceof InputComponentBuilder) {
-                            InputComponentBuilder inputComponent = (InputComponentBuilder) component;
-                            builder.input(inputComponent.text, inputComponent.placeholder, inputComponent.defaultValue);
-                        } else if (component instanceof ToggleComponentBuilder) {
-                            ToggleComponentBuilder toggleComponent = (ToggleComponentBuilder) component;
-                            builder.toggle(toggleComponent.text, toggleComponent.defaultValue);
-                        } else if (component instanceof DropdownComponentBuilder) {
-                            DropdownComponentBuilder dropdownComponent = (DropdownComponentBuilder) component;
-                            builder.dropdown(dropdownComponent.text, dropdownComponent.options, dropdownComponent.defaultIndex);
-                        } else if (component instanceof SliderComponentBuilder) {
-                            SliderComponentBuilder sliderComponent = (SliderComponentBuilder) component;
-                            builder.slider(sliderComponent.text, sliderComponent.min, sliderComponent.max,
-                                    sliderComponent.step, sliderComponent.defaultValue);
-                        }
-                    }
+                Predicate<Map<String, Object>> condition = conditions.get(conditionName);
+                if ("always".equals(conditionName) || (condition != null && condition.test(new HashMap<>()))) {
+                    entry.getValue().forEach(builder::component);
                 }
             }
 
-
             if (onSubmitCallback != null) {
-                builder.onSubmit((player, results) -> {
-                    onSubmitCallback.accept(player, results);
-                });
+                builder.onSubmit(onSubmitCallback);
             }
 
-            return builder.build();
+            return builder.build(player);
         }
     }
 
 
     public interface FormTemplate {
-        FormBuilder createForm(Map<String, Object> parameters);
+        FormBuilder<?> createForm(Map<String, Object> parameters);
 
         String getTemplateName();
 
