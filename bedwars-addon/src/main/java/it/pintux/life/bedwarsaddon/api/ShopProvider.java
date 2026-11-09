@@ -17,6 +17,10 @@ public interface ShopProvider {
 
     boolean isReady();
 
+    default boolean isInGame(Player player) {
+        return true;
+    }
+
     /** Static category structure for the player's shop index. */
     List<ShopCategory> getCategories(Player player);
 

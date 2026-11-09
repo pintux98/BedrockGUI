@@ -300,7 +300,7 @@ public final class BedrockFlagService {
     }
 
     private static String componentName(String text) {
-        return text.toLowerCase().replaceAll("\\s+", "_");
+        return it.pintux.life.common.utils.FormComponentNames.derive(text);
     }
 
     private static String prettify(String flagName) {

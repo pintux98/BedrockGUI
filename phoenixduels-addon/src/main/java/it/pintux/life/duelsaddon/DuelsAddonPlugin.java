@@ -85,8 +85,8 @@ public final class DuelsAddonPlugin extends JavaPlugin {
     }
 
     private boolean phoenixDuelsInstalled() {
-        return getServer().getPluginManager().getPlugin("PhoenixDuels") != null
-                || getServer().getPluginManager().getPlugin("PhoenixDuelsLite") != null;
+        return getServer().getPluginManager().isPluginEnabled("PhoenixDuels")
+                || getServer().getPluginManager().isPluginEnabled("PhoenixDuelsLite");
     }
 
     private static DuelsGateway unavailableGateway() {

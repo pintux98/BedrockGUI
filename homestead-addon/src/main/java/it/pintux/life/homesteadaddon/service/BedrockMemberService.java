@@ -348,7 +348,7 @@ public final class BedrockMemberService {
     }
 
     private static String componentName(String text) {
-        return text.toLowerCase().replaceAll("\\s+", "_");
+        return it.pintux.life.common.utils.FormComponentNames.derive(text);
     }
 
     private RegionView requireRegion(Player player, long regionId) {

@@ -38,7 +38,7 @@ public final class McPetsProvider implements PetProvider {
     }
 
     public static boolean isAvailable(JavaPlugin plugin) {
-        if (Bukkit.getPluginManager().getPlugin("MCPets") == null) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("MCPets")) {
             return false;
         }
         try {

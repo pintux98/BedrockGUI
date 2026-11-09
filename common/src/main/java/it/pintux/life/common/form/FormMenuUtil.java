@@ -77,7 +77,11 @@ public class FormMenuUtil {
 
         registerDefaultActionHandlers();
         loadFormMenus();
-        validateConfiguration();
+        if (scheduler != null) {
+            scheduler.runLaterSync(1, this::validateConfiguration);
+        } else {
+            validateConfiguration();
+        }
     }
 
 

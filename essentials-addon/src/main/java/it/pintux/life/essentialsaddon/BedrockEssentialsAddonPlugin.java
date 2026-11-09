@@ -290,7 +290,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
     }
 
     private void initShopGuiPlus(PluginManager pluginManager) {
-        if (pluginManager.getPlugin("ShopGUIPlus") == null) {
+        if (!pluginManager.isPluginEnabled("ShopGUIPlus")) {
             getLogger().info("ShopGUI+ backend disabled because ShopGUIPlus is not installed.");
             return;
         }
@@ -388,7 +388,7 @@ public final class BedrockEssentialsAddonPlugin extends JavaPlugin {
      * NoClassDefFoundError on a server that runs only one of them.</p>
      */
     private <T> void registerProvider(Map<String, Supplier<T>> factories, String pluginName, Supplier<T> factory) {
-        if (Bukkit.getPluginManager().getPlugin(pluginName) != null) {
+        if (Bukkit.getPluginManager().isPluginEnabled(pluginName)) {
             factories.put(pluginName, factory);
         }
     }

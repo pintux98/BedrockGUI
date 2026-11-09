@@ -1,18 +1,18 @@
 package it.pintux.life.essentialsaddon.provider;
 
+import com.Zrips.CMI.CMI;
+import com.Zrips.CMI.Modules.Warps.CmiWarp;
 import it.pintux.life.essentialsaddon.api.WarpProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
 public final class CMIWarpProvider implements WarpProvider {
-
-    private Object cmiInstance;
-    private Method getWarpManagerMethod;
 
     @Override
     public String getProviderId() {
@@ -21,21 +21,9 @@ public final class CMIWarpProvider implements WarpProvider {
 
     @Override
     public boolean isReady() {
-        if (cmiInstance != null) {
-            return true;
-        }
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CMI");
-        if (plugin == null || !plugin.isEnabled()) {
-            return false;
-        }
-        try {
-            cmiInstance = plugin;
-            getWarpManagerMethod = cmiInstance.getClass().getMethod("getWarpManager");
-            Object warpManager = getWarpManagerMethod.invoke(cmiInstance);
-            return warpManager != null;
-        } catch (Exception e) {
-            return false;
-        }
+        return Bukkit.getPluginManager().isPluginEnabled("CMI")
+                && CMI.getInstance() != null
+                && CMI.getInstance().getWarpManager() != null;
     }
 
     @Override
@@ -43,98 +31,61 @@ public final class CMIWarpProvider implements WarpProvider {
         if (!isReady()) {
             return List.of();
         }
-        try {
-            Object warpManager = getWarpManagerMethod.invoke(cmiInstance);
-            Method getWarps = warpManager.getClass().getMethod("getWarps");
-            Object warpsMap = getWarps.invoke(warpManager);
-            if (warpsMap instanceof Map) {
-                return new ArrayList<>(((Map<?, ?>) warpsMap).keySet().stream()
-                        .map(Object::toString)
-                        .toList());
+        List<String> names = new ArrayList<>();
+        for (CmiWarp warp : CMI.getInstance().getWarpManager().getWarps().values()) {
+            if (warp != null && !warp.isHidden()) {
+                names.add(warp.getName());
             }
-            return List.of();
-        } catch (Exception e) {
-            return List.of();
         }
+        return names;
     }
 
     @Override
     public Location getWarpLocation(String warpName) {
-        if (!isReady()) {
-            return null;
-        }
-        try {
-            Object warpManager = getWarpManagerMethod.invoke(cmiInstance);
-            Method getWarp = warpManager.getClass().getMethod("getWarp", String.class);
-            Object warp = getWarp.invoke(warpManager, warpName);
-            if (warp == null) {
-                return null;
-            }
-            Method getLocation = warp.getClass().getMethod("getLocation");
-            return (Location) getLocation.invoke(warp);
-        } catch (Exception e) {
-            return null;
-        }
+        CmiWarp warp = warp(warpName);
+        return warp == null ? null : warp.getLoc();
     }
 
     @Override
     public boolean hasAccess(Player player, String warpName) {
-        if (!isReady()) {
+        CmiWarp warp = warp(warpName);
+        if (warp == null) {
             return false;
         }
-        if (player.hasPermission("cmi.command.warp.*") || player.hasPermission("cmi.command.warp." + warpName)) {
-            return true;
-        }
-        try {
-            Object warpManager = getWarpManagerMethod.invoke(cmiInstance);
-            Method getWarp = warpManager.getClass().getMethod("getWarp", String.class);
-            Object warp = getWarp.invoke(warpManager, warpName);
-            if (warp != null) {
-                Method isReqPermission = warp.getClass().getMethod("isReqPermission");
-                if (Boolean.TRUE.equals(isReqPermission.invoke(warp))) {
-                    return player.hasPermission("cmi.command.warp." + warpName);
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return true;
+        return !warp.isReqPerm()
+                || player.hasPermission("cmi.command.warp.*")
+                || player.hasPermission("cmi.command.warp." + warp.getName());
     }
 
     @Override
     public boolean teleport(Player player, String warpName) {
-        if (!isReady()) {
-            return false;
-        }
         Location location = getWarpLocation(warpName);
-        if (location == null) {
-            return false;
-        }
-        try {
-            player.teleport(location);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return location != null && player.teleport(location);
     }
 
     @Override
     public String getDisplayName(String warpName) {
-        if (!isReady()) {
+        CmiWarp warp = warp(warpName);
+        if (warp == null || warp.getShownName() == null || warp.getShownName().isBlank()) {
             return warpName;
         }
-        try {
-            Object warpManager = getWarpManagerMethod.invoke(cmiInstance);
-            Method getWarp = warpManager.getClass().getMethod("getWarp", String.class);
-            Object warp = getWarp.invoke(warpManager, warpName);
-            if (warp != null) {
-                Method getDisplayName = warp.getClass().getMethod("getDisplayName");
-                String name = (String) getDisplayName.invoke(warp);
-                if (name != null && !name.isEmpty()) {
-                    return name;
-                }
-            }
-        } catch (Exception ignored) {
+        return warp.getShownName();
+    }
+
+    private CmiWarp warp(String warpName) {
+        if (warpName == null || !isReady()) {
+            return null;
         }
-        return warpName;
+        Map<String, CmiWarp> warps = CMI.getInstance().getWarpManager().getWarps();
+        CmiWarp exact = CMI.getInstance().getWarpManager().getWarp(warpName);
+        if (exact != null) {
+            return exact;
+        }
+        for (CmiWarp warp : warps.values()) {
+            if (warp != null && warp.getName().equalsIgnoreCase(warpName)) {
+                return warp;
+            }
+        }
+        return null;
     }
 }

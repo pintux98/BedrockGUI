@@ -53,6 +53,12 @@ public final class BedWars2023ShopProvider implements ShopProvider {
     }
 
     @Override
+    public boolean isInGame(Player player) {
+        BedWars api = access.get();
+        return api != null && playerCache(api, player) != null;
+    }
+
+    @Override
     public List<ShopCategory> getCategories(Player player) {
         IShopIndex index = shopIndex();
         if (index == null) return List.of();

@@ -43,6 +43,7 @@ public final class BedrockShopService {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!catalog.isReady()) { player.sendMessage(config.shopProviderUnavailable()); return; }
+        if (!catalog.isInGame(player)) { player.sendMessage(config.shopNotInGame()); return; }
 
         List<MenuButton> buttons = menuModel.categoryButtons(catalog.getCategories(player));
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(config.shopTitle());
@@ -59,6 +60,7 @@ public final class BedrockShopService {
         BedrockGUIApi api = requireApi(player);
         if (api == null) return;
         if (!catalog.isReady()) { player.sendMessage(config.shopProviderUnavailable()); return; }
+        if (!catalog.isInGame(player)) { player.sendMessage(config.shopNotInGame()); return; }
 
         lastCategory.put(player.getUniqueId(), categoryId);
         List<ShopContent> contents = catalog.getCategoryContents(player, categoryId);
@@ -74,6 +76,7 @@ public final class BedrockShopService {
 
     public void buy(Player player, String contentId) {
         if (!catalog.isReady()) { player.sendMessage(config.shopProviderUnavailable()); return; }
+        if (!catalog.isInGame(player)) { player.sendMessage(config.shopNotInGame()); return; }
         // BedWars' execute() performs the buy and sends its OWN messages/sounds (purchased,
         // insufficient funds, etc.) — we deliberately do not send any of our own here.
         catalog.purchase(player, contentId);

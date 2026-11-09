@@ -52,10 +52,7 @@ public final class CommandAliases {
         if (message == null) {
             return null;
         }
-        String trimmed = message.trim();
-        if (trimmed.startsWith("/")) {
-            trimmed = trimmed.substring(1);
-        }
+        String trimmed = unaliased(message);
         int space = firstSpace(trimmed);
         return normalize(space < 0 ? trimmed : trimmed.substring(0, space));
     }
@@ -64,13 +61,28 @@ public final class CommandAliases {
         if (message == null) {
             return new String[0];
         }
-        String trimmed = message.trim();
+        String trimmed = unaliased(message);
         int space = firstSpace(trimmed);
         if (space < 0) {
             return new String[0];
         }
         String remainder = trimmed.substring(space + 1).trim();
         return remainder.isEmpty() ? new String[0] : remainder.split("\\s+");
+    }
+
+    private static String unaliased(String message) {
+        String trimmed = message.trim();
+        if (trimmed.startsWith("/")) {
+            trimmed = trimmed.substring(1);
+        }
+        int space = firstSpace(trimmed);
+        if (space > 0 && "cmi".equals(normalize(trimmed.substring(0, space)))) {
+            String rest = trimmed.substring(space + 1).trim();
+            if (!rest.isEmpty()) {
+                return rest;
+            }
+        }
+        return trimmed;
     }
 
     private static int firstSpace(String text) {

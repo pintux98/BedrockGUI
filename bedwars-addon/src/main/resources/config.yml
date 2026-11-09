@@ -1,7 +1,7 @@
 # BedrockGUI Bedwars Addon
 
 # DO NOT CHANGE THIS VALUE — managed by the plugin.
-config-version: 2
+config-version: 3
 
 # Integrated GUIs = this addon's own Bedrock forms PLUS auto-interception of the
 # Bedwars menus (shop open, arena/upgrade/stats/spectator GUIs) for Bedrock
@@ -55,6 +55,7 @@ upgrades:
   upgrade-button-nocost: "&a{upgrade}"
   close-button: "&cClose"
   provider-unavailable: "&cUpgrades are currently unavailable."
+  not-in-game: "&cYou must be in a game to buy upgrades."
 
 arena:
   title: "&8Play BedWars"

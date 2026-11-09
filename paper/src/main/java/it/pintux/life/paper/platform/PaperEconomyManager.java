@@ -23,7 +23,7 @@ public class PaperEconomyManager implements PlatformEconomyManager {
 
     private void setupEconomy() {
         try {
-            if (Bukkit.getServer().getPluginManager().getPlugin("Vault") == null) {
+            if (!Bukkit.getServer().getPluginManager().isPluginEnabled("Vault")) {
                 return;
             }
             RegisteredServiceProvider<Economy> rsp = Bukkit.getServer().getServicesManager().getRegistration(Economy.class);

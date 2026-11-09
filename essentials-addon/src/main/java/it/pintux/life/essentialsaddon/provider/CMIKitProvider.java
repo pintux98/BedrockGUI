@@ -1,18 +1,21 @@
 package it.pintux.life.essentialsaddon.provider;
 
+import com.Zrips.CMI.CMI;
+import com.Zrips.CMI.Containers.CMIKitUsage;
+import com.Zrips.CMI.Modules.Kits.Kit;
+import com.Zrips.CMI.Modules.Kits.KitsManager;
 import it.pintux.life.essentialsaddon.api.KitProvider;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.Plugin;
+import org.bukkit.inventory.ItemStack;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
-@SuppressWarnings("unchecked")
 public final class CMIKitProvider implements KitProvider {
-
-    private Object cmiInstance;
-    private Method getKitsManagerMethod;
 
     @Override
     public String getProviderId() {
@@ -21,21 +24,9 @@ public final class CMIKitProvider implements KitProvider {
 
     @Override
     public boolean isReady() {
-        if (cmiInstance != null) {
-            return true;
-        }
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CMI");
-        if (plugin == null || !plugin.isEnabled()) {
-            return false;
-        }
-        try {
-            cmiInstance = plugin;
-            getKitsManagerMethod = cmiInstance.getClass().getMethod("getKitsManager");
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            return kitsManager != null;
-        } catch (Exception e) {
-            return false;
-        }
+        return Bukkit.getPluginManager().isPluginEnabled("CMI")
+                && CMI.getInstance() != null
+                && CMI.getInstance().getKitsManager() != null;
     }
 
     @Override
@@ -43,126 +34,122 @@ public final class CMIKitProvider implements KitProvider {
         if (!isReady()) {
             return List.of();
         }
-        try {
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            Method getKits = kitsManager.getClass().getMethod("getKits");
-            Object kitsList = getKits.invoke(kitsManager);
-            if (kitsList instanceof Collection) {
-                List<String> names = new ArrayList<>();
-                for (Object kit : (Collection<?>) kitsList) {
-                    Method getName = kit.getClass().getMethod("getName");
-                    names.add((String) getName.invoke(kit));
-                }
-                return names;
+        List<String> names = new ArrayList<>();
+        for (Kit kit : CMI.getInstance().getKitsManager().getKitMap().values()) {
+            if (kit != null && kit.isEnabled()) {
+                names.add(kit.getConfigName());
             }
-            return List.of();
-        } catch (Exception e) {
-            return List.of();
         }
+        return names;
     }
 
     @Override
     public boolean hasAccess(Player player, String kitName) {
-        if (!isReady()) {
-            return false;
-        }
-        if (player.hasPermission("cmi.kit.*") || player.hasPermission("cmi.kit." + kitName)) {
-            return true;
-        }
-        return false;
+        Kit kit = kit(kitName);
+        return kit != null && (player.hasPermission("cmi.kit.*")
+                || player.hasPermission("cmi.kit." + kit.getConfigName().toLowerCase(Locale.ROOT)));
     }
 
     @Override
     public boolean claimKit(Player player, String kitName) {
-        if (!isReady()) {
+        Kit kit = kit(kitName);
+        if (kit == null) {
             return false;
         }
-        try {
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            Method getKitByName = kitsManager.getClass().getMethod("getKitByName", String.class);
-            Object kit = getKitByName.invoke(kitsManager, kitName);
-            if (kit == null) {
-                return false;
-            }
-            Method giveKit = kitsManager.getClass().getMethod("giveKit", Player.class, kit.getClass());
-            return Boolean.TRUE.equals(giveKit.invoke(kitsManager, player, kit));
-        } catch (Exception e) {
-            return false;
-        }
+        Long before = lastUsage(player, kit);
+        boolean ran = player.performCommand("cmi kit " + kit.getCommandName());
+        Long after = lastUsage(player, kit);
+        return ran && after != null && !after.equals(before);
     }
 
     @Override
     public String getDisplayName(String kitName) {
-        if (!isReady()) {
+        Kit kit = kit(kitName);
+        if (kit == null || kit.getDisplayName() == null || kit.getDisplayName().isBlank()) {
             return kitName;
         }
-        try {
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            Method getKitByName = kitsManager.getClass().getMethod("getKitByName", String.class);
-            Object kit = getKitByName.invoke(kitsManager, kitName);
-            if (kit != null) {
-                Method getDisplayName = kit.getClass().getMethod("getDisplayName");
-                String name = (String) getDisplayName.invoke(kit);
-                if (name != null && !name.isEmpty()) {
-                    return name;
-                }
-            }
-        } catch (Exception ignored) {
-        }
-        return kitName;
+        return kit.getDisplayName();
     }
 
     @Override
     public int getItemCount(String kitName) {
-        if (!isReady()) {
+        Kit kit = kit(kitName);
+        if (kit == null || kit.getItems() == null) {
             return -1;
         }
-        try {
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            Method getKitByName = kitsManager.getClass().getMethod("getKitByName", String.class);
-            Object kit = getKitByName.invoke(kitsManager, kitName);
-            if (kit == null) {
-                return -1;
+        int count = 0;
+        for (ItemStack item : kit.getItems()) {
+            if (item != null) {
+                count++;
             }
-            Method getInventory = kit.getClass().getMethod("getInventory");
-            Object inventory = getInventory.invoke(kit);
-            Method getContents = inventory.getClass().getMethod("getContents");
-            Object[] contents = (Object[]) getContents.invoke(inventory);
-            int count = 0;
-            for (Object item : contents) {
-                if (item != null) count++;
-            }
-            return count;
-        } catch (Exception e) {
-            return -1;
         }
+        return count;
     }
 
     @Override
     public long getCooldownSeconds(Player player, String kitName) {
-        if (!isReady()) {
+        Kit kit = kit(kitName);
+        if (kit == null || kit.getDelay() <= 0) {
             return 0;
         }
-        try {
-            Object kitsManager = getKitsManagerMethod.invoke(cmiInstance);
-            Method getKitByName = kitsManager.getClass().getMethod("getKitByName", String.class);
-            Object kit = getKitByName.invoke(kitsManager, kitName);
-            if (kit == null) {
-                return 0;
-            }
-            Method getCooldown = kitsManager.getClass().getMethod("getCooldown", Player.class, kit.getClass());
-            Object result = getCooldown.invoke(kitsManager, player, kit);
-            if (result instanceof Number) {
-                return Math.max(0, ((Number) result).longValue());
-            }
-            return 0;
-        } catch (Exception e) {
+        Long last = lastUsage(player, kit);
+        if (last == null) {
             return 0;
         }
+        long remaining = last + kit.getDelay() * 1000L - System.currentTimeMillis();
+        return remaining <= 0 ? 0 : (remaining + 999) / 1000;
     }
 
     @Override
     public boolean isAvailable(Player player, String kitName) {
-        return getCooldownSeconds(player, kitName) <= 0;
+        Kit kit = kit(kitName);
+        if (kit == null) {
+            return false;
+        }
+        CMIKitUsage usage = usage(player, kit);
+        if (kit.getMaxUsages() > 0 && usage != null && usage.getUsedTimes() >= kit.getMaxUsages()) {
+            return false;
+        }
+        return getCooldownSeconds(player, kitName) == 0;
+    }
+
+    private Kit kit(String kitName) {
+        if (kitName == null || !isReady()) {
+            return null;
+        }
+        KitsManager manager = CMI.getInstance().getKitsManager();
+        Kit kit = manager.getKit(kitName);
+        if (kit != null) {
+            return kit;
+        }
+        for (Kit candidate : manager.getKitMap().values()) {
+            if (candidate != null && candidate.getConfigName().equalsIgnoreCase(kitName)) {
+                return candidate;
+            }
+        }
+        return null;
+    }
+
+    private Long lastUsage(Player player, Kit kit) {
+        CMIKitUsage usage = usage(player, kit);
+        return usage == null ? null : usage.getLastUsage();
+    }
+
+    private CMIKitUsage usage(Player player, Kit kit) {
+        Map<String, CMIKitUsage> usages = KitsManager.getUserKits(player.getUniqueId());
+        if (usages == null) {
+            return null;
+        }
+        for (Map.Entry<String, CMIKitUsage> entry : usages.entrySet()) {
+            CMIKitUsage usage = entry.getValue();
+            if (usage == null) {
+                continue;
+            }
+            if (entry.getKey().equalsIgnoreCase(kit.getConfigName())
+                    || (usage.getKitName() != null && usage.getKitName().equalsIgnoreCase(kit.getConfigName()))) {
+                return usage;
+            }
+        }
+        return null;
     }
 }

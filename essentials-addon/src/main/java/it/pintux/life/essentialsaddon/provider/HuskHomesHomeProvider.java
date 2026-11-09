@@ -37,7 +37,7 @@ public final class HuskHomesHomeProvider implements HomeProvider {
 
     public HuskHomesHomeProvider(Logger logger) {
         this.logger = logger;
-        if (Bukkit.getPluginManager().getPlugin("HuskHomes") == null) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("HuskHomes")) {
             throw new IllegalStateException("HuskHomes not found");
         }
     }

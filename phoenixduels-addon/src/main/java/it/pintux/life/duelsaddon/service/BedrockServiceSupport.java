@@ -80,7 +80,7 @@ public abstract class BedrockServiceSupport {
     }
 
     protected static String componentName(String text) {
-        return text.toLowerCase().replaceAll("\\s+", "_");
+        return it.pintux.life.common.utils.FormComponentNames.derive(text);
     }
 
     protected final class Pagination {

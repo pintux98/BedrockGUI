@@ -48,6 +48,7 @@ public final class BedrockUpgradeService {
         if (!catalog.isReady()) { player.sendMessage(config.upgradeProviderUnavailable()); return; }
 
         List<UpgradeContent> upgrades = catalog.getUpgrades(player);
+        if (upgrades.isEmpty()) { player.sendMessage(config.upgradeNotInGame()); return; }
         List<MenuButton> buttons = menuModel.upgradeButtons(upgrades);
         BedrockGUIApi.SimpleFormBuilder form = api.createSimpleForm(config.upgradeTitle());
         form.content(config.upgradeContent());

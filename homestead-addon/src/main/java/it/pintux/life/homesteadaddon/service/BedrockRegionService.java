@@ -196,7 +196,8 @@ public final class BedrockRegionService {
     }
 
 
-    public void openTopRegions(Player player, String sorting) {
+    public void openTopRegions(Player player, String requestedSorting) {
+        String sorting = requestedSorting == null || requestedSorting.isBlank() ? "BANK" : requestedSorting;
         BedrockGUIApi api = requireApi(player);
         if (api == null || !ensureAvailable(player)) {
             return;
@@ -213,7 +214,7 @@ public final class BedrockRegionService {
                 content.append(config.apply(config.text("top.line"), Map.of(
                         "rank", String.valueOf(rank++),
                         "name", region.name(),
-                        "value", topValue(sorting, region)))).append('\n');
+                        "value", topValue(sorting, region, player)))).append('\n');
             }
         }
 
@@ -228,10 +229,11 @@ public final class BedrockRegionService {
         form.send(new PaperPlayer(player));
     }
 
-    private String topValue(String sorting, RegionView region) {
+    private String topValue(String sorting, RegionView region, Player player) {
         return switch (sorting) {
             case "CHUNKS_COUNT" -> region.chunkCount() + " chunks";
             case "MEMBERS_COUNT" -> region.memberCount() + " members";
+            case "RATING" -> String.format(java.util.Locale.US, "%.1f / 5", gateway.rating(region.id(), player).average());
             case "CREATION_DATE" -> it.pintux.life.homesteadaddon.util.Formatting.date(region.createdAt());
             case "BANK" -> "$" + formatBank(region.bank());
             default -> region.ownerName();

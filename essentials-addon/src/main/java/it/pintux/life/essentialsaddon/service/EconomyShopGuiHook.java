@@ -24,7 +24,7 @@ public final class EconomyShopGuiHook {
     }
 
     public boolean isPluginPresent() {
-        return Bukkit.getPluginManager().getPlugin("EconomyShopGUI") != null
-                || Bukkit.getPluginManager().getPlugin("EconomyShopGUI-Premium") != null;
+        return Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI")
+                || Bukkit.getPluginManager().isPluginEnabled("EconomyShopGUI-Premium");
     }
 }

@@ -144,7 +144,8 @@ public final class BedrockEconomyShopService {
             form.button(configuration.shopEmptyPageMessage(), ignored -> { });
         } else {
             for (ShopItemView itemView : items) {
-                String buttonText = itemView.getDisplayName() + "\n" + priceLine(player, sectionId, itemView.getId());
+                String price = priceLine(player, sectionId, itemView.getId());
+                String buttonText = price.isEmpty() ? itemView.getDisplayName() : itemView.getDisplayName() + "\n" + price;
                 form.button(buttonText, itemView.getMaterial(), formPlayer ->
                         api.executeActionString(
                                 formPlayer,
@@ -444,8 +445,13 @@ public final class BedrockEconomyShopService {
         if (optionalItem.isEmpty()) {
             return configuration.shopUnavailableItemMessage();
         }
-        String buy = formatPrices(catalogService.resolveBuyPrice(player, optionalItem.get(), 1).map(BuyPrice::getPrices).orElse(Map.of()));
-        String sell = formatPrices(catalogService.resolveSellPrice(player, optionalItem.get(), 1).map(SellPrice::getPrices).orElse(Map.of()));
+        Map<EcoType, Double> buyPrices = catalogService.resolveBuyPrice(player, optionalItem.get(), 1).map(BuyPrice::getPrices).orElse(Map.of());
+        Map<EcoType, Double> sellPrices = catalogService.resolveSellPrice(player, optionalItem.get(), 1).map(SellPrice::getPrices).orElse(Map.of());
+        if (buyPrices.isEmpty() && sellPrices.isEmpty()) {
+            return "";
+        }
+        String buy = formatPrices(buyPrices);
+        String sell = formatPrices(sellPrices);
         return ChatColor.GREEN + "Buy " + buy + ChatColor.GRAY + " / " + ChatColor.RED + "Sell " + sell;
     }
 

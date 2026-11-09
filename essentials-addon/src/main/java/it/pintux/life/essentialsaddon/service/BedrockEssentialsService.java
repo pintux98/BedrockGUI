@@ -160,7 +160,7 @@ public final class BedrockEssentialsService {
                 playSound(player, configuration.soundKitClaimSuccess());
             } else {
                 player.sendMessage(configuration.render(configuration.kitClaimFailed(),
-                        Map.of("reason", "Kit claim failed")));
+                        Map.of("reason", kitName)));
                 playSound(player, configuration.soundActionFailed());
             }
         });

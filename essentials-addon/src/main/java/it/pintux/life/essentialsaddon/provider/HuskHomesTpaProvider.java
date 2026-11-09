@@ -32,7 +32,7 @@ public final class HuskHomesTpaProvider implements TpaProvider {
 
     public HuskHomesTpaProvider(Logger logger) {
         this.logger = logger;
-        if (Bukkit.getPluginManager().getPlugin("HuskHomes") == null) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("HuskHomes")) {
             throw new IllegalStateException("HuskHomes not found");
         }
         HuskHomesAPI.getInstance();

@@ -37,6 +37,7 @@ public final class BedwarsAddonConfiguration {
     private final String upgradeButtonNoCost;
     private final String upgradeCloseButton;
     private final String upgradeProviderUnavailable;
+    private final String upgradeNotInGame;
 
     private final String arenaTitle;
     private final String arenaContent;
@@ -122,6 +123,7 @@ public final class BedwarsAddonConfiguration {
         this.upgradeButtonNoCost = c.getString("upgrades.upgrade-button-nocost", "&a{upgrade}");
         this.upgradeCloseButton = color(c.getString("upgrades.close-button", "&cClose"));
         this.upgradeProviderUnavailable = color(c.getString("upgrades.provider-unavailable", "&cUpgrades are currently unavailable."));
+        this.upgradeNotInGame = color(c.getString("upgrades.not-in-game", "&cYou must be in a game to buy upgrades."));
 
         this.arenaTitle = color(c.getString("arena.title", "&8Play BedWars"));
         this.arenaContent = color(c.getString("arena.content", "Select an arena"));
@@ -258,6 +260,7 @@ public final class BedwarsAddonConfiguration {
     public String upgradeButtonNoCost() { return upgradeButtonNoCost; }
     public String upgradeCloseButton() { return upgradeCloseButton; }
     public String upgradeProviderUnavailable() { return upgradeProviderUnavailable; }
+    public String upgradeNotInGame() { return upgradeNotInGame; }
     public String arenaTitle() { return arenaTitle; }
     public String arenaContent() { return arenaContent; }
     public String arenaButton() { return arenaButton; }

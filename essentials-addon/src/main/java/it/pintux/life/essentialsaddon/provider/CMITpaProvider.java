@@ -1,5 +1,7 @@
 package it.pintux.life.essentialsaddon.provider;
 
+import com.Zrips.CMI.CMI;
+import com.Zrips.CMI.Modules.Teleportations.TpInfo;
 import com.Zrips.CMI.events.CMIPlayerTeleportRequestEvent;
 import it.pintux.life.essentialsaddon.api.TpaProvider;
 import org.bukkit.Bukkit;
@@ -9,13 +11,11 @@ import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.plugin.Plugin;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 public final class CMITpaProvider implements TpaProvider {
-
-    private Object cmiInstance;
-    private Method getTeleportManagerMethod;
 
     @Override
     public String getProviderId() {
@@ -28,7 +28,6 @@ public final class CMITpaProvider implements TpaProvider {
             Bukkit.getPluginManager().registerEvents(new Listener() {
                 @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
                 public void onTpaRequest(CMIPlayerTeleportRequestEvent event) {
-                    // whoAccepts is the side that has to answer, regardless of tpa vs tpahere
                     Player target = event.getWhoAccepts();
                     Player sender = event.getWhoOffers();
                     if (target == null || sender == null) {
@@ -39,116 +38,60 @@ public final class CMITpaProvider implements TpaProvider {
             }, plugin);
             return true;
         } catch (Exception | LinkageError failure) {
-            // CMI build without the request event
             return false;
         }
     }
 
     @Override
     public boolean isReady() {
-        if (cmiInstance != null) {
-            return true;
-        }
-        Plugin plugin = Bukkit.getPluginManager().getPlugin("CMI");
-        if (plugin == null || !plugin.isEnabled()) {
-            return false;
-        }
-        try {
-            cmiInstance = plugin;
-            getTeleportManagerMethod = cmiInstance.getClass().getMethod("getTeleportManager");
-            return getTeleportManagerMethod.invoke(cmiInstance) != null;
-        } catch (Exception e) {
-            return false;
-        }
+        return Bukkit.getPluginManager().isPluginEnabled("CMI")
+                && CMI.getInstance() != null
+                && CMI.getInstance().getTeleportManager() != null;
     }
 
     @Override
     public boolean sendTpaRequest(Player sender, Player target) {
-        if (!isReady()) return false;
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method tpa = teleportManager.getClass().getMethod("tpa", Player.class, Player.class, boolean.class);
-            tpa.invoke(teleportManager, sender, target, false);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return isReady() && sender.performCommand("cmi tpa " + target.getName()) && isRequested(sender, target);
     }
 
     @Override
     public boolean sendTpahereRequest(Player sender, Player target) {
-        if (!isReady()) return false;
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method tpahere = teleportManager.getClass().getMethod("tpahere", Player.class, Player.class, boolean.class);
-            tpahere.invoke(teleportManager, sender, target, false);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return isReady() && sender.performCommand("cmi tpahere " + target.getName()) && isRequested(sender, target);
     }
 
     @Override
     public boolean acceptTpa(Player target) {
-        if (!isReady()) return false;
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method accept = teleportManager.getClass().getMethod("tpAccept", Player.class);
-            accept.invoke(teleportManager, target);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return isReady() && hasPendingRequest(target) && target.performCommand("cmi tpaccept");
     }
 
     @Override
     public boolean denyTpa(Player target) {
-        if (!isReady()) return false;
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method deny = teleportManager.getClass().getMethod("tpDeny", Player.class);
-            deny.invoke(teleportManager, target);
-            return true;
-        } catch (Exception e) {
-            return false;
-        }
+        return isReady() && hasPendingRequest(target) && target.performCommand("cmi tpdeny");
     }
 
     @Override
     public boolean cancelTpa(Player sender) {
-        if (!isReady()) return false;
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method cancel = teleportManager.getClass().getMethod("tpCancel", Player.class);
-            cancel.invoke(teleportManager, sender);
-            return true;
-        } catch (Exception e) {
+        if (!isReady()) {
             return false;
         }
+        boolean removed = false;
+        for (TpInfo info : requests()) {
+            if (sender.equals(info.getWhoOffers()) && info.getWhoAccepts() != null) {
+                removed |= CMI.getInstance().getTeleportManager().removeTpRequest(sender, info.getWhoAccepts());
+            }
+        }
+        return removed;
     }
 
     @Override
     public List<String> getPendingRequests(Player player) {
-        if (!isReady()) return List.of();
-        try {
-            Object teleportManager = getTeleportManagerMethod.invoke(cmiInstance);
-            Method getRequests = teleportManager.getClass().getMethod("getPendingTeleports", Player.class);
-            Object requests = getRequests.invoke(teleportManager, player);
-            if (requests instanceof Collection) {
-                List<String> names = new ArrayList<>();
-                for (Object req : (Collection<?>) requests) {
-                    Method getSource = req.getClass().getMethod("getSource");
-                    Object source = getSource.invoke(req);
-                    if (source instanceof Player) {
-                        names.add(((Player) source).getName());
-                    }
-                }
-                return names;
+        List<String> senders = new ArrayList<>();
+        for (TpInfo info : requests()) {
+            if (player.equals(info.getWhoAccepts()) && info.getWhoOffers() != null) {
+                senders.add(info.getWhoOffers().getName());
             }
-            return List.of();
-        } catch (Exception e) {
-            return List.of();
         }
+        return senders;
     }
 
     @Override
@@ -160,5 +103,27 @@ public final class CMITpaProvider implements TpaProvider {
     public String getPendingRequestSender(Player player) {
         List<String> requests = getPendingRequests(player);
         return requests.isEmpty() ? null : requests.get(0);
+    }
+
+    private boolean isRequested(Player sender, Player target) {
+        for (TpInfo info : requests()) {
+            if (sender.equals(info.getWhoOffers()) && target.equals(info.getWhoAccepts())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private List<TpInfo> requests() {
+        if (!isReady()) {
+            return List.of();
+        }
+        List<TpInfo> all = new ArrayList<>();
+        for (Set<TpInfo> set : CMI.getInstance().getTeleportManager().getTeleportRequests().values()) {
+            if (set != null) {
+                all.addAll(set);
+            }
+        }
+        return all;
     }
 }

@@ -94,7 +94,9 @@ public final class CMIHomeProvider implements HomeProvider {
         }
         MainThread.run(() -> {
             try {
-                user.addHome(new CmiHome(homeName, new CMILocation(player.getLocation())), true);
+                CmiHome home = new CmiHome(homeName, new CMILocation(player.getLocation()));
+                home.setPrivate(true);
+                user.addHome(home, true);
                 callback.accept(HomeWriteResult.ok());
             } catch (Throwable e) {
                 callback.accept(HomeWriteResult.failed(e.getClass().getSimpleName()));
@@ -174,7 +176,9 @@ public final class CMIHomeProvider implements HomeProvider {
                     callback.accept(HomeWriteResult.failed("home not found"));
                     return;
                 }
-                user.addHome(new CmiHome(newName, new CMILocation(location)), true);
+                CmiHome renamed = new CmiHome(newName, new CMILocation(location));
+                renamed.setPrivate(existing.isPrivate());
+                user.addHome(renamed, true);
                 user.removeHome(homeName);
                 callback.accept(HomeWriteResult.ok());
             } catch (Throwable e) {

@@ -30,6 +30,10 @@ public final class ShopCatalogService {
         return provider != null && provider.isReady();
     }
 
+    public boolean isInGame(Player player) {
+        return isReady() && provider.isInGame(player);
+    }
+
     public List<ShopCategory> getCategories(Player player) {
         return isReady() ? provider.getCategories(player) : List.of();
     }

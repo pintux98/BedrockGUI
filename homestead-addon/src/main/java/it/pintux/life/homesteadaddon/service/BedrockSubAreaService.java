@@ -285,7 +285,7 @@ public final class BedrockSubAreaService {
     }
 
     private String string(Map<String, Object> results, String label) {
-        Object value = results.get(label.toLowerCase().replaceAll("\\s+", "_"));
+        Object value = results.get(it.pintux.life.common.utils.FormComponentNames.derive(label));
         return value == null ? "" : value.toString().trim();
     }
 

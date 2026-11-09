@@ -47,7 +47,7 @@ public final class HuskHomesWarpProvider implements WarpProvider {
     public HuskHomesWarpProvider(Plugin plugin, Logger logger, Runnable onWarpsChanged) {
         this.logger = logger;
         this.onWarpsChanged = onWarpsChanged;
-        if (Bukkit.getPluginManager().getPlugin("HuskHomes") == null) {
+        if (!Bukkit.getPluginManager().isPluginEnabled("HuskHomes")) {
             throw new IllegalStateException("HuskHomes not found");
         }
         hookWarpEvents(plugin);

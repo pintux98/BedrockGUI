@@ -309,9 +309,9 @@ public final class BedrockBedwarsAddonPlugin extends JavaPlugin {
 
     /** Detects which supported Bedwars plugin is installed. */
     private String detectBackend(PluginManager pm) {
-        if (pm.getPlugin("BedWars2023") != null) return "BedWars2023";
-        if (pm.getPlugin("BedWars1058") != null) return "BedWars1058";
-        if (pm.getPlugin("BedWars") != null) return "ScreamingBedWars";
+        if (pm.isPluginEnabled("BedWars2023")) return "BedWars2023";
+        if (pm.isPluginEnabled("BedWars1058")) return "BedWars1058";
+        if (pm.isPluginEnabled("BedWars")) return "ScreamingBedWars";
         return null;
     }
 

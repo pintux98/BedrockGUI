@@ -101,7 +101,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
         PaperCommandExecutor commandExecutor = new PaperCommandExecutor();
         PaperSoundManager soundManager = new PaperSoundManager();
         PaperEconomyManager economyManager = null;
-        if (Bukkit.getPluginManager().getPlugin("Vault") != null) {
+        if (Bukkit.getPluginManager().isPluginEnabled("Vault")) {
             economyManager = new PaperEconomyManager(this);
             getLogger().info("Vault integration enabled");
         } else {
@@ -128,7 +128,7 @@ public final class BedrockGUI extends JavaPlugin implements Listener {
 
         it.pintux.life.paper.placeholders.CorePlaceholders.register(api.getPlaceholderRegistry());
 
-        if (Bukkit.getPluginManager().getPlugin("PlaceholderAPI") != null) {
+        if (Bukkit.getPluginManager().isPluginEnabled("PlaceholderAPI")) {
             new BedrockGUIExpansion(this).register();
             getLogger().info("PlaceholderAPI expansion registered");
         } else {

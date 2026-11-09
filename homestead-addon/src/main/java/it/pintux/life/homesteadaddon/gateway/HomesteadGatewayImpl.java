@@ -64,7 +64,7 @@ public final class HomesteadGatewayImpl implements HomesteadGateway {
 
     @Override
     public boolean isAvailable() {
-        return Bukkit.getPluginManager().getPlugin("Homestead") != null;
+        return Bukkit.getPluginManager().isPluginEnabled("Homestead");
     }
 
     @Override
